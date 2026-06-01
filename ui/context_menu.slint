@@ -1,0 +1,295 @@
+// Floating snip right-click context menu.
+//
+// One borderless slint::Window per floating snip, opened at the screen
+// position of the right click. Items emit a `picked(action)` callback
+// where `action` is one of the ContextAction values below; Rust dispatches.
+//
+// Action codes (int):
+//   0 = Close (hide floating window, keep snip in gallery)
+//   1 = Delete (remove snip from gallery entirely)
+//   2 = Copy (snip image -> clipboard)
+//   3 = Resize again (re-enable resize handles on this snip)
+//   4 = Copy OCR (Windows OCR -> clipboard)
+//   5 = Rotate left  (90° counter-clockwise)
+//   6 = Rotate right (90° clockwise)
+//   7 = Rotate 180°
+//   8 = Flip horizontal
+//   9 = Flip vertical
+//  10 = Crop (inward-only handles -> real pixel crop on release)
+//  11 = OCR + translate (popup)
+//  12 = Share via the Windows share sheet
+//  13 = Mail (new message with the snip attached, via MAPI)
+//  14 = Open in the system image editor (Paint)
+//  15 = Upload (upload to an image host, copy the link to the clipboard)
+
+import { Glyph } from "icons.slint";
+
+component MenuItem inherits Rectangle {
+    in property <string> icon: "";
+    in property <string> label: "";
+    in property <string> hint: "";
+    in property <color> icon-color: #8a8782;
+    in property <bool> stub: false;
+    in property <bool> danger: false;
+    callback clicked();
+
+    height: 28px;
+    border-radius: 4px;
+    background: ta.has-hover && !stub ? (danger ? #3a1a1a : #2a2a2a) : transparent;
+
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 10px;
+        // No `alignment` — let the label stretch so everything is
+        // left-aligned (icon on the left, label flush-left, hint on the right).
+        Rectangle {
+            width: 26px;
+            background: transparent;
+
+            if root.icon == "ocr" : Text {
+                text: "OCR";
+                color: root.danger ? #e06363 : root.icon-color;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+                font-size: 10px;
+                font-weight: 700;
+                width: 100%;
+                height: 100%;
+            }
+
+            if root.icon != "ocr" : Glyph {
+                name: root.icon;
+                paint: root.danger ? #e06363 : root.icon-color;
+                size: 15px;
+                weight: 1.7px;
+            }
+        }
+        Text {
+            text: root.label;
+            color: stub ? #5e5b56 : (danger ? #e06363 : #e8e6e2);
+            vertical-alignment: center;
+            horizontal-alignment: left;
+            font-size: 12px;
+            horizontal-stretch: 1;
+            overflow: elide;
+        }
+        Text {
+            text: root.hint;
+            color: #5e5b56;
+            vertical-alignment: center;
+            font-size: 10px;
+            font-family: "Consolas";
+        }
+    }
+
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// Compact square button used in the "Transform" transform row.
+component TransformBtn inherits Rectangle {
+    in property <string> icon: "";
+    in property <string> text: "";
+    // Glyph colour (idle / hover). Defaults match the neutral menu palette;
+    // the share row overrides them (e.g. WhatsApp green).
+    in property <color> tint: #b8b6b1;
+    in property <color> tint-hover: #e8e6e2;
+    callback clicked();
+
+    height: 30px;
+    min-width: 34px;
+    horizontal-stretch: 1;
+    border-radius: 4px;
+    background: ta.has-hover ? #2a2a2a : transparent;
+
+    if root.icon != "" : Glyph {
+        name: root.icon;
+        paint: ta.has-hover ? root.tint-hover : root.tint;
+        size: 17px;
+        weight: 1.7px;
+        x: (parent.width - self.width) / 2;
+    }
+    if root.text != "" : Text {
+        text: root.text;
+        color: ta.has-hover ? #e8e6e2 : #b8b6b1;
+        font-size: 10px;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+export component ContextMenuWindow inherits Window {
+    title: "SnipdeckContextMenu";
+    no-frame: true;
+    always-on-top: true;
+    background: transparent;
+
+    callback picked(int);
+    callback dismissed();
+
+    // "Show Snipdeck" is shown only for a floating snip's menu, not the gallery.
+    in property <bool> show-app-item: true;
+
+    width: 220px;
+    // +20px over the item stack for the close-button header row.
+    height: root.show-app-item ? 388px : 358px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: #1c1c1c;
+        border-radius: 6px;
+        border-width: 1px;
+        border-color: #3a3a3a;
+
+        // Click outside any item closes the menu.
+        TouchArea {
+            clicked => { root.dismissed(); }
+        }
+
+        VerticalLayout {
+            padding: 4px;
+            spacing: 0px;
+
+            // Top strip: a close (X) button, right-aligned. Clicking it — or
+            // anywhere outside the menu — dismisses it without taking an action.
+            HorizontalLayout {
+                height: 20px;
+                Rectangle { horizontal-stretch: 1; }
+                Rectangle {
+                    width: 24px;
+                    border-radius: 4px;
+                    background: close-ta.has-hover ? #2a2a2a : transparent;
+                    Glyph {
+                        name: "x";
+                        paint: close-ta.has-hover ? #e8e6e2 : #8a8782;
+                        size: 14px;
+                        weight: 1.7px;
+                        x: (parent.width - self.width) / 2;
+                    }
+                    close-ta := TouchArea {
+                        clicked => { root.dismissed(); }
+                    }
+                }
+            }
+
+            MenuItem {
+                icon: "copy";
+                label: @tr("Copy");
+                hint: "img";
+                clicked => { root.picked(2); }
+            }
+            MenuItem {
+                icon: "ocr";
+                label: @tr("OCR + Clipboard");
+                hint: "Win OCR";
+                clicked => { root.picked(4); }
+            }
+            MenuItem {
+                icon: "translate";
+                label: @tr("OCR + Translate");
+                hint: @tr("translate");
+                clicked => { root.picked(11); }
+            }
+            if root.show-app-item : Rectangle { height: 1px; background: #262626; }
+            if root.show-app-item : MenuItem {
+                icon: "window";
+                label: @tr("Show Snipdeck");
+                clicked => { root.picked(16); }
+            }
+            Rectangle {
+                height: 22px;
+                HorizontalLayout {
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    Text {
+                        text: @tr("Share");
+                        color: #8a8782;
+                        font-size: 10px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+            HorizontalLayout {
+                padding-left: 6px;
+                padding-right: 6px;
+                spacing: 2px;
+                // Windows share sheet (Mail/WhatsApp/Telegram… all appear there).
+                TransformBtn { icon: "share"; clicked => { root.picked(12); } }
+                // Direct mail compose with the snip attached (MAPI).
+                TransformBtn { icon: "mail"; clicked => { root.picked(13); } }
+                // Open in the system image editor (Paint).
+                TransformBtn { icon: "brush"; clicked => { root.picked(14); } }
+                // Upload to Imgur (anonymous); the resulting link is copied.
+                TransformBtn { icon: "upload"; clicked => { root.picked(15); } }
+            }
+            Rectangle {
+                height: 22px;
+                HorizontalLayout {
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    Text {
+                        text: @tr("Transform");
+                        color: #8a8782;
+                        font-size: 10px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+            HorizontalLayout {
+                padding-left: 6px;
+                padding-right: 6px;
+                spacing: 2px;
+                TransformBtn { icon: "reset"; clicked => { root.picked(5); } }
+                TransformBtn { icon: "rotate-cw"; clicked => { root.picked(6); } }
+                TransformBtn { text: "180°"; clicked => { root.picked(7); } }
+                TransformBtn { icon: "flip-h"; clicked => { root.picked(8); } }
+                TransformBtn { icon: "flip-v"; clicked => { root.picked(9); } }
+            }
+            Rectangle { height: 1px; background: #262626; }
+            MenuItem {
+                icon: "pencil";
+                label: @tr("Annotate");
+                hint: @tr("draw");
+                clicked => { root.picked(17); }
+            }
+            MenuItem {
+                icon: "crop";
+                label: @tr("Crop");
+                hint: @tr("drag inward");
+                clicked => { root.picked(10); }
+            }
+            MenuItem {
+                icon: "resize";
+                label: @tr("Resize");
+                hint: @tr("handles");
+                clicked => { root.picked(3); }
+            }
+            MenuItem {
+                icon: "eye-off";
+                label: @tr("Hide from screen");
+                hint: @tr("hide");
+                clicked => { root.picked(0); }
+            }
+            Rectangle { height: 1px; background: #262626; }
+            MenuItem {
+                icon: "trash";
+                label: @tr("Delete");
+                hint: @tr("remove");
+                danger: true;
+                clicked => { root.picked(1); }
+            }
+        }
+    }
+}

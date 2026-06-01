@@ -1,0 +1,98 @@
+[package]
+name = "snipdeck"
+version = "0.1.0"
+edition = "2021"
+description = "A fast Windows screen-snipping deck: capture regions, keep floating snips on screen, OCR-index, search, and manage hundreds of screenshots."
+authors = ["Hasan Salihoğlu <hsn.salihoglu@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/hasantr/snipdeck"
+homepage = "https://github.com/hasantr/snipdeck"
+readme = "README.md"
+keywords = ["screenshot", "snipping", "ocr", "capture", "windows"]
+categories = ["multimedia::images", "gui"]
+
+[[bin]]
+name = "snipdeck"
+path = "src/main.rs"
+
+[dependencies]
+slint = { version = "1.8", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "raw-window-handle-06"] }
+raw-window-handle = "0.6"
+xcap = "0.0.14"
+arboard = { version = "3", features = ["image-data"] }
+global-hotkey = "0.5"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "gif", "tiff"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+dirs = "5"
+rfd = "0.14"
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4"
+env_logger = "0.11"
+uuid = { version = "1", features = ["v4", "serde"] }
+parking_lot = "0.12"
+sys-locale = "0.3"
+anyhow = "1"
+rdev = { version = "0.5", features = ["unstable_grab"] }
+crossbeam-channel = "0.5"
+# Tiny synchronous HTTP client (rustls TLS bundled — no OpenSSL, no async
+# runtime) used by the OCR-translate feature. Runs on the same worker thread
+# the OCR already uses, so no tokio/reqwest weight is pulled in.
+ureq = { version = "2", features = ["json"] }
+# Pure-Rust 2D rasteriser (the resvg engine) used to FLATTEN annotations onto
+# the snip at full resolution: proper anti-aliased thick strokes, round caps/
+# joins and fills that match the live Slint `Path` preview pixel-for-pixel. No
+# system/GPU deps.
+tiny-skia = "0.11"
+# Pure-Rust font rasteriser, used only to bake annotation text into the image
+# on save (the live preview uses Slint's own text). No system deps.
+ab_glyph = "0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi",
+    "Win32_Graphics_Dwm",
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
+    "Win32_UI_HiDpi",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_Security",
+    "Win32_System_Com",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Mapi",
+    "Win32_System_Registry",
+    "Win32_System_Threading",
+    "Win32_System_WinRT",
+    "Win32_UI_Accessibility",
+    "Foundation",
+    "Foundation_Collections",
+    "Globalization",
+    "Graphics_Imaging",
+    "Media_Ocr",
+    "ApplicationModel_DataTransfer",
+    "Storage_Streams",
+] }
+
+[dev-dependencies]
+ico = "0.3"
+
+[build-dependencies]
+slint-build = "1.8"
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 1

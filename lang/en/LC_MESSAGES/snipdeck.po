@@ -1,0 +1,20 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "Annotate"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Opacity"
+msgstr "Opacity"
+
+msgid "draw"
+msgstr "draw"

@@ -1,0 +1,454 @@
+# Snipdeck — Simplified Chinese translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh-CN\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "新建"
+
+msgid "Snip + Clip"
+msgstr "截图+复制"
+
+msgid "Clip only"
+msgstr "仅复制"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Reset"
+msgstr "重置"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "截取新图 — 按住 Win + 左键拖拽选区"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "截图并复制到剪贴板"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "仅复制到剪贴板（不保存到图库）"
+
+msgid "Hide on-screen snips"
+msgstr "隐藏屏幕上的截图"
+
+msgid "Show snips on screen"
+msgstr "在屏幕上显示截图"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "在任务栏显示/隐藏悬浮截图"
+
+msgid "Clear unpinned snips"
+msgstr "清除未固定的截图"
+
+msgid "Clear all snips"
+msgstr "清除所有截图"
+
+msgid "Toggle light / dark theme"
+msgstr "切换浅色/深色主题"
+
+msgid "Settings"
+msgstr "设置"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "状态"
+
+msgid "Content"
+msgstr "内容"
+
+msgid "Size"
+msgstr "尺寸"
+
+msgid "Date"
+msgstr "日期"
+
+msgid "Sort"
+msgstr "排序"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "按状态筛选 — 全部 → 已固定 → 未固定 → 屏幕上 → 已隐藏"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "按内容筛选 — 有/无 OCR · 有/无窗口 · 已标记"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "按尺寸筛选 — 小 / 中 / 大 / 宽 / 高 / 正方形"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "按日期筛选 — 今天 / 24小时 / 7天 / 30天"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "排序方式 — 最新 / 最旧 / 已固定 / 尺寸 / 宽度 / 高度 / 显示器"
+
+msgid "Reset all filters and search"
+msgstr "重置所有筛选条件和搜索"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "已固定"
+
+msgid "Unpinned"
+msgstr "未固定"
+
+msgid "On screen"
+msgstr "屏幕上"
+
+msgid "Hidden"
+msgstr "已隐藏"
+
+msgid "All"
+msgstr "全部"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "有 OCR"
+
+msgid "No OCR"
+msgstr "无 OCR"
+
+msgid "Has window"
+msgstr "有窗口"
+
+msgid "No window"
+msgstr "无窗口"
+
+msgid "Tagged"
+msgstr "已标记"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "小"
+
+msgid "Medium"
+msgstr "中"
+
+msgid "Large"
+msgstr "大"
+
+msgid "Wide"
+msgstr "宽"
+
+msgid "Tall"
+msgstr "高"
+
+msgid "Square"
+msgstr "正方形"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "今天"
+
+msgid "24 hours"
+msgstr "24小时"
+
+msgid "7 days"
+msgstr "7天"
+
+msgid "30 days"
+msgstr "30天"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "最旧"
+
+msgid "Largest"
+msgstr "最大"
+
+msgid "Smallest"
+msgstr "最小"
+
+msgid "Width"
+msgstr "宽度"
+
+msgid "Height"
+msgstr "高度"
+
+msgid "Monitor"
+msgstr "显示器"
+
+msgid "Newest"
+msgstr "最新"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "文字 / OCR / 窗口 / 显示器 / 路径"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "尚未截取任何图片"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "按住 Win + 鼠标左键拖拽可截取屏幕区域。"
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR、窗口信息和筛选条件将在后台建立索引。"
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "已固定"
+
+msgid "on screen"
+msgstr "屏幕上"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "共 {}"
+
+msgid "Pinned {}"
+msgstr "已固定 {}"
+
+msgid "On screen {}"
+msgstr "屏幕上 {}"
+
+msgid "Filtered {}"
+msgstr "已筛选 {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F 搜索"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "复制"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + 剪贴板"
+
+msgid "OCR + Translate"
+msgstr "OCR + 翻译"
+
+msgid "translate"
+msgstr "翻译"
+
+msgid "Share"
+msgstr "分享"
+
+msgid "Transform"
+msgstr "变换"
+
+msgid "Crop"
+msgstr "裁剪"
+
+msgid "drag inward"
+msgstr "向内拖拽"
+
+msgid "Resize"
+msgstr "调整大小"
+
+msgid "handles"
+msgstr "拖拽手柄"
+
+msgid "Hide from screen"
+msgstr "从屏幕隐藏"
+
+msgid "hide"
+msgstr "隐藏"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "remove"
+msgstr "移除"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "翻译"
+
+msgid "Target language"
+msgstr "目标语言"
+
+msgid "More ▾"
+msgstr "更多 ▾"
+
+msgid "Source (OCR)"
+msgstr "原文（OCR）"
+
+msgid "copy"
+msgstr "复制"
+
+msgid "Translation"
+msgstr "译文"
+
+msgid "translating…"
+msgstr "翻译中…"
+
+msgid "Copy translation"
+msgstr "复制译文"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "1月"
+
+msgid "Feb"
+msgstr "2月"
+
+msgid "Mar"
+msgstr "3月"
+
+msgid "Apr"
+msgstr "4月"
+
+msgid "May"
+msgstr "5月"
+
+msgid "Jun"
+msgstr "6月"
+
+msgid "Jul"
+msgstr "7月"
+
+msgid "Aug"
+msgstr "8月"
+
+msgid "Sep"
+msgstr "9月"
+
+msgid "Oct"
+msgstr "10月"
+
+msgid "Nov"
+msgstr "11月"
+
+msgid "Dec"
+msgstr "12月"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "显示器"
+
+msgid "window"
+msgstr "窗口"
+
+msgid "OCR text indexed"
+msgstr "OCR 文字已建立索引"
+
+msgid "Window info indexed"
+msgstr "窗口信息已建立索引"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "显示 Snipdeck"
+
+msgid "New Snip"
+msgstr "新建截图"
+
+msgid "Launch at Login"
+msgstr "开机自动启动"
+
+msgid "Exit"
+msgstr "退出"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "热键注册失败：{e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "悬浮窗口打开失败：{e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "菜单打开失败：{e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "悬浮窗口重新打开失败：{e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "设置窗口尚未就绪。"
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "按钮触发截图在 Slint 版本中尚未接入 — 请使用 Win+LMouse 拖拽截图。"
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "复制到剪贴板失败：{e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "文字复制到剪贴板失败：{e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "屏幕截图失败：{e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "屏幕冻结失败：{e}"
+
+msgid "Failed to save image: {e}"
+msgstr "图片保存失败：{e}"
+
+msgid "Failed to save: {e}"
+msgstr "保存失败：{e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "区域裁剪失败：{e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "翻译窗口打开失败：{e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "编辑器打开失败：{e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "上传启动失败：{e}"
+
+msgid "Share failed: {e}"
+msgstr "分享失败：{e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "图片已上传。\r\n链接已复制到剪贴板：\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "图片已上传：\r\n{url}\r\n\r\n（链接无法复制到剪贴板。）"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — 上传"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "上传失败：\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "未配置 Imgur Client-ID — 无法上传。\r\n\r\n1) 获取免费 Client-ID：\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) 将其添加到此文件：\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) 重启 Snipdeck。"
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — 需要 Imgur Client-ID"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "此图片将上传至互联网 — \"Imgur\"（匿名）。\r\n\r\n• 图片不会出现在 Imgur 首页/图库中（隐藏，未列出）。\r\n• 但任何拥有链接的人均可查看此图片。\r\n• 图片未经加密。\r\n• 请勿上传敏感内容，例如证件、密码或私信。\r\n\r\n上传成功后，链接将自动复制到剪贴板。\r\n\r\n确认上传？"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "此图片将上传至互联网 — \"catbox.moe\"。\r\n\r\n• 图片不会出现在任何公开图库/搜索结果中（未列出）。\r\n• 但任何拥有链接的人均可查看此图片。\r\n• 由于是匿名上传，您事后将无法自行删除。\r\n• 图片未经加密。\r\n• 请勿上传敏感内容，例如证件、密码或私信。\r\n\r\n上传成功后，链接将自动复制到剪贴板。\r\n\r\n确认上传？"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — 上传至互联网"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "图片已复制到剪贴板。\r\n请在已打开的邮件中按 Ctrl+V 粘贴。"
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "邮件已打开，但图片无法复制到剪贴板。\r\n请重新复制截图，然后按 Ctrl+V 粘贴。"
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — 附加到邮件"
+
+msgid "Language"
+msgstr "语言"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "标注"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Opacity"
+msgstr "不透明度"
+
+msgid "draw"
+msgstr "绘制"

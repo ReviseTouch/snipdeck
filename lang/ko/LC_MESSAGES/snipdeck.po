@@ -1,0 +1,454 @@
+# Snipdeck — Korean translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "새로"
+
+msgid "Snip + Clip"
+msgstr "캡처 + 복사"
+
+msgid "Clip only"
+msgstr "복사만"
+
+msgid "Close"
+msgstr "닫기"
+
+msgid "Reset"
+msgstr "초기화"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "새 캡처 — Win + 마우스 왼쪽 버튼으로 영역을 드래그하세요"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "캡처하여 클립보드에 복사"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "클립보드에만 복사 (갤러리에 저장하지 않음)"
+
+msgid "Hide on-screen snips"
+msgstr "화면의 캡처 숨기기"
+
+msgid "Show snips on screen"
+msgstr "화면에 캡처 표시"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "작업 표시줄에서 플로팅 캡처 표시 / 숨기기"
+
+msgid "Clear unpinned snips"
+msgstr "고정되지 않은 캡처 지우기"
+
+msgid "Clear all snips"
+msgstr "모든 캡처 지우기"
+
+msgid "Toggle light / dark theme"
+msgstr "밝은 / 어두운 테마 전환"
+
+msgid "Settings"
+msgstr "설정"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "상태"
+
+msgid "Content"
+msgstr "내용"
+
+msgid "Size"
+msgstr "크기"
+
+msgid "Date"
+msgstr "날짜"
+
+msgid "Sort"
+msgstr "정렬"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "상태별 필터 — 전체 → 고정됨 → 고정 안 됨 → 화면에 표시 → 숨김"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "내용별 필터 — OCR 있음/없음 · 창 있음/없음 · 태그됨"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "크기별 필터 — 소 / 중 / 대 / 넓음 / 높음 / 정사각형"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "날짜별 필터 — 오늘 / 24시간 / 7일 / 30일"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "정렬 기준 — 최신순 / 오래된순 / 고정됨 / 크기 / 너비 / 높이 / 모니터"
+
+msgid "Reset all filters and search"
+msgstr "모든 필터 및 검색 초기화"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "고정됨"
+
+msgid "Unpinned"
+msgstr "고정 안 됨"
+
+msgid "On screen"
+msgstr "화면에 표시"
+
+msgid "Hidden"
+msgstr "숨김"
+
+msgid "All"
+msgstr "전체"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "OCR 있음"
+
+msgid "No OCR"
+msgstr "OCR 없음"
+
+msgid "Has window"
+msgstr "창 있음"
+
+msgid "No window"
+msgstr "창 없음"
+
+msgid "Tagged"
+msgstr "태그됨"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "소"
+
+msgid "Medium"
+msgstr "중"
+
+msgid "Large"
+msgstr "대"
+
+msgid "Wide"
+msgstr "넓음"
+
+msgid "Tall"
+msgstr "높음"
+
+msgid "Square"
+msgstr "정사각형"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "오늘"
+
+msgid "24 hours"
+msgstr "24시간"
+
+msgid "7 days"
+msgstr "7일"
+
+msgid "30 days"
+msgstr "30일"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "오래된순"
+
+msgid "Largest"
+msgstr "큰순"
+
+msgid "Smallest"
+msgstr "작은순"
+
+msgid "Width"
+msgstr "너비"
+
+msgid "Height"
+msgstr "높이"
+
+msgid "Monitor"
+msgstr "모니터"
+
+msgid "Newest"
+msgstr "최신순"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "텍스트 / OCR / 창 / 모니터 / 경로"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "아직 캡처가 없습니다"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Win + 마우스 왼쪽 버튼으로 화면 영역을 캡처하세요."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, 창 정보 및 필터가 백그라운드에서 색인됩니다."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "고정됨"
+
+msgid "on screen"
+msgstr "화면에 표시"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "전체 {}"
+
+msgid "Pinned {}"
+msgstr "고정됨 {}"
+
+msgid "On screen {}"
+msgstr "화면에 표시 {}"
+
+msgid "Filtered {}"
+msgstr "필터됨 {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F 검색"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "복사"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + 클립보드"
+
+msgid "OCR + Translate"
+msgstr "OCR + 번역"
+
+msgid "translate"
+msgstr "번역"
+
+msgid "Share"
+msgstr "공유"
+
+msgid "Transform"
+msgstr "변환"
+
+msgid "Crop"
+msgstr "자르기"
+
+msgid "drag inward"
+msgstr "안쪽으로 드래그"
+
+msgid "Resize"
+msgstr "크기 조정"
+
+msgid "handles"
+msgstr "핸들"
+
+msgid "Hide from screen"
+msgstr "화면에서 숨기기"
+
+msgid "hide"
+msgstr "숨기기"
+
+msgid "Delete"
+msgstr "삭제"
+
+msgid "remove"
+msgstr "제거"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "번역"
+
+msgid "Target language"
+msgstr "대상 언어"
+
+msgid "More ▾"
+msgstr "더 보기 ▾"
+
+msgid "Source (OCR)"
+msgstr "원문 (OCR)"
+
+msgid "copy"
+msgstr "복사"
+
+msgid "Translation"
+msgstr "번역"
+
+msgid "translating…"
+msgstr "번역 중…"
+
+msgid "Copy translation"
+msgstr "번역 복사"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "1월"
+
+msgid "Feb"
+msgstr "2월"
+
+msgid "Mar"
+msgstr "3월"
+
+msgid "Apr"
+msgstr "4월"
+
+msgid "May"
+msgstr "5월"
+
+msgid "Jun"
+msgstr "6월"
+
+msgid "Jul"
+msgstr "7월"
+
+msgid "Aug"
+msgstr "8월"
+
+msgid "Sep"
+msgstr "9월"
+
+msgid "Oct"
+msgstr "10월"
+
+msgid "Nov"
+msgstr "11월"
+
+msgid "Dec"
+msgstr "12월"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "모니터"
+
+msgid "window"
+msgstr "창"
+
+msgid "OCR text indexed"
+msgstr "OCR 텍스트 색인됨"
+
+msgid "Window info indexed"
+msgstr "창 정보 색인됨"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Snipdeck 표시"
+
+msgid "New Snip"
+msgstr "새 캡처"
+
+msgid "Launch at Login"
+msgstr "로그인 시 시작"
+
+msgid "Exit"
+msgstr "종료"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "단축키 등록 실패: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "플로팅 창 열기 실패: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "메뉴 열기 실패: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "플로팅 창 다시 열기 실패: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "설정 창이 아직 준비되지 않았습니다."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "버튼으로 시작하는 캡처는 Slint 포트에 아직 연결되지 않았습니다 — Win+LMouse로 드래그하세요."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "클립보드에 복사 실패: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "텍스트를 클립보드에 복사 실패: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "화면 캡처 실패: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "화면 고정 실패: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "이미지 저장 실패: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "저장 실패: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "영역 자르기 실패: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "번역 창 열기 실패: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "편집기 열기 실패: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "업로드 시작 실패: {e}"
+
+msgid "Share failed: {e}"
+msgstr "공유 실패: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "이미지가 업로드되었습니다.\r\n링크가 클립보드에 복사되었습니다:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "이미지가 업로드되었습니다:\r\n{url}\r\n\r\n(링크를 클립보드에 복사하지 못했습니다.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — 업로드"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "업로드 실패:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Imgur Client-ID가 설정되지 않아 업로드할 수 없습니다.\r\n\r\n1) 무료 Client-ID 발급:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) 아래 파일에 추가:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Snipdeck 재시작."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Imgur Client-ID 필요"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "이 이미지는 인터넷에 업로드됩니다 — \"Imgur\" (익명).\r\n\r\n• Imgur 홈 페이지 / 갤러리에는 표시되지 않습니다 (숨김, 비공개).\r\n• 그러나 결과 링크를 가진 누구나 이미지를 열 수 있습니다.\r\n• 이미지는 암호화되지 않습니다.\r\n• 신분증, 비밀번호, 개인 메시지 등 민감한 내용은 업로드하지 마세요.\r\n\r\n업로드 성공 시 링크가 클립보드에 복사됩니다.\r\n\r\n업로드하시겠습니까?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "이 이미지는 인터넷에 업로드됩니다 — \"catbox.moe\".\r\n\r\n• 어떤 공개 갤러리 / 검색에도 표시되지 않습니다 (비공개).\r\n• 그러나 결과 링크를 가진 누구나 이미지를 열 수 있습니다.\r\n• 익명으로 업로드되므로 나중에 직접 삭제할 수 없습니다.\r\n• 이미지는 암호화되지 않습니다.\r\n• 신분증, 비밀번호, 개인 메시지 등 민감한 내용은 업로드하지 마세요.\r\n\r\n업로드 성공 시 링크가 클립보드에 복사됩니다.\r\n\r\n업로드하시겠습니까?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — 인터넷에 업로드"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "이미지가 클립보드에 복사되었습니다.\r\n열린 이메일에 Ctrl+V로 붙여넣으세요."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "이메일이 열렸지만 이미지를 클립보드에 복사하지 못했습니다.\r\n캡처를 다시 복사한 후 Ctrl+V로 붙여넣으세요."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — 이메일에 첨부"
+
+msgid "Language"
+msgstr "언어"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "주석 달기"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "Save"
+msgstr "저장"
+
+msgid "Opacity"
+msgstr "불투명도"
+
+msgid "draw"
+msgstr "그리기"

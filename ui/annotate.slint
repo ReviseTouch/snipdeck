@@ -1,0 +1,617 @@
+// Annotation editor window — Telegram-style.
+//
+// A dedicated editor opened from a snip's context menu ("Annotate"). The chrome
+// is two floating rounded "pills" over the snip: a top tool pill and a bottom
+// action pill, plus an on-demand HSV colour-wheel panel. ALL geometry + colour
+// maths live in Rust (`annotate.rs`); the UI reports gestures and reflects the
+// shape list, the live "draft" shape, and the resolved styling.
+//
+// Tool codes (int), shared with `annotate.rs`:
+//   0 pen · 1 highlighter · 2 rectangle · 3 ellipse · 4 line · 5 arrow · 6 text
+
+import { Glyph } from "icons.slint";
+import { ScrollView } from "std-widgets.slint";
+
+// One fully-resolved annotation primitive for display. Vector shapes carry SVG
+// `commands` already scaled to display (logical) pixels; text shapes carry the
+// string + its anchor. Built by Rust, one per committed shape.
+export struct AnnoShape {
+    is-text: bool,
+    commands: string,
+    stroke: brush,
+    width: length,
+    fill: brush,
+    text: string,
+    text-x: length,
+    text-y: length,
+    text-size: length,
+}
+
+// A round tool button (icon or a letter), highlighted when active. The outer
+// cell stretches to the pill height; the round button is centred inside it so
+// it sits on the vertical axis regardless of the pill's height.
+component ToolBtn inherits Rectangle {
+    in property <string> icon;
+    in property <string> glyph-text;
+    in property <bool> active;
+    callback clicked();
+    width: 40px;
+    background: transparent;
+    Rectangle {
+        width: 36px;
+        height: 36px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        border-radius: 18px;
+        background: root.active ? #4b4b4f : (ta.has-hover ? #2f2f31 : transparent);
+        if root.icon != "" : Glyph {
+            name: root.icon;
+            paint: root.active ? #ffffff : #d8d6d2;
+            size: 19px;
+            weight: 1.7px;
+            x: (parent.width - self.width) / 2;
+        }
+        if root.glyph-text != "" : Text {
+            text: root.glyph-text;
+            color: root.active ? #ffffff : #d8d6d2;
+            font-size: 19px;
+            font-weight: 800;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// The colour chip in the top pill — shows the active colour and opens the wheel.
+component ColorChip inherits Rectangle {
+    in property <brush> tint;
+    in property <bool> open;
+    callback clicked();
+    width: 40px;
+    background: transparent;
+    Rectangle {
+        width: 30px;
+        height: 30px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        border-radius: 15px;
+        background: root.tint;
+        border-width: root.open ? 3px : 2px;
+        border-color: root.open ? #ffffff : #ffffffaa;
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// A compact continuous slider (track + fill + handle). Drag anywhere on it to
+// set the value; `pressed` is exposed so the editor can show a live preview.
+// Value is an input — Rust echoes the new value back, so there is no loop.
+component Slider inherits Rectangle {
+    in property <float> value;
+    in property <float> minimum: 0;
+    in property <float> maximum: 100;
+    out property <bool> pressed: ta.pressed;
+    callback changed(float);
+
+    // No fixed height: stretch to the pill band; the track/handle self-centre.
+    property <length> knob: 14px;
+    property <float> frac: root.maximum > root.minimum
+        ? (root.value - root.minimum) / (root.maximum - root.minimum)
+        : 0;
+
+    Rectangle {
+        height: 4px;
+        y: (parent.height - self.height) / 2;
+        border-radius: 2px;
+        background: #57575a;
+        Rectangle {
+            x: 0;
+            width: parent.width * max(0, min(1, root.frac));
+            height: parent.height;
+            border-radius: 2px;
+            background: #0a84ff;
+        }
+    }
+    Rectangle {
+        width: root.knob;
+        height: root.knob;
+        border-radius: root.knob / 2;
+        background: #ffffff;
+        y: (parent.height - self.height) / 2;
+        x: max(0, min(1, root.frac)) * (parent.width - root.knob);
+    }
+    ta := TouchArea {
+        property <float> val-at-pointer: root.minimum
+            + max(0, min(1, self.mouse-x / parent.width)) * (root.maximum - root.minimum);
+        pointer-event(ev) => {
+            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                root.changed(self.val-at-pointer);
+            }
+        }
+        moved => {
+            if (self.pressed) { root.changed(self.val-at-pointer); }
+        }
+    }
+}
+
+// A pill text button (Cancel / Save). Outer cell stretches; inner pill centred.
+component TextButton inherits Rectangle {
+    in property <string> label;
+    in property <bool> accent;
+    callback clicked();
+    min-width: 82px;
+    background: transparent;
+    Rectangle {
+        width: 100%;
+        height: 34px;
+        y: (parent.height - self.height) / 2;
+        border-radius: 17px;
+        background: root.accent
+            ? (ta.has-hover ? #2a93ff : #0a84ff)
+            : (ta.has-hover ? #38383a : transparent);
+        Text {
+            text: root.label;
+            color: root.accent ? #ffffff : #e8e6e2;
+            font-size: 14px;
+            font-weight: 600;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// A vertically-centred text label that fills its layout cell.
+component Lbl inherits Rectangle {
+    in property <string> text;
+    in property <color> tone: #cfcfd2;
+    background: transparent;
+    Text {
+        text: root.text;
+        color: root.tone;
+        font-size: 12px;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+// An inset vertical divider (centred, shorter than the pill).
+component VDiv inherits Rectangle {
+    width: 1px;
+    background: transparent;
+    Rectangle {
+        width: 1px;
+        height: 24px;
+        y: (parent.height - self.height) / 2;
+        background: #4a4a4d;
+    }
+}
+
+export component AnnotateWindow inherits Window {
+    title: @tr("Annotate");
+    background: #0d0d0f;
+    icon: @image-url("../assets/preview_256.png");
+    // The snip windows are always-on-top; the editor must sit above them (and
+    // get focus) so it isn't hidden behind the very snip being annotated.
+    always-on-top: true;
+
+    // --- Inputs (Rust → UI) ---
+    in property <image> snip-image;
+    in property <length> canvas-w;
+    in property <length> canvas-h;
+    in property <float> disp-scale;          // display(logical) px per image px
+    in property <[AnnoShape]> shapes;
+    in property <string> draft-commands;
+    in property <brush> draft-stroke;
+    in property <length> draft-width;
+    in property <brush> draft-fill;
+    in property <bool> drafting;
+    in property <bool> can-undo;
+    in property <bool> can-redo;
+
+    // --- Toolbar state (Rust owns it; UI reflects it) ---
+    in property <int> tool;
+    in property <length> stroke-display;     // current stroke width (display px)
+    in property <float> opacity-pct;         // current opacity, 10..100
+    in property <float> fill-opacity;        // 0..1, mirrors opacity-pct
+    in property <brush> current-color;       // active colour at full alpha
+    in property <float> preview-opacity: 1.0; // pulses (Rust) for the size preview
+
+    // --- Zoom ---
+    in property <string> zoom-label: "100%";
+
+    // --- Colour wheel ---
+    in property <image> wheel-image;
+    in property <length> wheel-sel-x;        // selector dot centre (within wheel)
+    in property <length> wheel-sel-y;
+    in property <float> brightness;          // 0..100 (HSV value)
+    property <bool> show-wheel: false;
+
+    // --- Text editing ---
+    in property <bool> editing-text;
+    in property <length> text-x;
+    in property <length> text-y;
+    in property <length> text-disp-size;
+    in property <brush> text-color;
+
+    // True while a size/opacity slider is dragged → blink the size preview.
+    out property <bool> size-previewing: width-slider.pressed || opacity-slider.pressed;
+
+    // --- Outputs (UI → Rust) ---
+    callback set-tool(int);
+    callback set-width-px(float);
+    callback set-opacity(float);
+    callback pick-wheel(float, float, float); // pointer x, y, wheel size (px)
+    callback set-brightness(float);           // 0..100
+    callback zoom-in();
+    callback zoom-out();
+    callback zoom-reset();
+    callback draw-begin(float, float);        // image-space coords
+    callback draw-move(float, float);
+    callback draw-end(float, float);
+    callback place-text(float, float);
+    callback commit-text(string);
+    callback undo();
+    callback redo();
+    callback clear-all();
+    callback cancel();
+    callback save();
+
+    forward-focus: key-catcher;
+
+    Rectangle {
+        background: #0d0d0f;
+
+        VerticalLayout {
+            // ===== Top pill: undo · tools · redo · colour =====
+            Rectangle {
+                height: 66px;
+                HorizontalLayout {
+                    alignment: center;
+                    Rectangle {
+                        height: 48px;
+                        y: (parent.height - self.height) / 2;
+                        border-radius: 24px;
+                        background: #1e1e20f2;
+                        drop-shadow-blur: 18px;
+                        drop-shadow-color: #00000088;
+                        drop-shadow-offset-y: 5px;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            spacing: 3px;
+                            alignment: center;
+
+                            ToolBtn { icon: "undo"; clicked => { root.undo(); } }
+                            VDiv {}
+                            ToolBtn { icon: "pencil"; active: root.tool == 0; clicked => { root.set-tool(0); } }
+                            ToolBtn { icon: "highlighter"; active: root.tool == 1; clicked => { root.set-tool(1); } }
+                            ToolBtn { icon: "square"; active: root.tool == 2; clicked => { root.set-tool(2); } }
+                            ToolBtn { icon: "circle"; active: root.tool == 3; clicked => { root.set-tool(3); } }
+                            ToolBtn { icon: "line"; active: root.tool == 4; clicked => { root.set-tool(4); } }
+                            ToolBtn { icon: "arrow-ur"; active: root.tool == 5; clicked => { root.set-tool(5); } }
+                            ToolBtn { glyph-text: "A"; active: root.tool == 6; clicked => { root.set-tool(6); } }
+                            VDiv {}
+                            ToolBtn { icon: "redo"; clicked => { root.redo(); } }
+                            ColorChip {
+                                tint: root.current-color;
+                                open: root.show-wheel;
+                                clicked => { root.show-wheel = !root.show-wheel; }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===== Canvas (scrollable so zoom-in can pan) =====
+            Rectangle {
+                background: #0d0d0f;
+                horizontal-stretch: 1;
+                vertical-stretch: 1;
+
+                sv := ScrollView {
+                    viewport-width: max(root.canvas-w, self.visible-width);
+                    viewport-height: max(root.canvas-h, self.visible-height);
+                    Rectangle {
+                        // Content fills the larger of canvas/viewport so the
+                        // canvas stays centred when it fits and scrolls when zoomed in.
+                        width: max(root.canvas-w, sv.visible-width);
+                        height: max(root.canvas-h, sv.visible-height);
+                        canvas := Rectangle {
+                            width: root.canvas-w;
+                            height: root.canvas-h;
+                            x: (parent.width - self.width) / 2;
+                            y: (parent.height - self.height) / 2;
+                            clip: true;
+                            drop-shadow-blur: 20px;
+                            drop-shadow-color: #000000aa;
+
+                    Image {
+                        width: 100%;
+                        height: 100%;
+                        image-fit: fill;
+                        source: root.snip-image;
+                    }
+
+                    for s in root.shapes : Rectangle {
+                        if !s.is-text : Path {
+                            width: root.canvas-w;
+                            height: root.canvas-h;
+                            viewbox-width: root.canvas-w / 1px;
+                            viewbox-height: root.canvas-h / 1px;
+                            commands: s.commands;
+                            stroke: s.stroke;
+                            stroke-width: s.width;
+                            stroke-line-cap: round;
+                            stroke-line-join: round;
+                            fill: s.fill;
+                        }
+                        if s.is-text : Text {
+                            x: s.text-x;
+                            y: s.text-y;
+                            text: s.text;
+                            color: s.stroke;
+                            font-size: s.text-size;
+                            font-weight: 700;
+                        }
+                    }
+
+                    Path {
+                        visible: root.drafting;
+                        width: root.canvas-w;
+                        height: root.canvas-h;
+                        viewbox-width: root.canvas-w / 1px;
+                        viewbox-height: root.canvas-h / 1px;
+                        commands: root.draft-commands;
+                        stroke: root.draft-stroke;
+                        stroke-width: root.draft-width;
+                        stroke-line-cap: round;
+                        stroke-line-join: round;
+                        fill: root.draft-fill;
+                    }
+
+                    // Blinking brush-size preview, centred on the image.
+                    Rectangle {
+                        visible: root.size-previewing;
+                        width: max(3px, root.stroke-display);
+                        height: max(3px, root.stroke-display);
+                        border-radius: self.width / 2;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                        background: root.current-color;
+                        opacity: root.preview-opacity * root.fill-opacity;
+                        border-width: 1px;
+                        border-color: #ffffffcc;
+                    }
+
+                    ta := TouchArea {
+                        mouse-cursor: crosshair;
+                        pointer-event(ev) => {
+                            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                                root.show-wheel = false;
+                                if (root.tool == 6) {
+                                    root.place-text((self.mouse-x / 1px) / root.disp-scale,
+                                                    (self.mouse-y / 1px) / root.disp-scale);
+                                } else {
+                                    root.draw-begin((self.mouse-x / 1px) / root.disp-scale,
+                                                    (self.mouse-y / 1px) / root.disp-scale);
+                                }
+                            }
+                            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.up) {
+                                if (root.tool != 6 && root.drafting) {
+                                    root.draw-end((self.mouse-x / 1px) / root.disp-scale,
+                                                  (self.mouse-y / 1px) / root.disp-scale);
+                                }
+                            }
+                        }
+                        moved => {
+                            if (root.tool != 6 && root.drafting && self.pressed) {
+                                root.draw-move((self.mouse-x / 1px) / root.disp-scale,
+                                               (self.mouse-y / 1px) / root.disp-scale);
+                            }
+                        }
+                    }
+
+                    if root.editing-text : TextInput {
+                        x: root.text-x;
+                        y: root.text-y;
+                        width: max(60px, root.canvas-w - self.x - 6px);
+                        color: root.text-color;
+                        font-size: root.text-disp-size;
+                        font-weight: 700;
+                        single-line: true;
+                        wrap: no-wrap;
+                        init => {
+                            self.text = "";
+                            self.focus();
+                        }
+                        accepted => { root.commit-text(self.text); }
+                    }
+                        }
+                    }
+                }
+            }
+
+            // ===== Bottom pill: cancel · size · opacity · save =====
+            Rectangle {
+                height: 66px;
+                HorizontalLayout {
+                    alignment: center;
+                    Rectangle {
+                        height: 48px;
+                        y: (parent.height - self.height) / 2;
+                        border-radius: 24px;
+                        background: #1e1e20f2;
+                        drop-shadow-blur: 18px;
+                        drop-shadow-color: #00000088;
+                        drop-shadow-offset-y: 5px;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            spacing: 10px;
+                            alignment: center;
+
+                            TextButton { label: @tr("Cancel"); clicked => { root.cancel(); } }
+                            VDiv {}
+                            Glyph { name: "pencil"; paint: #98989a; size: 16px; }
+                            width-slider := Slider {
+                                width: 150px;
+                                minimum: 1;
+                                maximum: 64;
+                                value: root.stroke-display / 1px;
+                                changed(v) => { root.set-width-px(v); }
+                            }
+                            Lbl { min-width: 44px; text: round(root.stroke-display / 1px) + "px"; }
+                            VDiv {}
+                            Lbl { text: @tr("Opacity"); tone: #98989a; }
+                            opacity-slider := Slider {
+                                width: 130px;
+                                minimum: 10;
+                                maximum: 100;
+                                value: root.opacity-pct;
+                                changed(v) => { root.set-opacity(v); }
+                            }
+                            Lbl { min-width: 40px; text: round(root.opacity-pct) + "%"; }
+                            VDiv {}
+                            TextButton { label: @tr("Save"); accent: true; clicked => { root.save(); } }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ===== Colour-wheel panel (floats under the top pill) =====
+        if root.show-wheel : Rectangle {
+            width: 196px;
+            height: 248px;
+            x: (parent.width - self.width) / 2;
+            y: 62px;
+            border-radius: 16px;
+            background: #1e1e20f7;
+            drop-shadow-blur: 22px;
+            drop-shadow-color: #000000aa;
+            drop-shadow-offset-y: 6px;
+
+            VerticalLayout {
+                padding: 14px;
+                spacing: 12px;
+
+                wheel := Rectangle {
+                    width: 168px;
+                    height: 168px;
+                    Image {
+                        width: 100%;
+                        height: 100%;
+                        source: root.wheel-image;
+                    }
+                    // Selector ring at the picked hue/saturation.
+                    Rectangle {
+                        width: 16px;
+                        height: 16px;
+                        border-radius: 8px;
+                        background: root.current-color;
+                        border-width: 2px;
+                        border-color: #ffffff;
+                        x: root.wheel-sel-x - self.width / 2;
+                        y: root.wheel-sel-y - self.height / 2;
+                    }
+                    wheel-ta := TouchArea {
+                        pointer-event(ev) => {
+                            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                                root.pick-wheel(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 1px);
+                            }
+                        }
+                        moved => {
+                            if (self.pressed) {
+                                root.pick-wheel(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 1px);
+                            }
+                        }
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 8px;
+                    Glyph { name: "sun"; paint: #98989a; size: 16px; }
+                    Slider {
+                        horizontal-stretch: 1;
+                        minimum: 0;
+                        maximum: 100;
+                        value: root.brightness;
+                        changed(v) => { root.set-brightness(v); }
+                    }
+                }
+            }
+        }
+
+        // ===== Zoom control (floats bottom-right, above the bottom pill so it
+        // never overlaps the top/bottom pills). Tap the % to fit. =====
+        Rectangle {
+            x: parent.width - self.width - 14px;
+            y: parent.height - 66px - self.height - 12px;
+            width: 150px;
+            height: 40px;
+            border-radius: 20px;
+            background: #1e1e20f2;
+            drop-shadow-blur: 18px;
+            drop-shadow-color: #00000088;
+            drop-shadow-offset-y: 5px;
+            HorizontalLayout {
+                padding-left: 4px;
+                padding-right: 4px;
+                spacing: 2px;
+                alignment: center;
+                ToolBtn { icon: "minus"; clicked => { root.zoom-out(); } }
+                Rectangle {
+                    min-width: 58px;
+                    Rectangle {
+                        width: 100%;
+                        height: 26px;
+                        y: (parent.height - self.height) / 2;
+                        border-radius: 8px;
+                        background: fit-ta.has-hover ? #38383a : transparent;
+                        Text {
+                            text: root.zoom-label;
+                            color: #e8e6e2;
+                            font-size: 12px;
+                            font-weight: 600;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                            width: 100%;
+                            height: 100%;
+                        }
+                    }
+                    fit-ta := TouchArea {
+                        clicked => { root.zoom-reset(); }
+                    }
+                }
+                ToolBtn { icon: "plus"; clicked => { root.zoom-in(); } }
+            }
+        }
+    }
+
+    // Keyboard shortcuts (active when not typing text). Zero-sized so it never
+    // intercepts canvas clicks — it still receives keys via `forward-focus`.
+    key-catcher := FocusScope {
+        width: 0px;
+        height: 0px;
+        enabled: !root.editing-text;
+        key-pressed(e) => {
+            if (e.text == Key.Escape) { root.cancel(); return accept; }
+            if (e.modifiers.control && e.text == "z") { root.undo(); return accept; }
+            if (e.modifiers.control && e.text == "y") { root.redo(); return accept; }
+            return reject;
+        }
+    }
+}

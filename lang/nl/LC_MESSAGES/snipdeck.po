@@ -1,0 +1,454 @@
+# Snipdeck — Dutch (nl) translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nl\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "Nieuw"
+
+msgid "Snip + Clip"
+msgstr "Knip + Kopieer"
+
+msgid "Clip only"
+msgstr "Alleen kopiëren"
+
+msgid "Close"
+msgstr "Sluiten"
+
+msgid "Reset"
+msgstr "Resetten"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "Maak een nieuwe knipsel — sleep een gebied met Win + linkermuisknop"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "Maak een knipsel en kopieer het naar het klembord"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "Alleen naar klembord kopiëren (zonder opslaan in de galerij)"
+
+msgid "Hide on-screen snips"
+msgstr "Knipsels op scherm verbergen"
+
+msgid "Show snips on screen"
+msgstr "Knipsels op scherm tonen"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "Zwevende knipsels tonen / verbergen in de taakbalk"
+
+msgid "Clear unpinned snips"
+msgstr "Niet-vastgezette knipsels verwijderen"
+
+msgid "Clear all snips"
+msgstr "Alle knipsels verwijderen"
+
+msgid "Toggle light / dark theme"
+msgstr "Licht / donker thema wisselen"
+
+msgid "Settings"
+msgstr "Instellingen"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "Status"
+
+msgid "Content"
+msgstr "Inhoud"
+
+msgid "Size"
+msgstr "Grootte"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Sort"
+msgstr "Sorteren"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "Filteren op status — Alles → Vastgezet → Niet vastgezet → Op scherm → Verborgen"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "Filteren op inhoud — Heeft/Geen OCR · Heeft/Geen venster · Gelabeld"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "Filteren op grootte — Klein / Middel / Groot / Breed / Hoog / Vierkant"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "Filteren op datum — Vandaag / 24 uur / 7 dagen / 30 dagen"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "Sorteren op — Nieuwste / Oudste / Vastgezet / Grootte / Breedte / Hoogte / Monitor"
+
+msgid "Reset all filters and search"
+msgstr "Alle filters en zoekterm resetten"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "Vastgezet"
+
+msgid "Unpinned"
+msgstr "Niet vastgezet"
+
+msgid "On screen"
+msgstr "Op scherm"
+
+msgid "Hidden"
+msgstr "Verborgen"
+
+msgid "All"
+msgstr "Alles"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "Heeft OCR"
+
+msgid "No OCR"
+msgstr "Geen OCR"
+
+msgid "Has window"
+msgstr "Heeft venster"
+
+msgid "No window"
+msgstr "Geen venster"
+
+msgid "Tagged"
+msgstr "Gelabeld"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "Klein"
+
+msgid "Medium"
+msgstr "Middel"
+
+msgid "Large"
+msgstr "Groot"
+
+msgid "Wide"
+msgstr "Breed"
+
+msgid "Tall"
+msgstr "Hoog"
+
+msgid "Square"
+msgstr "Vierkant"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "Vandaag"
+
+msgid "24 hours"
+msgstr "24 uur"
+
+msgid "7 days"
+msgstr "7 dagen"
+
+msgid "30 days"
+msgstr "30 dagen"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "Oudste"
+
+msgid "Largest"
+msgstr "Grootste"
+
+msgid "Smallest"
+msgstr "Kleinste"
+
+msgid "Width"
+msgstr "Breedte"
+
+msgid "Height"
+msgstr "Hoogte"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Newest"
+msgstr "Nieuwste"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "tekst / OCR / venster / monitor / pad"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "Nog geen knipsels verzameld"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Maak een selectie van het scherm met Win + linkermuisknop."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, vensterinformatie en filters worden op de achtergrond geïndexeerd."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "vastgezet"
+
+msgid "on screen"
+msgstr "op scherm"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "Totaal {}"
+
+msgid "Pinned {}"
+msgstr "Vastgezet {}"
+
+msgid "On screen {}"
+msgstr "Op scherm {}"
+
+msgid "Filtered {}"
+msgstr "Gefilterd {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F zoeken"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "Kopiëren"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + Klembord"
+
+msgid "OCR + Translate"
+msgstr "OCR + Vertalen"
+
+msgid "translate"
+msgstr "vertalen"
+
+msgid "Share"
+msgstr "Delen"
+
+msgid "Transform"
+msgstr "Transformeren"
+
+msgid "Crop"
+msgstr "Bijsnijden"
+
+msgid "drag inward"
+msgstr "naar binnen slepen"
+
+msgid "Resize"
+msgstr "Formaat wijzigen"
+
+msgid "handles"
+msgstr "handvatten"
+
+msgid "Hide from screen"
+msgstr "Van scherm verbergen"
+
+msgid "hide"
+msgstr "verbergen"
+
+msgid "Delete"
+msgstr "Verwijderen"
+
+msgid "remove"
+msgstr "verwijderen"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "Vertalen"
+
+msgid "Target language"
+msgstr "Doeltaal"
+
+msgid "More ▾"
+msgstr "Meer ▾"
+
+msgid "Source (OCR)"
+msgstr "Bron (OCR)"
+
+msgid "copy"
+msgstr "kopiëren"
+
+msgid "Translation"
+msgstr "Vertaling"
+
+msgid "translating…"
+msgstr "vertalen…"
+
+msgid "Copy translation"
+msgstr "Vertaling kopiëren"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Mar"
+msgstr "Mrt"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "May"
+msgstr "Mei"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "Aug"
+msgstr "Aug"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Oct"
+msgstr "Okt"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Dec"
+msgstr "Dec"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "window"
+msgstr "venster"
+
+msgid "OCR text indexed"
+msgstr "OCR-tekst geïndexeerd"
+
+msgid "Window info indexed"
+msgstr "Vensterinformatie geïndexeerd"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Snipdeck tonen"
+
+msgid "New Snip"
+msgstr "Nieuw knipsel"
+
+msgid "Launch at Login"
+msgstr "Starten bij aanmelden"
+
+msgid "Exit"
+msgstr "Afsluiten"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "Sneltoetsen registreren mislukt: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "Zwevend venster openen mislukt: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "Menu openen mislukt: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "Zwevend venster heropenen mislukt: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "Het instellingenvenster is nog niet gereed."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "Knopgestuurde knipsels zijn nog niet gekoppeld in de Slint-poort — sleep met Win+LMouse."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "Kopiëren naar klembord mislukt: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "Tekst naar klembord kopiëren mislukt: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "Schermopname mislukt: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "Scherm bevriezen mislukt: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "Afbeelding opslaan mislukt: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "Opslaan mislukt: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "Gebied bijsnijden mislukt: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "Vertaalvenster openen mislukt: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "Editor openen mislukt: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "Uploaden starten mislukt: {e}"
+
+msgid "Share failed: {e}"
+msgstr "Delen mislukt: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "Afbeelding geüpload.\r\nLink gekopieerd naar klembord:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "Afbeelding geüpload:\r\n{url}\r\n\r\n(De link kon niet naar het klembord worden gekopieerd.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — Uploaden"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "Uploaden mislukt:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Geen Imgur Client-ID ingesteld — uploaden niet mogelijk.\r\n\r\n1) Haal een gratis Client-ID op:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Voeg het toe aan dit bestand:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Herstart Snipdeck."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Imgur Client-ID vereist"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Deze afbeelding wordt geüpload naar het INTERNET — \"Imgur\" (anoniem).\r\n\r\n• De afbeelding verschijnt NIET op de Imgur-startpagina / galerij (verborgen, niet vermeld).\r\n• Maar iedereen met de link kan de afbeelding openen.\r\n• De afbeelding is niet versleuteld.\r\n• Upload GEEN GEVOELIGE inhoud zoals ID's, wachtwoorden of privéberichten.\r\n\r\nBij succes wordt de link naar uw klembord gekopieerd.\r\n\r\nUploaden?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Deze afbeelding wordt geüpload naar het INTERNET — \"catbox.moe\".\r\n\r\n• De afbeelding verschijnt NIET in een openbare galerij / zoekopdracht (niet vermeld).\r\n• Maar iedereen met de link kan de afbeelding openen.\r\n• Omdat de upload anoniem is, KUNT U HEM LATER NIET ZELF VERWIJDEREN.\r\n• De afbeelding is niet versleuteld.\r\n• Upload GEEN GEVOELIGE inhoud zoals ID's, wachtwoorden of privéberichten.\r\n\r\nBij succes wordt de link naar uw klembord gekopieerd.\r\n\r\nUploaden?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — Uploaden naar internet"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "De afbeelding is naar het klembord gekopieerd.\r\nPlak het in de geopende e-mail met Ctrl+V."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "De e-mail is geopend, maar de afbeelding kon niet naar het klembord worden gekopieerd.\r\nKopieer het knipsel opnieuw en plak het met Ctrl+V."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — Bijvoegen aan e-mail"
+
+msgid "Language"
+msgstr "Taal"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "Annoteren"
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "Save"
+msgstr "Opslaan"
+
+msgid "Opacity"
+msgstr "Dekking"
+
+msgid "draw"
+msgstr "tekenen"

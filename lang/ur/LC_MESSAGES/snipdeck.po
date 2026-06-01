@@ -1,0 +1,454 @@
+# Snipdeck — Urdu translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ur\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "نیا"
+
+msgid "Snip + Clip"
+msgstr "اسنپ + کلپ"
+
+msgid "Clip only"
+msgstr "صرف کلپ"
+
+msgid "Close"
+msgstr "بند کریں"
+
+msgid "Reset"
+msgstr "دوبارہ ترتیب"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "نیا اسنپ لیں — Win + بائیں کلک سے علاقہ کھینچیں"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "اسنپ لیں اور کلپ بورڈ پر کاپی کریں"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "صرف کلپ بورڈ پر کاپی کریں (گیلری میں محفوظ کیے بغیر)"
+
+msgid "Hide on-screen snips"
+msgstr "اسکرین پر موجود اسنپس چھپائیں"
+
+msgid "Show snips on screen"
+msgstr "اسنپس اسکرین پر دکھائیں"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "ٹاسک بار میں تیرتے اسنپس دکھائیں / چھپائیں"
+
+msgid "Clear unpinned snips"
+msgstr "غیر پن کیے اسنپس صاف کریں"
+
+msgid "Clear all snips"
+msgstr "تمام اسنپس صاف کریں"
+
+msgid "Toggle light / dark theme"
+msgstr "روشن / تاریک تھیم تبدیل کریں"
+
+msgid "Settings"
+msgstr "ترتیبات"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "حالت"
+
+msgid "Content"
+msgstr "مواد"
+
+msgid "Size"
+msgstr "سائز"
+
+msgid "Date"
+msgstr "تاریخ"
+
+msgid "Sort"
+msgstr "ترتیب"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "حالت کے مطابق فلٹر کریں — سب → پن کیے → غیر پن → اسکرین پر → پوشیدہ"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "مواد کے مطابق فلٹر کریں — OCR ہے/نہیں · ونڈو ہے/نہیں · ٹیگ شدہ"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "سائز کے مطابق فلٹر کریں — چھوٹا / درمیانہ / بڑا / چوڑا / لمبا / مربع"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "تاریخ کے مطابق فلٹر کریں — آج / 24 گھنٹے / 7 دن / 30 دن"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "ترتیب دیں — نیا ترین / پرانا ترین / پن کیے / سائز / چوڑائی / اونچائی / مانیٹر"
+
+msgid "Reset all filters and search"
+msgstr "تمام فلٹر اور تلاش دوبارہ ترتیب دیں"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "پن کیا"
+
+msgid "Unpinned"
+msgstr "غیر پن"
+
+msgid "On screen"
+msgstr "اسکرین پر"
+
+msgid "Hidden"
+msgstr "پوشیدہ"
+
+msgid "All"
+msgstr "سب"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "OCR موجود"
+
+msgid "No OCR"
+msgstr "OCR نہیں"
+
+msgid "Has window"
+msgstr "ونڈو موجود"
+
+msgid "No window"
+msgstr "ونڈو نہیں"
+
+msgid "Tagged"
+msgstr "ٹیگ شدہ"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "چھوٹا"
+
+msgid "Medium"
+msgstr "درمیانہ"
+
+msgid "Large"
+msgstr "بڑا"
+
+msgid "Wide"
+msgstr "چوڑا"
+
+msgid "Tall"
+msgstr "لمبا"
+
+msgid "Square"
+msgstr "مربع"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "آج"
+
+msgid "24 hours"
+msgstr "24 گھنٹے"
+
+msgid "7 days"
+msgstr "7 دن"
+
+msgid "30 days"
+msgstr "30 دن"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "پرانا ترین"
+
+msgid "Largest"
+msgstr "سب سے بڑا"
+
+msgid "Smallest"
+msgstr "سب سے چھوٹا"
+
+msgid "Width"
+msgstr "چوڑائی"
+
+msgid "Height"
+msgstr "اونچائی"
+
+msgid "Monitor"
+msgstr "مانیٹر"
+
+msgid "Newest"
+msgstr "نیا ترین"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "متن / OCR / ونڈو / مانیٹر / راستہ"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "ابھی تک کوئی اسنپ نہیں"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Win + بائیں ماؤس سے اسکرین کا علاقہ کیپچر کریں۔"
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR، ونڈو معلومات اور فلٹر پس منظر میں ترتیب پا رہے ہیں۔"
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "پن کیا"
+
+msgid "on screen"
+msgstr "اسکرین پر"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "کل {}"
+
+msgid "Pinned {}"
+msgstr "پن کیے {}"
+
+msgid "On screen {}"
+msgstr "اسکرین پر {}"
+
+msgid "Filtered {}"
+msgstr "فلٹر شدہ {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F تلاش"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "کاپی"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + کلپ بورڈ"
+
+msgid "OCR + Translate"
+msgstr "OCR + ترجمہ"
+
+msgid "translate"
+msgstr "ترجمہ"
+
+msgid "Share"
+msgstr "شیئر"
+
+msgid "Transform"
+msgstr "تبدیل"
+
+msgid "Crop"
+msgstr "کراپ"
+
+msgid "drag inward"
+msgstr "اندر کھینچیں"
+
+msgid "Resize"
+msgstr "سائز بدلیں"
+
+msgid "handles"
+msgstr "ہینڈلز"
+
+msgid "Hide from screen"
+msgstr "اسکرین سے چھپائیں"
+
+msgid "hide"
+msgstr "چھپائیں"
+
+msgid "Delete"
+msgstr "حذف"
+
+msgid "remove"
+msgstr "ہٹائیں"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "ترجمہ"
+
+msgid "Target language"
+msgstr "ہدف زبان"
+
+msgid "More ▾"
+msgstr "مزید ▾"
+
+msgid "Source (OCR)"
+msgstr "ماخذ (OCR)"
+
+msgid "copy"
+msgstr "کاپی"
+
+msgid "Translation"
+msgstr "ترجمہ"
+
+msgid "translating…"
+msgstr "ترجمہ ہو رہا ہے…"
+
+msgid "Copy translation"
+msgstr "ترجمہ کاپی کریں"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "جن"
+
+msgid "Feb"
+msgstr "فر"
+
+msgid "Mar"
+msgstr "مار"
+
+msgid "Apr"
+msgstr "اپر"
+
+msgid "May"
+msgstr "مئی"
+
+msgid "Jun"
+msgstr "جون"
+
+msgid "Jul"
+msgstr "جول"
+
+msgid "Aug"
+msgstr "اگ"
+
+msgid "Sep"
+msgstr "ستم"
+
+msgid "Oct"
+msgstr "اکت"
+
+msgid "Nov"
+msgstr "نوم"
+
+msgid "Dec"
+msgstr "دسم"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "مانیٹر"
+
+msgid "window"
+msgstr "ونڈو"
+
+msgid "OCR text indexed"
+msgstr "OCR متن ترتیب شدہ"
+
+msgid "Window info indexed"
+msgstr "ونڈو معلومات ترتیب شدہ"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Snipdeck دکھائیں"
+
+msgid "New Snip"
+msgstr "نیا اسنپ"
+
+msgid "Launch at Login"
+msgstr "لاگ ان پر شروع کریں"
+
+msgid "Exit"
+msgstr "باہر نکلیں"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "ہاٹ کیز رجسٹر کرنے میں ناکامی: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "تیرتی ونڈو کھولنے میں ناکامی: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "مینو کھولنے میں ناکامی: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "تیرتی ونڈو دوبارہ کھولنے میں ناکامی: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "ترتیبات کی ونڈو ابھی تیار نہیں۔"
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "بٹن سے شروع ہونے والا اسنپ Slint پورٹ میں ابھی فعال نہیں — Win+LMouse سے کھینچیں۔"
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "کلپ بورڈ پر کاپی کرنے میں ناکامی: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "متن کلپ بورڈ پر کاپی کرنے میں ناکامی: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "اسکرین کیپچر کرنے میں ناکامی: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "اسکرین منجمد کرنے میں ناکامی: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "تصویر محفوظ کرنے میں ناکامی: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "محفوظ کرنے میں ناکامی: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "علاقہ کراپ کرنے میں ناکامی: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "ترجمہ ونڈو کھولنے میں ناکامی: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "ایڈیٹر کھولنے میں ناکامی: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "اپلوڈ شروع کرنے میں ناکامی: {e}"
+
+msgid "Share failed: {e}"
+msgstr "شیئر ناکام: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "تصویر اپلوڈ ہو گئی۔\r\nلنک کلپ بورڈ پر کاپی ہو گیا:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "تصویر اپلوڈ ہو گئی:\r\n{url}\r\n\r\n(لنک کلپ بورڈ پر کاپی نہ ہو سکا۔)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — اپلوڈ"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "اپلوڈ ناکام:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "کوئی Imgur Client-ID ترتیب نہیں — اپلوڈ ممکن نہیں۔\r\n\r\n1) مفت Client-ID حاصل کریں:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) اسے اس فائل میں شامل کریں:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Snipdeck دوبارہ شروع کریں۔"
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Imgur Client-ID درکار ہے"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "یہ تصویر انٹرنیٹ پر اپلوڈ ہو گی — \"Imgur\" (گمنام)۔\r\n\r\n• یہ Imgur کے ہوم پیج / گیلری پر ظاہر نہیں ہو گی (پوشیدہ، غیر درج)۔\r\n• لیکن جس کے پاس بھی لنک ہو، وہ تصویر کھول سکتا ہے۔\r\n• تصویر انکرپٹڈ نہیں ہے۔\r\n• شناختی کارڈ، پاس ورڈ یا نجی پیغامات جیسا حساس مواد اپلوڈ نہ کریں۔\r\n\r\nکامیابی پر لنک آپ کے کلپ بورڈ پر کاپی ہو جائے گا۔\r\n\r\nاپلوڈ کریں؟"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "یہ تصویر انٹرنیٹ پر اپلوڈ ہو گی — \"catbox.moe\"۔\r\n\r\n• یہ کسی عوامی گیلری / تلاش میں ظاہر نہیں ہو گی (غیر درج)۔\r\n• لیکن جس کے پاس بھی لنک ہو، وہ تصویر کھول سکتا ہے۔\r\n• چونکہ یہ گمنام اپلوڈ ہے، آپ بعد میں اسے خود حذف نہیں کر سکتے۔\r\n• تصویر انکرپٹڈ نہیں ہے۔\r\n• شناختی کارڈ، پاس ورڈ یا نجی پیغامات جیسا حساس مواد اپلوڈ نہ کریں۔\r\n\r\nکامیابی پر لنک آپ کے کلپ بورڈ پر کاپی ہو جائے گا۔\r\n\r\nاپلوڈ کریں؟"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — انٹرنیٹ پر اپلوڈ"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "تصویر کلپ بورڈ پر کاپی ہو گئی ہے۔\r\nاسے کھلی ای میل میں Ctrl+V سے چسپاں کریں۔"
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "ای میل کھل گئی، لیکن تصویر کلپ بورڈ پر کاپی نہ ہو سکی۔\r\nاسنپ دوبارہ کاپی کریں اور Ctrl+V سے چسپاں کریں۔"
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — ای میل سے منسلک کریں"
+
+msgid "Language"
+msgstr "زبان"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "تشریح"
+
+msgid "Cancel"
+msgstr "منسوخ کریں"
+
+msgid "Save"
+msgstr "محفوظ کریں"
+
+msgid "Opacity"
+msgstr "دھندلاپن"
+
+msgid "draw"
+msgstr "بنائیں"

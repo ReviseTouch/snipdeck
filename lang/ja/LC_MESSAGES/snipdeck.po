@@ -1,0 +1,454 @@
+# Snipdeck — Japanese translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "新規"
+
+msgid "Snip + Clip"
+msgstr "スニップ＋クリップ"
+
+msgid "Clip only"
+msgstr "クリップのみ"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Reset"
+msgstr "リセット"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "新しいスニップを撮影 — Win＋左クリックで範囲をドラッグ"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "スニップを撮影してクリップボードにコピー"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "クリップボードにのみコピー（ギャラリーに保存しない）"
+
+msgid "Hide on-screen snips"
+msgstr "画面上のスニップを非表示"
+
+msgid "Show snips on screen"
+msgstr "スニップを画面に表示"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "タスクバーのフローティングスニップを表示／非表示"
+
+msgid "Clear unpinned snips"
+msgstr "固定されていないスニップを消去"
+
+msgid "Clear all snips"
+msgstr "すべてのスニップを消去"
+
+msgid "Toggle light / dark theme"
+msgstr "ライト／ダークテーマを切替"
+
+msgid "Settings"
+msgstr "設定"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "ステータス"
+
+msgid "Content"
+msgstr "コンテンツ"
+
+msgid "Size"
+msgstr "サイズ"
+
+msgid "Date"
+msgstr "日付"
+
+msgid "Sort"
+msgstr "並替"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "ステータスで絞込 — すべて → 固定済 → 未固定 → 画面上 → 非表示"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "コンテンツで絞込 — OCRあり／なし · ウィンドウあり／なし · タグ付き"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "サイズで絞込 — 小 / 中 / 大 / 横長 / 縦長 / 正方形"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "日付で絞込 — 今日 / 24時間 / 7日間 / 30日間"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "並替基準 — 新しい順 / 古い順 / 固定済 / サイズ / 幅 / 高さ / モニター"
+
+msgid "Reset all filters and search"
+msgstr "すべてのフィルターと検索をリセット"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "固定済"
+
+msgid "Unpinned"
+msgstr "未固定"
+
+msgid "On screen"
+msgstr "画面上"
+
+msgid "Hidden"
+msgstr "非表示"
+
+msgid "All"
+msgstr "すべて"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "OCRあり"
+
+msgid "No OCR"
+msgstr "OCRなし"
+
+msgid "Has window"
+msgstr "ウィンドウあり"
+
+msgid "No window"
+msgstr "ウィンドウなし"
+
+msgid "Tagged"
+msgstr "タグ付き"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "小"
+
+msgid "Medium"
+msgstr "中"
+
+msgid "Large"
+msgstr "大"
+
+msgid "Wide"
+msgstr "横長"
+
+msgid "Tall"
+msgstr "縦長"
+
+msgid "Square"
+msgstr "正方形"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "今日"
+
+msgid "24 hours"
+msgstr "24時間"
+
+msgid "7 days"
+msgstr "7日間"
+
+msgid "30 days"
+msgstr "30日間"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "古い順"
+
+msgid "Largest"
+msgstr "大きい順"
+
+msgid "Smallest"
+msgstr "小さい順"
+
+msgid "Width"
+msgstr "幅"
+
+msgid "Height"
+msgstr "高さ"
+
+msgid "Monitor"
+msgstr "モニター"
+
+msgid "Newest"
+msgstr "新しい順"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "テキスト / OCR / ウィンドウ / モニター / パス"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "スニップがまだありません"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Win＋左クリックで画面の範囲をキャプチャします。"
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR、ウィンドウ情報、フィルターはバックグラウンドでインデックスされます。"
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "固定済"
+
+msgid "on screen"
+msgstr "画面上"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "合計 {}"
+
+msgid "Pinned {}"
+msgstr "固定済 {}"
+
+msgid "On screen {}"
+msgstr "画面上 {}"
+
+msgid "Filtered {}"
+msgstr "絞込 {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F 検索"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "コピー"
+
+msgid "OCR + Clipboard"
+msgstr "OCR＋クリップボード"
+
+msgid "OCR + Translate"
+msgstr "OCR＋翻訳"
+
+msgid "translate"
+msgstr "翻訳"
+
+msgid "Share"
+msgstr "共有"
+
+msgid "Transform"
+msgstr "変形"
+
+msgid "Crop"
+msgstr "切り抜き"
+
+msgid "drag inward"
+msgstr "内側にドラッグ"
+
+msgid "Resize"
+msgstr "サイズ変更"
+
+msgid "handles"
+msgstr "ハンドル"
+
+msgid "Hide from screen"
+msgstr "画面から非表示"
+
+msgid "hide"
+msgstr "非表示"
+
+msgid "Delete"
+msgstr "削除"
+
+msgid "remove"
+msgstr "削除"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "翻訳"
+
+msgid "Target language"
+msgstr "翻訳先言語"
+
+msgid "More ▾"
+msgstr "もっと見る ▾"
+
+msgid "Source (OCR)"
+msgstr "原文（OCR）"
+
+msgid "copy"
+msgstr "コピー"
+
+msgid "Translation"
+msgstr "翻訳結果"
+
+msgid "translating…"
+msgstr "翻訳中…"
+
+msgid "Copy translation"
+msgstr "翻訳をコピー"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "1月"
+
+msgid "Feb"
+msgstr "2月"
+
+msgid "Mar"
+msgstr "3月"
+
+msgid "Apr"
+msgstr "4月"
+
+msgid "May"
+msgstr "5月"
+
+msgid "Jun"
+msgstr "6月"
+
+msgid "Jul"
+msgstr "7月"
+
+msgid "Aug"
+msgstr "8月"
+
+msgid "Sep"
+msgstr "9月"
+
+msgid "Oct"
+msgstr "10月"
+
+msgid "Nov"
+msgstr "11月"
+
+msgid "Dec"
+msgstr "12月"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "モニター"
+
+msgid "window"
+msgstr "ウィンドウ"
+
+msgid "OCR text indexed"
+msgstr "OCRテキストがインデックスされました"
+
+msgid "Window info indexed"
+msgstr "ウィンドウ情報がインデックスされました"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Snipdeck を表示"
+
+msgid "New Snip"
+msgstr "新規スニップ"
+
+msgid "Launch at Login"
+msgstr "ログイン時に起動"
+
+msgid "Exit"
+msgstr "終了"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "ホットキーの登録に失敗しました: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "フローティングウィンドウを開けませんでした: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "メニューを開けませんでした: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "フローティングウィンドウを再び開けませんでした: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "設定ウィンドウはまだ準備できていません。"
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "ボタンによるスニップはまだ Slint ポートに実装されていません — Win+LMouse でドラッグしてください。"
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "クリップボードへのコピーに失敗しました: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "テキストのクリップボードへのコピーに失敗しました: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "画面のキャプチャに失敗しました: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "画面のフリーズに失敗しました: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "画像の保存に失敗しました: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "保存に失敗しました: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "領域の切り抜きに失敗しました: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "翻訳ウィンドウを開けませんでした: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "エディターを開けませんでした: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "アップロードの開始に失敗しました: {e}"
+
+msgid "Share failed: {e}"
+msgstr "共有に失敗しました: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "画像をアップロードしました。\r\nリンクをクリップボードにコピーしました:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "画像をアップロードしました:\r\n{url}\r\n\r\n（リンクをクリップボードにコピーできませんでした。）"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — アップロード"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "アップロードに失敗しました:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Imgur Client-ID が設定されていません — アップロードできません。\r\n\r\n1) 無料の Client-ID を取得してください:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) 次のファイルに追加してください:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Snipdeck を再起動してください。"
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Imgur Client-ID が必要です"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "この画像はインターネット上の「Imgur」（匿名）にアップロードされます。\r\n\r\n• Imgur のホームページ／ギャラリーには表示されません（非公開、非掲載）。\r\n• ただし、生成されたリンクを持っている人は誰でも画像を開くことができます。\r\n• 画像は暗号化されていません。\r\n• ID、パスワード、プライベートメッセージなどの機密コンテンツはアップロードしないでください。\r\n\r\n成功するとリンクがクリップボードにコピーされます。\r\n\r\nアップロードしますか？"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "この画像はインターネット上の「catbox.moe」にアップロードされます。\r\n\r\n• 公開ギャラリー／検索には表示されません（非掲載）。\r\n• ただし、生成されたリンクを持っている人は誰でも画像を開くことができます。\r\n• 匿名でアップロードされるため、後でご自身で削除することはできません。\r\n• 画像は暗号化されていません。\r\n• ID、パスワード、プライベートメッセージなどの機密コンテンツはアップロードしないでください。\r\n\r\n成功するとリンクがクリップボードにコピーされます。\r\n\r\nアップロードしますか？"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — インターネットへアップロード"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "画像をクリップボードにコピーしました。\r\n開いているメールに Ctrl+V で貼り付けてください。"
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "メールが開きましたが、画像をクリップボードにコピーできませんでした。\r\nスニップを再度コピーして Ctrl+V で貼り付けてください。"
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — メールに添付"
+
+msgid "Language"
+msgstr "言語"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "注釈"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Opacity"
+msgstr "不透明度"
+
+msgid "draw"
+msgstr "描く"

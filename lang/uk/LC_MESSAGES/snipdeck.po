@@ -1,0 +1,454 @@
+# Snipdeck — Ukrainian (uk) translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uk\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "Новий"
+
+msgid "Snip + Clip"
+msgstr "Знімок + Буфер"
+
+msgid "Clip only"
+msgstr "Лише буфер"
+
+msgid "Close"
+msgstr "Закрити"
+
+msgid "Reset"
+msgstr "Скинути"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "Новий знімок — виділіть область за допомогою Win + ліва кнопка миші"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "Зробити знімок і скопіювати до буфера обміну"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "Копіювати лише до буфера (без збереження у галерею)"
+
+msgid "Hide on-screen snips"
+msgstr "Сховати знімки на екрані"
+
+msgid "Show snips on screen"
+msgstr "Показати знімки на екрані"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "Показати / сховати плаваючі знімки на панелі завдань"
+
+msgid "Clear unpinned snips"
+msgstr "Видалити незакріплені знімки"
+
+msgid "Clear all snips"
+msgstr "Видалити всі знімки"
+
+msgid "Toggle light / dark theme"
+msgstr "Перемкнути світлу / темну тему"
+
+msgid "Settings"
+msgstr "Налаштування"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "Статус"
+
+msgid "Content"
+msgstr "Вміст"
+
+msgid "Size"
+msgstr "Розмір"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Sort"
+msgstr "Сортування"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "Фільтр за статусом — Всі → Закріплені → Незакріплені → На екрані → Приховані"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "Фільтр за вмістом — Є/Немає OCR · Є/Немає вікна · З тегом"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "Фільтр за розміром — Малий / Середній / Великий / Широкий / Високий / Квадратний"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "Фільтр за датою — Сьогодні / 24 години / 7 днів / 30 днів"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "Сортувати — Новіші / Старіші / Закріплені / Розмір / Ширина / Висота / Монітор"
+
+msgid "Reset all filters and search"
+msgstr "Скинути всі фільтри та пошук"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "Закріплені"
+
+msgid "Unpinned"
+msgstr "Незакріплені"
+
+msgid "On screen"
+msgstr "На екрані"
+
+msgid "Hidden"
+msgstr "Приховані"
+
+msgid "All"
+msgstr "Всі"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "Є OCR"
+
+msgid "No OCR"
+msgstr "Немає OCR"
+
+msgid "Has window"
+msgstr "Є вікно"
+
+msgid "No window"
+msgstr "Немає вікна"
+
+msgid "Tagged"
+msgstr "З тегом"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "Малий"
+
+msgid "Medium"
+msgstr "Середній"
+
+msgid "Large"
+msgstr "Великий"
+
+msgid "Wide"
+msgstr "Широкий"
+
+msgid "Tall"
+msgstr "Високий"
+
+msgid "Square"
+msgstr "Квадратний"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "Сьогодні"
+
+msgid "24 hours"
+msgstr "24 години"
+
+msgid "7 days"
+msgstr "7 днів"
+
+msgid "30 days"
+msgstr "30 днів"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "Старіші"
+
+msgid "Largest"
+msgstr "Найбільші"
+
+msgid "Smallest"
+msgstr "Найменші"
+
+msgid "Width"
+msgstr "Ширина"
+
+msgid "Height"
+msgstr "Висота"
+
+msgid "Monitor"
+msgstr "Монітор"
+
+msgid "Newest"
+msgstr "Новіші"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "текст / OCR / вікно / монітор / шлях"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "Знімків ще немає"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Виділіть область на екрані за допомогою Win + ліва кнопка миші."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, інформація про вікна та фільтри індексуються у фоновому режимі."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "закріплено"
+
+msgid "on screen"
+msgstr "на екрані"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "Всього {}"
+
+msgid "Pinned {}"
+msgstr "Закріплено {}"
+
+msgid "On screen {}"
+msgstr "На екрані {}"
+
+msgid "Filtered {}"
+msgstr "Відфільтровано {}"
+
+msgid "Ctrl+F search"
+msgstr "Пошук Ctrl+F"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "Копіювати"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + Буфер"
+
+msgid "OCR + Translate"
+msgstr "OCR + Переклад"
+
+msgid "translate"
+msgstr "перекласти"
+
+msgid "Share"
+msgstr "Поділитись"
+
+msgid "Transform"
+msgstr "Перетворити"
+
+msgid "Crop"
+msgstr "Обрізати"
+
+msgid "drag inward"
+msgstr "тягнути всередину"
+
+msgid "Resize"
+msgstr "Змінити розмір"
+
+msgid "handles"
+msgstr "маркери"
+
+msgid "Hide from screen"
+msgstr "Сховати з екрана"
+
+msgid "hide"
+msgstr "сховати"
+
+msgid "Delete"
+msgstr "Видалити"
+
+msgid "remove"
+msgstr "вилучити"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "Переклад"
+
+msgid "Target language"
+msgstr "Мова перекладу"
+
+msgid "More ▾"
+msgstr "Більше ▾"
+
+msgid "Source (OCR)"
+msgstr "Джерело (OCR)"
+
+msgid "copy"
+msgstr "копіювати"
+
+msgid "Translation"
+msgstr "Переклад"
+
+msgid "translating…"
+msgstr "перекладається…"
+
+msgid "Copy translation"
+msgstr "Копіювати переклад"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "Січ"
+
+msgid "Feb"
+msgstr "Лют"
+
+msgid "Mar"
+msgstr "Бер"
+
+msgid "Apr"
+msgstr "Квіт"
+
+msgid "May"
+msgstr "Трав"
+
+msgid "Jun"
+msgstr "Черв"
+
+msgid "Jul"
+msgstr "Лип"
+
+msgid "Aug"
+msgstr "Серп"
+
+msgid "Sep"
+msgstr "Вер"
+
+msgid "Oct"
+msgstr "Жовт"
+
+msgid "Nov"
+msgstr "Лист"
+
+msgid "Dec"
+msgstr "Груд"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Монітор"
+
+msgid "window"
+msgstr "вікно"
+
+msgid "OCR text indexed"
+msgstr "Текст OCR проіндексовано"
+
+msgid "Window info indexed"
+msgstr "Інформацію про вікно проіндексовано"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Показати Snipdeck"
+
+msgid "New Snip"
+msgstr "Новий знімок"
+
+msgid "Launch at Login"
+msgstr "Запускати при вході"
+
+msgid "Exit"
+msgstr "Вийти"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "Не вдалося зареєструвати гарячі клавіші: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "Не вдалося відкрити плаваюче вікно: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "Не вдалося відкрити меню: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "Не вдалося повторно відкрити плаваюче вікно: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "Вікно налаштувань ще не готове."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "Знімок кнопкою ще не реалізовано у порті Slint — перетягніть за допомогою Win+LMouse."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "Не вдалося скопіювати до буфера: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "Не вдалося скопіювати текст до буфера: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "Не вдалося захопити екран: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "Не вдалося заморозити екран: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "Не вдалося зберегти зображення: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "Не вдалося зберегти: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "Не вдалося обрізати область: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "Не вдалося відкрити вікно перекладу: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "Не вдалося відкрити редактор: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "Не вдалося розпочати завантаження: {e}"
+
+msgid "Share failed: {e}"
+msgstr "Помилка поширення: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "Зображення завантажено.\r\nПосилання скопійовано до буфера:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "Зображення завантажено:\r\n{url}\r\n\r\n(Не вдалося скопіювати посилання до буфера.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — Завантаження"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "Помилка завантаження:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Imgur Client-ID не налаштовано — завантаження неможливе.\r\n\r\n1) Отримайте безкоштовний Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Додайте його до цього файлу:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Перезапустіть Snipdeck."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — необхідний Imgur Client-ID"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Це зображення буде завантажено до ІНТЕРНЕТУ — \"Imgur\" (анонімно).\r\n\r\n• Воно НЕ з'явиться на головній сторінці / у галереї Imgur (приховане, без лістингу).\r\n• Але будь-хто, хто має посилання, зможе відкрити зображення.\r\n• Зображення не зашифровано.\r\n• НЕ завантажуйте КОНФІДЕНЦІЙНИЙ вміст: документи, паролі або особисті повідомлення.\r\n\r\nУ разі успіху посилання буде скопійовано до буфера обміну.\r\n\r\nЗавантажити?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Це зображення буде завантажено до ІНТЕРНЕТУ — \"catbox.moe\".\r\n\r\n• Воно НЕ з'явиться в жодній публічній галереї / пошуку (без лістингу).\r\n• Але будь-хто, хто має посилання, зможе відкрити зображення.\r\n• Оскільки завантаження анонімне, ВИ НЕ ЗМОЖЕТЕ ВИДАЛИТИ ЙОГО самостійно пізніше.\r\n• Зображення не зашифровано.\r\n• НЕ завантажуйте КОНФІДЕНЦІЙНИЙ вміст: документи, паролі або особисті повідомлення.\r\n\r\nУ разі успіху посилання буде скопійовано до буфера обміну.\r\n\r\nЗавантажити?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — Завантаження до інтернету"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "Зображення скопійовано до буфера обміну.\r\nВставте його у відкритий лист за допомогою Ctrl+V."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "Лист відкрито, але зображення не вдалося скопіювати до буфера обміну.\r\nСкопіюйте знімок ще раз і вставте його за допомогою Ctrl+V."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — Додати до листа"
+
+msgid "Language"
+msgstr "Мова"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "Анотувати"
+
+msgid "Cancel"
+msgstr "Скасувати"
+
+msgid "Save"
+msgstr "Зберегти"
+
+msgid "Opacity"
+msgstr "Непрозорість"
+
+msgid "draw"
+msgstr "малювати"

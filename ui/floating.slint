@@ -1,0 +1,386 @@
+// Re-usable resize handle for floating snip corners/edges.
+// Reports cumulative (dx, dy) since press point — Rust applies geometry
+// changes, the on-screen handle then moves with the window, so the
+// reported delta naturally returns to ~0 between mouse movements (same
+// trick the drag-area uses for window moves).
+component ResizeHandle inherits TouchArea {
+    in property <int> side: 0;
+    in property <bool> handles-visible: true;
+    in property <length> handle-size: 14px;
+    callback delta(int, length, length);
+    callback started();
+    callback ended();
+
+    width: handle-size;
+    height: handle-size;
+    visible: handles-visible;
+
+    property <length> last-x: 0px;
+    property <length> last-y: 0px;
+    property <bool> dragging: false;
+
+    pointer-event(ev) => {
+        if (ev.kind == PointerEventKind.down && ev.button == PointerEventButton.left) {
+            self.last-x = self.mouse-x;
+            self.last-y = self.mouse-y;
+            self.dragging = true;
+            root.started();
+        }
+        if (ev.kind == PointerEventKind.up && ev.button == PointerEventButton.left && self.dragging) {
+            self.dragging = false;
+            root.ended();
+        }
+    }
+    moved => {
+        if (self.dragging) {
+            root.delta(self.side, self.mouse-x - self.last-x, self.mouse-y - self.last-y);
+        }
+    }
+}
+
+export component FloatingWindow inherits Window {
+    // The title is invisible (no-frame) but used by window_tamer to
+    // identify our floating snips and apply WDA_EXCLUDEFROMCAPTURE —
+    // that way re-capturing the screen behind a resize handle doesn't
+    // include the snip's own border in the new image.
+    title: "SnipdeckFloating";
+    no-frame: true;
+    always-on-top: true;
+    background: transparent;
+
+    in property <image> snip-image;
+    in property <length> outer-w: 100px;
+    in property <length> outer-h: 100px;
+    // Border thickness in logical pixels; Rust sets this to 3/scale_factor
+    // so the on-screen border is exactly 3 physical pixels and the inner
+    // image area is exactly the captured-snip pixel size.
+    in property <length> border-len: 3px;
+    // True only while this snip is the user-selected one. Default false so
+    // an un-interacted snip keeps its normal (brand) border.
+    in-out property <bool> selected: false;
+    in property <bool> pinned: false;
+    // Normal border colour (the brand orange) and the distinct colour used
+    // only while this snip is selected.
+    in property <color> border-active: #ff8a3d;
+    in property <color> border-selected: #2ad4ff;
+    // Resize handles are only shown while the snip is at its original
+    // captured position — once the user drags the window, Rust flips
+    // this to false (the snip has been re-purposed as a floating note).
+    in-out property <bool> show-handles: true;
+    // True while a resize-handle drag is in progress. We clear the
+    // inner image during the gesture so the user sees the *live* screen
+    // through the window — otherwise they'd just watch the old snip
+    // stretch, which doesn't preview the new capture area.
+    in-out property <bool> resizing: false;
+    // Crop mode: the resize handles drag inward only, the source-clip
+    // preview shows the kept sub-region, and Rust commits the real pixel
+    // crop on release.
+    in-out property <bool> cropping: false;
+    // Source-clip sub-rectangle (in image pixels) shown while cropping.
+    // 0 width/height means "no clip" → the full image (the non-crop case).
+    in-out property <int> clip-x: 0;
+    in-out property <int> clip-y: 0;
+    in-out property <int> clip-w: 0;
+    in-out property <int> clip-h: 0;
+    // Full image pixel size + the window's screen anchor captured when crop
+    // mode starts, so Rust can derive live window geometry from the clip rect.
+    in-out property <int> img-w: 0;
+    in-out property <int> img-h: 0;
+    in-out property <int> crop-anchor-x: 0;
+    in-out property <int> crop-anchor-y: 0;
+
+    width: outer-w;
+    height: outer-h;
+
+    // Pointer-delta drag: Slint reports `mouse-x/y` in local logical
+    // coords; we forward deltas, and Rust applies them to the OS window
+    // position.  This avoids needing raw HWND access for moves.
+    callback drag-delta(length, length);
+    callback right-pressed(length, length);
+    callback middle-pressed();
+    // Fired on any pointer press over the snip so Rust can mark this one
+    // as the selected snip (and highlight its border accordingly).
+    callback pressed();
+    // Resize: side index 0=NW, 1=N, 2=NE, 3=E, 4=SE, 5=S, 6=SW, 7=W.
+    callback resize-delta(int, length, length);
+    callback resize-end();
+
+    // Handle indicator size scales down on tiny snips so the dots
+    // don't eat the entire border. Capped at 10 px, never more than
+    // a quarter of the smaller dimension.
+    property <length> handle-size: min(10px, min(outer-w, outer-h) / 5);
+    property <length> half-handle: handle-size / 2;
+    // Bright colour for the handle dots — placed on top of the layered
+    // border so it's visible against any background.
+    property <color> handle-tint: #ffb066;
+    // The two contrast bands of the layered border. Outer = white so
+    // the snip stands out on dark backgrounds, inner = dark so it
+    // stands out on light backgrounds, middle = the brand colour.
+    property <color> ring-outer: #111111;
+    property <color> ring-inner: #ffffff;
+
+    Rectangle {
+        width: root.width;
+        height: root.height;
+        background: transparent;
+
+        // Inner content. image-fit: fill makes it zoom/stretch to fill
+        // the inner area, so resize handles end up acting as a free-form
+        // zoom — no re-capture, just visual scaling of the existing snip.
+        Rectangle {
+            x: border-len;
+            y: border-len;
+            width: parent.width - border-len * 2;
+            height: parent.height - border-len * 2;
+            background: white;
+            // Normal view: NO source-clip, so the full image renders. We must
+            // not use source-clip-width/height: 0 as a "no clip" sentinel —
+            // Slint's software renderer treats a 0-size clip as a real
+            // zero-area source rect and computes `(max_y - 1)` which underflows
+            // usize, panicking with an out-of-range slice index on the very
+            // first frame. Omitting the clip bindings entirely is the only safe
+            // "full image" state.
+            if !root.cropping : Image {
+                source: snip-image;
+                width: parent.width;
+                height: parent.height;
+                image-fit: fill;
+            }
+            // Crop preview: show only the kept sub-region (1:1 with the
+            // shrinking window). clip-w/h stay ≥ 16 the whole gesture (seeded
+            // to the full image, clamped by crop_delta), so no underflow.
+            if root.cropping : Image {
+                source: snip-image;
+                width: parent.width;
+                height: parent.height;
+                image-fit: fill;
+                source-clip-x: root.clip-x;
+                source-clip-y: root.clip-y;
+                source-clip-width: root.clip-w;
+                source-clip-height: root.clip-h;
+            }
+        }
+
+        // Layered border ring: 3 nested 1/3-thickness stroked
+        // rectangles (white → brand colour → dark). The sandwich
+        // stays visible on any background — a single colour would
+        // disappear against similar-coloured screen content.
+        property <color> ring-color: cropping ? #46d17a : (selected ? border-selected : border-active);
+        property <length> band-len: border-len / 3;
+        Rectangle {
+            x: 0; y: 0;
+            width: parent.width; height: parent.height;
+            background: transparent;
+            border-width: band-len;
+            border-color: ring-outer;
+        }
+        Rectangle {
+            x: band-len; y: band-len;
+            width: parent.width - band-len * 2;
+            height: parent.height - band-len * 2;
+            background: transparent;
+            border-width: band-len;
+            border-color: ring-color;
+        }
+        Rectangle {
+            x: band-len * 2; y: band-len * 2;
+            width: parent.width - band-len * 4;
+            height: parent.height - band-len * 4;
+            background: transparent;
+            border-width: band-len;
+            border-color: ring-inner;
+        }
+
+        // Handle indicators painted ON TOP of the border ring. They
+        // re-colour 8 small segments of the existing border so the
+        // user sees exactly where the resize grab points are. These
+        // are pure visuals — the TouchAreas below own the input.
+        // 4 corners (each an L of two strips):
+        if show-handles : Rectangle {
+            x: 0; y: 0;
+            width: handle-size; height: border-len;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: 0; y: 0;
+            width: border-len; height: handle-size;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: parent.width - handle-size; y: 0;
+            width: handle-size; height: border-len;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: parent.width - border-len; y: 0;
+            width: border-len; height: handle-size;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: parent.width - handle-size; y: parent.height - border-len;
+            width: handle-size; height: border-len;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: parent.width - border-len; y: parent.height - handle-size;
+            width: border-len; height: handle-size;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: 0; y: parent.height - border-len;
+            width: handle-size; height: border-len;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: 0; y: parent.height - handle-size;
+            width: border-len; height: handle-size;
+            background: handle-tint;
+        }
+        // 4 edge midpoints:
+        if show-handles : Rectangle {
+            x: parent.width / 2 - handle-size / 2; y: 0;
+            width: handle-size; height: border-len;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: parent.width - border-len; y: parent.height / 2 - handle-size / 2;
+            width: border-len; height: handle-size;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: parent.width / 2 - handle-size / 2; y: parent.height - border-len;
+            width: handle-size; height: border-len;
+            background: handle-tint;
+        }
+        if show-handles : Rectangle {
+            x: 0; y: parent.height / 2 - handle-size / 2;
+            width: border-len; height: handle-size;
+            background: handle-tint;
+        }
+
+        if pinned : Rectangle {
+            x: parent.width - 12px;
+            y: 0px;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            border-width: 2px;
+            border-color: #ffc832;
+            background: #2b1f00;
+        }
+
+        touch := TouchArea {
+            mouse-cursor: move;
+            property <length> last-x: 0px;
+            property <length> last-y: 0px;
+            property <bool> dragging: false;
+
+            pointer-event(ev) => {
+                if (ev.kind == PointerEventKind.down) {
+                    root.pressed();
+                    if (ev.button == PointerEventButton.left) {
+                        touch.last-x = touch.mouse-x;
+                        touch.last-y = touch.mouse-y;
+                        touch.dragging = true;
+                    } else if (ev.button == PointerEventButton.right) {
+                        root.right-pressed(touch.mouse-x, touch.mouse-y);
+                    } else if (ev.button == PointerEventButton.middle) {
+                        root.middle-pressed();
+                    }
+                }
+                if (ev.kind == PointerEventKind.up && ev.button == PointerEventButton.left) {
+                    touch.dragging = false;
+                }
+            }
+            moved => {
+                if (touch.dragging) {
+                    root.drag-delta(touch.mouse-x - touch.last-x, touch.mouse-y - touch.last-y);
+                }
+            }
+        }
+
+        // Resize handle TouchAreas — declared AFTER `touch` so they
+        // sit on top in z-order and claim pointer events within their
+        // small bounds. The drag TouchArea still catches the rest.
+        ResizeHandle {
+            side: 0;
+            handles-visible: show-handles;
+            x: -half-handle;
+            y: -half-handle;
+            mouse-cursor: nwse-resize;
+            delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
+            started => { root.pressed(); root.resizing = true; }
+            ended => { root.resizing = false; root.resize-end(); }
+        }
+        ResizeHandle {
+            side: 1;
+            handles-visible: show-handles;
+            x: parent.width / 2 - half-handle;
+            y: -half-handle;
+            mouse-cursor: ns-resize;
+            delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
+            started => { root.pressed(); root.resizing = true; }
+            ended => { root.resizing = false; root.resize-end(); }
+        }
+        ResizeHandle {
+            side: 2;
+            handles-visible: show-handles;
+            x: parent.width - half-handle;
+            y: -half-handle;
+            mouse-cursor: nesw-resize;
+            delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
+            started => { root.pressed(); root.resizing = true; }
+            ended => { root.resizing = false; root.resize-end(); }
+        }
+        ResizeHandle {
+            side: 3;
+            handles-visible: show-handles;
+            x: parent.width - half-handle;
+            y: parent.height / 2 - half-handle;
+            mouse-cursor: ew-resize;
+            delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
+            started => { root.pressed(); root.resizing = true; }
+            ended => { root.resizing = false; root.resize-end(); }
+        }
+        ResizeHandle {
+            side: 4;
+            handles-visible: show-handles;
+            x: parent.width - half-handle;
+            y: parent.height - half-handle;
+            mouse-cursor: nwse-resize;
+            delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
+            started => { root.pressed(); root.resizing = true; }
+            ended => { root.resizing = false; root.resize-end(); }
+        }
+        ResizeHandle {
+            side: 5;
+            handles-visible: show-handles;
+            x: parent.width / 2 - half-handle;
+            y: parent.height - half-handle;
+            mouse-cursor: ns-resize;
+            delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
+            started => { root.pressed(); root.resizing = true; }
+            ended => { root.resizing = false; root.resize-end(); }
+        }
+        ResizeHandle {
+            side: 6;
+            handles-visible: show-handles;
+            x: -half-handle;
+            y: parent.height - half-handle;
+            mouse-cursor: nesw-resize;
+            delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
+            started => { root.pressed(); root.resizing = true; }
+            ended => { root.resizing = false; root.resize-end(); }
+        }
+        ResizeHandle {
+            side: 7;
+            handles-visible: show-handles;
+            x: -half-handle;
+            y: parent.height / 2 - half-handle;
+            mouse-cursor: ew-resize;
+            delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
+            started => { root.pressed(); root.resizing = true; }
+            ended => { root.resizing = false; root.resize-end(); }
+        }
+    }
+}

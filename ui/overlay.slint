@@ -1,0 +1,145 @@
+// Cross-platform snip-selector overlay.
+//
+// Sized & positioned by Rust to cover one monitor's screen rect. Sits
+// always-on-top, borderless, transparent. Draws a dim mask outside the
+// current selection rectangle plus a coloured border on the selection
+// itself, with a tiny W×H readout floating near the corner.
+//
+// NOT a hard replacement for `overlay.rs` (the Win32 layered window) —
+// kept alongside it so each platform can pick whichever it likes.
+export component OverlayWindow inherits Window {
+    title: "SnipdeckOverlay";
+    no-frame: true;
+    always-on-top: true;
+    background: transparent;
+
+    // Window outer size in logical pixels (Rust converts physical → logical
+    // using the OS scale factor before pushing values in).
+    in property <length> outer-w: 1920px;
+    in property <length> outer-h: 1080px;
+
+    // Frozen-screen backdrop (Win+Shift+Space "freeze first" mode): when
+    // `frozen` is true the overlay shows `frozen-bg` — the snapshot taken the
+    // instant Space was pressed — so selection happens on a still image and
+    // hover tooltips stay captured. In live mode this stays transparent.
+    in property <bool> frozen: false;
+    in property <image> frozen-bg;
+
+    // Selection rect in window-local logical pixels.
+    in property <length> sel-x: 0px;
+    in property <length> sel-y: 0px;
+    in property <length> sel-w: 0px;
+    in property <length> sel-h: 0px;
+    in property <bool> selecting: false;
+    in property <color> border-color: #ff8a3d;
+    in property <color> dim-color: #00000060;
+
+    width: outer-w;
+    height: outer-h;
+
+    // Frozen snapshot behind everything (only in "freeze first" mode).
+    if frozen : Image {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        source: frozen-bg;
+        image-fit: fill;
+    }
+
+    // Before a selection is drawn, dim the WHOLE frozen screen (like the
+    // Win+Shift+S overlay) so it's obvious the screen is frozen and waiting.
+    if frozen && !selecting : Rectangle {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        background: dim-color;
+    }
+
+    // Four dim panels around the selection (instead of one big mask) so
+    // the captured rect stays fully transparent — this also avoids any
+    // colour bleed under the selection when the renderer composes alpha.
+    Rectangle {
+        x: 0px; y: 0px;
+        width: parent.width;
+        height: max(0px, sel-y);
+        background: dim-color;
+        visible: selecting;
+    }
+    Rectangle {
+        x: 0px;
+        y: sel-y + sel-h;
+        width: parent.width;
+        height: max(0px, parent.height - sel-y - sel-h);
+        background: dim-color;
+        visible: selecting;
+    }
+    Rectangle {
+        x: 0px;
+        y: max(0px, sel-y);
+        width: max(0px, sel-x);
+        height: max(0px, sel-h);
+        background: dim-color;
+        visible: selecting;
+    }
+    Rectangle {
+        x: sel-x + sel-w;
+        y: max(0px, sel-y);
+        width: max(0px, parent.width - sel-x - sel-w);
+        height: max(0px, sel-h);
+        background: dim-color;
+        visible: selecting;
+    }
+
+    // Selection border + inner white outline for contrast on any wallpaper.
+    Rectangle {
+        x: sel-x - 1px;
+        y: sel-y - 1px;
+        width: sel-w + 2px;
+        height: sel-h + 2px;
+        background: transparent;
+        border-color: border-color;
+        border-width: 1px;
+        visible: selecting && sel-w > 0px && sel-h > 0px;
+    }
+    Rectangle {
+        x: sel-x;
+        y: sel-y;
+        width: sel-w;
+        height: sel-h;
+        background: transparent;
+        border-color: white;
+        border-width: 1px;
+        visible: selecting && sel-w > 0px && sel-h > 0px;
+    }
+    Rectangle {
+        x: sel-x + 1px;
+        y: sel-y + 1px;
+        width: sel-w - 2px;
+        height: sel-h - 2px;
+        background: transparent;
+        border-color: border-color;
+        border-width: 1px;
+        visible: selecting && sel-w > 2px && sel-h > 2px;
+    }
+
+    // W × H readout — anchored at the bottom-right of the selection.
+    if selecting && sel-w > 0px && sel-h > 0px : Rectangle {
+        x: min(parent.width - 88px, sel-x + sel-w + 6px);
+        y: min(parent.height - 24px, sel-y + sel-h + 6px);
+        width: 80px;
+        height: 22px;
+        background: #000c;
+        border-radius: 4px;
+        Text {
+            text: round(sel-w / 1px) + " × " + round(sel-h / 1px);
+            color: white;
+            font-size: 12px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+    }
+}

@@ -1,0 +1,454 @@
+# Snipdeck — Bengali (bn) translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: bn\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "নতুন"
+
+msgid "Snip + Clip"
+msgstr "স্নিপ + ক্লিপ"
+
+msgid "Clip only"
+msgstr "শুধু ক্লিপ"
+
+msgid "Close"
+msgstr "বন্ধ"
+
+msgid "Reset"
+msgstr "রিসেট"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "নতুন স্নিপ নিন — Win + বাম ক্লিক দিয়ে একটি এলাকা টেনে নির্বাচন করুন"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "একটি স্নিপ নিন এবং ক্লিপবোর্ডে কপি করুন"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "শুধুমাত্র ক্লিপবোর্ডে কপি করুন (গ্যালারিতে সংরক্ষণ ছাড়াই)"
+
+msgid "Hide on-screen snips"
+msgstr "স্ক্রিনের স্নিপগুলো লুকান"
+
+msgid "Show snips on screen"
+msgstr "স্ক্রিনে স্নিপগুলো দেখান"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "টাস্কবারে ভাসমান স্নিপগুলো দেখান / লুকান"
+
+msgid "Clear unpinned snips"
+msgstr "আনপিন করা স্নিপগুলো মুছুন"
+
+msgid "Clear all snips"
+msgstr "সব স্নিপ মুছুন"
+
+msgid "Toggle light / dark theme"
+msgstr "হালকা / গাঢ় থিম পরিবর্তন করুন"
+
+msgid "Settings"
+msgstr "সেটিংস"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "অবস্থা"
+
+msgid "Content"
+msgstr "বিষয়বস্তু"
+
+msgid "Size"
+msgstr "আকার"
+
+msgid "Date"
+msgstr "তারিখ"
+
+msgid "Sort"
+msgstr "সাজান"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "অবস্থা অনুযায়ী ফিল্টার করুন — সব → পিন করা → আনপিন করা → স্ক্রিনে → লুকানো"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "বিষয়বস্তু অনুযায়ী ফিল্টার করুন — OCR আছে/নেই · উইন্ডো আছে/নেই · ট্যাগ করা"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "আকার অনুযায়ী ফিল্টার করুন — ছোট / মাঝারি / বড় / চওড়া / লম্বা / বর্গাকার"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "তারিখ অনুযায়ী ফিল্টার করুন — আজ / ২৪ ঘণ্টা / ৭ দিন / ৩০ দিন"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "এভাবে সাজান — নতুন / পুরনো / পিন করা / আকার / প্রস্থ / উচ্চতা / মনিটর"
+
+msgid "Reset all filters and search"
+msgstr "সব ফিল্টার ও অনুসন্ধান রিসেট করুন"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "পিন করা"
+
+msgid "Unpinned"
+msgstr "আনপিন করা"
+
+msgid "On screen"
+msgstr "স্ক্রিনে"
+
+msgid "Hidden"
+msgstr "লুকানো"
+
+msgid "All"
+msgstr "সব"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "OCR আছে"
+
+msgid "No OCR"
+msgstr "OCR নেই"
+
+msgid "Has window"
+msgstr "উইন্ডো আছে"
+
+msgid "No window"
+msgstr "উইন্ডো নেই"
+
+msgid "Tagged"
+msgstr "ট্যাগ করা"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "ছোট"
+
+msgid "Medium"
+msgstr "মাঝারি"
+
+msgid "Large"
+msgstr "বড়"
+
+msgid "Wide"
+msgstr "চওড়া"
+
+msgid "Tall"
+msgstr "লম্বা"
+
+msgid "Square"
+msgstr "বর্গাকার"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "আজ"
+
+msgid "24 hours"
+msgstr "২৪ ঘণ্টা"
+
+msgid "7 days"
+msgstr "৭ দিন"
+
+msgid "30 days"
+msgstr "৩০ দিন"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "পুরনো"
+
+msgid "Largest"
+msgstr "সবচেয়ে বড়"
+
+msgid "Smallest"
+msgstr "সবচেয়ে ছোট"
+
+msgid "Width"
+msgstr "প্রস্থ"
+
+msgid "Height"
+msgstr "উচ্চতা"
+
+msgid "Monitor"
+msgstr "মনিটর"
+
+msgid "Newest"
+msgstr "নতুন"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "টেক্সট / OCR / উইন্ডো / মনিটর / পথ"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "এখনো কোনো স্নিপ সংগ্রহ করা হয়নি"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Win + বাম মাউস দিয়ে স্ক্রিন থেকে একটি এলাকা ক্যাপচার করুন।"
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, উইন্ডো তথ্য, এবং ফিল্টারগুলো পটভূমিতে সূচীবদ্ধ হচ্ছে।"
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "পিন করা"
+
+msgid "on screen"
+msgstr "স্ক্রিনে"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "মোট {}"
+
+msgid "Pinned {}"
+msgstr "পিন করা {}"
+
+msgid "On screen {}"
+msgstr "স্ক্রিনে {}"
+
+msgid "Filtered {}"
+msgstr "ফিল্টার করা {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F অনুসন্ধান"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "কপি"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + ক্লিপবোর্ড"
+
+msgid "OCR + Translate"
+msgstr "OCR + অনুবাদ"
+
+msgid "translate"
+msgstr "অনুবাদ"
+
+msgid "Share"
+msgstr "শেয়ার"
+
+msgid "Transform"
+msgstr "রূপান্তর"
+
+msgid "Crop"
+msgstr "ক্রপ"
+
+msgid "drag inward"
+msgstr "ভেতরে টানুন"
+
+msgid "Resize"
+msgstr "আকার পরিবর্তন"
+
+msgid "handles"
+msgstr "হ্যান্ডেল"
+
+msgid "Hide from screen"
+msgstr "স্ক্রিন থেকে লুকান"
+
+msgid "hide"
+msgstr "লুকান"
+
+msgid "Delete"
+msgstr "মুছুন"
+
+msgid "remove"
+msgstr "সরান"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "অনুবাদ করুন"
+
+msgid "Target language"
+msgstr "লক্ষ্য ভাষা"
+
+msgid "More ▾"
+msgstr "আরো ▾"
+
+msgid "Source (OCR)"
+msgstr "উৎস (OCR)"
+
+msgid "copy"
+msgstr "কপি"
+
+msgid "Translation"
+msgstr "অনুবাদ"
+
+msgid "translating…"
+msgstr "অনুবাদ হচ্ছে…"
+
+msgid "Copy translation"
+msgstr "অনুবাদ কপি করুন"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "জান"
+
+msgid "Feb"
+msgstr "ফেব"
+
+msgid "Mar"
+msgstr "মার"
+
+msgid "Apr"
+msgstr "এপ্র"
+
+msgid "May"
+msgstr "মে"
+
+msgid "Jun"
+msgstr "জুন"
+
+msgid "Jul"
+msgstr "জুল"
+
+msgid "Aug"
+msgstr "আগ"
+
+msgid "Sep"
+msgstr "সেপ"
+
+msgid "Oct"
+msgstr "অক্ট"
+
+msgid "Nov"
+msgstr "নভ"
+
+msgid "Dec"
+msgstr "ডিস"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "মনিটর"
+
+msgid "window"
+msgstr "উইন্ডো"
+
+msgid "OCR text indexed"
+msgstr "OCR টেক্সট সূচীবদ্ধ"
+
+msgid "Window info indexed"
+msgstr "উইন্ডো তথ্য সূচীবদ্ধ"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Snipdeck দেখান"
+
+msgid "New Snip"
+msgstr "নতুন স্নিপ"
+
+msgid "Launch at Login"
+msgstr "লগইনে চালু করুন"
+
+msgid "Exit"
+msgstr "প্রস্থান"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "হটকি নিবন্ধন করতে ব্যর্থ: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "ভাসমান উইন্ডো খুলতে ব্যর্থ: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "মেনু খুলতে ব্যর্থ: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "ভাসমান উইন্ডো পুনরায় খুলতে ব্যর্থ: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "সেটিংস উইন্ডো এখনো প্রস্তুত নয়।"
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "বাটন-চালিত স্নিপ Slint পোর্টে এখনো সংযুক্ত নয় — Win+LMouse দিয়ে টেনে নির্বাচন করুন।"
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "ক্লিপবোর্ডে কপি করতে ব্যর্থ: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "ক্লিপবোর্ডে টেক্সট কপি করতে ব্যর্থ: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "স্ক্রিন ক্যাপচার করতে ব্যর্থ: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "স্ক্রিন ফ্রিজ করতে ব্যর্থ: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "ছবি সংরক্ষণ করতে ব্যর্থ: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "সংরক্ষণ করতে ব্যর্থ: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "এলাকা ক্রপ করতে ব্যর্থ: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "অনুবাদ উইন্ডো খুলতে ব্যর্থ: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "এডিটর খুলতে ব্যর্থ: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "আপলোড শুরু করতে ব্যর্থ: {e}"
+
+msgid "Share failed: {e}"
+msgstr "শেয়ার করতে ব্যর্থ: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "ছবি আপলোড হয়েছে।\r\nলিঙ্ক ক্লিপবোর্ডে কপি করা হয়েছে:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "ছবি আপলোড হয়েছে:\r\n{url}\r\n\r\n(ক্লিপবোর্ডে লিঙ্ক কপি করা সম্ভব হয়নি।)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — আপলোড"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "আপলোড ব্যর্থ হয়েছে:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "কোনো Imgur Client-ID কনফিগার করা নেই — আপলোড করা যাবে না।\r\n\r\n১) বিনামূল্যে Client-ID নিন:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n২) এই ফাইলে যুক্ত করুন:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n৩) Snipdeck পুনরায় চালু করুন।"
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Imgur Client-ID প্রয়োজন"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "এই ছবিটি ইন্টারনেটে আপলোড হবে — \"Imgur\" (বেনামে)।\r\n\r\n• এটি Imgur হোম পেজ / গ্যালারিতে দেখাবে না (লুকানো, তালিকাভুক্ত নয়)।\r\n• তবে যে কেউ লিঙ্কটি পেলে ছবিটি খুলতে পারবে।\r\n• ছবিটি এনক্রিপ্টেড নয়।\r\n• পরিচয়পত্র, পাসওয়ার্ড বা ব্যক্তিগত বার্তার মতো সংবেদনশীল বিষয়বস্তু আপলোড করবেন না।\r\n\r\nসফল হলে লিঙ্কটি ক্লিপবোর্ডে কপি হয়ে যাবে।\r\n\r\nআপলোড করবেন?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "এই ছবিটি ইন্টারনেটে আপলোড হবে — \"catbox.moe\"।\r\n\r\n• এটি কোনো পাবলিক গ্যালারি / অনুসন্ধানে দেখাবে না (তালিকাভুক্ত নয়)।\r\n• তবে যে কেউ লিঙ্কটি পেলে ছবিটি খুলতে পারবে।\r\n• বেনামে আপলোড করা হয় বলে, আপনি পরে নিজে এটি মুছতে পারবেন না।\r\n• ছবিটি এনক্রিপ্টেড নয়।\r\n• পরিচয়পত্র, পাসওয়ার্ড বা ব্যক্তিগত বার্তার মতো সংবেদনশীল বিষয়বস্তু আপলোড করবেন না।\r\n\r\nসফল হলে লিঙ্কটি ক্লিপবোর্ডে কপি হয়ে যাবে।\r\n\r\nআপলোড করবেন?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — ইন্টারনেটে আপলোড"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "ছবিটি ক্লিপবোর্ডে কপি করা হয়েছে।\r\nখোলা ইমেইলে Ctrl+V দিয়ে পেস্ট করুন।"
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "ইমেইল খুলেছে, কিন্তু ছবিটি ক্লিপবোর্ডে কপি করা যায়নি।\r\nস্নিপটি আবার কপি করুন এবং Ctrl+V দিয়ে পেস্ট করুন।"
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — ইমেইলে সংযুক্ত করুন"
+
+msgid "Language"
+msgstr "ভাষা"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "টীকা যোগ করুন"
+
+msgid "Cancel"
+msgstr "বাতিল"
+
+msgid "Save"
+msgstr "সংরক্ষণ"
+
+msgid "Opacity"
+msgstr "অস্বচ্ছতা"
+
+msgid "draw"
+msgstr "আঁকুন"

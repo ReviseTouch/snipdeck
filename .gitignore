@@ -1,0 +1,13 @@
+# Rust build artifacts — large and reproducible, never commit.
+/target
+
+# Runtime logs / crash output
+*.log
+*.out
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
+*~

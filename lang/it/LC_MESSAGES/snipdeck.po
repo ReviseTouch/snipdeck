@@ -1,0 +1,454 @@
+# Snipdeck — Italian (it) translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: it\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "Nuovo"
+
+msgid "Snip + Clip"
+msgstr "Acquisisci + Copia"
+
+msgid "Clip only"
+msgstr "Solo copia"
+
+msgid "Close"
+msgstr "Chiudi"
+
+msgid "Reset"
+msgstr "Reimposta"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "Acquisisci una nuova schermata — trascina un'area con Win + clic sinistro"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "Acquisisci una schermata e copiala negli appunti"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "Copia solo negli appunti (senza salvare nella galleria)"
+
+msgid "Hide on-screen snips"
+msgstr "Nascondi le schermate sullo schermo"
+
+msgid "Show snips on screen"
+msgstr "Mostra le schermate sullo schermo"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "Mostra / nascondi le schermate flottanti nella barra delle applicazioni"
+
+msgid "Clear unpinned snips"
+msgstr "Rimuovi le schermate non bloccate"
+
+msgid "Clear all snips"
+msgstr "Rimuovi tutte le schermate"
+
+msgid "Toggle light / dark theme"
+msgstr "Alterna tema chiaro / scuro"
+
+msgid "Settings"
+msgstr "Impostazioni"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "Stato"
+
+msgid "Content"
+msgstr "Contenuto"
+
+msgid "Size"
+msgstr "Dimensione"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Sort"
+msgstr "Ordina"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "Filtra per stato — Tutti → Bloccati → Non bloccati → Sullo schermo → Nascosti"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "Filtra per contenuto — Con/Senza OCR · Con/Senza finestra · Con tag"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "Filtra per dimensione — Piccola / Media / Grande / Larga / Alta / Quadrata"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "Filtra per data — Oggi / 24 ore / 7 giorni / 30 giorni"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "Ordina per — Più recente / Più vecchio / Bloccato / Dimensione / Larghezza / Altezza / Monitor"
+
+msgid "Reset all filters and search"
+msgstr "Reimposta tutti i filtri e la ricerca"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "Bloccato"
+
+msgid "Unpinned"
+msgstr "Non bloccato"
+
+msgid "On screen"
+msgstr "Sullo schermo"
+
+msgid "Hidden"
+msgstr "Nascosto"
+
+msgid "All"
+msgstr "Tutti"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "Con OCR"
+
+msgid "No OCR"
+msgstr "Senza OCR"
+
+msgid "Has window"
+msgstr "Con finestra"
+
+msgid "No window"
+msgstr "Senza finestra"
+
+msgid "Tagged"
+msgstr "Con tag"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "Piccola"
+
+msgid "Medium"
+msgstr "Media"
+
+msgid "Large"
+msgstr "Grande"
+
+msgid "Wide"
+msgstr "Larga"
+
+msgid "Tall"
+msgstr "Alta"
+
+msgid "Square"
+msgstr "Quadrata"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "Oggi"
+
+msgid "24 hours"
+msgstr "24 ore"
+
+msgid "7 days"
+msgstr "7 giorni"
+
+msgid "30 days"
+msgstr "30 giorni"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "Più vecchio"
+
+msgid "Largest"
+msgstr "Più grande"
+
+msgid "Smallest"
+msgstr "Più piccola"
+
+msgid "Width"
+msgstr "Larghezza"
+
+msgid "Height"
+msgstr "Altezza"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Newest"
+msgstr "Più recente"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "testo / OCR / finestra / monitor / percorso"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "Nessuna schermata acquisita"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Acquisisci un'area dello schermo con Win + tasto sinistro del mouse."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, informazioni sulla finestra e filtri vengono indicizzati in background."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "bloccato"
+
+msgid "on screen"
+msgstr "sullo schermo"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "Totale {}"
+
+msgid "Pinned {}"
+msgstr "Bloccati {}"
+
+msgid "On screen {}"
+msgstr "Sullo schermo {}"
+
+msgid "Filtered {}"
+msgstr "Filtrati {}"
+
+msgid "Ctrl+F search"
+msgstr "Ricerca Ctrl+F"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "Copia"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + Appunti"
+
+msgid "OCR + Translate"
+msgstr "OCR + Traduci"
+
+msgid "translate"
+msgstr "traduci"
+
+msgid "Share"
+msgstr "Condividi"
+
+msgid "Transform"
+msgstr "Trasforma"
+
+msgid "Crop"
+msgstr "Ritaglia"
+
+msgid "drag inward"
+msgstr "trascina verso l'interno"
+
+msgid "Resize"
+msgstr "Ridimensiona"
+
+msgid "handles"
+msgstr "maniglie"
+
+msgid "Hide from screen"
+msgstr "Nascondi dallo schermo"
+
+msgid "hide"
+msgstr "nascondi"
+
+msgid "Delete"
+msgstr "Elimina"
+
+msgid "remove"
+msgstr "rimuovi"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "Traduci"
+
+msgid "Target language"
+msgstr "Lingua di destinazione"
+
+msgid "More ▾"
+msgstr "Altro ▾"
+
+msgid "Source (OCR)"
+msgstr "Sorgente (OCR)"
+
+msgid "copy"
+msgstr "copia"
+
+msgid "Translation"
+msgstr "Traduzione"
+
+msgid "translating…"
+msgstr "traduzione in corso…"
+
+msgid "Copy translation"
+msgstr "Copia traduzione"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "Gen"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "May"
+msgstr "Mag"
+
+msgid "Jun"
+msgstr "Giu"
+
+msgid "Jul"
+msgstr "Lug"
+
+msgid "Aug"
+msgstr "Ago"
+
+msgid "Sep"
+msgstr "Set"
+
+msgid "Oct"
+msgstr "Ott"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Dec"
+msgstr "Dic"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "window"
+msgstr "finestra"
+
+msgid "OCR text indexed"
+msgstr "Testo OCR indicizzato"
+
+msgid "Window info indexed"
+msgstr "Info finestra indicizzate"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Mostra Snipdeck"
+
+msgid "New Snip"
+msgstr "Nuova schermata"
+
+msgid "Launch at Login"
+msgstr "Avvia all'accesso"
+
+msgid "Exit"
+msgstr "Esci"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "Registrazione dei tasti di scelta rapida non riuscita: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "Apertura della finestra flottante non riuscita: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "Apertura del menu non riuscita: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "Riapertura della finestra flottante non riuscita: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "La finestra delle impostazioni non è ancora pronta."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "L'acquisizione tramite pulsante non è ancora implementata nel port Slint — trascina con Win+LMouse."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "Copia negli appunti non riuscita: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "Copia del testo negli appunti non riuscita: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "Acquisizione dello schermo non riuscita: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "Blocco dello schermo non riuscito: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "Salvataggio dell'immagine non riuscito: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "Salvataggio non riuscito: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "Ritaglio dell'area non riuscito: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "Apertura della finestra di traduzione non riuscita: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "Apertura dell'editor non riuscita: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "Avvio del caricamento non riuscito: {e}"
+
+msgid "Share failed: {e}"
+msgstr "Condivisione non riuscita: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "Immagine caricata.\r\nLink copiato negli appunti:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "Immagine caricata:\r\n{url}\r\n\r\n(Impossibile copiare il link negli appunti.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — Caricamento"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "Caricamento non riuscito:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Nessun Client-ID Imgur configurato — impossibile caricare.\r\n\r\n1) Ottieni un Client-ID gratuito:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Aggiungilo a questo file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Riavvia Snipdeck."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Client-ID Imgur richiesto"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Questa immagine verrà caricata su INTERNET — \"Imgur\" (anonimo).\r\n\r\n• NON apparirà nella home page / galleria di Imgur (nascosta, non in elenco).\r\n• Ma chiunque abbia il link risultante potrà aprire l'immagine.\r\n• L'immagine non è crittografata.\r\n• NON caricare contenuti SENSIBILI come documenti d'identità, password o messaggi privati.\r\n\r\nIn caso di successo il link viene copiato negli appunti.\r\n\r\nCaricare?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Questa immagine verrà caricata su INTERNET — \"catbox.moe\".\r\n\r\n• NON apparirà in nessuna galleria pubblica / ricerca (non in elenco).\r\n• Ma chiunque abbia il link risultante potrà aprire l'immagine.\r\n• Poiché viene caricata anonimamente, NON POTRAI ELIMINARLA in seguito.\r\n• L'immagine non è crittografata.\r\n• NON caricare contenuti SENSIBILI come documenti d'identità, password o messaggi privati.\r\n\r\nIn caso di successo il link viene copiato negli appunti.\r\n\r\nCaricare?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — Carica su internet"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "L'immagine è stata copiata negli appunti.\r\nIncollala nell'email aperta con Ctrl+V."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "L'email si è aperta, ma l'immagine non è stata copiata negli appunti.\r\nCopia di nuovo la schermata e incollala con Ctrl+V."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — Allega all'email"
+
+msgid "Language"
+msgstr "Lingua"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "Annota"
+
+msgid "Cancel"
+msgstr "Annulla"
+
+msgid "Save"
+msgstr "Salva"
+
+msgid "Opacity"
+msgstr "Opacità"
+
+msgid "draw"
+msgstr "disegna"

@@ -1,0 +1,454 @@
+# Snipdeck — Arabic translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "جديد"
+
+msgid "Snip + Clip"
+msgstr "قص + نسخ"
+
+msgid "Clip only"
+msgstr "نسخ فقط"
+
+msgid "Close"
+msgstr "إغلاق"
+
+msgid "Reset"
+msgstr "إعادة تعيين"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "التقط لقطة جديدة — اسحب منطقة بالضغط على Win + النقر الأيسر"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "التقط لقطة وانسخها إلى الحافظة"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "نسخ إلى الحافظة فقط (دون الحفظ في المعرض)"
+
+msgid "Hide on-screen snips"
+msgstr "إخفاء اللقطات على الشاشة"
+
+msgid "Show snips on screen"
+msgstr "إظهار اللقطات على الشاشة"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "إظهار / إخفاء اللقطات العائمة في شريط المهام"
+
+msgid "Clear unpinned snips"
+msgstr "مسح اللقطات غير المثبتة"
+
+msgid "Clear all snips"
+msgstr "مسح جميع اللقطات"
+
+msgid "Toggle light / dark theme"
+msgstr "تبديل المظهر الفاتح / الداكن"
+
+msgid "Settings"
+msgstr "الإعدادات"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Content"
+msgstr "المحتوى"
+
+msgid "Size"
+msgstr "الحجم"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "Sort"
+msgstr "الترتيب"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "تصفية حسب الحالة — الكل → مثبت → غير مثبت → على الشاشة → مخفي"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "تصفية حسب المحتوى — يحتوي/لا يحتوي على OCR · يحتوي/لا يحتوي على نافذة · مُوسوم"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "تصفية حسب الحجم — صغير / متوسط / كبير / عريض / طويل / مربع"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "تصفية حسب التاريخ — اليوم / 24 ساعة / 7 أيام / 30 يومًا"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "الترتيب حسب — الأحدث / الأقدم / مثبت / الحجم / العرض / الارتفاع / الشاشة"
+
+msgid "Reset all filters and search"
+msgstr "إعادة تعيين كل المرشحات والبحث"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "مثبت"
+
+msgid "Unpinned"
+msgstr "غير مثبت"
+
+msgid "On screen"
+msgstr "على الشاشة"
+
+msgid "Hidden"
+msgstr "مخفي"
+
+msgid "All"
+msgstr "الكل"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "يحتوي على OCR"
+
+msgid "No OCR"
+msgstr "بدون OCR"
+
+msgid "Has window"
+msgstr "يحتوي على نافذة"
+
+msgid "No window"
+msgstr "بدون نافذة"
+
+msgid "Tagged"
+msgstr "مُوسوم"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "صغير"
+
+msgid "Medium"
+msgstr "متوسط"
+
+msgid "Large"
+msgstr "كبير"
+
+msgid "Wide"
+msgstr "عريض"
+
+msgid "Tall"
+msgstr "طويل"
+
+msgid "Square"
+msgstr "مربع"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "اليوم"
+
+msgid "24 hours"
+msgstr "24 ساعة"
+
+msgid "7 days"
+msgstr "7 أيام"
+
+msgid "30 days"
+msgstr "30 يومًا"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "الأقدم"
+
+msgid "Largest"
+msgstr "الأكبر"
+
+msgid "Smallest"
+msgstr "الأصغر"
+
+msgid "Width"
+msgstr "العرض"
+
+msgid "Height"
+msgstr "الارتفاع"
+
+msgid "Monitor"
+msgstr "الشاشة"
+
+msgid "Newest"
+msgstr "الأحدث"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "نص / OCR / نافذة / شاشة / مسار"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "لم يتم جمع أي لقطات بعد"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "التقط منطقة من الشاشة باستخدام Win + النقر الأيسر."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "يتم فهرسة OCR ومعلومات النافذة والمرشحات في الخلفية."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "مثبت"
+
+msgid "on screen"
+msgstr "على الشاشة"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "الإجمالي {}"
+
+msgid "Pinned {}"
+msgstr "مثبت {}"
+
+msgid "On screen {}"
+msgstr "على الشاشة {}"
+
+msgid "Filtered {}"
+msgstr "مُصفى {}"
+
+msgid "Ctrl+F search"
+msgstr "بحث Ctrl+F"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "نسخ"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + الحافظة"
+
+msgid "OCR + Translate"
+msgstr "OCR + ترجمة"
+
+msgid "translate"
+msgstr "ترجمة"
+
+msgid "Share"
+msgstr "مشاركة"
+
+msgid "Transform"
+msgstr "تحويل"
+
+msgid "Crop"
+msgstr "قص"
+
+msgid "drag inward"
+msgstr "اسحب للداخل"
+
+msgid "Resize"
+msgstr "تغيير الحجم"
+
+msgid "handles"
+msgstr "مقابض"
+
+msgid "Hide from screen"
+msgstr "إخفاء من الشاشة"
+
+msgid "hide"
+msgstr "إخفاء"
+
+msgid "Delete"
+msgstr "حذف"
+
+msgid "remove"
+msgstr "إزالة"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "ترجمة"
+
+msgid "Target language"
+msgstr "لغة الهدف"
+
+msgid "More ▾"
+msgstr "المزيد ▾"
+
+msgid "Source (OCR)"
+msgstr "المصدر (OCR)"
+
+msgid "copy"
+msgstr "نسخ"
+
+msgid "Translation"
+msgstr "الترجمة"
+
+msgid "translating…"
+msgstr "جارٍ الترجمة…"
+
+msgid "Copy translation"
+msgstr "نسخ الترجمة"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "يناير"
+
+msgid "Feb"
+msgstr "فبراير"
+
+msgid "Mar"
+msgstr "مارس"
+
+msgid "Apr"
+msgstr "أبريل"
+
+msgid "May"
+msgstr "مايو"
+
+msgid "Jun"
+msgstr "يونيو"
+
+msgid "Jul"
+msgstr "يوليو"
+
+msgid "Aug"
+msgstr "أغسطس"
+
+msgid "Sep"
+msgstr "سبتمبر"
+
+msgid "Oct"
+msgstr "أكتوبر"
+
+msgid "Nov"
+msgstr "نوفمبر"
+
+msgid "Dec"
+msgstr "ديسمبر"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "الشاشة"
+
+msgid "window"
+msgstr "نافذة"
+
+msgid "OCR text indexed"
+msgstr "تم فهرسة نص OCR"
+
+msgid "Window info indexed"
+msgstr "تم فهرسة معلومات النافذة"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "إظهار Snipdeck"
+
+msgid "New Snip"
+msgstr "لقطة جديدة"
+
+msgid "Launch at Login"
+msgstr "التشغيل عند تسجيل الدخول"
+
+msgid "Exit"
+msgstr "خروج"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "فشل تسجيل مفاتيح الاختصار: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "فشل فتح النافذة العائمة: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "فشل فتح القائمة: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "فشل إعادة فتح النافذة العائمة: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "نافذة الإعدادات غير جاهزة بعد."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "لقطة زر التشغيل غير مربوطة في منفذ Slint بعد — اسحب باستخدام Win+LMouse."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "فشل النسخ إلى الحافظة: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "فشل نسخ النص إلى الحافظة: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "فشل التقاط الشاشة: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "فشل تجميد الشاشة: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "فشل حفظ الصورة: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "فشل الحفظ: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "فشل قص المنطقة: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "فشل فتح نافذة الترجمة: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "فشل فتح المحرر: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "فشل بدء الرفع: {e}"
+
+msgid "Share failed: {e}"
+msgstr "فشلت المشاركة: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "تم رفع الصورة.\r\nتم نسخ الرابط إلى الحافظة:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "تم رفع الصورة:\r\n{url}\r\n\r\n(تعذّر نسخ الرابط إلى الحافظة.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — رفع"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "فشل الرفع:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "لم يتم تكوين Imgur Client-ID — تعذّر الرفع.\r\n\r\n1) احصل على Client-ID مجاني:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) أضفه إلى هذا الملف:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) أعد تشغيل Snipdeck."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — مطلوب Imgur Client-ID"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "ستُرفع هذه الصورة إلى الإنترنت — \"Imgur\" (بشكل مجهول).\r\n\r\n• لن تظهر على الصفحة الرئيسية لـ Imgur / المعرض (مخفية، غير مُدرجة).\r\n• لكن أي شخص لديه الرابط الناتج يمكنه فتح الصورة.\r\n• الصورة غير مشفرة.\r\n• لا تقم برفع محتوى حساس كالمعرّفات أو كلمات المرور أو الرسائل الخاصة.\r\n\r\nعند النجاح يُنسخ الرابط إلى الحافظة.\r\n\r\nرفع؟"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "ستُرفع هذه الصورة إلى الإنترنت — \"catbox.moe\".\r\n\r\n• لن تظهر في أي معرض عام / بحث (غير مُدرجة).\r\n• لكن أي شخص لديه الرابط الناتج يمكنه فتح الصورة.\r\n• نظرًا لرفعها بشكل مجهول، لا يمكنك حذفها بنفسك لاحقًا.\r\n• الصورة غير مشفرة.\r\n• لا تقم برفع محتوى حساس كالمعرّفات أو كلمات المرور أو الرسائل الخاصة.\r\n\r\nعند النجاح يُنسخ الرابط إلى الحافظة.\r\n\r\nرفع؟"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — رفع إلى الإنترنت"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "تم نسخ الصورة إلى الحافظة.\r\nالصقها في البريد الإلكتروني المفتوح باستخدام Ctrl+V."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "تم فتح البريد الإلكتروني، لكن تعذّر نسخ الصورة إلى الحافظة.\r\nانسخ اللقطة مجددًا والصقها باستخدام Ctrl+V."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — إرفاق بالبريد الإلكتروني"
+
+msgid "Language"
+msgstr "اللغة"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "تعليق توضيحي"
+
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgid "Save"
+msgstr "حفظ"
+
+msgid "Opacity"
+msgstr "العتامة"
+
+msgid "draw"
+msgstr "ارسم"

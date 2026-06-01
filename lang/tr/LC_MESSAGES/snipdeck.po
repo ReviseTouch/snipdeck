@@ -1,0 +1,454 @@
+# Snipdeck — Turkish (tr) translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: tr\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "Yeni"
+
+msgid "Snip + Clip"
+msgstr "Kesi + Kopyala"
+
+msgid "Clip only"
+msgstr "Yalnız Kopyala"
+
+msgid "Close"
+msgstr "Kapat"
+
+msgid "Reset"
+msgstr "Sıfırla"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "Yeni kesim al — Win + sol tıkla ile bölge sürükle"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "Kesim al ve panoya kopyala"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "Yalnızca panoya kopyala (galeriye kaydetmeden)"
+
+msgid "Hide on-screen snips"
+msgstr "Ekrandaki kesimleri gizle"
+
+msgid "Show snips on screen"
+msgstr "Kesimleri ekranda göster"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "Görev çubuğundaki kayan kesimleri göster / gizle"
+
+msgid "Clear unpinned snips"
+msgstr "Sabitlenmemiş kesimleri temizle"
+
+msgid "Clear all snips"
+msgstr "Tüm kesimleri temizle"
+
+msgid "Toggle light / dark theme"
+msgstr "Açık / koyu tema arasında geç"
+
+msgid "Settings"
+msgstr "Ayarlar"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "Durum"
+
+msgid "Content"
+msgstr "İçerik"
+
+msgid "Size"
+msgstr "Boyut"
+
+msgid "Date"
+msgstr "Tarih"
+
+msgid "Sort"
+msgstr "Sırala"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "Duruma göre filtrele — Tümü → Sabitli → Sabitsiz → Ekranda → Gizli"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "İçeriğe göre filtrele — OCR var/yok · Pencere var/yok · Etiketli"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "Boyuta göre filtrele — Küçük / Orta / Büyük / Geniş / Uzun / Kare"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "Tarihe göre filtrele — Bugün / 24 saat / 7 gün / 30 gün"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "Sıralama ölçütü — En yeni / En eski / Sabitli / Boyut / Genişlik / Yükseklik / Monitör"
+
+msgid "Reset all filters and search"
+msgstr "Tüm filtreleri ve aramayı sıfırla"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "Sabitli"
+
+msgid "Unpinned"
+msgstr "Sabitsiz"
+
+msgid "On screen"
+msgstr "Ekranda"
+
+msgid "Hidden"
+msgstr "Gizli"
+
+msgid "All"
+msgstr "Tümü"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "OCR var"
+
+msgid "No OCR"
+msgstr "OCR yok"
+
+msgid "Has window"
+msgstr "Pencere var"
+
+msgid "No window"
+msgstr "Pencere yok"
+
+msgid "Tagged"
+msgstr "Etiketli"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "Küçük"
+
+msgid "Medium"
+msgstr "Orta"
+
+msgid "Large"
+msgstr "Büyük"
+
+msgid "Wide"
+msgstr "Geniş"
+
+msgid "Tall"
+msgstr "Uzun"
+
+msgid "Square"
+msgstr "Kare"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "Bugün"
+
+msgid "24 hours"
+msgstr "24 saat"
+
+msgid "7 days"
+msgstr "7 gün"
+
+msgid "30 days"
+msgstr "30 gün"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "En eski"
+
+msgid "Largest"
+msgstr "En büyük"
+
+msgid "Smallest"
+msgstr "En küçük"
+
+msgid "Width"
+msgstr "Genişlik"
+
+msgid "Height"
+msgstr "Yükseklik"
+
+msgid "Monitor"
+msgstr "Monitör"
+
+msgid "Newest"
+msgstr "En yeni"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "metin / OCR / pencere / monitör / yol"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "Henüz kesim yok"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Win + sol fare ile ekrandan bir bölge yakala."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, pencere bilgisi ve filtreler arka planda dizine ekleniyor."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "sabitli"
+
+msgid "on screen"
+msgstr "ekranda"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "Toplam {}"
+
+msgid "Pinned {}"
+msgstr "Sabitli {}"
+
+msgid "On screen {}"
+msgstr "Ekranda {}"
+
+msgid "Filtered {}"
+msgstr "Filtrelendi {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F ara"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "Kopyala"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + Pano"
+
+msgid "OCR + Translate"
+msgstr "OCR + Çevir"
+
+msgid "translate"
+msgstr "çevir"
+
+msgid "Share"
+msgstr "Paylaş"
+
+msgid "Transform"
+msgstr "Dönüştür"
+
+msgid "Crop"
+msgstr "Kırp"
+
+msgid "drag inward"
+msgstr "içe sürükle"
+
+msgid "Resize"
+msgstr "Yeniden boyutlandır"
+
+msgid "handles"
+msgstr "tutamaçlar"
+
+msgid "Hide from screen"
+msgstr "Ekrandan gizle"
+
+msgid "hide"
+msgstr "gizle"
+
+msgid "Delete"
+msgstr "Sil"
+
+msgid "remove"
+msgstr "kaldır"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "Çevir"
+
+msgid "Target language"
+msgstr "Hedef dil"
+
+msgid "More ▾"
+msgstr "Daha fazla ▾"
+
+msgid "Source (OCR)"
+msgstr "Kaynak (OCR)"
+
+msgid "copy"
+msgstr "kopyala"
+
+msgid "Translation"
+msgstr "Çeviri"
+
+msgid "translating…"
+msgstr "çevriliyor…"
+
+msgid "Copy translation"
+msgstr "Çeviriyi kopyala"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "Oca"
+
+msgid "Feb"
+msgstr "Şub"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Apr"
+msgstr "Nis"
+
+msgid "May"
+msgstr "May"
+
+msgid "Jun"
+msgstr "Haz"
+
+msgid "Jul"
+msgstr "Tem"
+
+msgid "Aug"
+msgstr "Ağu"
+
+msgid "Sep"
+msgstr "Eyl"
+
+msgid "Oct"
+msgstr "Eki"
+
+msgid "Nov"
+msgstr "Kas"
+
+msgid "Dec"
+msgstr "Ara"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Monitör"
+
+msgid "window"
+msgstr "pencere"
+
+msgid "OCR text indexed"
+msgstr "OCR metni dizine eklendi"
+
+msgid "Window info indexed"
+msgstr "Pencere bilgisi dizine eklendi"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Snipdeck'i Göster"
+
+msgid "New Snip"
+msgstr "Yeni Kesim"
+
+msgid "Launch at Login"
+msgstr "Oturum Açınca Başlat"
+
+msgid "Exit"
+msgstr "Çıkış"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "Kısayol tuşları kaydedilemedi: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "Kayan pencere açılamadı: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "Menü açılamadı: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "Kayan pencere yeniden açılamadı: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "Ayarlar penceresi henüz hazır değil."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "Düğmeyle tetiklenen kesim henüz Slint portuna bağlanmadı — Win+LMouse ile sürükleyin."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "Panoya kopyalanamadı: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "Metin panoya kopyalanamadı: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "Ekran yakalanamadı: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "Ekran dondurulamadı: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "Görüntü kaydedilemedi: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "Kaydedilemedi: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "Bölge kırpılamadı: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "Çeviri penceresi açılamadı: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "Düzenleyici açılamadı: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "Yükleme başlatılamadı: {e}"
+
+msgid "Share failed: {e}"
+msgstr "Paylaşım başarısız: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "Görüntü yüklendi.\r\nBağlantı panoya kopyalandı:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "Görüntü yüklendi:\r\n{url}\r\n\r\n(Bağlantı panoya kopyalanamadı.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — Yükleme"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "Yükleme başarısız:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Imgur Client-ID yapılandırılmamış — yükleme yapılamıyor.\r\n\r\n1) Ücretsiz Client-ID edinin:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Şu dosyaya ekleyin:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Snipdeck'i yeniden başlatın."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Imgur Client-ID gerekli"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Bu görüntü İNTERNET'e yüklenecek — \"Imgur\" (anonim).\r\n\r\n• Imgur ana sayfasında / galerisinde GÖRÜNMEZ (gizli, listelenmemiş).\r\n• Ancak oluşturulan bağlantıya sahip olan herkes görüntüyü açabilir.\r\n• Görüntü şifrelenmemiştir.\r\n• Kimlik, şifre veya özel mesaj gibi HASSAS içerik yüklemeyin.\r\n\r\nBaşarılı olursa bağlantı panonuza kopyalanır.\r\n\r\nYüklensin mi?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Bu görüntü İNTERNET'e yüklenecek — \"catbox.moe\".\r\n\r\n• Hiçbir herkese açık galeri / aramada GÖRÜNMEZ (listelenmemiş).\r\n• Ancak oluşturulan bağlantıya sahip olan herkes görüntüyü açabilir.\r\n• Anonim olarak yüklendiğinden daha sonra KENDİNİZ SİLEMEZSİNİZ.\r\n• Görüntü şifrelenmemiştir.\r\n• Kimlik, şifre veya özel mesaj gibi HASSAS içerik yüklemeyin.\r\n\r\nBaşarılı olursa bağlantı panonuza kopyalanır.\r\n\r\nYüklensin mi?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — İnternet'e yükle"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "Görüntü panoya kopyalandı.\r\nAçık e-postaya Ctrl+V ile yapıştırın."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "E-posta açıldı ancak görüntü panoya kopyalanamadı.\r\nKesimi tekrar kopyalayın ve Ctrl+V ile yapıştırın."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — E-postaya ekle"
+
+msgid "Language"
+msgstr "Dil"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "İşaretle"
+
+msgid "Cancel"
+msgstr "İptal"
+
+msgid "Save"
+msgstr "Kaydet"
+
+msgid "Opacity"
+msgstr "Opaklık"
+
+msgid "draw"
+msgstr "çiz"

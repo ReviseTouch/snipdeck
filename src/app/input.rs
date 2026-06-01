@@ -1,0 +1,417 @@
+use super::*;
+use crate::i18n::{t, t1};
+
+impl AppState {
+    pub(crate) fn handle_action(&mut self, action: Action, window: &MainWindow) {
+        match action {
+            Action::NewSnip {
+                to_clip,
+                keep_float,
+            } => {
+                // Button-triggered snip: not yet wired in stage 1 — needs
+                // a click-and-drag overlay mode independent of the Win+
+                // LMouse hook. For now, surface a hint.
+                let _ = (to_clip, keep_float);
+                self.last_error = Some(t(
+                    "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse.",
+                ));
+            }
+            Action::ToggleFloatingInTaskbar => {
+                self.settings.floating_in_taskbar = !self.settings.floating_in_taskbar;
+                let _ = self.settings.save();
+                crate::window_tamer::set_floating_in_taskbar(self.settings.floating_in_taskbar);
+                // Close + reopen every currently-floating snip so the
+                // fresh windows pick up the new WS_EX_TOOLWINDOW state
+                // at creation (toggling it at runtime is fragile).
+                let to_reopen: Vec<crate::snip::Snip> = self
+                    .gallery
+                    .snips
+                    .iter()
+                    .filter(|s| self.floating.windows.contains_key(&s.id))
+                    .cloned()
+                    .collect();
+                self.floating.close_all();
+                let sf = self.scale_factor;
+                for s in to_reopen {
+                    if let Err(e) =
+                        self.floating
+                            .open(&s, &self.settings, sf, Some(window.window()))
+                    {
+                        self.last_error =
+                            Some(t1("Failed to reopen floating window: {e}", "{e}", &e.to_string()));
+                    }
+                }
+                self.refresh_gallery(window);
+            }
+            Action::ToggleAllVisibility => {
+                if self.floating.windows.is_empty() {
+                    // Reopen all floating snips (those marked `floating: true`).
+                    let to_open: Vec<crate::snip::Snip> = self
+                        .gallery
+                        .snips
+                        .iter()
+                        .filter(|s| s.floating)
+                        .cloned()
+                        .collect();
+                    let sf = self.scale_factor;
+                    for s in to_open {
+                        let _ = self
+                            .floating
+                            .open(&s, &self.settings, sf, Some(window.window()));
+                    }
+                } else {
+                    self.floating.close_all();
+                    for s in self.gallery.snips.iter_mut() {
+                        s.floating = false;
+                    }
+                }
+                let _ = self.gallery.save();
+                self.refresh_gallery(window);
+            }
+            Action::ClearUnpinned => {
+                let unpinned: Vec<Uuid> = self
+                    .gallery
+                    .snips
+                    .iter()
+                    .filter(|s| !s.pinned)
+                    .map(|s| s.id)
+                    .collect();
+                for id in unpinned {
+                    self.floating.close(id);
+                    self.gallery.remove(id);
+                    self.thumb_cache.remove(&id);
+                }
+                let _ = self.gallery.save();
+                self.refresh_gallery(window);
+            }
+            Action::ClearAll => {
+                self.floating.close_all();
+                self.gallery.clear_all();
+                self.thumb_cache.clear();
+                let _ = self.gallery.save();
+                self.refresh_gallery(window);
+            }
+            Action::ToggleAutostart => match crate::autostart::toggle() {
+                Ok(on) => window.set_autostart_enabled(on),
+                Err(e) => log::warn!("autostart toggle failed: {e}"),
+            },
+            Action::ToggleTheme => {
+                self.settings.dark_theme = !self.settings.dark_theme;
+                let _ = self.settings.save();
+                window.set_dark_theme(self.settings.dark_theme);
+            }
+            Action::SetLanguage(code) => {
+                self.settings.language = code.clone();
+                let _ = self.settings.save();
+                crate::i18n::set_language(&code);
+                // Re-translate the bundled Slint UI live; the Rust-provided card
+                // text (months / source labels) is rebuilt by refresh_gallery.
+                if let Err(e) = slint::select_bundled_translation(&code) {
+                    log::warn!("select_bundled_translation({code}) failed: {e:?}");
+                }
+                window.set_current_language(SharedString::from(crate::i18n::current()));
+                self.refresh_gallery(window);
+            }
+            Action::Copy(id) => {
+                if let Some(snip) = self.gallery.get(id) {
+                    if let Ok(img) = snip.load_image() {
+                        if let Err(e) = clipboard::copy_image(&img) {
+                            self.last_error = Some(t1("Failed to copy to clipboard: {e}", "{e}", &e.to_string()));
+                        }
+                    }
+                }
+            }
+            Action::Save(id) => self.save_snip_to_file(id),
+            Action::TogglePin(id) => {
+                let new_state = if let Some(s) = self.gallery.get_mut(id) {
+                    s.pinned = !s.pinned;
+                    s.pinned
+                } else {
+                    false
+                };
+                self.floating.refresh_pin(id, new_state);
+                let _ = self.gallery.save();
+                self.refresh_gallery(window);
+            }
+            Action::Delete(id) => {
+                self.floating.close(id);
+                self.gallery.remove(id);
+                self.thumb_cache.remove(&id);
+                let _ = self.gallery.save();
+                self.refresh_gallery(window);
+            }
+            Action::SnipClicked(id) => {
+                if let Some(snip) = self.gallery.get(id).cloned() {
+                    self.floating.toggle(
+                        &snip,
+                        &self.settings,
+                        self.scale_factor,
+                        Some(window.window()),
+                    );
+                    if let Some(s) = self.gallery.get_mut(id) {
+                        s.floating = self.floating.windows.contains_key(&id);
+                    }
+                    let _ = self.gallery.save();
+                    self.refresh_gallery(window);
+                }
+            }
+            Action::SnipContextMenu(id) => {
+                if let Some((x, y)) = cursor_screen_pos() {
+                    if let Err(e) = self.context_menu.show_for(id, x, y, false) {
+                        self.last_error =
+                            Some(t1("Failed to open menu: {e}", "{e}", &e.to_string()));
+                    }
+                }
+            }
+            Action::SearchChanged(s) => {
+                self.search = s;
+                self.refresh_gallery(window);
+            }
+            Action::StatusFilterChanged(idx) => {
+                self.filters.status = idx.max(0);
+                self.refresh_gallery(window);
+            }
+            Action::ContentFilterChanged(idx) => {
+                self.filters.content = idx.max(0);
+                self.refresh_gallery(window);
+            }
+            Action::SizeFilterChanged(idx) => {
+                self.filters.size = idx.max(0);
+                self.refresh_gallery(window);
+            }
+            Action::DateFilterChanged(idx) => {
+                self.filters.date = idx.max(0);
+                self.refresh_gallery(window);
+            }
+            Action::SortChanged(idx) => {
+                self.filters.sort = idx.max(0);
+                self.refresh_gallery(window);
+            }
+            Action::ResetFilters => {
+                self.search.clear();
+                self.filters = GalleryFilters::default();
+                self.refresh_gallery(window);
+            }
+            Action::CloseError => {
+                self.last_error = None;
+                self.hotkey_error = None;
+            }
+            Action::RequestThumb(id) => {
+                self.load_thumb_into_model(id);
+            }
+        }
+    }
+
+    pub(crate) fn handle_hotkey(&mut self, action: HotkeyAction, _window: &MainWindow) {
+        // Stage 1: hotkeys not yet implemented (need a button-triggered
+        // overlay flow). The mouse-hook path is fully functional.
+        let _ = action;
+    }
+
+    pub(crate) fn handle_mouse_event(&mut self, event: MouseTriggerEvent) {
+        log::info!("mouse event: {:?}, active={}", event, self.active.is_some());
+        match event {
+            MouseTriggerEvent::StartSnip { x, y, mods } => {
+                if self.active.is_some() {
+                    log::warn!("StartSnip ignored: active selection in progress");
+                    return;
+                }
+                // Freeze-first (Win+Shift+Space): the screen was already
+                // captured and shown frozen on FreezeArm. Reuse it (don't
+                // recapture); the result is a normal floating snip that stays on
+                // screen, just like Win+click (not clipboard-only — copying is
+                // Win+Alt's job). The frozen overlay is already up.
+                if let Some((armed_at, captured)) = self.frozen_pending.take() {
+                    // Ignore a stale frozen frame (armed long ago, never used) so
+                    // an old click can't snip outdated screen content; fall
+                    // through to a fresh live capture instead.
+                    if armed_at.elapsed() < std::time::Duration::from_secs(12) {
+                        let source_window = crate::window_metadata::capture_at_point(x, y);
+                        self.overlay.update_sel(x, y, x, y);
+                        self.active = Some(ActiveSelection {
+                            captured,
+                            start: (x, y),
+                            end: (x, y),
+                            to_clipboard: false,
+                            keep_floating: true,
+                            source_window,
+                        });
+                        return;
+                    }
+                    crate::mouse_trigger::clear_freeze();
+                    self.overlay.hide();
+                }
+                // Modifier matrix:
+                //   Win+LMouse              → snip + floating window
+                //   Win+Ctrl+LMouse         → snip + floating + clipboard
+                //   Win+Alt+LMouse          → clipboard only (no gallery)
+                //   Win+Shift+LMouse        → gallery only, no floating
+                //   Win+Ctrl+Shift+LMouse   → gallery + clipboard, no floating
+                let (to_clipboard, keep_floating) = if mods.alt {
+                    (true, false)
+                } else if mods.ctrl && mods.shift {
+                    (true, false)
+                } else if mods.shift {
+                    (false, false)
+                } else if mods.ctrl {
+                    (true, true)
+                } else {
+                    (false, true)
+                };
+                let source_window = crate::window_metadata::capture_at_point(x, y);
+                if let Some(window) = &source_window {
+                    log::info!(
+                        "source window: title={:?} app={:?} pid={:?} bounds={:?}",
+                        window.title,
+                        window.app_name,
+                        window.pid,
+                        window.bounds
+                    );
+                }
+                // Capture the monitor the cursor is on (not just the
+                // primary), otherwise dragging on a secondary monitor
+                // crops out of bounds and the snip is silently dropped.
+                match capture::capture_at(x, y) {
+                    Ok(captured) => {
+                        let area = captured.area;
+                        // Slint overlay covers exactly one monitor.
+                        // freeze_screen_during_snip is a TODO on the
+                        // Slint backend (Win32 backend had it).
+                        if let Err(e) =
+                            self.overlay.show_for_monitor(area, self.scale_factor, None)
+                        {
+                            log::warn!("overlay show failed: {e}");
+                        }
+                        self.overlay.update_sel(x, y, x, y);
+                        self.active = Some(ActiveSelection {
+                            captured,
+                            start: (x, y),
+                            end: (x, y),
+                            to_clipboard,
+                            keep_floating,
+                            source_window,
+                        });
+                    }
+                    Err(e) => {
+                        self.overlay.hide();
+                        self.last_error = Some(t1("Failed to capture screen: {e}", "{e}", &e.to_string()));
+                    }
+                }
+            }
+            MouseTriggerEvent::FreezeArm { x, y } => {
+                // Win+Shift+Space: capture the screen NOW (before any click, so
+                // hover tooltips are still visible) and show it frozen + dimmed
+                // as the overlay backdrop. The drag that starts the selection
+                // arrives as the next StartSnip, which reuses this capture.
+                if self.active.is_some() {
+                    return;
+                }
+                match capture::capture_at(x, y) {
+                    Ok(captured) => {
+                        let area = captured.area;
+                        if let Err(e) = self.overlay.show_for_monitor(
+                            area,
+                            self.scale_factor,
+                            Some(&captured.image),
+                        ) {
+                            log::warn!("frozen overlay show failed: {e}");
+                        }
+                        self.frozen_pending = Some((std::time::Instant::now(), captured));
+                    }
+                    Err(e) => {
+                        self.frozen_pending = None;
+                        // Capture failed — clear the hook's freeze flag too, or
+                        // it stays armed and the next plain click starts a snip.
+                        crate::mouse_trigger::clear_freeze();
+                        self.overlay.hide();
+                        self.last_error = Some(t1("Failed to freeze screen: {e}", "{e}", &e.to_string()));
+                    }
+                }
+            }
+            MouseTriggerEvent::Move { x, y } => {
+                if let Some(sel) = self.active.as_mut() {
+                    sel.end = (x, y);
+                    self.overlay.update_sel(sel.start.0, sel.start.1, x, y);
+                }
+            }
+            MouseTriggerEvent::Release { x, y } => {
+                if let Some(mut sel) = self.active.take() {
+                    sel.end = (x, y);
+                    self.overlay.hide();
+                    // Mask the Win key (Win+F23) so a lone Win press can't
+                    // open the Start menu — but keep any modifier the user
+                    // is still physically holding. That's what lets you hold
+                    // Win and drag several times to take snips back-to-back.
+                    crate::mouse_trigger::force_release_modifiers();
+                    let (sx, sy) = sel.start;
+                    let (ex, ey) = sel.end;
+                    let region = ScreenRect {
+                        x: sx.min(ex),
+                        y: sy.min(ey),
+                        w: (sx - ex).unsigned_abs(),
+                        h: (sy - ey).unsigned_abs(),
+                    };
+                    log::info!("Release: region={:?}", region);
+                    if region.w < 4 || region.h < 4 {
+                        log::info!("Region too small, ignoring");
+                        return;
+                    }
+                    let monitor_label = sel.captured.monitor_label.clone();
+                    match capture::crop(&sel.captured, region) {
+                        Ok(image) => {
+                            let mut snip = make_snip(region);
+                            snip.monitor_label = Some(monitor_label);
+                            if let Err(e) = snip.save_image_png(&image) {
+                                self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
+                                return;
+                            }
+                            if sel.to_clipboard {
+                                if let Err(e) = clipboard::copy_image(&image) {
+                                    self.last_error = Some(t1("Failed to copy to clipboard: {e}", "{e}", &e.to_string()));
+                                }
+                            }
+                            if sel.keep_floating {
+                                snip.floating = true;
+                            }
+                            let snip_id = snip.id;
+                            let keep_float = sel.keep_floating;
+                            self.gallery.push_new(snip);
+                            let _ = self.gallery.save();
+                            if let Some(window_info) = sel.source_window.take() {
+                                let window_info = crate::window_metadata::with_selection_confidence(
+                                    window_info,
+                                    region,
+                                );
+                                if let Err(err) =
+                                    crate::snip::save_window_info(snip_id, &window_info)
+                                {
+                                    log::debug!("source window metadata save skipped: {err}");
+                                }
+                            }
+                            spawn_ocr_index(snip_id, image.clone());
+                            log::info!(
+                                "Snip pushed to gallery, total={}, keep_float={}",
+                                self.gallery.snips.len(),
+                                keep_float
+                            );
+                            if keep_float {
+                                self.pending_open.push(snip_id);
+                            }
+                            self.last_snip_ids.clear();
+                        }
+                        Err(e) => {
+                            self.last_error = Some(t1("Failed to crop region: {e}", "{e}", &e.to_string()));
+                        }
+                    }
+                }
+            }
+            MouseTriggerEvent::Cancel => {
+                self.active = None;
+                self.frozen_pending = None;
+                crate::mouse_trigger::clear_freeze();
+                self.overlay.hide();
+                crate::mouse_trigger::force_release_modifiers();
+            }
+        }
+    }
+}

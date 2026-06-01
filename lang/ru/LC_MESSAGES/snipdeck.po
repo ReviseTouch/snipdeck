@@ -1,0 +1,459 @@
+# Snipdeck — translation template (.pot)
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+# English is the source language: every msgid is the exact English text.
+# To translate: copy this file to lang/<code>/LC_MESSAGES/snipdeck.po and fill
+# each msgstr. Keep placeholders ({}, {e}, {err}, {url}, {path}) and escapes
+# (\r\n, \", •, —, →, ·, ▾, …) intact. Do not translate: Snipdeck, OCR, Win,
+# Ctrl+F, Ctrl+V, Imgur, imgur.com, imgur_client_id, catbox.moe, MAPI.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "Новый"
+
+msgid "Snip + Clip"
+msgstr "Снимок + Буфер"
+
+msgid "Clip only"
+msgstr "Только буфер"
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Reset"
+msgstr "Сбросить"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "Новый снимок — выделите область с Win + левая кнопка"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "Сделать снимок и скопировать в буфер обмена"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "Только скопировать в буфер (без сохранения в галерею)"
+
+msgid "Hide on-screen snips"
+msgstr "Скрыть снимки с экрана"
+
+msgid "Show snips on screen"
+msgstr "Показать снимки на экране"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "Показать / скрыть плавающие снимки на панели задач"
+
+msgid "Clear unpinned snips"
+msgstr "Удалить незакреплённые снимки"
+
+msgid "Clear all snips"
+msgstr "Удалить все снимки"
+
+msgid "Toggle light / dark theme"
+msgstr "Переключить светлую / тёмную тему"
+
+msgid "Settings"
+msgstr "Настройки"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "Статус"
+
+msgid "Content"
+msgstr "Содержимое"
+
+msgid "Size"
+msgstr "Размер"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Sort"
+msgstr "Сортировка"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "Фильтр по статусу — Все → Закреплённые → Незакреплённые → На экране → Скрытые"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "Фильтр по содержимому — Есть/Нет OCR · Есть/Нет окна · С меткой"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "Фильтр по размеру — Маленький / Средний / Большой / Широкий / Высокий / Квадратный"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "Фильтр по дате — Сегодня / 24 часа / 7 дней / 30 дней"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "Сортировать по — Новые / Старые / Закреплённые / Размер / Ширина / Высота / Монитор"
+
+msgid "Reset all filters and search"
+msgstr "Сбросить все фильтры и поиск"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "Закреплённые"
+
+msgid "Unpinned"
+msgstr "Незакреплённые"
+
+msgid "On screen"
+msgstr "На экране"
+
+msgid "Hidden"
+msgstr "Скрытые"
+
+msgid "All"
+msgstr "Все"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "Есть OCR"
+
+msgid "No OCR"
+msgstr "Нет OCR"
+
+msgid "Has window"
+msgstr "Есть окно"
+
+msgid "No window"
+msgstr "Нет окна"
+
+msgid "Tagged"
+msgstr "С меткой"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "Маленький"
+
+msgid "Medium"
+msgstr "Средний"
+
+msgid "Large"
+msgstr "Большой"
+
+msgid "Wide"
+msgstr "Широкий"
+
+msgid "Tall"
+msgstr "Высокий"
+
+msgid "Square"
+msgstr "Квадратный"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "Сегодня"
+
+msgid "24 hours"
+msgstr "24 часа"
+
+msgid "7 days"
+msgstr "7 дней"
+
+msgid "30 days"
+msgstr "30 дней"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "Старые"
+
+msgid "Largest"
+msgstr "Наибольший"
+
+msgid "Smallest"
+msgstr "Наименьший"
+
+msgid "Width"
+msgstr "Ширина"
+
+msgid "Height"
+msgstr "Высота"
+
+msgid "Monitor"
+msgstr "Монитор"
+
+msgid "Newest"
+msgstr "Новые"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "текст / OCR / окно / монитор / путь"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "Снимков пока нет"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Выделите область экрана с Win + левая кнопка мыши."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, данные окна и фильтры индексируются в фоне."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "закреплён"
+
+msgid "on screen"
+msgstr "на экране"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "Всего {}"
+
+msgid "Pinned {}"
+msgstr "Закреплено {}"
+
+msgid "On screen {}"
+msgstr "На экране {}"
+
+msgid "Filtered {}"
+msgstr "Отфильтровано {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F поиск"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "Копировать"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + Буфер"
+
+msgid "OCR + Translate"
+msgstr "OCR + Перевод"
+
+msgid "translate"
+msgstr "перевести"
+
+msgid "Share"
+msgstr "Поделиться"
+
+msgid "Transform"
+msgstr "Преобразовать"
+
+msgid "Crop"
+msgstr "Обрезать"
+
+msgid "drag inward"
+msgstr "тянуть внутрь"
+
+msgid "Resize"
+msgstr "Изменить размер"
+
+msgid "handles"
+msgstr "маркеры"
+
+msgid "Hide from screen"
+msgstr "Убрать с экрана"
+
+msgid "hide"
+msgstr "скрыть"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "remove"
+msgstr "удалить"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "Перевести"
+
+msgid "Target language"
+msgstr "Язык перевода"
+
+msgid "More ▾"
+msgstr "Ещё ▾"
+
+msgid "Source (OCR)"
+msgstr "Источник (OCR)"
+
+msgid "copy"
+msgstr "копировать"
+
+msgid "Translation"
+msgstr "Перевод"
+
+msgid "translating…"
+msgstr "перевод…"
+
+msgid "Copy translation"
+msgstr "Копировать перевод"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "Янв"
+
+msgid "Feb"
+msgstr "Фев"
+
+msgid "Mar"
+msgstr "Мар"
+
+msgid "Apr"
+msgstr "Апр"
+
+msgid "May"
+msgstr "Май"
+
+msgid "Jun"
+msgstr "Июн"
+
+msgid "Jul"
+msgstr "Июл"
+
+msgid "Aug"
+msgstr "Авг"
+
+msgid "Sep"
+msgstr "Сен"
+
+msgid "Oct"
+msgstr "Окт"
+
+msgid "Nov"
+msgstr "Ноя"
+
+msgid "Dec"
+msgstr "Дек"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Монитор"
+
+msgid "window"
+msgstr "окно"
+
+msgid "OCR text indexed"
+msgstr "OCR текст проиндексирован"
+
+msgid "Window info indexed"
+msgstr "Данные окна проиндексированы"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Показать Snipdeck"
+
+msgid "New Snip"
+msgstr "Новый снимок"
+
+msgid "Launch at Login"
+msgstr "Запуск при входе"
+
+msgid "Exit"
+msgstr "Выход"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "Не удалось зарегистрировать горячие клавиши: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "Не удалось открыть плавающее окно: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "Не удалось открыть меню: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "Не удалось повторно открыть плавающее окно: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "Окно настроек ещё не готово."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "Снимок по кнопке в порте Slint ещё не реализован — выделите область с Win+LMouse."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "Не удалось скопировать в буфер обмена: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "Не удалось скопировать текст в буфер обмена: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "Не удалось захватить экран: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "Не удалось заморозить экран: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "Не удалось сохранить изображение: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "Не удалось сохранить: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "Не удалось обрезать область: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "Не удалось открыть окно перевода: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "Не удалось открыть редактор: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "Не удалось начать загрузку: {e}"
+
+msgid "Share failed: {e}"
+msgstr "Ошибка публикации: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "Изображение загружено.\r\nСсылка скопирована в буфер обмена:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "Изображение загружено:\r\n{url}\r\n\r\n(Не удалось скопировать ссылку в буфер обмена.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — Загрузка"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "Загрузка не удалась:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Imgur Client-ID не настроен — загрузка невозможна.\r\n\r\n1) Получите бесплатный Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Добавьте его в этот файл:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Перезапустите Snipdeck."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — требуется Imgur Client-ID"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Это изображение будет загружено в ИНТЕРНЕТ — «Imgur» (анонимно).\r\n\r\n• Оно НЕ появится на главной странице / в галерее Imgur (скрыто, без публикации).\r\n• Но любой, у кого есть ссылка, сможет открыть изображение.\r\n• Изображение не зашифровано.\r\n• НЕ загружайте КОНФИДЕНЦИАЛЬНОЕ содержимое: удостоверения, пароли, личные сообщения.\r\n\r\nПри успехе ссылка будет скопирована в буфер обмена.\r\n\r\nЗагрузить?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Это изображение будет загружено в ИНТЕРНЕТ — «catbox.moe».\r\n\r\n• Оно НЕ появится ни в какой публичной галерее / поиске (без публикации).\r\n• Но любой, у кого есть ссылка, сможет открыть изображение.\r\n• Поскольку загрузка анонимная, ВЫ НЕ СМОЖЕТЕ удалить его самостоятельно.\r\n• Изображение не зашифровано.\r\n• НЕ загружайте КОНФИДЕНЦИАЛЬНОЕ содержимое: удостоверения, пароли, личные сообщения.\r\n\r\nПри успехе ссылка будет скопирована в буфер обмена.\r\n\r\nЗагрузить?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — Загрузка в интернет"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "Изображение скопировано в буфер обмена.\r\nВставьте его в открытое письмо с помощью Ctrl+V."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "Письмо открыто, но изображение не удалось скопировать в буфер обмена.\r\nСкопируйте снимок ещё раз и вставьте его с помощью Ctrl+V."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — Вложить в письмо"
+
+msgid "Language"
+msgstr "Язык"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "Аннотировать"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Opacity"
+msgstr "Непрозрачность"
+
+msgid "draw"
+msgstr "рисовать"

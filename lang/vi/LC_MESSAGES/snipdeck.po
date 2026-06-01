@@ -1,0 +1,454 @@
+# Snipdeck — Vietnamese translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: vi\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "Mới"
+
+msgid "Snip + Clip"
+msgstr "Chụp + Sao"
+
+msgid "Clip only"
+msgstr "Chỉ sao"
+
+msgid "Close"
+msgstr "Đóng"
+
+msgid "Reset"
+msgstr "Đặt lại"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "Chụp mới — kéo vùng bằng Win + nhấp trái"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "Chụp màn hình và sao chép vào bộ nhớ tạm"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "Chỉ sao chép vào bộ nhớ tạm (không lưu vào thư viện)"
+
+msgid "Hide on-screen snips"
+msgstr "Ẩn ảnh chụp trên màn hình"
+
+msgid "Show snips on screen"
+msgstr "Hiện ảnh chụp trên màn hình"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "Hiện / ẩn ảnh chụp nổi trên thanh tác vụ"
+
+msgid "Clear unpinned snips"
+msgstr "Xóa ảnh chụp chưa ghim"
+
+msgid "Clear all snips"
+msgstr "Xóa tất cả ảnh chụp"
+
+msgid "Toggle light / dark theme"
+msgstr "Chuyển giao diện sáng / tối"
+
+msgid "Settings"
+msgstr "Cài đặt"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "Trạng thái"
+
+msgid "Content"
+msgstr "Nội dung"
+
+msgid "Size"
+msgstr "Kích thước"
+
+msgid "Date"
+msgstr "Ngày"
+
+msgid "Sort"
+msgstr "Sắp xếp"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "Lọc theo trạng thái — Tất cả → Đã ghim → Chưa ghim → Trên màn hình → Ẩn"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "Lọc theo nội dung — Có/Không OCR · Có/Không cửa sổ · Đã gắn thẻ"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "Lọc theo kích thước — Nhỏ / Vừa / Lớn / Rộng / Cao / Vuông"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "Lọc theo ngày — Hôm nay / 24 giờ / 7 ngày / 30 ngày"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "Sắp xếp theo — Mới nhất / Cũ nhất / Đã ghim / Kích thước / Chiều rộng / Chiều cao / Màn hình"
+
+msgid "Reset all filters and search"
+msgstr "Đặt lại tất cả bộ lọc và tìm kiếm"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "Đã ghim"
+
+msgid "Unpinned"
+msgstr "Chưa ghim"
+
+msgid "On screen"
+msgstr "Trên màn hình"
+
+msgid "Hidden"
+msgstr "Ẩn"
+
+msgid "All"
+msgstr "Tất cả"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "Có OCR"
+
+msgid "No OCR"
+msgstr "Không OCR"
+
+msgid "Has window"
+msgstr "Có cửa sổ"
+
+msgid "No window"
+msgstr "Không cửa sổ"
+
+msgid "Tagged"
+msgstr "Đã gắn thẻ"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "Nhỏ"
+
+msgid "Medium"
+msgstr "Vừa"
+
+msgid "Large"
+msgstr "Lớn"
+
+msgid "Wide"
+msgstr "Rộng"
+
+msgid "Tall"
+msgstr "Cao"
+
+msgid "Square"
+msgstr "Vuông"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "Hôm nay"
+
+msgid "24 hours"
+msgstr "24 giờ"
+
+msgid "7 days"
+msgstr "7 ngày"
+
+msgid "30 days"
+msgstr "30 ngày"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "Cũ nhất"
+
+msgid "Largest"
+msgstr "Lớn nhất"
+
+msgid "Smallest"
+msgstr "Nhỏ nhất"
+
+msgid "Width"
+msgstr "Chiều rộng"
+
+msgid "Height"
+msgstr "Chiều cao"
+
+msgid "Monitor"
+msgstr "Màn hình"
+
+msgid "Newest"
+msgstr "Mới nhất"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "văn bản / OCR / cửa sổ / màn hình / đường dẫn"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "Chưa có ảnh chụp nào"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Chụp một vùng màn hình bằng Win + nhấp chuột trái."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, thông tin cửa sổ và bộ lọc được lập chỉ mục trong nền."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "đã ghim"
+
+msgid "on screen"
+msgstr "trên màn hình"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "Tổng {}"
+
+msgid "Pinned {}"
+msgstr "Đã ghim {}"
+
+msgid "On screen {}"
+msgstr "Trên màn hình {}"
+
+msgid "Filtered {}"
+msgstr "Đã lọc {}"
+
+msgid "Ctrl+F search"
+msgstr "Tìm kiếm Ctrl+F"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "Sao chép"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + Bộ nhớ tạm"
+
+msgid "OCR + Translate"
+msgstr "OCR + Dịch"
+
+msgid "translate"
+msgstr "dịch"
+
+msgid "Share"
+msgstr "Chia sẻ"
+
+msgid "Transform"
+msgstr "Biến đổi"
+
+msgid "Crop"
+msgstr "Cắt xén"
+
+msgid "drag inward"
+msgstr "kéo vào trong"
+
+msgid "Resize"
+msgstr "Thay đổi kích thước"
+
+msgid "handles"
+msgstr "tay cầm"
+
+msgid "Hide from screen"
+msgstr "Ẩn khỏi màn hình"
+
+msgid "hide"
+msgstr "ẩn"
+
+msgid "Delete"
+msgstr "Xóa"
+
+msgid "remove"
+msgstr "gỡ bỏ"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "Dịch"
+
+msgid "Target language"
+msgstr "Ngôn ngữ đích"
+
+msgid "More ▾"
+msgstr "Thêm ▾"
+
+msgid "Source (OCR)"
+msgstr "Nguồn (OCR)"
+
+msgid "copy"
+msgstr "sao chép"
+
+msgid "Translation"
+msgstr "Bản dịch"
+
+msgid "translating…"
+msgstr "đang dịch…"
+
+msgid "Copy translation"
+msgstr "Sao chép bản dịch"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "Thg 1"
+
+msgid "Feb"
+msgstr "Thg 2"
+
+msgid "Mar"
+msgstr "Thg 3"
+
+msgid "Apr"
+msgstr "Thg 4"
+
+msgid "May"
+msgstr "Thg 5"
+
+msgid "Jun"
+msgstr "Thg 6"
+
+msgid "Jul"
+msgstr "Thg 7"
+
+msgid "Aug"
+msgstr "Thg 8"
+
+msgid "Sep"
+msgstr "Thg 9"
+
+msgid "Oct"
+msgstr "Thg 10"
+
+msgid "Nov"
+msgstr "Thg 11"
+
+msgid "Dec"
+msgstr "Thg 12"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Màn hình"
+
+msgid "window"
+msgstr "cửa sổ"
+
+msgid "OCR text indexed"
+msgstr "Văn bản OCR đã lập chỉ mục"
+
+msgid "Window info indexed"
+msgstr "Thông tin cửa sổ đã lập chỉ mục"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Hiện Snipdeck"
+
+msgid "New Snip"
+msgstr "Chụp mới"
+
+msgid "Launch at Login"
+msgstr "Khởi chạy khi đăng nhập"
+
+msgid "Exit"
+msgstr "Thoát"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "Không thể đăng ký phím tắt: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "Không thể mở cửa sổ nổi: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "Không thể mở menu: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "Không thể mở lại cửa sổ nổi: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "Cửa sổ cài đặt chưa sẵn sàng."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "Chụp bằng nút chưa hoạt động trong bản Slint — hãy kéo bằng Win+LMouse."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "Không thể sao chép vào bộ nhớ tạm: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "Không thể sao chép văn bản vào bộ nhớ tạm: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "Không thể chụp màn hình: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "Không thể đóng băng màn hình: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "Không thể lưu ảnh: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "Không thể lưu: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "Không thể cắt xén vùng: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "Không thể mở cửa sổ dịch: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "Không thể mở trình chỉnh sửa: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "Không thể bắt đầu tải lên: {e}"
+
+msgid "Share failed: {e}"
+msgstr "Chia sẻ thất bại: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "Ảnh đã được tải lên.\r\nĐã sao chép liên kết vào bộ nhớ tạm:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "Ảnh đã được tải lên:\r\n{url}\r\n\r\n(Không thể sao chép liên kết vào bộ nhớ tạm.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — Tải lên"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "Tải lên thất bại:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Chưa cấu hình Imgur Client-ID — không thể tải lên.\r\n\r\n1) Lấy Client-ID miễn phí:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Thêm vào tệp này:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Khởi động lại Snipdeck."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Yêu cầu Imgur Client-ID"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Ảnh này sẽ được tải lên INTERNET — \"Imgur\" (ẩn danh).\r\n\r\n• Ảnh sẽ KHÔNG xuất hiện trên trang chủ / thư viện Imgur (ẩn, không liệt kê).\r\n• Nhưng bất kỳ ai có liên kết đều có thể xem ảnh.\r\n• Ảnh không được mã hóa.\r\n• KHÔNG tải lên nội dung NHẠY CẢM như CMND, mật khẩu hoặc tin nhắn riêng tư.\r\n\r\nNếu thành công, liên kết sẽ được sao chép vào bộ nhớ tạm.\r\n\r\nTải lên?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Ảnh này sẽ được tải lên INTERNET — \"catbox.moe\".\r\n\r\n• Ảnh sẽ KHÔNG xuất hiện trong bất kỳ thư viện công khai / tìm kiếm nào (không liệt kê).\r\n• Nhưng bất kỳ ai có liên kết đều có thể xem ảnh.\r\n• Vì được tải lên ẩn danh, BẠN KHÔNG THỂ TỰ XÓA sau này.\r\n• Ảnh không được mã hóa.\r\n• KHÔNG tải lên nội dung NHẠY CẢM như CMND, mật khẩu hoặc tin nhắn riêng tư.\r\n\r\nNếu thành công, liên kết sẽ được sao chép vào bộ nhớ tạm.\r\n\r\nTải lên?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — Tải lên internet"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "Ảnh đã được sao chép vào bộ nhớ tạm.\r\nDán vào email đang mở bằng Ctrl+V."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "Email đã mở, nhưng không thể sao chép ảnh vào bộ nhớ tạm.\r\nHãy sao chép ảnh chụp lại và dán bằng Ctrl+V."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — Đính kèm vào email"
+
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "Chú thích"
+
+msgid "Cancel"
+msgstr "Hủy"
+
+msgid "Save"
+msgstr "Lưu"
+
+msgid "Opacity"
+msgstr "Độ mờ"
+
+msgid "draw"
+msgstr "vẽ"

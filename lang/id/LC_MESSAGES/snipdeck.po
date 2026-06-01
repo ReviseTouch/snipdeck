@@ -1,0 +1,454 @@
+# Snipdeck — Indonesian (id) translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: id\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "Baru"
+
+msgid "Snip + Clip"
+msgstr "Snip + Salin"
+
+msgid "Clip only"
+msgstr "Salin saja"
+
+msgid "Close"
+msgstr "Tutup"
+
+msgid "Reset"
+msgstr "Atur Ulang"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "Ambil snip baru — seret wilayah dengan Win + klik kiri"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "Ambil snip dan salin ke papan klip"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "Salin ke papan klip saja (tanpa menyimpan ke galeri)"
+
+msgid "Hide on-screen snips"
+msgstr "Sembunyikan snip di layar"
+
+msgid "Show snips on screen"
+msgstr "Tampilkan snip di layar"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "Tampilkan / sembunyikan snip mengambang di bilah tugas"
+
+msgid "Clear unpinned snips"
+msgstr "Hapus snip yang tidak disematkan"
+
+msgid "Clear all snips"
+msgstr "Hapus semua snip"
+
+msgid "Toggle light / dark theme"
+msgstr "Beralih tema terang / gelap"
+
+msgid "Settings"
+msgstr "Pengaturan"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "Status"
+
+msgid "Content"
+msgstr "Konten"
+
+msgid "Size"
+msgstr "Ukuran"
+
+msgid "Date"
+msgstr "Tanggal"
+
+msgid "Sort"
+msgstr "Urutkan"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "Filter berdasarkan status — Semua → Disematkan → Tidak disematkan → Di layar → Tersembunyi"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "Filter berdasarkan konten — Ada/Tanpa OCR · Ada/Tanpa jendela · Bertanda"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "Filter berdasarkan ukuran — Kecil / Sedang / Besar / Lebar / Tinggi / Persegi"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "Filter berdasarkan tanggal — Hari ini / 24 jam / 7 hari / 30 hari"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "Urutkan berdasarkan — Terbaru / Terlama / Disematkan / Ukuran / Lebar / Tinggi / Monitor"
+
+msgid "Reset all filters and search"
+msgstr "Atur ulang semua filter dan pencarian"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "Disematkan"
+
+msgid "Unpinned"
+msgstr "Tidak disematkan"
+
+msgid "On screen"
+msgstr "Di layar"
+
+msgid "Hidden"
+msgstr "Tersembunyi"
+
+msgid "All"
+msgstr "Semua"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "Ada OCR"
+
+msgid "No OCR"
+msgstr "Tanpa OCR"
+
+msgid "Has window"
+msgstr "Ada jendela"
+
+msgid "No window"
+msgstr "Tanpa jendela"
+
+msgid "Tagged"
+msgstr "Bertanda"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "Kecil"
+
+msgid "Medium"
+msgstr "Sedang"
+
+msgid "Large"
+msgstr "Besar"
+
+msgid "Wide"
+msgstr "Lebar"
+
+msgid "Tall"
+msgstr "Tinggi"
+
+msgid "Square"
+msgstr "Persegi"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "Hari ini"
+
+msgid "24 hours"
+msgstr "24 jam"
+
+msgid "7 days"
+msgstr "7 hari"
+
+msgid "30 days"
+msgstr "30 hari"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "Terlama"
+
+msgid "Largest"
+msgstr "Terbesar"
+
+msgid "Smallest"
+msgstr "Terkecil"
+
+msgid "Width"
+msgstr "Lebar"
+
+msgid "Height"
+msgstr "Tinggi"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Newest"
+msgstr "Terbaru"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "teks / OCR / jendela / monitor / jalur"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "Belum ada snip yang dikumpulkan"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Tangkap wilayah dari layar dengan Win + tombol kiri mouse."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, info jendela, dan filter diindeks di latar belakang."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "disematkan"
+
+msgid "on screen"
+msgstr "di layar"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "Total {}"
+
+msgid "Pinned {}"
+msgstr "Disematkan {}"
+
+msgid "On screen {}"
+msgstr "Di layar {}"
+
+msgid "Filtered {}"
+msgstr "Difilter {}"
+
+msgid "Ctrl+F search"
+msgstr "Pencarian Ctrl+F"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "Salin"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + Papan Klip"
+
+msgid "OCR + Translate"
+msgstr "OCR + Terjemahkan"
+
+msgid "translate"
+msgstr "terjemahkan"
+
+msgid "Share"
+msgstr "Bagikan"
+
+msgid "Transform"
+msgstr "Transformasi"
+
+msgid "Crop"
+msgstr "Potong"
+
+msgid "drag inward"
+msgstr "seret ke dalam"
+
+msgid "Resize"
+msgstr "Ubah ukuran"
+
+msgid "handles"
+msgstr "pegangan"
+
+msgid "Hide from screen"
+msgstr "Sembunyikan dari layar"
+
+msgid "hide"
+msgstr "sembunyikan"
+
+msgid "Delete"
+msgstr "Hapus"
+
+msgid "remove"
+msgstr "hapus"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "Terjemahkan"
+
+msgid "Target language"
+msgstr "Bahasa target"
+
+msgid "More ▾"
+msgstr "Lainnya ▾"
+
+msgid "Source (OCR)"
+msgstr "Sumber (OCR)"
+
+msgid "copy"
+msgstr "salin"
+
+msgid "Translation"
+msgstr "Terjemahan"
+
+msgid "translating…"
+msgstr "menerjemahkan…"
+
+msgid "Copy translation"
+msgstr "Salin terjemahan"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "May"
+msgstr "Mei"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "Aug"
+msgstr "Agt"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Oct"
+msgstr "Okt"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Dec"
+msgstr "Des"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "window"
+msgstr "jendela"
+
+msgid "OCR text indexed"
+msgstr "Teks OCR diindeks"
+
+msgid "Window info indexed"
+msgstr "Info jendela diindeks"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Tampilkan Snipdeck"
+
+msgid "New Snip"
+msgstr "Snip Baru"
+
+msgid "Launch at Login"
+msgstr "Jalankan saat Masuk"
+
+msgid "Exit"
+msgstr "Keluar"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "Gagal mendaftarkan tombol pintas: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "Gagal membuka jendela mengambang: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "Gagal membuka menu: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "Gagal membuka kembali jendela mengambang: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "Jendela pengaturan belum siap."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "Snip yang dipicu tombol belum tersambung di port Slint — seret dengan Win+LMouse."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "Gagal menyalin ke papan klip: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "Gagal menyalin teks ke papan klip: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "Gagal menangkap layar: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "Gagal membekukan layar: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "Gagal menyimpan gambar: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "Gagal menyimpan: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "Gagal memotong wilayah: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "Gagal membuka jendela terjemahan: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "Gagal membuka editor: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "Gagal memulai unggahan: {e}"
+
+msgid "Share failed: {e}"
+msgstr "Berbagi gagal: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "Gambar diunggah.\r\nTautan disalin ke papan klip:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "Gambar diunggah:\r\n{url}\r\n\r\n(Tautan tidak dapat disalin ke papan klip.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — Unggah"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "Unggahan gagal:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Imgur Client-ID belum dikonfigurasi — tidak dapat mengunggah.\r\n\r\n1) Dapatkan Client-ID gratis:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Tambahkan ke file ini:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Mulai ulang Snipdeck."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Imgur Client-ID diperlukan"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Gambar ini akan diunggah ke INTERNET — \"Imgur\" (anonim).\r\n\r\n• Gambar TIDAK akan muncul di halaman utama / galeri Imgur (tersembunyi, tidak terdaftar).\r\n• Namun siapa pun yang memiliki tautan tersebut dapat membuka gambar.\r\n• Gambar tidak dienkripsi.\r\n• JANGAN mengunggah konten SENSITIF seperti ID, kata sandi, atau pesan pribadi.\r\n\r\nJika berhasil, tautan disalin ke papan klip Anda.\r\n\r\nUnggah?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Gambar ini akan diunggah ke INTERNET — \"catbox.moe\".\r\n\r\n• Gambar TIDAK akan muncul di galeri / pencarian publik mana pun (tidak terdaftar).\r\n• Namun siapa pun yang memiliki tautan tersebut dapat membuka gambar.\r\n• Karena diunggah secara anonim, ANDA TIDAK DAPAT MENGHAPUSNYA sendiri nanti.\r\n• Gambar tidak dienkripsi.\r\n• JANGAN mengunggah konten SENSITIF seperti ID, kata sandi, atau pesan pribadi.\r\n\r\nJika berhasil, tautan disalin ke papan klip Anda.\r\n\r\nUnggah?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — Unggah ke internet"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "Gambar telah disalin ke papan klip.\r\nTempel ke email yang terbuka dengan Ctrl+V."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "Email terbuka, tetapi gambar tidak dapat disalin ke papan klip.\r\nSalin snip lagi dan tempel dengan Ctrl+V."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — Lampirkan ke email"
+
+msgid "Language"
+msgstr "Bahasa"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "Anotasi"
+
+msgid "Cancel"
+msgstr "Batal"
+
+msgid "Save"
+msgstr "Simpan"
+
+msgid "Opacity"
+msgstr "Opasitas"
+
+msgid "draw"
+msgstr "gambar"

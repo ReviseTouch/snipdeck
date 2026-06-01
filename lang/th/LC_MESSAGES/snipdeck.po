@@ -1,0 +1,454 @@
+# Snipdeck — Thai translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: th\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "ใหม่"
+
+msgid "Snip + Clip"
+msgstr "จับ + คัดลอก"
+
+msgid "Clip only"
+msgstr "คัดลอกอย่างเดียว"
+
+msgid "Close"
+msgstr "ปิด"
+
+msgid "Reset"
+msgstr "รีเซ็ต"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "จับภาพใหม่ — ลากเลือกพื้นที่ด้วย Win + คลิกซ้าย"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "จับภาพและคัดลอกไปยังคลิปบอร์ด"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "คัดลอกไปยังคลิปบอร์ดเท่านั้น (โดยไม่บันทึกในแกลเลอรี)"
+
+msgid "Hide on-screen snips"
+msgstr "ซ่อนภาพที่แสดงบนหน้าจอ"
+
+msgid "Show snips on screen"
+msgstr "แสดงภาพบนหน้าจอ"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "แสดง / ซ่อนภาพลอยตัวในแถบงาน"
+
+msgid "Clear unpinned snips"
+msgstr "ล้างภาพที่ไม่ได้ปักหมุด"
+
+msgid "Clear all snips"
+msgstr "ล้างภาพทั้งหมด"
+
+msgid "Toggle light / dark theme"
+msgstr "สลับธีมสว่าง / มืด"
+
+msgid "Settings"
+msgstr "การตั้งค่า"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "สถานะ"
+
+msgid "Content"
+msgstr "เนื้อหา"
+
+msgid "Size"
+msgstr "ขนาด"
+
+msgid "Date"
+msgstr "วันที่"
+
+msgid "Sort"
+msgstr "เรียง"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "กรองตามสถานะ — ทั้งหมด → ปักหมุด → ไม่ปักหมุด → บนหน้าจอ → ซ่อน"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "กรองตามเนื้อหา — มี/ไม่มี OCR · มี/ไม่มีหน้าต่าง · ติดแท็ก"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "กรองตามขนาด — เล็ก / กลาง / ใหญ่ / กว้าง / สูง / สี่เหลี่ยมจัตุรัส"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "กรองตามวันที่ — วันนี้ / 24 ชั่วโมง / 7 วัน / 30 วัน"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "เรียงตาม — ใหม่สุด / เก่าสุด / ปักหมุด / ขนาด / ความกว้าง / ความสูง / Monitor"
+
+msgid "Reset all filters and search"
+msgstr "รีเซ็ตตัวกรองและการค้นหาทั้งหมด"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "ปักหมุด"
+
+msgid "Unpinned"
+msgstr "ไม่ปักหมุด"
+
+msgid "On screen"
+msgstr "บนหน้าจอ"
+
+msgid "Hidden"
+msgstr "ซ่อน"
+
+msgid "All"
+msgstr "ทั้งหมด"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "มี OCR"
+
+msgid "No OCR"
+msgstr "ไม่มี OCR"
+
+msgid "Has window"
+msgstr "มีหน้าต่าง"
+
+msgid "No window"
+msgstr "ไม่มีหน้าต่าง"
+
+msgid "Tagged"
+msgstr "ติดแท็ก"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "เล็ก"
+
+msgid "Medium"
+msgstr "กลาง"
+
+msgid "Large"
+msgstr "ใหญ่"
+
+msgid "Wide"
+msgstr "กว้าง"
+
+msgid "Tall"
+msgstr "สูง"
+
+msgid "Square"
+msgstr "สี่เหลี่ยมจัตุรัส"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "วันนี้"
+
+msgid "24 hours"
+msgstr "24 ชั่วโมง"
+
+msgid "7 days"
+msgstr "7 วัน"
+
+msgid "30 days"
+msgstr "30 วัน"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "เก่าสุด"
+
+msgid "Largest"
+msgstr "ใหญ่สุด"
+
+msgid "Smallest"
+msgstr "เล็กสุด"
+
+msgid "Width"
+msgstr "ความกว้าง"
+
+msgid "Height"
+msgstr "ความสูง"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Newest"
+msgstr "ใหม่สุด"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "ข้อความ / OCR / หน้าต่าง / monitor / path"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "ยังไม่มีภาพที่จับไว้"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "จับภาพพื้นที่บนหน้าจอด้วย Win + คลิกซ้าย"
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR ข้อมูลหน้าต่าง และตัวกรองถูกจัดทำดัชนีเบื้องหลัง"
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "ปักหมุด"
+
+msgid "on screen"
+msgstr "บนหน้าจอ"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "ทั้งหมด {}"
+
+msgid "Pinned {}"
+msgstr "ปักหมุด {}"
+
+msgid "On screen {}"
+msgstr "บนหน้าจอ {}"
+
+msgid "Filtered {}"
+msgstr "กรองแล้ว {}"
+
+msgid "Ctrl+F search"
+msgstr "Ctrl+F ค้นหา"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "คัดลอก"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + คลิปบอร์ด"
+
+msgid "OCR + Translate"
+msgstr "OCR + แปลภาษา"
+
+msgid "translate"
+msgstr "แปลภาษา"
+
+msgid "Share"
+msgstr "แชร์"
+
+msgid "Transform"
+msgstr "แปลง"
+
+msgid "Crop"
+msgstr "ตัดรูป"
+
+msgid "drag inward"
+msgstr "ลากเข้าด้านใน"
+
+msgid "Resize"
+msgstr "ปรับขนาด"
+
+msgid "handles"
+msgstr "จุดจับ"
+
+msgid "Hide from screen"
+msgstr "ซ่อนจากหน้าจอ"
+
+msgid "hide"
+msgstr "ซ่อน"
+
+msgid "Delete"
+msgstr "ลบ"
+
+msgid "remove"
+msgstr "นำออก"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "แปลภาษา"
+
+msgid "Target language"
+msgstr "ภาษาปลายทาง"
+
+msgid "More ▾"
+msgstr "เพิ่มเติม ▾"
+
+msgid "Source (OCR)"
+msgstr "ต้นฉบับ (OCR)"
+
+msgid "copy"
+msgstr "คัดลอก"
+
+msgid "Translation"
+msgstr "คำแปล"
+
+msgid "translating…"
+msgstr "กำลังแปล…"
+
+msgid "Copy translation"
+msgstr "คัดลอกคำแปล"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "ม.ค."
+
+msgid "Feb"
+msgstr "ก.พ."
+
+msgid "Mar"
+msgstr "มี.ค."
+
+msgid "Apr"
+msgstr "เม.ย."
+
+msgid "May"
+msgstr "พ.ค."
+
+msgid "Jun"
+msgstr "มิ.ย."
+
+msgid "Jul"
+msgstr "ก.ค."
+
+msgid "Aug"
+msgstr "ส.ค."
+
+msgid "Sep"
+msgstr "ก.ย."
+
+msgid "Oct"
+msgstr "ต.ค."
+
+msgid "Nov"
+msgstr "พ.ย."
+
+msgid "Dec"
+msgstr "ธ.ค."
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "window"
+msgstr "หน้าต่าง"
+
+msgid "OCR text indexed"
+msgstr "จัดทำดัชนีข้อความ OCR แล้ว"
+
+msgid "Window info indexed"
+msgstr "จัดทำดัชนีข้อมูลหน้าต่างแล้ว"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "แสดง Snipdeck"
+
+msgid "New Snip"
+msgstr "ภาพใหม่"
+
+msgid "Launch at Login"
+msgstr "เปิดตอนเข้าสู่ระบบ"
+
+msgid "Exit"
+msgstr "ออก"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "ลงทะเบียนปุ่มลัดไม่สำเร็จ: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "เปิดหน้าต่างลอยตัวไม่สำเร็จ: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "เปิดเมนูไม่สำเร็จ: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "เปิดหน้าต่างลอยตัวซ้ำไม่สำเร็จ: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "หน้าต่างการตั้งค่ายังไม่พร้อม"
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "การจับภาพด้วยปุ่มยังไม่รองรับในพอร์ต Slint — ลากด้วย Win+LMouse"
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "คัดลอกไปยังคลิปบอร์ดไม่สำเร็จ: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "คัดลอกข้อความไปยังคลิปบอร์ดไม่สำเร็จ: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "จับภาพหน้าจอไม่สำเร็จ: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "หยุดหน้าจอไม่สำเร็จ: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "บันทึกรูปภาพไม่สำเร็จ: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "บันทึกไม่สำเร็จ: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "ตัดพื้นที่ไม่สำเร็จ: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "เปิดหน้าต่างแปลภาษาไม่สำเร็จ: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "เปิดตัวแก้ไขไม่สำเร็จ: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "เริ่มอัปโหลดไม่สำเร็จ: {e}"
+
+msgid "Share failed: {e}"
+msgstr "การแชร์ล้มเหลว: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "อัปโหลดรูปภาพสำเร็จ\r\nคัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "อัปโหลดรูปภาพสำเร็จ:\r\n{url}\r\n\r\n(ไม่สามารถคัดลอกลิงก์ไปยังคลิปบอร์ดได้)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — อัปโหลด"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "อัปโหลดล้มเหลว:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "ยังไม่ได้กำหนด Imgur Client-ID — ไม่สามารถอัปโหลดได้\r\n\r\n1) รับ Client-ID ฟรี:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) เพิ่มลงในไฟล์นี้:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) รีสตาร์ท Snipdeck"
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — ต้องการ Imgur Client-ID"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "รูปภาพนี้จะถูกอัปโหลดไปยัง INTERNET — \"Imgur\" (ไม่ระบุตัวตน)\r\n\r\n• จะ ไม่ ปรากฏบนหน้าแรก / แกลเลอรีของ Imgur (ซ่อน ไม่แสดงในรายการ)\r\n• แต่ผู้ที่มีลิงก์สามารถเปิดรูปภาพได้\r\n• รูปภาพไม่ได้เข้ารหัส\r\n• ห้าม อัปโหลดเนื้อหา ที่สำคัญ เช่น บัตรประจำตัว รหัสผ่าน หรือข้อความส่วนตัว\r\n\r\nเมื่อสำเร็จ ลิงก์จะถูกคัดลอกไปยังคลิปบอร์ด\r\n\r\nอัปโหลด?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "รูปภาพนี้จะถูกอัปโหลดไปยัง INTERNET — \"catbox.moe\"\r\n\r\n• จะ ไม่ ปรากฏในแกลเลอรีสาธารณะ / การค้นหา (ไม่แสดงในรายการ)\r\n• แต่ผู้ที่มีลิงก์สามารถเปิดรูปภาพได้\r\n• เนื่องจากอัปโหลดแบบไม่ระบุตัวตน คุณ ไม่สามารถลบ ได้ในภายหลัง\r\n• รูปภาพไม่ได้เข้ารหัส\r\n• ห้าม อัปโหลดเนื้อหา ที่สำคัญ เช่น บัตรประจำตัว รหัสผ่าน หรือข้อความส่วนตัว\r\n\r\nเมื่อสำเร็จ ลิงก์จะถูกคัดลอกไปยังคลิปบอร์ด\r\n\r\nอัปโหลด?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — อัปโหลดไปยังอินเทอร์เน็ต"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "คัดลอกรูปภาพไปยังคลิปบอร์ดแล้ว\r\nวางลงในอีเมลที่เปิดอยู่ด้วย Ctrl+V"
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "เปิดอีเมลแล้ว แต่ไม่สามารถคัดลอกรูปภาพไปยังคลิปบอร์ดได้\r\nคัดลอกภาพอีกครั้งและวางด้วย Ctrl+V"
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — แนบไปกับอีเมล"
+
+msgid "Language"
+msgstr "ภาษา"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "ใส่คำอธิบาย"
+
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgid "Save"
+msgstr "บันทึก"
+
+msgid "Opacity"
+msgstr "ความทึบ"
+
+msgid "draw"
+msgstr "วาด"

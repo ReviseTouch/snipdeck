@@ -1,0 +1,459 @@
+# Snipdeck — translation template (.pot)
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+# English is the source language: every msgid is the exact English text.
+# To translate: copy this file to lang/<code>/LC_MESSAGES/snipdeck.po and fill
+# each msgstr. Keep placeholders ({}, {e}, {err}, {url}, {path}) and escapes
+# (\r\n, \", •, —, →, ·, ▾, …) intact. Do not translate: Snipdeck, OCR, Win,
+# Ctrl+F, Ctrl+V, Imgur, imgur.com, imgur_client_id, catbox.moe, MAPI.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr ""
+
+msgid "Snip + Clip"
+msgstr ""
+
+msgid "Clip only"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Reset"
+msgstr ""
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr ""
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr ""
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr ""
+
+msgid "Hide on-screen snips"
+msgstr ""
+
+msgid "Show snips on screen"
+msgstr ""
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr ""
+
+msgid "Clear unpinned snips"
+msgstr ""
+
+msgid "Clear all snips"
+msgstr ""
+
+msgid "Toggle light / dark theme"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr ""
+
+msgid "Content"
+msgstr ""
+
+msgid "Size"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Sort"
+msgstr ""
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr ""
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr ""
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr ""
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr ""
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr ""
+
+msgid "Reset all filters and search"
+msgstr ""
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr ""
+
+msgid "Unpinned"
+msgstr ""
+
+msgid "On screen"
+msgstr ""
+
+msgid "Hidden"
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr ""
+
+msgid "No OCR"
+msgstr ""
+
+msgid "Has window"
+msgstr ""
+
+msgid "No window"
+msgstr ""
+
+msgid "Tagged"
+msgstr ""
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr ""
+
+msgid "Medium"
+msgstr ""
+
+msgid "Large"
+msgstr ""
+
+msgid "Wide"
+msgstr ""
+
+msgid "Tall"
+msgstr ""
+
+msgid "Square"
+msgstr ""
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr ""
+
+msgid "24 hours"
+msgstr ""
+
+msgid "7 days"
+msgstr ""
+
+msgid "30 days"
+msgstr ""
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr ""
+
+msgid "Largest"
+msgstr ""
+
+msgid "Smallest"
+msgstr ""
+
+msgid "Width"
+msgstr ""
+
+msgid "Height"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Newest"
+msgstr ""
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr ""
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr ""
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr ""
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr ""
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr ""
+
+msgid "on screen"
+msgstr ""
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr ""
+
+msgid "Pinned {}"
+msgstr ""
+
+msgid "On screen {}"
+msgstr ""
+
+msgid "Filtered {}"
+msgstr ""
+
+msgid "Ctrl+F search"
+msgstr ""
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr ""
+
+msgid "OCR + Clipboard"
+msgstr ""
+
+msgid "OCR + Translate"
+msgstr ""
+
+msgid "translate"
+msgstr ""
+
+msgid "Share"
+msgstr ""
+
+msgid "Transform"
+msgstr ""
+
+msgid "Crop"
+msgstr ""
+
+msgid "drag inward"
+msgstr ""
+
+msgid "Resize"
+msgstr ""
+
+msgid "handles"
+msgstr ""
+
+msgid "Hide from screen"
+msgstr ""
+
+msgid "hide"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "remove"
+msgstr ""
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr ""
+
+msgid "Target language"
+msgstr ""
+
+msgid "More ▾"
+msgstr ""
+
+msgid "Source (OCR)"
+msgstr ""
+
+msgid "copy"
+msgstr ""
+
+msgid "Translation"
+msgstr ""
+
+msgid "translating…"
+msgstr ""
+
+msgid "Copy translation"
+msgstr ""
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr ""
+
+msgid "Feb"
+msgstr ""
+
+msgid "Mar"
+msgstr ""
+
+msgid "Apr"
+msgstr ""
+
+msgid "May"
+msgstr ""
+
+msgid "Jun"
+msgstr ""
+
+msgid "Jul"
+msgstr ""
+
+msgid "Aug"
+msgstr ""
+
+msgid "Sep"
+msgstr ""
+
+msgid "Oct"
+msgstr ""
+
+msgid "Nov"
+msgstr ""
+
+msgid "Dec"
+msgstr ""
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr ""
+
+msgid "window"
+msgstr ""
+
+msgid "OCR text indexed"
+msgstr ""
+
+msgid "Window info indexed"
+msgstr ""
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr ""
+
+msgid "New Snip"
+msgstr ""
+
+msgid "Launch at Login"
+msgstr ""
+
+msgid "Exit"
+msgstr ""
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr ""
+
+msgid "Failed to open floating window: {e}"
+msgstr ""
+
+msgid "Failed to open menu: {e}"
+msgstr ""
+
+msgid "Failed to reopen floating window: {e}"
+msgstr ""
+
+msgid "The settings window isn't ready yet."
+msgstr ""
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr ""
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr ""
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr ""
+
+msgid "Failed to capture screen: {e}"
+msgstr ""
+
+msgid "Failed to freeze screen: {e}"
+msgstr ""
+
+msgid "Failed to save image: {e}"
+msgstr ""
+
+msgid "Failed to save: {e}"
+msgstr ""
+
+msgid "Failed to crop region: {e}"
+msgstr ""
+
+msgid "Failed to open translation window: {e}"
+msgstr ""
+
+msgid "Failed to open editor: {e}"
+msgstr ""
+
+msgid "Failed to start upload: {e}"
+msgstr ""
+
+msgid "Share failed: {e}"
+msgstr ""
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr ""
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr ""
+
+msgid "Snipdeck — Upload"
+msgstr ""
+
+msgid "Upload failed:\r\n{err}"
+msgstr ""
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr ""
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr ""
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr ""
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr ""
+
+msgid "Snipdeck — Upload to the internet"
+msgstr ""
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr ""
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr ""
+
+msgid "Snipdeck — Attach to email"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Opacity"
+msgstr ""
+
+msgid "draw"
+msgstr ""

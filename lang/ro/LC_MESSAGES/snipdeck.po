@@ -1,0 +1,454 @@
+# Snipdeck — Romanian (ro) translation
+# Copyright (c) 2026 Hasan Salihoğlu. MIT License.
+msgid ""
+msgstr ""
+"Project-Id-Version: snipdeck 0.1.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ro\n"
+
+#. ── Toolbar buttons (keep short to fit the buttons) ──
+msgid "New"
+msgstr "Nou"
+
+msgid "Snip + Clip"
+msgstr "Captură + Copiere"
+
+msgid "Clip only"
+msgstr "Doar copiere"
+
+msgid "Close"
+msgstr "Închide"
+
+msgid "Reset"
+msgstr "Resetare"
+
+#. ── Toolbar / control tooltips ──
+msgid "Take a new snip — drag a region with Win + left click"
+msgstr "Captură nouă — trage o regiune cu Win + clic stânga"
+
+msgid "Take a snip and copy it to the clipboard"
+msgstr "Captează și copiază în clipboard"
+
+msgid "Copy to the clipboard only (without saving to the gallery)"
+msgstr "Copiază în clipboard (fără a salva în galerie)"
+
+msgid "Hide on-screen snips"
+msgstr "Ascunde capturile de pe ecran"
+
+msgid "Show snips on screen"
+msgstr "Afișează capturile pe ecran"
+
+msgid "Show / hide floating snips in the taskbar"
+msgstr "Afișează / ascunde capturile flotante din bara de activități"
+
+msgid "Clear unpinned snips"
+msgstr "Șterge capturile neprinse"
+
+msgid "Clear all snips"
+msgstr "Șterge toate capturile"
+
+msgid "Toggle light / dark theme"
+msgstr "Comută tema luminoasă / întunecată"
+
+msgid "Settings"
+msgstr "Setări"
+
+#. ── Filter labels ──
+msgid "Status"
+msgstr "Stare"
+
+msgid "Content"
+msgstr "Conținut"
+
+msgid "Size"
+msgstr "Dimensiune"
+
+msgid "Date"
+msgstr "Dată"
+
+msgid "Sort"
+msgstr "Sortare"
+
+#. ── Filter tooltips (keep the → · / arrows and separators) ──
+msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
+msgstr "Filtrare după stare — Toate → Prinse → Neprinse → Pe ecran → Ascunse"
+
+msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
+msgstr "Filtrare după conținut — Cu/Fără OCR · Cu/Fără fereastră · Etichetat"
+
+msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
+msgstr "Filtrare după dimensiune — Mic / Mediu / Mare / Lat / Înalt / Pătrat"
+
+msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
+msgstr "Filtrare după dată — Azi / 24 ore / 7 zile / 30 zile"
+
+msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
+msgstr "Sortare după — Cele mai noi / Cele mai vechi / Prinse / Dimensiune / Lățime / Înălțime / Monitor"
+
+msgid "Reset all filters and search"
+msgstr "Resetează toate filtrele și căutarea"
+
+#. ── Filter values (Status) ──
+msgid "Pinned"
+msgstr "Prins"
+
+msgid "Unpinned"
+msgstr "Neprins"
+
+msgid "On screen"
+msgstr "Pe ecran"
+
+msgid "Hidden"
+msgstr "Ascuns"
+
+msgid "All"
+msgstr "Toate"
+
+#. ── Filter values (Content) ──
+msgid "Has OCR"
+msgstr "Cu OCR"
+
+msgid "No OCR"
+msgstr "Fără OCR"
+
+msgid "Has window"
+msgstr "Cu fereastră"
+
+msgid "No window"
+msgstr "Fără fereastră"
+
+msgid "Tagged"
+msgstr "Etichetat"
+
+#. ── Filter values (Size) ──
+msgid "Small"
+msgstr "Mic"
+
+msgid "Medium"
+msgstr "Mediu"
+
+msgid "Large"
+msgstr "Mare"
+
+msgid "Wide"
+msgstr "Lat"
+
+msgid "Tall"
+msgstr "Înalt"
+
+msgid "Square"
+msgstr "Pătrat"
+
+#. ── Filter values (Date) ──
+msgid "Today"
+msgstr "Azi"
+
+msgid "24 hours"
+msgstr "24 ore"
+
+msgid "7 days"
+msgstr "7 zile"
+
+msgid "30 days"
+msgstr "30 zile"
+
+#. ── Sort values ──
+msgid "Oldest"
+msgstr "Cele mai vechi"
+
+msgid "Largest"
+msgstr "Cele mai mari"
+
+msgid "Smallest"
+msgstr "Cele mai mici"
+
+msgid "Width"
+msgstr "Lățime"
+
+msgid "Height"
+msgstr "Înălțime"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Newest"
+msgstr "Cele mai noi"
+
+#. ── Search placeholder ──
+msgid "text / OCR / window / monitor / path"
+msgstr "text / OCR / fereastră / monitor / cale"
+
+#. ── Empty gallery state ──
+msgid "No snips collected yet"
+msgstr "Nicio captură colectată încă"
+
+msgid "Capture a region from the screen with Win + left mouse."
+msgstr "Captează o regiune de pe ecran cu Win + clic stânga."
+
+msgid "OCR, window info, and filters are indexed in the background."
+msgstr "OCR, informațiile ferestrei și filtrele sunt indexate în fundal."
+
+#. ── Card chips (very short) ──
+msgid "pinned"
+msgstr "prins"
+
+msgid "on screen"
+msgstr "pe ecran"
+
+#. ── Status bar ({} is the count; keep it) ──
+msgid "Total {}"
+msgstr "Total {}"
+
+msgid "Pinned {}"
+msgstr "Prinse {}"
+
+msgid "On screen {}"
+msgstr "Pe ecran {}"
+
+msgid "Filtered {}"
+msgstr "Filtrate {}"
+
+msgid "Ctrl+F search"
+msgstr "Căutare Ctrl+F"
+
+#. ── Floating-snip right-click menu ──
+msgid "Copy"
+msgstr "Copiază"
+
+msgid "OCR + Clipboard"
+msgstr "OCR + Clipboard"
+
+msgid "OCR + Translate"
+msgstr "OCR + Traducere"
+
+msgid "translate"
+msgstr "traduce"
+
+msgid "Share"
+msgstr "Partajează"
+
+msgid "Transform"
+msgstr "Transformă"
+
+msgid "Crop"
+msgstr "Decupează"
+
+msgid "drag inward"
+msgstr "trage spre interior"
+
+msgid "Resize"
+msgstr "Redimensionează"
+
+msgid "handles"
+msgstr "puncte de prindere"
+
+msgid "Hide from screen"
+msgstr "Ascunde de pe ecran"
+
+msgid "hide"
+msgstr "ascunde"
+
+msgid "Delete"
+msgstr "Șterge"
+
+msgid "remove"
+msgstr "elimină"
+
+#. ── OCR + Translate popup ──
+msgid "Translate"
+msgstr "Traducere"
+
+msgid "Target language"
+msgstr "Limba țintă"
+
+msgid "More ▾"
+msgstr "Mai mult ▾"
+
+msgid "Source (OCR)"
+msgstr "Sursă (OCR)"
+
+msgid "copy"
+msgstr "copiază"
+
+msgid "Translation"
+msgstr "Traducere"
+
+msgid "translating…"
+msgstr "se traduce…"
+
+msgid "Copy translation"
+msgstr "Copiază traducerea"
+
+#. ── Date: short month names shown on each snip card ──
+msgid "Jan"
+msgstr "Ian"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "Jun"
+msgstr "Iun"
+
+msgid "Jul"
+msgstr "Iul"
+
+msgid "Aug"
+msgstr "Aug"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Oct"
+msgstr "Oct"
+
+msgid "Nov"
+msgstr "Noi"
+
+msgid "Dec"
+msgstr "Dec"
+
+#. ── Card source line ──
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "window"
+msgstr "fereastră"
+
+msgid "OCR text indexed"
+msgstr "Text OCR indexat"
+
+msgid "Window info indexed"
+msgstr "Informații fereastră indexate"
+
+#. ── System-tray menu ──
+msgid "Show Snipdeck"
+msgstr "Afișează Snipdeck"
+
+msgid "New Snip"
+msgstr "Captură nouă"
+
+msgid "Launch at Login"
+msgstr "Pornire la autentificare"
+
+msgid "Exit"
+msgstr "Ieșire"
+
+#. ── Error banners ({e} is the technical error detail; keep {e} verbatim) ──
+msgid "Failed to register hotkeys: {e}"
+msgstr "Înregistrarea tastelor rapide a eșuat: {e}"
+
+msgid "Failed to open floating window: {e}"
+msgstr "Deschiderea ferestrei flotante a eșuat: {e}"
+
+msgid "Failed to open menu: {e}"
+msgstr "Deschiderea meniului a eșuat: {e}"
+
+msgid "Failed to reopen floating window: {e}"
+msgstr "Redeschiderea ferestrei flotante a eșuat: {e}"
+
+msgid "The settings window isn't ready yet."
+msgstr "Fereastra de setări nu este încă pregătită."
+
+msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
+msgstr "Captura declanșată prin buton nu este încă implementată în portul Slint — trage cu Win+LMouse."
+
+msgid "Failed to copy to clipboard: {e}"
+msgstr "Copierea în clipboard a eșuat: {e}"
+
+msgid "Failed to copy text to clipboard: {e}"
+msgstr "Copierea textului în clipboard a eșuat: {e}"
+
+msgid "Failed to capture screen: {e}"
+msgstr "Capturarea ecranului a eșuat: {e}"
+
+msgid "Failed to freeze screen: {e}"
+msgstr "Înghețarea ecranului a eșuat: {e}"
+
+msgid "Failed to save image: {e}"
+msgstr "Salvarea imaginii a eșuat: {e}"
+
+msgid "Failed to save: {e}"
+msgstr "Salvarea a eșuat: {e}"
+
+msgid "Failed to crop region: {e}"
+msgstr "Decuparea regiunii a eșuat: {e}"
+
+msgid "Failed to open translation window: {e}"
+msgstr "Deschiderea ferestrei de traducere a eșuat: {e}"
+
+msgid "Failed to open editor: {e}"
+msgstr "Deschiderea editorului a eșuat: {e}"
+
+msgid "Failed to start upload: {e}"
+msgstr "Pornirea încărcării a eșuat: {e}"
+
+msgid "Share failed: {e}"
+msgstr "Partajarea a eșuat: {e}"
+
+#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
+msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
+msgstr "Imaginea a fost încărcată.\r\nLink copiat în clipboard:\r\n{url}"
+
+msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
+msgstr "Imaginea a fost încărcată:\r\n{url}\r\n\r\n(Link-ul nu a putut fi copiat în clipboard.)"
+
+msgid "Snipdeck — Upload"
+msgstr "Snipdeck — Încărcare"
+
+msgid "Upload failed:\r\n{err}"
+msgstr "Încărcarea a eșuat:\r\n{err}"
+
+msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
+msgstr "Niciun Imgur Client-ID configurat — încărcarea nu este posibilă.\r\n\r\n1) Obține un Client-ID gratuit:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Adaugă-l în acest fișier:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Repornește Snipdeck."
+
+msgid "Snipdeck — Imgur Client-ID required"
+msgstr "Snipdeck — Imgur Client-ID necesar"
+
+msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Această imagine va fi încărcată pe INTERNET — \"Imgur\" (anonim).\r\n\r\n• NU va apărea pe pagina principală / galeria Imgur (ascunsă, nelistată).\r\n• Dar oricine deține link-ul rezultat poate deschide imaginea.\r\n• Imaginea nu este criptată.\r\n• NU încărca conținut SENSIBIL, cum ar fi ID-uri, parole sau mesaje private.\r\n\r\nÎn caz de succes, link-ul este copiat în clipboard.\r\n\r\nÎncarcă?"
+
+msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
+msgstr "Această imagine va fi încărcată pe INTERNET — \"catbox.moe\".\r\n\r\n• NU va apărea în nicio galerie / căutare publică (nelistată).\r\n• Dar oricine deține link-ul rezultat poate deschide imaginea.\r\n• Deoarece este încărcată anonim, NU O POȚI ȘTERGE singur mai târziu.\r\n• Imaginea nu este criptată.\r\n• NU încărca conținut SENSIBIL, cum ar fi ID-uri, parole sau mesaje private.\r\n\r\nÎn caz de succes, link-ul este copiat în clipboard.\r\n\r\nÎncarcă?"
+
+msgid "Snipdeck — Upload to the internet"
+msgstr "Snipdeck — Încărcare pe internet"
+
+#. ── Share / mail dialogs ──
+msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
+msgstr "Imaginea a fost copiată în clipboard.\r\nLip-o în emailul deschis cu Ctrl+V."
+
+msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
+msgstr "Emailul s-a deschis, dar imaginea nu a putut fi copiată în clipboard.\r\nCopiază captura din nou și lip-o cu Ctrl+V."
+
+msgid "Snipdeck — Attach to email"
+msgstr "Snipdeck — Atașare la email"
+
+msgid "Language"
+msgstr "Limbă"
+
+#. ── Annotation editor (right-click menu + editor window) ──
+msgid "Annotate"
+msgstr "Adnotează"
+
+msgid "Cancel"
+msgstr "Anulează"
+
+msgid "Save"
+msgstr "Salvează"
+
+msgid "Opacity"
+msgstr "Opacitate"
+
+msgid "draw"
+msgstr "desenează"
