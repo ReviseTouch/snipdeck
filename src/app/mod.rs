@@ -3,6 +3,7 @@ use std::rc::Rc;
 use uuid::Uuid;
 
 use crate::annotate::Annotator;
+use crate::collage::{Collager, CollageSource};
 use crate::capture::{self, CapturedScreen};
 use crate::clipboard;
 use crate::context_menu::{ContextAction, ContextMenuManager};
@@ -15,6 +16,7 @@ use crate::snip::{make_snip, GalleryState, ScreenRect};
 use crate::translate_popup::TranslatePopup;
 use crate::i18n::{t, t1};
 
+use crate::AboutWindow;
 use crate::LangItem;
 use crate::MainWindow;
 use crate::SnipItem;
@@ -60,8 +62,14 @@ pub struct AppState {
     pub context_menu: ContextMenuManager,
     pub translate_popup: TranslatePopup,
     pub annotate: Annotator,
+    pub collage: Collager,
+    /// The About window, kept alive while open (recreated each time it's shown).
+    about: Option<AboutWindow>,
 
     active: Option<ActiveSelection>,
+    /// Capture routing (to_clipboard, keep_floating) armed by a global hotkey,
+    /// applied to the next armed StartSnip instead of the live modifiers.
+    armed_routing: Option<(bool, bool)>,
     /// Win+Shift+Space "freeze first": the screen captured the instant Space
     /// was pressed (with a timestamp), shown frozen in the overlay and reused
     /// when the drag begins. Expired by a watchdog so a stale frozen frame
@@ -147,7 +155,10 @@ impl AppState {
             context_menu: ContextMenuManager::new(),
             translate_popup: TranslatePopup::new(),
             annotate: Annotator::new(),
+            collage: Collager::new(),
+            about: None,
             active: None,
+            armed_routing: None,
             frozen_pending: None,
             last_error: None,
             hotkey_error,
@@ -216,6 +227,8 @@ impl AppState {
             })
         });
         let p = pending.clone();
+        window.on_collage_create(move || p.borrow_mut().push(Action::OpenCollage));
+        let p = pending.clone();
         window.on_toggle_all_visibility(move || p.borrow_mut().push(Action::ToggleAllVisibility));
         let p = pending.clone();
         window.on_toggle_floating_in_taskbar(move || {
@@ -230,6 +243,8 @@ impl AppState {
         window.set_autostart_enabled(crate::autostart::is_enabled());
         let p = pending.clone();
         window.on_toggle_theme(move || p.borrow_mut().push(Action::ToggleTheme));
+        let p = pending.clone();
+        window.on_show_about(move || p.borrow_mut().push(Action::ShowAbout));
         // Populate the toolbar language menu and reflect the active language.
         let langs: Vec<LangItem> = crate::i18n::LANGUAGES
             .iter()
@@ -277,6 +292,10 @@ impl AppState {
             .on_date_filter_changed(move |idx| p.borrow_mut().push(Action::DateFilterChanged(idx)));
         let p = pending.clone();
         window.on_sort_changed(move |idx| p.borrow_mut().push(Action::SortChanged(idx)));
+        // Reflect the persisted card size and persist any later change.
+        window.set_thumb_size_index(self.settings.thumb_size_index);
+        let p = pending.clone();
+        window.on_thumb_size_changed(move |idx| p.borrow_mut().push(Action::ThumbSizeChanged(idx)));
         let p = pending.clone();
         window.on_reset_filters(move || p.borrow_mut().push(Action::ResetFilters));
         let p = pending.clone();
@@ -442,6 +461,10 @@ impl AppState {
         if let Some((id, img)) = self.annotate.take_result() {
             self.apply_annotation(id, img, window);
         }
+        // A finished collage (the editor's Save) becomes a brand-new snip.
+        if let Some(img) = self.collage.take_result() {
+            self.apply_collage(img, window);
+        }
 
         // A context menu belongs to exactly one snip. If that snip's
         // floating window has since closed — via middle-click, a hotkey,
@@ -589,10 +612,16 @@ pub(crate) enum Action {
     SizeFilterChanged(i32),
     DateFilterChanged(i32),
     SortChanged(i32),
+    /// The gallery card-size step (0/1/2) changed — persist it.
+    ThumbSizeChanged(i32),
     ResetFilters,
     CloseError,
     /// A card scrolled into view and wants its thumbnail decoded + shown.
     RequestThumb(Uuid),
+    /// Open the dynamic collage editor (gallery toolbar button).
+    OpenCollage,
+    /// Open the About window (toolbar info button).
+    ShowAbout,
 }
 
 fn snip_pixels(snip: &crate::snip::Snip) -> u64 {

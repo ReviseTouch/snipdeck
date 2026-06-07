@@ -1,0 +1,574 @@
+// Dynamic collage editor window — Telegram-style chrome (mirrors annotate.slint).
+//
+// A dedicated, self-contained editor opened from the gallery toolbar ("Collage").
+// It carries its OWN image picker (a thumbnail tray at the bottom) so it does not
+// need any gallery multi-selection: the user taps thumbnails to add/remove them,
+// arranges the layout live, then Saves — producing a brand-new snip.
+//
+// ALL geometry + colour maths live in Rust (`collage.rs`); this UI is a dumb
+// renderer that reflects the computed cell rectangles and reports taps. The live
+// preview and the saved image come from the SAME layout code, so they match.
+//
+// Layout codes (int), shared with `collage.rs`:
+//   0 grid · 1 rows (justified) · 2 masonry (columns)
+
+import { Glyph } from "icons.slint";
+import { ScrollView } from "std-widgets.slint";
+
+// One placed image in the collage, in DISPLAY (preview) pixels. Built by Rust,
+// one per selected image; `index` is its slot in the selection order (for taps).
+export struct CollageCell {
+    source: image,
+    x: length,
+    y: length,
+    w: length,
+    h: length,
+    radius: length,
+    selected: bool,
+    index: int,
+}
+
+// One thumbnail in the picker tray. `order` is 0 when not in the collage, else
+// its 1-based position in the selection order (shown as a badge).
+export struct TrayItem {
+    thumb: image,
+    id: string,
+    order: int,
+}
+
+// A round tool button (icon), highlighted when active. Stretches to the pill
+// height; the round button self-centres on the vertical axis.
+component ToolBtn inherits Rectangle {
+    in property <string> icon;
+    in property <bool> active;
+    callback clicked();
+    width: 40px;
+    background: transparent;
+    Rectangle {
+        width: 36px;
+        height: 36px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        border-radius: 18px;
+        background: root.active ? #4b4b4f : (ta.has-hover ? #2f2f31 : transparent);
+        Glyph {
+            name: root.icon;
+            paint: root.active ? #ffffff : #d8d6d2;
+            size: 19px;
+            weight: 1.7px;
+            x: (parent.width - self.width) / 2;
+        }
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// A background-colour swatch. `is-transparent` draws a 2×2 checker instead of a
+// solid fill, so "no background" reads clearly.
+component Swatch inherits Rectangle {
+    in property <brush> tone;
+    in property <bool> active;
+    in property <bool> is-transparent;
+    callback clicked();
+    width: 34px;
+    background: transparent;
+    Rectangle {
+        width: 26px;
+        height: 26px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        border-radius: 7px;
+        clip: true;
+        background: root.is-transparent ? #ffffff : root.tone;
+        border-width: root.active ? 3px : 1px;
+        border-color: root.active ? #0a84ff : #ffffff66;
+        // Checker for the transparent option.
+        if root.is-transparent : Rectangle {
+            x: 13px; y: 0; width: 13px; height: 13px; background: #c0c0c4;
+        }
+        if root.is-transparent : Rectangle {
+            x: 0; y: 13px; width: 13px; height: 13px; background: #c0c0c4;
+        }
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// The colour chip that opens the HSV wheel for a custom background.
+component ColorChip inherits Rectangle {
+    in property <brush> tint;
+    in property <bool> open;
+    callback clicked();
+    width: 40px;
+    background: transparent;
+    Rectangle {
+        width: 30px;
+        height: 30px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        border-radius: 15px;
+        background: root.tint;
+        border-width: root.open ? 3px : 2px;
+        border-color: root.open ? #ffffff : #ffffffaa;
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// A compact continuous slider (track + fill + handle).
+component Slider inherits Rectangle {
+    in property <float> value;
+    in property <float> minimum: 0;
+    in property <float> maximum: 100;
+    out property <bool> pressed: ta.pressed;
+    callback changed(float);
+
+    property <length> knob: 14px;
+    property <float> frac: root.maximum > root.minimum
+        ? (root.value - root.minimum) / (root.maximum - root.minimum)
+        : 0;
+
+    Rectangle {
+        height: 4px;
+        y: (parent.height - self.height) / 2;
+        border-radius: 2px;
+        background: #57575a;
+        Rectangle {
+            x: 0;
+            width: parent.width * max(0, min(1, root.frac));
+            height: parent.height;
+            border-radius: 2px;
+            background: #0a84ff;
+        }
+    }
+    Rectangle {
+        width: root.knob;
+        height: root.knob;
+        border-radius: root.knob / 2;
+        background: #ffffff;
+        y: (parent.height - self.height) / 2;
+        x: max(0, min(1, root.frac)) * (parent.width - root.knob);
+    }
+    ta := TouchArea {
+        property <float> val-at-pointer: root.minimum
+            + max(0, min(1, self.mouse-x / parent.width)) * (root.maximum - root.minimum);
+        pointer-event(ev) => {
+            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                root.changed(self.val-at-pointer);
+            }
+        }
+        moved => {
+            if (self.pressed) { root.changed(self.val-at-pointer); }
+        }
+    }
+}
+
+// A pill text button (Cancel / Save).
+component TextButton inherits Rectangle {
+    in property <string> label;
+    in property <bool> accent;
+    in property <bool> enabled: true;
+    callback clicked();
+    min-width: 82px;
+    background: transparent;
+    Rectangle {
+        width: 100%;
+        height: 34px;
+        y: (parent.height - self.height) / 2;
+        border-radius: 17px;
+        opacity: root.enabled ? 1.0 : 0.4;
+        background: root.accent
+            ? (ta.has-hover ? #2a93ff : #0a84ff)
+            : (ta.has-hover ? #38383a : transparent);
+        Text {
+            text: root.label;
+            color: root.accent ? #ffffff : #e8e6e2;
+            font-size: 14px;
+            font-weight: 600;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    ta := TouchArea {
+        clicked => { if (root.enabled) { root.clicked(); } }
+    }
+}
+
+// A vertically-centred text label that fills its layout cell.
+component Lbl inherits Rectangle {
+    in property <string> text;
+    in property <color> tone: #cfcfd2;
+    background: transparent;
+    Text {
+        text: root.text;
+        color: root.tone;
+        font-size: 12px;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+// An inset vertical divider.
+component VDiv inherits Rectangle {
+    width: 1px;
+    background: transparent;
+    Rectangle {
+        width: 1px;
+        height: 24px;
+        y: (parent.height - self.height) / 2;
+        background: #4a4a4d;
+    }
+}
+
+export component CollageWindow inherits Window {
+    title: @tr("Collage");
+    background: #0d0d0f;
+    icon: @image-url("../assets/preview_256.png");
+    // The snip windows are always-on-top; the editor must sit above them.
+    always-on-top: true;
+
+    // --- Inputs (Rust → UI) ---
+    in property <length> canvas-w;
+    in property <length> canvas-h;
+    in property <[CollageCell]> cells;
+    in property <[TrayItem]> tray;
+    in property <length> tray-width;             // total width of the tray strip
+    in property <int> layout-kind;               // 0 grid · 1 rows · 2 masonry
+    in property <string> cols-label: "3";
+    in property <int> count;                     // images currently in the collage
+    in property <brush> bg-color: #ffffff;
+    in property <int> bg-mode: 1;                // 0 transp · 1 white · 2 black · 3 custom
+    in property <image> checker;                 // transparent-background backdrop
+
+    // Sliders
+    in property <float> gap-value: 8;
+    in property <float> radius-value: 0;
+
+    // Colour wheel (for the custom background)
+    in property <brush> current-color;
+    in property <image> wheel-image;
+    in property <length> wheel-sel-x;
+    in property <length> wheel-sel-y;
+    in property <float> brightness;
+    property <bool> show-wheel: false;
+
+    // --- Outputs (UI → Rust) ---
+    callback pick-layout(int);
+    callback cols-inc();
+    callback cols-dec();
+    callback set-gap(float);
+    callback set-radius(float);
+    callback set-bg(int);                        // preset 0 / 1 / 2
+    callback pick-wheel(float, float, float);    // pointer x, y, wheel size (px)
+    callback set-brightness(float);
+    callback tray-tap(string);
+    callback cell-tap(int);
+    callback cancel();
+    callback save();
+
+    forward-focus: key-catcher;
+
+    Rectangle {
+        background: #0d0d0f;
+
+        VerticalLayout {
+            // ===== Top pill: layout · columns · background =====
+            Rectangle {
+                height: 66px;
+                HorizontalLayout {
+                    alignment: center;
+                    Rectangle {
+                        height: 48px;
+                        y: (parent.height - self.height) / 2;
+                        border-radius: 24px;
+                        background: #1e1e20f2;
+                        drop-shadow-blur: 18px;
+                        drop-shadow-color: #00000088;
+                        drop-shadow-offset-y: 5px;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            spacing: 3px;
+                            alignment: center;
+
+                            ToolBtn { icon: "grid"; active: root.layout-kind == 0; clicked => { root.pick-layout(0); } }
+                            ToolBtn { icon: "rows"; active: root.layout-kind == 1; clicked => { root.pick-layout(1); } }
+                            ToolBtn { icon: "columns"; active: root.layout-kind == 2; clicked => { root.pick-layout(2); } }
+                            VDiv {}
+                            ToolBtn { icon: "minus"; clicked => { root.cols-dec(); } }
+                            Lbl { min-width: 30px; text: root.cols-label; tone: #e8e6e2; }
+                            ToolBtn { icon: "plus"; clicked => { root.cols-inc(); } }
+                            VDiv {}
+                            Swatch { is-transparent: true; active: root.bg-mode == 0; clicked => { root.set-bg(0); } }
+                            Swatch { tone: #ffffff; active: root.bg-mode == 1; clicked => { root.set-bg(1); } }
+                            Swatch { tone: #000000; active: root.bg-mode == 2; clicked => { root.set-bg(2); } }
+                            ColorChip {
+                                tint: root.current-color;
+                                open: root.show-wheel;
+                                clicked => { root.show-wheel = !root.show-wheel; }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===== Preview canvas =====
+            Rectangle {
+                background: #0d0d0f;
+                horizontal-stretch: 1;
+                vertical-stretch: 1;
+
+                canvas := Rectangle {
+                    width: root.canvas-w;
+                    height: root.canvas-h;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                    clip: true;
+                    drop-shadow-blur: 20px;
+                    drop-shadow-color: #000000aa;
+
+                    // Background layer (solid colour, or a checker when transparent).
+                    if root.bg-mode != 0 : Rectangle {
+                        width: 100%;
+                        height: 100%;
+                        background: root.bg-color;
+                    }
+                    if root.bg-mode == 0 : Image {
+                        width: 100%;
+                        height: 100%;
+                        image-fit: fill;
+                        source: root.checker;
+                    }
+
+                    for c in root.cells : Rectangle {
+                        x: c.x;
+                        y: c.y;
+                        width: c.w;
+                        height: c.h;
+                        border-radius: c.radius;
+                        clip: true;
+                        Image {
+                            width: 100%;
+                            height: 100%;
+                            image-fit: cover;
+                            source: c.source;
+                        }
+                        cell-ta := TouchArea {
+                            clicked => { root.cell-tap(c.index); }
+                        }
+                        // Swap-selection highlight (first tap of a swap).
+                        if c.selected : Rectangle {
+                            width: 100%;
+                            height: 100%;
+                            border-radius: c.radius;
+                            border-width: 3px;
+                            border-color: #0a84ff;
+                            background: #0a84ff22;
+                        }
+                    }
+                }
+
+                if root.count == 0 : Text {
+                    text: @tr("Pick images from the tray below to build a collage");
+                    color: #6a6a6e;
+                    font-size: 15px;
+                    horizontal-alignment: center;
+                    x: (parent.width - self.width) / 2;
+                    y: (parent.height - self.height) / 2;
+                }
+            }
+
+            // ===== Picker tray (all gallery snips; tap to add / remove) =====
+            Rectangle {
+                height: 110px;
+                background: #141416;
+                Rectangle {
+                    height: 1px;
+                    y: 0;
+                    background: #00000066;
+                }
+                tray-sv := ScrollView {
+                    viewport-width: max(root.tray-width, self.visible-width);
+                    viewport-height: self.visible-height;
+                    HorizontalLayout {
+                        padding: 13px;
+                        spacing: 8px;
+                        alignment: start;
+                        for it in root.tray : Rectangle {
+                            width: 84px;
+                            tile := Rectangle {
+                                width: 84px;
+                                height: 84px;
+                                y: (parent.height - self.height) / 2;
+                                border-radius: 10px;
+                                clip: true;
+                                background: #1e1e20;
+                                border-width: it.order > 0 ? 2px : 0px;
+                                border-color: #0a84ff;
+                                Image {
+                                    width: 100%;
+                                    height: 100%;
+                                    image-fit: contain;
+                                    source: it.thumb;
+                                    opacity: it.order > 0 ? 1.0 : 0.78;
+                                }
+                                if it.order > 0 : Rectangle {
+                                    x: parent.width - self.width - 4px;
+                                    y: 4px;
+                                    width: 20px;
+                                    height: 20px;
+                                    border-radius: 10px;
+                                    background: #0a84ff;
+                                    Text {
+                                        text: it.order + "";
+                                        color: #ffffff;
+                                        font-size: 11px;
+                                        font-weight: 800;
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                        width: 100%;
+                                        height: 100%;
+                                    }
+                                }
+                                ta := TouchArea {
+                                    clicked => { root.tray-tap(it.id); }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ===== Bottom pill: cancel · gap · round · save =====
+            Rectangle {
+                height: 66px;
+                HorizontalLayout {
+                    alignment: center;
+                    Rectangle {
+                        height: 48px;
+                        y: (parent.height - self.height) / 2;
+                        border-radius: 24px;
+                        background: #1e1e20f2;
+                        drop-shadow-blur: 18px;
+                        drop-shadow-color: #00000088;
+                        drop-shadow-offset-y: 5px;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            spacing: 10px;
+                            alignment: center;
+
+                            TextButton { label: @tr("Cancel"); clicked => { root.cancel(); } }
+                            VDiv {}
+                            Lbl { text: @tr("Gap"); tone: #98989a; }
+                            gap-slider := Slider {
+                                width: 120px;
+                                minimum: 0;
+                                maximum: 40;
+                                value: root.gap-value;
+                                changed(v) => { root.set-gap(v); }
+                            }
+                            Lbl { min-width: 30px; text: round(root.gap-value) + ""; }
+                            VDiv {}
+                            Lbl { text: @tr("Round"); tone: #98989a; }
+                            radius-slider := Slider {
+                                width: 120px;
+                                minimum: 0;
+                                maximum: 80;
+                                value: root.radius-value;
+                                changed(v) => { root.set-radius(v); }
+                            }
+                            Lbl { min-width: 30px; text: round(root.radius-value) + ""; }
+                            VDiv {}
+                            TextButton {
+                                label: @tr("Save");
+                                accent: true;
+                                enabled: root.count > 0;
+                                clicked => { root.save(); }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ===== Colour-wheel panel (floats under the top pill) =====
+        if root.show-wheel : Rectangle {
+            width: 196px;
+            height: 248px;
+            x: (parent.width - self.width) / 2;
+            y: 62px;
+            border-radius: 16px;
+            background: #1e1e20f7;
+            drop-shadow-blur: 22px;
+            drop-shadow-color: #000000aa;
+            drop-shadow-offset-y: 6px;
+
+            VerticalLayout {
+                padding: 14px;
+                spacing: 12px;
+
+                wheel := Rectangle {
+                    width: 168px;
+                    height: 168px;
+                    Image {
+                        width: 100%;
+                        height: 100%;
+                        source: root.wheel-image;
+                    }
+                    Rectangle {
+                        width: 16px;
+                        height: 16px;
+                        border-radius: 8px;
+                        background: root.current-color;
+                        border-width: 2px;
+                        border-color: #ffffff;
+                        x: root.wheel-sel-x - self.width / 2;
+                        y: root.wheel-sel-y - self.height / 2;
+                    }
+                    wheel-ta := TouchArea {
+                        pointer-event(ev) => {
+                            if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                                root.pick-wheel(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 1px);
+                            }
+                        }
+                        moved => {
+                            if (self.pressed) {
+                                root.pick-wheel(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 1px);
+                            }
+                        }
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 8px;
+                    Glyph { name: "sun"; paint: #98989a; size: 16px; }
+                    Slider {
+                        horizontal-stretch: 1;
+                        minimum: 0;
+                        maximum: 100;
+                        value: root.brightness;
+                        changed(v) => { root.set-brightness(v); }
+                    }
+                }
+            }
+        }
+    }
+
+    // Keyboard: Esc cancels. Zero-sized so it never intercepts canvas taps.
+    key-catcher := FocusScope {
+        width: 0px;
+        height: 0px;
+        key-pressed(e) => {
+            if (e.text == Key.Escape) { root.cancel(); return accept; }
+            return reject;
+        }
+    }
+}

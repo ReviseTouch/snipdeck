@@ -1,0 +1,142 @@
+---
+title: "Ayarlar"
+description: "Snipdeck'in ayarlarını ve verilerini nerede sakladığı ile davranışını değiştirmek için düzenleyebileceğiniz settings.json anahtarları."
+order: 2
+category: "reference"
+---
+
+Snipdeck yapılandırmasını, uygulamayı ilk çalıştırdığınızda otomatik olarak oluşturulan düz bir JSON dosyasında tutar. Henüz bir ayarlar penceresi yok; bu nedenle davranışı bu dosyayı düzenleyip Snipdeck'i yeniden başlatarak değiştirirsiniz. Bu sayfa, her şeyin nerede bulunduğunu ve hangi anahtarları güvenle değiştirebileceğinizi açıklar.
+
+## Ayarlar nasıl çalışır
+
+İlk çalıştırmada Snipdeck, makul varsayılanlarla bir `settings.json` dosyası yazar. Bir ayarı değiştirmek için:
+
+1. Snipdeck'ten çıkın (tepsi simgesine sağ tıklayıp çıkış yapın).
+2. `settings.json` dosyasını herhangi bir metin düzenleyicide açın (aşağıdaki [Dosya konumları](#dosya-konumlari) bölümüne bakın).
+3. Bir değeri, geçerli JSON kalmasına dikkat ederek düzenleyin ve kaydedin.
+4. Snipdeck'i yeniden başlatın. Ayarlar yalnızca başlangıçta bir kez okunur.
+
+Bazı ayarlar uygulamanın kendisi tarafından da geri yazılır — örneğin, en son kullandığınız çeviri hedefi ile seçtiğiniz arayüz dili, bunları araç çubuğundan veya çeviri açılır penceresinden değiştirdiğinizde kalıcı olarak kaydedilir. Bunları elle düzenlemek de işe yarar; yalnızca arayüzde değiştirdiğinizde Snipdeck'in bunların üzerine yazacağını bekleyin.
+
+> **Not:** Snipdeck `settings.json` dosyasını yalnızca başlangıçta okur. Çalışırken yaptığınız değişiklikler, yeniden başlatana kadar etkili olmaz ve çıkışta üzerine yazılabilir.
+
+> **Uyarı:** `settings.json` geçerli JSON olarak kalmalıdır. Dosya eksikse veya ayrıştırılamıyorsa, Snipdeck başlamayı reddetmek yerine sessizce yerleşik varsayılanlara geri döner. Bilinmeyen anahtarlar yok sayılır ve atladığınız her anahtar varsayılan değerine geri döner.
+
+## Dosya konumları
+
+Snipdeck dosyalarını gezici (roaming) yapılandırma klasörünüz, yerel uygulama verisi klasörünüz ve Resimler klasörünüz arasında paylaştırır.
+
+| Yol | İçerik |
+| --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | Kullanıcı ayarlarınız (aşağıda açıklanan anahtarlar). |
+| `%LOCALAPPDATA%\Snipdeck\snips.db` | Galeri veritabanı (tam metin arama dizini içeren SQLite). |
+| `%LOCALAPPDATA%\Snipdeck\state.json` | Pencere/oturum durumu. |
+| `%LOCALAPPDATA%\Snipdeck\cache\images\` | Tam çözünürlüklü kesit görüntüleri. |
+| `%LOCALAPPDATA%\Snipdeck\cache\thumbs\` | Galeri küçük resimleri. |
+| `%USERPROFILE%\Pictures\Snipdeck\` | **Save** (Kaydet) eylemi için varsayılan klasör. |
+
+> **Not:** `%APPDATA%` gezici yapılandırma dizininizdir (genellikle `C:\Users\<siz>\AppData\Roaming`) ve `%LOCALAPPDATA%` yerel uygulama verisi dizininizdir (genellikle `C:\Users\<siz>\AppData\Local`). İkisinden birini Dosya Gezgini adres çubuğuna yapıştırarak doğrudan oraya gidebilirsiniz.
+
+> **İpucu:** `cache\` klasörü ile `snips.db` birlikte, yakaladığınız her kesiti barındırır. Bunları bir bütün olarak yedekleyin (veya makineler arasında taşıyın) — veritabanı, görüntülere önbellekteki konumlarıyla başvurur.
+
+Snipdeck'in çok daha eski bir sürümünü kullandıysanız, dosyaları bunun yerine bir `Snipper` klasörü altında bulunuyor olabilir. Snipdeck, başlangıçta bu klasörü otomatik olarak `Snipdeck` klasörüne taşır; bu yüzden normalde onu hiç görmezsiniz.
+
+## settings.json anahtarları
+
+Aşağıda, değiştirmek isteyebileceğiniz en olası anahtarlar yer alır. Dosyada her biri isteğe bağlıdır — bir anahtarı silerseniz, Snipdeck gösterilen varsayılanı kullanır.
+
+| Anahtar | Varsayılan | Anlamı |
+| --- | --- | --- |
+| `language` | `"auto"` | Arayüz dili. `"auto"` işletim sistemi yerel ayarınızı izler; aksi takdirde `"en"`, `"de"` veya `"zh-CN"` gibi desteklenen bir kod. Bkz. [Diller](/docs/snipdeck/languages). |
+| `dark_theme` | `true` | Koyu kabuk için `true`, açık kabuk için `false`. |
+| `upload_service` | `"catbox"` | **Upload** (Yükle) eyleminin hangi görüntü barındırıcısını kullanacağı: `"catbox"` veya `"imgur"`. Tanınmayan herhangi bir değer catbox'a geri döner. |
+| `imgur_client_id` | `""` | Imgur Client-ID'niz. Yalnızca `upload_service` değeri `"imgur"` olduğunda gereklidir. |
+| `translate_target` | `"en"` | **OCR + Translate** (OCR + Çevir) için varsayılan hedef dil. Çeviri açılır penceresinde bir dil seçtiğinizde güncellenir. |
+| `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Çeviri açılır penceresinde hızlı seçim düğmeleri olarak gösterilen favori diller. Açılır pencereden düzenlenebilir; asla boş olmaz. |
+| `default_format` | `"png"` | **Save** (Kaydet) iletişim kutusu için önceden doldurulan dosya uzantısı: `"png"`, `"jpg"` veya `"bmp"`. Bu yalnızca kaydederken sunulan varsayılan uzantıyı belirler; Snipdeck'in açabileceği biçimleri kısıtlamaz. |
+| `save_dir` | _(Pictures\Snipdeck)_ | **Save** (Kaydet) eylemi için varsayılan klasör. Bir yol dizesi; varsayılan olarak `Pictures\Snipdeck` klasörünüzdür. |
+| `include_border_on_save` | `false` | `true` olduğunda, yakalama kenarlığı kaydedilen görüntü dosyalarına işlenir. |
+| `include_border_on_clipboard` | `false` | `true` olduğunda, yakalama kenarlığı panoya kopyalanan görüntülere işlenir. |
+| `freeze_screen_during_snip` | `false` | `true` olduğunda, seçim sürüklemesi ekranın dondurulmuş bir anlık görüntüsü üzerinde gerçekleşir (önce dondur). |
+| `floating_in_taskbar` | `false` | `true` olduğunda, kayan kesitler görev çubuğunda kendi girişleri olarak görünür. |
+| `border_color_active` | `[r,g,b]` | Etkin/odaklanmış kesitteki kenarlığın RGB rengi. |
+| `border_color_inactive` | `[r,g,b]` | Etkin olmayan kesitlerdeki kenarlığın RGB rengi. |
+| `selection_tint` | `[r,g,b,a]` | Geçerli seçimin dışındaki ekranı karartmak için kullanılan RGBA tonu. |
+
+Değerler büyük/küçük harfe duyarlıdır ve yukarıdaki dizelerle tam olarak eşleşmelidir. Dil kodları, Snipdeck'in araç çubuğundaki küre menüsünde gösterdiği biçimi kullanır (örneğin `zh_cn` değil `zh-CN`).
+
+> **İpucu:** `translate_target` ve `translate_favs`, uygulamanın kendisinden yönetmesi en kolay anahtarlardır: **OCR + Translate** (OCR + Çevir) penceresini açın, bir dili seçin veya yıldızlayın; Snipdeck bu değişikliği sizin için `settings.json` dosyasına geri yazar. Bkz. [OCR + çeviri](/docs/snipdeck/ocr-translate).
+
+### Genel kısayol tuşları
+
+Genel kısayol tuşları da `settings.json` içinde düz dizeler olarak saklanır ve elle düzenlenebilir. Her değer, `"CtrlShift+A"` veya `"WinAlt+H"` gibi bir tuş kombinasyonudur.
+
+| Anahtar | Varsayılan | Eylem |
+| --- | --- | --- |
+| `hotkey_snip` | `"CtrlShift+A"` | Yeni bir kayan kesit başlatın. |
+| `hotkey_snip_clip` | `"CtrlShift+C"` | Kesit alın ve panoya kopyalayın. |
+| `hotkey_clip_only` | `"CtrlShift+X"` | Yalnızca panoya kesit alın (galeriye kaydedilmez). |
+| `hotkey_toggle_visibility` | `"WinAlt+H"` | Tüm kayan kesitleri aynı anda gösterin veya gizleyin. |
+| `hotkey_gallery` | `"CtrlShift+G"` | Galeriyi / ana pencereyi açın. |
+
+### Diğer anahtarlar
+
+`settings.json` ayrıca uygulama tarafından yönetilen dahili bir geçiş bayrağı içerir. Bu bayrak dışında, dosyadaki her anahtar — kayıt dizini, yakalama kenarlığı renkleri, seçim karartma tonu, kenarlık işleme geçişleri, önce dondur geçişi, görev çubuğu geçişi ve yukarıdaki kısayol tuşları dahil — elle düzenlenebilir ve bu sayfadaki tablolarda belgelenmiştir.
+
+## Yükleme servisleri
+
+**Upload** (Yükle) eylemi (bir kesitin **Share** (Paylaş) menüsünden), bir bağlantı yapıştırabilmeniz için görüntüyü herkese açık bir görüntü barındırıcısına gönderir. Yüklemeler her zaman isteğe bağlıdır (opt-in) ve makinenizden herhangi bir şey ayrılmadan önce açık bir onay iletişim kutusuyla doğrulanır — bkz. [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security).
+
+Snipdeck, `upload_service` anahtarıyla seçilen iki barındırıcıyı destekler:
+
+| Servis | Gereken hesap / anahtar | Notlar |
+| --- | --- | --- |
+| **catbox.moe** (varsayılan) | Yok | Hesap veya anahtar gerekmez. Ancak anonim yüklemeler sonradan **sizin tarafınızdan silinemez**. |
+| **Imgur** | Ücretsiz bir Client-ID | `upload_service` değerini `"imgur"` olarak ayarlayın ve Client-ID'nizi `imgur_client_id` alanına yapıştırın. |
+
+Her durumda görüntü listelenmemiş olur, ancak **bağlantıya sahip olan herkes onu açabilir ve görüntü şifreli değildir.** Bağlantıyla herkese açık olan bir barındırıcıya hassas içerik yüklemeyin.
+
+### Imgur'u kurma
+
+catbox.moe yerine Imgur kullanmak için:
+
+1. [imgur.com](https://imgur.com) adresinde oturum açın ve **Settings → Applications → Register an application** bölümüne gidin.
+2. **OAuth 2 authorization without a callback URL** seçeneğini seçip kaydolun. Anonim yüklemeler için oturum açma veya Client-Secret'a ihtiyacınız yoktur — yalnızca Client-ID.
+3. Imgur'un size verdiği **Client-ID**'yi kopyalayın.
+4. `settings.json` içinde şunu ayarlayın:
+
+```json
+{
+  "upload_service": "imgur",
+  "imgur_client_id": "YOUR_CLIENT_ID_HERE"
+}
+```
+
+5. Dosyayı kaydedin ve Snipdeck'i yeniden başlatın.
+
+> **Not:** `upload_service` değeri `"imgur"` ancak `imgur_client_id` boşsa, Imgur yüklemeleri kimlik doğrulaması yapamaz. Ya Client-ID'yi doldurun ya da `upload_service` değerini tekrar `"catbox"` olarak değiştirin.
+
+## Örnek settings.json
+
+Açık temayı, Almanca arayüzü ve Imgur yüklemelerini kullanan minimal bir dosya şöyle görünebilir:
+
+```json
+{
+  "language": "de",
+  "dark_theme": false,
+  "upload_service": "imgur",
+  "imgur_client_id": "abc123def456",
+  "translate_target": "de",
+  "translate_favs": ["de", "en", "fr", "tr"],
+  "default_format": "jpg"
+}
+```
+
+Dışarıda bıraktığınız her anahtar yalnızca varsayılanını kullanır; bu nedenle yalnızca gerçekten değiştirmek istediğiniz ayarları listelemeniz yeterlidir.
+
+## Ayrıca bakınız
+
+- [Paylaşım ve dışa aktarma](/docs/snipdeck/sharing-and-export) — bu ayarları kullanan Upload (Yükle), Mail (Posta) ve Share (Paylaş) eylemleri.
+- [Diller](/docs/snipdeck/languages) — desteklenen arayüz dili kodları ve `language` değerinin nasıl algılandığı.
+- [OCR + çeviri](/docs/snipdeck/ocr-translate) — `translate_target` ve `translate_favs` değerlerinin nasıl kullanıldığı.
+- [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security) — yerelde ne kaldığı ve yükleme onay iletişim kutusu.

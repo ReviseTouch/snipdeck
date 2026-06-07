@@ -60,10 +60,10 @@ impl AppState {
                             .open(&s, &self.settings, sf, Some(window.window()));
                     }
                 } else {
+                    // Temporary group hide: close the windows but KEEP each
+                    // snip's `floating` mark, so toggling back on reopens the
+                    // same set (and they still restore on next launch).
                     self.floating.close_all();
-                    for s in self.gallery.snips.iter_mut() {
-                        s.floating = false;
-                    }
                 }
                 let _ = self.gallery.save();
                 self.refresh_gallery(window);
@@ -187,6 +187,13 @@ impl AppState {
                 self.filters.sort = idx.max(0);
                 self.refresh_gallery(window);
             }
+            Action::ThumbSizeChanged(idx) => {
+                // Persist the new size step. The grid reflow itself is driven by
+                // the UI: a wider/narrower card changes the cards-per-row, which
+                // fires `gallery-cols-changed` and re-chunks the rows.
+                self.settings.thumb_size_index = idx.clamp(0, 2);
+                let _ = self.settings.save();
+            }
             Action::ResetFilters => {
                 self.search.clear();
                 self.filters = GalleryFilters::default();
@@ -196,16 +203,41 @@ impl AppState {
                 self.last_error = None;
                 self.hotkey_error = None;
             }
+            Action::OpenCollage => self.open_collage(window),
+            Action::ShowAbout => self.show_about(window),
             Action::RequestThumb(id) => {
                 self.load_thumb_into_model(id);
             }
         }
     }
 
-    pub(crate) fn handle_hotkey(&mut self, action: HotkeyAction, _window: &MainWindow) {
-        // Stage 1: hotkeys not yet implemented (need a button-triggered
-        // overlay flow). The mouse-hook path is fully functional.
-        let _ = action;
+    pub(crate) fn handle_hotkey(&mut self, action: HotkeyAction, window: &MainWindow) {
+        match action {
+            // The three capture hotkeys arm a one-shot region drag (like the
+            // tray's "New Snip"); `armed_routing` makes the next drag route the
+            // same way the matching Win+drag combo would, even with no modifier
+            // held during the drag.
+            HotkeyAction::Snip => {
+                self.armed_routing = Some((false, true));
+                crate::mouse_trigger::arm_snip();
+            }
+            HotkeyAction::SnipToClipboard => {
+                self.armed_routing = Some((true, true));
+                crate::mouse_trigger::arm_snip();
+            }
+            HotkeyAction::ClipboardOnly => {
+                self.armed_routing = Some((true, false));
+                crate::mouse_trigger::arm_snip();
+            }
+            // Acts on the existing windows — no capture flow needed.
+            HotkeyAction::ToggleVisibility => {
+                self.handle_action(Action::ToggleAllVisibility, window);
+            }
+            HotkeyAction::Gallery => {
+                let _ = window.show();
+                crate::tray::focus_main_window();
+            }
+        }
     }
 
     pub(crate) fn handle_mouse_event(&mut self, event: MouseTriggerEvent) {
@@ -247,17 +279,21 @@ impl AppState {
                 //   Win+Alt+LMouse          → clipboard only (no gallery)
                 //   Win+Shift+LMouse        → gallery only, no floating
                 //   Win+Ctrl+Shift+LMouse   → gallery + clipboard, no floating
-                let (to_clipboard, keep_floating) = if mods.alt {
-                    (true, false)
-                } else if mods.ctrl && mods.shift {
-                    (true, false)
-                } else if mods.shift {
-                    (false, false)
-                } else if mods.ctrl {
-                    (true, true)
-                } else {
-                    (false, true)
-                };
+                // A global hotkey may have armed an explicit routing; otherwise
+                // derive it from the modifiers held during the drag.
+                let (to_clipboard, keep_floating) = self.armed_routing.take().unwrap_or_else(|| {
+                    if mods.alt {
+                        (true, false)
+                    } else if mods.ctrl && mods.shift {
+                        (true, false)
+                    } else if mods.shift {
+                        (false, false)
+                    } else if mods.ctrl {
+                        (true, true)
+                    } else {
+                        (false, true)
+                    }
+                });
                 let source_window = crate::window_metadata::capture_at_point(x, y);
                 if let Some(window) = &source_window {
                     log::info!(

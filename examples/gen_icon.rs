@@ -15,7 +15,7 @@ const MASTER: u32 = 256 * SS; // 1024
 const CARD_TOP: [f32; 4] = [255.0, 168.0, 92.0, 255.0]; // #ffa85c
 const CARD_BOT: [f32; 4] = [243.0, 120.0, 32.0, 255.0]; // #f37820
 const CARD_BORDER: [f32; 4] = [198.0, 92.0, 18.0, 255.0]; // #c65c12
-const BRACKET: [f32; 4] = [244.0, 237.0, 227.0, 255.0]; // #f4ede3 warm off-white
+const BRACKET: [f32; 4] = [140.0, 136.0, 127.0, 255.0]; // #8c887f bold warm gray
 const EDGE: [f32; 4] = [30.0, 22.0, 14.0, 130.0]; // soft dark outline (for light bg)
 
 fn lerp(a: [f32; 4], b: [f32; 4], t: f32) -> [f32; 4] {
@@ -70,7 +70,7 @@ fn render_master() -> RgbaImage {
     // Selection frame corner brackets.
     let inset = 14.0;
     let arm = 44.0;
-    let half_t = 7.5; // bracket half-thickness
+    let half_t = 10.5; // bracket half-thickness
     let edge_w = 2.0;
     let corners = [
         (inset, inset, 1.0, 1.0),               // TL

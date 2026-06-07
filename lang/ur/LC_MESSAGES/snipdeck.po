@@ -452,3 +452,6 @@ msgstr "دھندلاپن"
 
 msgid "draw"
 msgstr "بنائیں"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "تھمبنیل سائز — چھوٹا / درمیانہ / بڑا"

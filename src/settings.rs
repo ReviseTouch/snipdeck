@@ -38,6 +38,10 @@ fn default_imgur_client_id() -> String {
 fn default_language() -> String {
     "auto".into()
 }
+
+fn default_thumb_size_index() -> i32 {
+    1 // Medium
+}
 use std::path::PathBuf;
 
 use crate::paths;
@@ -99,6 +103,10 @@ pub struct Settings {
     /// as "de" / "zh-CN". Persisted when the user picks one from the toolbar.
     #[serde(default = "default_language")]
     pub language: String,
+    /// Gallery card / thumbnail size step: 0 = Small, 1 = Medium (default),
+    /// 2 = Large. Set from the filter-bar S/M/L toggle.
+    #[serde(default = "default_thumb_size_index")]
+    pub thumb_size_index: i32,
 }
 
 impl Default for Settings {
@@ -116,7 +124,7 @@ impl Default for Settings {
             hotkey_snip: "CtrlShift+A".into(),
             hotkey_snip_clip: "CtrlShift+C".into(),
             hotkey_clip_only: "CtrlShift+X".into(),
-            hotkey_toggle_visibility: "CtrlShift+H".into(),
+            hotkey_toggle_visibility: "WinAlt+H".into(),
             hotkey_gallery: "CtrlShift+G".into(),
             floating_in_taskbar: default_floating_in_taskbar(),
             dark_theme: default_dark_theme(),
@@ -125,6 +133,7 @@ impl Default for Settings {
             upload_service: default_upload_service(),
             imgur_client_id: default_imgur_client_id(),
             language: default_language(),
+            thumb_size_index: default_thumb_size_index(),
         }
     }
 }
@@ -153,6 +162,12 @@ impl Settings {
         // The translate popup always needs at least one quick-pick pill.
         if s.translate_favs.is_empty() {
             s.translate_favs = default_translate_favs();
+        }
+        // The "show / hide all snips" hotkey moved from Ctrl+Shift+H to
+        // Win+Alt+H. Migrate anyone still on the old default so they pick up the
+        // new combo (a user who chose a different value of their own is left be).
+        if s.hotkey_toggle_visibility == "CtrlShift+H" {
+            s.hotkey_toggle_visibility = "WinAlt+H".into();
         }
         s
     }

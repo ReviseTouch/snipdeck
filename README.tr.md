@@ -93,6 +93,20 @@ olacağını değiştirmek için değiştirici tuşlar ekle:
 Ayrıca tepsi simgesine sağ tıklayıp → **New Snip** ile `Win` tuşunu basılı tutmadan tek
 seferlik bir sürükleme yakalaması da hazırlayabilirsin.
 
+### Genel kısayollar
+
+`Win` + sürükle dışında Snipdeck, beş yapılandırılabilir genel kısayol tuşu da kaydeder:
+
+| Kısayol | İşlem |
+| --- | --- |
+| `Win`+`Alt`+`H` | Ekrandaki tüm kesimleri göster / gizle |
+| `Ctrl`+`Shift`+`A` | Yeni kesim |
+| `Ctrl`+`Shift`+`C` | Yeni kesim **ve** panoya kopyala |
+| `Ctrl`+`Shift`+`X` | Yalnızca pano |
+| `Ctrl`+`Shift`+`G` | Galeriyi aç |
+
+Bunları `settings.json` içindeki `hotkey_*` anahtarlarıyla değiştir.
+
 ---
 
 ## ✏️ İşaretleme editörü

@@ -452,3 +452,6 @@ msgstr "Krycie"
 
 msgid "draw"
 msgstr "rysuj"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "Rozmiar miniatury — Małe / Średnie / Duże"

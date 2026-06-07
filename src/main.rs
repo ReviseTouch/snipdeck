@@ -5,8 +5,10 @@ mod app;
 mod autostart;
 mod capture;
 mod clipboard;
+mod collage;
 mod context_menu;
 mod dxgi_capture;
+mod elevate;
 mod floating;
 mod hotkeys;
 mod i18n;
@@ -59,7 +61,18 @@ fn main() -> Result<(), slint::PlatformError> {
     // Only one Snipdeck per session. A second launch would fight the first
     // over the global hotkey and the process-wide input hooks; bail out
     // early (and raise the running window) instead.
-    if !single_instance::acquire() {
+    //
+    // The exception is the tray "Run as administrator" handoff: this elevated
+    // instance was just relaunched by a medium instance that is exiting right
+    // now, so it must wait for that lock to be released and take it over rather
+    // than quitting as a duplicate.
+    let elevated_takeover = std::env::args().any(|a| a == "--elevated-takeover");
+    let acquired = if elevated_takeover {
+        single_instance::acquire_after_handoff()
+    } else {
+        single_instance::acquire()
+    };
+    if !acquired {
         log::info!("Another Snipdeck instance is already running; exiting.");
         return Ok(());
     }
@@ -172,6 +185,17 @@ fn main() -> Result<(), slint::PlatformError> {
                             }
                         }
                         Err(e) => log::warn!("autostart toggle failed: {e}"),
+                    },
+                    tray::TrayCommand::RunAsAdmin => match elevate::relaunch_as_admin() {
+                        // Launched an elevated instance — remove the tray icon
+                        // and exit so it takes over the single-instance lock.
+                        Ok(true) => {
+                            tray::shutdown();
+                            std::process::exit(0);
+                        }
+                        // User dismissed the UAC prompt — stay as we are.
+                        Ok(false) => log::info!("run-as-administrator cancelled by user"),
+                        Err(e) => log::warn!("run-as-administrator failed: {e}"),
                     },
                     tray::TrayCommand::Exit => {
                         let _ = slint::quit_event_loop();

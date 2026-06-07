@@ -1,0 +1,123 @@
+---
+title: "Kurulum"
+description: "Snipdeck'i tek bir taşınabilir yürütülebilir dosya olarak indirin, sistem tepsisinden çalıştırın, kaynaktan derleyin ve kayıt defteri kullanmadan oturum açılışında başlatmayı etkinleştirin."
+order: 2
+category: "getting-started"
+---
+
+Bu sayfa, Snipdeck'i çalışır hale getirmek için ihtiyacınız olan her şeyi kapsar: sistem gereksinimleri, taşınabilir yürütülebilir dosyanın indirilmesi, ilk açılışta neler olduğu, kaynaktan derleme ve oturum açılışında başlatmanın etkinleştirilmesi. Snipdeck, kurulum gerektirmeyen, kendi kendine yeten tek bir `.exe` dosyası olarak gelir; bu yüzden başlamak yalnızca birkaç saniye sürer.
+
+## Sistem gereksinimleri
+
+Snipdeck şu an yalnızca Windows üzerinde çalışan bir masaüstü uygulamasıdır.
+
+| Gereksinim | Ayrıntı |
+| --- | --- |
+| İşletim sistemi | Windows 10 veya Windows 11 |
+| Mimari | x64 |
+| Kurulum izi | Tek bir `snipdeck.exe` — kurulum yok, arka plan hizmeti yok |
+| Bağımlılıklar | Dağıtım için hiçbiri. OCR, yerleşik `Windows.Media.Ocr` motorunu kullanır; dolayısıyla model indirme gerekmez ve yakalama ya da dizinleme için ağ bağlantısı gerekmez |
+
+> **Not:** macOS ve Linux sürümleri yolda. Arayüz (Slint) ve çekirdeğin büyük bölümü hâlihazırda çapraz platform; ancak yakalama, OCR, tepsi ve paylaşım şu anda Windows'a özgü API'lere dayanıyor; bu yüzden Snipdeck şimdilik yalnızca Windows'ta çalışıyor.
+
+## Yürütülebilir dosyayı indirin
+
+Snipdeck, tek bir taşınabilir yürütülebilir dosya olarak dağıtılır.
+
+1. [Releases](https://github.com/hasantr/snipdeck/releases) sayfasını açın.
+2. En son `snipdeck.exe` dosyasını indirin.
+3. Onu istediğiniz yere koyun — `Downloads` klasörünüze, bir araçlar dizinine ya da bir USB belleğe. Kurulum yok ve `Program Files` içine hiçbir şey yazılmaz.
+
+Taşınabilir olduğu için dosyayı doğrudan çalıştırırsınız. "Kaldırmak" için yalnızca `snipdeck.exe` dosyasını silersiniz (verilerinizi de kaldırmak isterseniz [Verilerinizin tutulduğu yer](#verilerinizin-tutuldugu-yer) altında listelenen klasörleri).
+
+> **İpucu:** Yeni indirilmiş bir yürütülebilir dosyayı ilk kez çalıştırdığınızda Windows SmartScreen sizi uyarabilir. Çalıştırmak için **More info → Run anyway** (Diğer bilgiler → Yine de çalıştır) seçeneğini işaretleyin.
+
+## İlk açılış
+
+Başlatmak için `snipdeck.exe` dosyasına çift tıklayın. İlk çalıştırmada Snipdeck şunları yapar:
+
+- Ayar ve veri klasörlerini oluşturur (bkz. [Verilerinizin tutulduğu yer](#verilerinizin-tutuldugu-yer)).
+- Arayüz dilini işletim sistemi yerel ayarından seçer — bunu araç çubuğundaki küre menüsünden değiştirebilirsiniz (bkz. [Diller](/docs/snipdeck/languages)).
+- **Sistem tepsisine** (saatin yanındaki bildirim alanı) bir simge ekler.
+
+Snipdeck tepsi odaklıdır: ana pencereyi kapattığınızda uygulama tepside çalışmaya devam eder ve yakalamaya hazırdır. Menü için tepsi simgesine sağ tıklayın:
+
+| Tepsi eylemi | Ne yapar |
+| --- | --- |
+| **New Snip** (Yeni Kesit) | `Win` tuşunu basılı tutmadan tek seferlik bir sürükleme yakalamasını hazır eder |
+| **Launch at Login** (Oturum Açılışında Başlat) | Kayıt defteri kullanmadan oturum açılışında başlatmayı açıp kapatır (onay işareti mevcut durumu gösterir) |
+| Göster / aç | Galeri penceresini yeniden öne getirir |
+| Çık | Snipdeck'ten tamamen çıkar |
+
+Snipdeck tek örnek olarak çalışır — yürütülebilir dosyayı yeniden başlatmak, ikinci bir kopya başlatmak yerine mevcut pencereyi öne getirir.
+
+Hemen yakalamaya başlamak için `Win` tuşunu basılı tutup bir bölgeyi sürükleyin. Bkz. [Hızlı başlangıç](/docs/snipdeck/quick-start) ve tüm [yakalama kısayolları](/docs/snipdeck/capture-shortcuts).
+
+### Verilerinizin tutulduğu yer
+
+Snipdeck, ayarlarını ve kesit verilerini standart kullanıcı başına konumlarda saklar:
+
+```text
+%APPDATA%\Snipdeck\settings.json        User settings (JSON)
+%LOCALAPPDATA%\Snipdeck\                snips.db, state.json, and cache\ (images + thumbnails)
+Pictures\Snipdeck\                      Default folder for Save
+```
+
+Bu klasörler ilk çalıştırmada oluşturulur. Düzenleyebileceğiniz ayar anahtarları için bkz. [Ayarlar](/docs/snipdeck/settings).
+
+## Kaynaktan derleme
+
+Kendiniz derlemeyi tercih ederseniz, Snipdeck kararlı (stable) Rust ile derlenir.
+
+**Gereksinimler:**
+
+- [Rust](https://rustup.rs/) (kararlı araç zinciri)
+- Windows 10 veya 11
+- Git
+
+Depoyu klonlayın ve bir sürüm (release) ikili dosyası derleyin:
+
+```powershell
+git clone https://github.com/hasantr/snipdeck.git
+cd snipdeck
+cargo build --release
+```
+
+Derlenen ikili dosya şuraya gelir:
+
+```text
+target\release\snipdeck.exe
+```
+
+Bu, Releases'ten indireceğiniz aynı tek taşınabilir yürütülebilir dosyadır — onu istediğiniz yere kopyalayıp doğrudan çalıştırabilirsiniz.
+
+> **Not:** 23 dil kataloğunun tamamı, paketlenmiş gettext `.po` dosyalarından derleme sırasında ikili dosyaya gömülür; bu nedenle çalışma zamanında gettext bağımlılığı yoktur. Yerelleştirmenin nasıl kurulduğunu öğrenmek için bkz. [Diller](/docs/snipdeck/languages).
+
+## Oturum açılışında başlatma
+
+Snipdeck, siz oturum açtığınızda otomatik olarak başlayabilir ve bunu **kayıt defterine dokunmadan** yapar.
+
+Etkinleştirmek için tepsi simgesine sağ tıklayın ve **Launch at Login** (Oturum Açılışında Başlat) seçeneğini açın. Menüdeki onay işareti mevcut durumu yansıtır.
+
+### Nasıl çalışır
+
+Snipdeck, `HKCU\…\CurrentVersion\Run` altına bir değer yazmak yerine, kullanıcı başına Başlangıç (Startup) klasörünüze sıradan bir kısayol bırakır:
+
+```text
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Snipdeck.lnk
+```
+
+Bu, Windows Ayarlar arayüzünün de kendisinin yönettiği, sıradan ve kullanıcı tarafından görülebilen otomatik başlatma mekanizmasıdır. Kayıt defterindeki `Run` anahtarı, antivirüs ve EDR araçlarının en sık sezgisel olarak işaretlediği otomatik başlatma yöntemidir; bu yüzden Snipdeck bundan bilinçli olarak kaçınır. **Launch at Login** seçeneğini kapatmak yalnızca `Snipdeck.lnk` kısayolunu siler.
+
+Kısayol, yürütülebilir dosyanın mevcut konumunu işaret ettiği için, `snipdeck.exe` nerede olursa olsun çalışır. Yürütülebilir dosyayı daha sonra yeni bir klasöre taşırsanız, kısayolun yeni yolu hedeflemesi için **Launch at Login** seçeneğini kapatıp yeniden açın.
+
+> **İpucu:** Kısayolu istediğiniz zaman kendiniz görebilir (ve kaldırabilirsiniz) — Çalıştır iletişim kutusunu açın (`Win`+`R`), `shell:Startup` yazın ve aynı Başlangıç klasörüne göz atmak için Enter'a basın.
+
+Snipdeck'in gizliliğe duyarlı varsayılanları hakkında daha fazlası için bkz. [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security).
+
+## Sonraki adımlar
+
+- [Hızlı başlangıç](/docs/snipdeck/quick-start) — ilk kesitinizi bir dakikadan kısa sürede alın.
+- [Yakalama kısayolları](/docs/snipdeck/capture-shortcuts) — yakalama için tüm değiştirici tuş matrisi.
+- [Ayarlar](/docs/snipdeck/settings) — `settings.json` içindeki her anahtar ve neyi denetlediği.
+- [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security) — oturum açılışında başlatmanın neden kayıt defteri kullanmadığı ve yüklemelerin nasıl isteğe bağlı kaldığı.

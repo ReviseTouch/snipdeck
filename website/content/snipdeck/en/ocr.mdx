@@ -1,0 +1,89 @@
+---
+title: "OCR (text recognition)"
+description: "How Snipdeck reads text from every snip locally with the Windows OCR engine to power full-text gallery search and one-click text copy."
+order: 4
+category: "features"
+---
+
+Snipdeck reads the text inside your screenshots so you can search for it later and copy it out as plain text. Recognition runs locally on the operating system's own OCR engine, with no model download and no network connection, so even sensitive captures never leave your machine.
+
+This page explains how background indexing works, how the recognized text feeds gallery search, and how the **OCR + Clipboard** action copies a snip's text on demand.
+
+## What OCR does in Snipdeck
+
+OCR (optical character recognition) turns the pixels of a snip into machine-readable text. Snipdeck uses it for two things:
+
+- **Indexing** — every snip you capture is read in the background and its text is stored so you can find that snip later by typing words that appear in it.
+- **Copying** — you can right-click any snip and copy its recognized text straight to the clipboard, ready to paste into an editor, chat, or terminal.
+
+If you want to read a snip's text in another language instead of just copying it, see [OCR + Translate](/en/docs/snipdeck/ocr-translate).
+
+## The engine
+
+On Windows, Snipdeck uses the built-in `Windows.Media.Ocr` engine — the same OCR component that ships with the operating system (introduced in Windows 8.1 and improved through Windows 11).
+
+| Property | Detail |
+| --- | --- |
+| Engine | `Windows.Media.Ocr` (operating-system built-in) |
+| Model download | None — the engine ships with Windows |
+| Network access | None — recognition is fully local |
+| Language | Picked from your Windows user-profile languages |
+| Fallback language | `en-US` when no OCR-supported language is installed |
+
+> **Note:** Because OCR uses the OS engine, the languages it can read depend on the language packs installed in Windows. Snipdeck asks Windows to use your profile's languages first, so an installed pack (for example English or Turkish) is selected automatically. If your profile has no OCR-supported language, Snipdeck falls back to `en-US`.
+
+Recognition runs on a dedicated worker thread so the gallery UI never blocks while a snip is being read. Very small images (under 40 px on the shorter side) are upscaled with a high-quality filter before recognition, because the OS engine struggles with tiny inputs — this happens automatically and you do not need to configure anything.
+
+## Automatic background indexing
+
+You do not have to ask for OCR. The moment a snip is captured, Snipdeck kicks off recognition in the background:
+
+1. The snip is saved to the gallery and shown immediately — capture never waits on OCR.
+2. A background thread reads the snip's text with the OS engine.
+3. The recognized text is written to the snip's record and added to the full-text search index.
+
+Because this is asynchronous, a freshly captured snip becomes searchable by its text a moment after it appears, not instantly. Captures that contain no readable text (a solid color, a photo with no words) simply produce no OCR text, and that is fine — the snip is still saved and searchable by its other metadata.
+
+> **Tip:** There is nothing to enable. Capture a snip the usual way (see [Capture shortcuts](/en/docs/snipdeck/capture-shortcuts)) and OCR indexing happens on its own.
+
+## Full-text gallery search
+
+The recognized text is indexed alongside each snip's other metadata in a local SQLite full-text index. When you type in the gallery search box, Snipdeck matches your query against all of it:
+
+| Field | Example of what it matches |
+| --- | --- |
+| OCR text | Words and phrases that appear *inside* the screenshot |
+| Label | The snip's name/label |
+| Monitor label | Which monitor the snip came from |
+| Dimensions | The snip's pixel size |
+| Window title | Title of the window that was captured |
+| Window app / process | The application or process name |
+| Window path | The executable path of the source window |
+
+This means you can find a screenshot of an error dialog by searching for a word in the error message, or find a snip of a webpage by a phrase that was on the page — without ever having labeled it. For the full search syntax, filters, and how results are ranked, see [Gallery and search](/en/docs/snipdeck/gallery-and-search).
+
+> **Note:** Only snips that have been OCR-indexed contribute their text to search. A snip captured seconds ago may not yet show up by its inner text until indexing finishes; metadata like the window title is available right away.
+
+## OCR + Clipboard
+
+To pull the text out of a single snip, right-click a floating snip **or** a gallery thumbnail and choose **OCR + Clipboard**.
+
+- If the snip has already been OCR-indexed, its stored text is copied to the clipboard instantly.
+- If it has not been indexed yet, Snipdeck reads the image on the spot, stores the result, and copies it.
+
+Either way you end up with the recognized text on your clipboard, ready to paste. The action also keeps the snip's stored OCR text up to date, so it benefits search as well.
+
+> **Tip:** Use **OCR + Clipboard** to lift a code snippet, URL, or error message out of a screenshot you cannot select text in — for example a remote desktop, a video frame, or a PDF rendered as an image.
+
+If recognition finds no text in the image, nothing is copied. To send the text through translation instead of copying it verbatim, use **OCR + Translate** — see [OCR + Translate](/en/docs/snipdeck/ocr-translate).
+
+## Privacy
+
+Capture and OCR are fully local. The `Windows.Media.Ocr` engine runs on your machine, requires no model download, and makes no network requests, so the contents of your snips are never transmitted anywhere during indexing or copying. The only OCR-related feature that uses the network is **OCR + Translate**, which sends the recognized *text* (not the image) to a translation service — and only when you explicitly invoke it. See [Privacy and security](/en/docs/snipdeck/privacy-and-security) for the full picture.
+
+## See also
+
+- [OCR + Translate](/en/docs/snipdeck/ocr-translate) — read a snip's text in another language
+- [Gallery and search](/en/docs/snipdeck/gallery-and-search) — full-text search, filters, and ranking
+- [Capture shortcuts](/en/docs/snipdeck/capture-shortcuts) — the modifier-and-drag capture grid
+- [Privacy and security](/en/docs/snipdeck/privacy-and-security) — what stays local and what uses the network

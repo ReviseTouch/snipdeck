@@ -281,4 +281,36 @@ export component Glyph inherits Rectangle {
         commands: "M15 14 L20 9 L15 4 M20 9 L9 9 A5 5 0 0 0 9 19 L13 19";
         paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
     }
+
+    // --- Collage editor ---
+
+    // Stacked layers (Feather "layers") — the gallery's Collage button.
+    if root.name == "layers" : StrokeGlyph {
+        commands: "M12 2 L22 7 L12 12 L2 7 Z M2 12 L12 17 L22 12 M2 17 L12 22 L22 17";
+        paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
+    }
+
+    // 2×2 grid — the uniform grid layout.
+    if root.name == "grid" : StrokeGlyph {
+        commands: "M4 4 L10 4 L10 10 L4 10 Z M14 4 L20 4 L20 10 L14 10 Z M4 14 L10 14 L10 20 L4 20 Z M14 14 L20 14 L20 20 L14 20 Z";
+        paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
+    }
+
+    // Two stacked bars — the justified-rows layout.
+    if root.name == "rows" : StrokeGlyph {
+        commands: "M3 5 L21 5 L21 10 L3 10 Z M3 14 L21 14 L21 19 L3 19 Z";
+        paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
+    }
+
+    // Two vertical bars — the masonry (columns) layout.
+    if root.name == "columns" : StrokeGlyph {
+        commands: "M5 3 L10 3 L10 21 L5 21 Z M14 3 L19 3 L19 21 L14 21 Z";
+        paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
+    }
+
+    // Circle with an "i" — the About / info button.
+    if root.name == "info" : StrokeGlyph {
+        commands: "M12 3 A9 9 0 1 0 12 21 A9 9 0 1 0 12 3 Z M12 16 L12 11 M12 8 L12.01 8";
+        paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
+    }
 }

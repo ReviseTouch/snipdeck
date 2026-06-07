@@ -1,0 +1,81 @@
+---
+title: "Sıkça Sorulan Sorular"
+description: "Snipdeck hakkında en sık sorulan soruların kısa yanıtları: lisanslama, çevrimdışı kullanım, platform desteği, snip'lerin nerede tutulduğu ve gizlilik."
+order: 5
+category: "getting-started"
+---
+
+İnsanların Snipdeck hakkında en sık sorduğu soruların kısa yanıtları; her biri ilgili tam kılavuza bağlantı verir. Henüz yeni başlıyorsanız, [Hızlı başlangıç](/docs/snipdeck/quick-start) temel konuları birkaç dakikada anlatıyor.
+
+## Snipdeck ücretsiz ve açık kaynak mı?
+
+Evet. Snipdeck, [ReviseTouch](https://revisetouch.com) tarafından geliştirilen, **MIT lisansı** altında ücretsiz ve açık kaynaklı bir uygulamadır. Kaynak kodunu inceleyebilir, kendiniz derleyebilir ve MIT lisansının izin verdiği her amaç için kullanabilirsiniz.
+
+> **Not:** Tek dosyalık taşınabilir `snipdeck.exe` ve kaynaktan derleme talimatlarının ikisi de [Kurulum](/docs/snipdeck/installation) sayfasında yer alıyor.
+
+## Çevrimdışı çalışır mı?
+
+Büyük ölçüde, evet. En önemli özellikler hiçbir ağ bağlantısı olmadan **tamamen yerel** çalışır:
+
+| Özellik | Ağ gerekiyor mu? |
+| --- | --- |
+| Yakalama (bölge, önce-dondur) | Hayır |
+| OCR (metin indeksleme ve OCR + Pano) | Hayır |
+| Galeri ve arama | Hayır |
+| OCR + **Çeviri** | **Evet** |
+| Bir resim sunucusuna yükleme | **Evet** |
+
+OCR, yerleşik `Windows.Media.Ocr` motorunu kullanır; indirilecek bir model yoktur ve yakalama ya da indeksleme sırasında makinenizden hiçbir şey çıkmaz. Ağa erişen tek özellikler, tanınan metni bir çeviri uç noktasına gönderen [OCR + Çeviri](/docs/snipdeck/ocr-translate) ile her zaman isteğe bağlı olan [yüklemeler](/docs/snipdeck/sharing-and-export)'dir.
+
+## Snipdeck yalnızca Windows için mi?
+
+Şimdilik, evet. Snipdeck **Windows 10 ve 11**'i hedefler; çünkü yakalama, OCR, sistem tepsisi ve paylaşımın tamamı Windows'a özgü API'leri kullanır. Arayüz (Slint) ve çekirdeğin büyük bölümü zaten platformlar arası olduğundan, **macOS ve Linux sürümleri yolda**. Güncel platform desteği için [Kurulum](/docs/snipdeck/installation) sayfasına bakın.
+
+## Snip'lerim nerede saklanıyor?
+
+Kullanıcı profilinizde. Snipdeck, veritabanını ve resim önbelleğini `%LOCALAPPDATA%` altında, ayarlarınızı `%APPDATA%` altında tutar ve açıkça yaptığınız her *Save* (Kaydet) işlemini varsayılan olarak **Resimler** klasörünüze yazar.
+
+| Yol | İçerik |
+| --- | --- |
+| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`, `state.json` ve resimlerle küçük resimlerin bulunduğu `cache\` |
+| `%APPDATA%\Snipdeck\settings.json` | Kullanıcı ayarlarınız |
+| `Pictures\Snipdeck\` | *Save* (Kaydet) için varsayılan klasör |
+
+Dosyaların ve anahtarların tam listesi için [Ayarlar](/docs/snipdeck/settings) sayfasına, snip'lerin nasıl indekslendiğini öğrenmek için [Galeri ve arama](/docs/snipdeck/gallery-and-search) sayfasına bakın.
+
+## Verilerimin herhangi biri bir yere gönderiliyor mu?
+
+Hayır; ağ kullanan bir özelliği siz açıkça tetiklemediğiniz sürece. Yakalama, OCR ve indeksleme tamamen yereldir. Yalnızca iki işlem makinenizden dışarı çıkar ve ikisi de açıkça sizin tarafınızdan başlatılır:
+
+- **OCR + Çeviri**, bir snip'in yalnızca OCR ile çıkarılmış *metnini* çevrilebilmesi için herkese açık bir çeviri uç noktasına gönderir. Başka hiçbir yerde kullanılmaz.
+- **Upload** (Yükle), resmi bir resim sunucusuna gönderir ve bunu yalnızca hedefi adıyla belirten **açık bir onay penceresinden** sonra yapar.
+
+> **Uyarı:** Anonim yüklemeler bağlantısı olan herkese açıktır ve şifrelenmez; bu yüzden hassas içerik yüklemeyin. Paylaşmadan önce [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security) sayfasını okuyun.
+
+## Dili nasıl değiştiririm?
+
+Snipdeck **23 dilde** sunulur ve ilk açılışta dilinizi işletim sistemi yerel ayarından otomatik olarak algılar. Bunu geçersiz kılmak için araç çubuğundaki **küre menüsünü** açın ve bir dil seçin. Tam liste ve çevirilerin nasıl işlediği için [Diller](/docs/snipdeck/languages) sayfasına bakın.
+
+## Nasıl kolaj oluştururum?
+
+Galeri araç çubuğundaki **Collage** (Kolaj) düğmesinden [kolaj editörünü](/docs/snipdeck/collage) açın. Editörün kendi küçük resim seçicisi vardır; böylece hangi snip'leri birleştireceğinizi onun içinden seçer, bir düzen belirler (Grid (Izgara), Rows (Satırlar) ya da Masonry (Tuğla)) ve sonucu yepyeni bir snip olarak kaydedersiniz; orijinalleriniz olduğu gibi kalır.
+
+## Exe nerede ve Snipdeck'i nasıl kaldırırım?
+
+Snipdeck, yükleyici gerektirmeyen **tek dosyalık taşınabilir bir yürütülebilir dosyadır**. Bir sürüm indirdiyseniz, `snipdeck.exe` onu kaydettiğiniz yerdedir; kaynaktan yapılan bir derleme ise `target\release\snipdeck.exe` konumunda oluşur.
+
+Snipdeck'i kaldırmak için:
+
+1. Sistem tepsisinden çıkış yapın.
+2. `snipdeck.exe` dosyasını silin.
+3. Oturum açılışında başlatmayı etkinleştirdiyseniz, `shell:Startup` klasörünüzden Snipdeck kısayolunu silin (Snipdeck asla bir kayıt defteri `Run` anahtarı yazmaz).
+4. İsterseniz snip'lerinizi ve ayarlarınızı kaldırmak için [Snip'lerim nerede saklanıyor?](#snipler-nerede-saklaniyor) bölümünde listelenen veri klasörlerini silin.
+
+> **İpucu:** Yükleyici ve kayıt defteri izi olmadığından, `.exe` dosyasını ve veri klasörlerini silmek geriye hiçbir şey bırakmaz. Oturum açılışında başlatmanın neden kayıt defteri içermediğini öğrenmek için [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security) sayfasına bakın.
+
+## Ayrıca bkz.
+
+- [Kurulum](/docs/snipdeck/installation) — taşınabilir exe'yi indirin veya kaynaktan derleyin.
+- [Hızlı başlangıç](/docs/snipdeck/quick-start) — ilk snip'inizi birkaç dakikada yakalayın.
+- [Ayarlar](/docs/snipdeck/settings) — her dosya yolu ve yapılandırılabilir anahtar.
+- [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security) — neyin yerel kaldığı ve neyin ağa eriştiği.

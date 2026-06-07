@@ -452,3 +452,6 @@ msgstr "Độ mờ"
 
 msgid "draw"
 msgstr "vẽ"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "Kích thước ảnh thu nhỏ — Nhỏ / Vừa / Lớn"

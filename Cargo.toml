@@ -88,9 +88,19 @@ slint-build = "1.8"
 [target.'cfg(windows)'.build-dependencies]
 winresource = "0.1"
 
+# Tuned for a small binary WITHOUT sacrificing runtime performance:
+#   opt-level = 3      keep full speed optimisation (the software renderer and
+#                      image paths stay fast); we do NOT drop to "s"/"z".
+#   lto = "fat"        whole-program LTO — aggressive cross-crate inlining and
+#                      dead-code elimination; smaller AND usually faster.
+#   codegen-units = 1  one unit lets LTO see everything (smaller + faster).
+#   strip = true       drop symbols/debuginfo from the shipped exe.
+# NOTE: panic is intentionally left as "unwind" (NOT "abort"): src/ocr.rs relies
+# on catch_unwind so a panic inside windows-rs OCR surfaces as an error instead
+# of killing the whole app. "abort" would shave a little size but defeat that.
 [profile.release]
 opt-level = 3
-lto = "thin"
+lto = "fat"
 codegen-units = 1
 strip = true
 

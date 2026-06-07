@@ -1,0 +1,136 @@
+---
+title: "Architecture (for contributors)"
+description: "How Snipdeck is structured internally: the single-threaded Slint event loop, worker threads and channels, the module map, and the software renderer."
+order: 5
+category: "reference"
+---
+
+This page is for contributors and curious power users. It explains how Snipdeck is put together: a single-threaded Slint event loop owns all UI, while OS hooks and blocking work run on their own threads and hand results back over channels that are drained once per tick. If you want to read the code or add a feature, start here.
+
+> **Note:** Snipdeck is written in Rust with a [Slint](https://slint.dev) UI. The descriptions below reflect the source in `src/` and `ui/`; module paths are relative to the repository root.
+
+## The big picture
+
+Snipdeck runs everything that touches the UI on a single thread — the thread that owns the Slint event loop. Anything that would block that thread (capturing the screen, running OCR, talking to the network, waiting on OS input hooks) lives on a separate thread and communicates back through channels. The main thread polls those channels on a fixed cadence and applies the results to the UI.
+
+This gives you two simple rules that the whole codebase follows:
+
+1. **UI state is only ever mutated on the main thread.** Slint models, windows, and properties are not `Send`, so they never leave the main thread.
+2. **Cross-thread work returns by message, not by shared mutation.** Workers send their results over a channel; the main thread reads them when it next ticks.
+
+### The event loop and the tick
+
+`main()` (in `src/main.rs`) sets up the process, creates the `MainWindow`, builds the application state, and then starts a single repeating Slint timer that fires roughly every 8 milliseconds. That timer callback is the heartbeat of the app — its body calls `AppState::tick()`.
+
+```rust
+// src/main.rs (abridged)
+let timer = slint::Timer::default();
+timer.start(
+    slint::TimerMode::Repeated,
+    std::time::Duration::from_millis(8),
+    move || {
+        // drain the tray channel, then:
+        state_for_timer.borrow_mut().tick(&window);
+    },
+);
+main_window.show()?;
+slint::run_event_loop_until_quit()
+```
+
+Each `tick()` (in `src/app/mod.rs`) does the same ordered sweep:
+
+| Step | What it drains | Source |
+| --- | --- | --- |
+| 1 | UI action queue (button clicks, menu picks pushed by Slint callbacks) | `ACTION_QUEUE` |
+| 2 | Global hotkey events | `HotkeyService::poll()` |
+| 3 | Mouse-trigger events (the `Win`+drag selections) | `MouseTriggerService` channel |
+| 4 | Pending floating windows to open (deferred one tick from creation) | `pending_open` |
+| 5 | Floating-window callbacks: drag positions, resize ends, close and menu requests | `FloatingManager::drain()` |
+| 6 | Finished OCR/translate, annotation, and collage results; then push banners and reflect state to the UI | `translate_popup`, `annotate`, `collage` |
+
+Because every channel is drained once per tick, there is exactly one place where each kind of background result lands on the UI thread, which keeps the data flow easy to reason about.
+
+> **Tip:** Slint callbacks (button presses, filter changes, context-menu actions) do **not** mutate `AppState` directly. They can't easily borrow `&mut self`, so they push a small `Action` enum value onto a queue that `tick()` drains in step 1. If you add a new UI control, follow the same pattern: add an `Action` variant, push it from the Slint callback in `wire_callbacks`, and handle it in `tick`.
+
+### Why a timer instead of "wake on event"
+
+The timer-driven poll keeps the worker services backend-agnostic — they only need a channel, not a handle to wake the Slint loop. It also survives a subtle Windows quirk: during a live window resize, Win32 runs a *modal* event loop and the Slint timer is frozen. To keep the gallery re-chunking smoothly mid-resize, the column-count callback (`on_gallery_cols_changed`) is wired directly against the shared state in `main()` rather than going through the queued-`Action` path, so it can run synchronously even while the tick is stalled.
+
+## Threads and channels
+
+Only the main thread touches the UI. These are the background workers and the channels they report on:
+
+| Worker | Runs on | Hands back via |
+| --- | --- | --- |
+| Mouse/keyboard hooks (the `Win`+drag arming and selection) | OS hook callback / polling thread | `MouseTriggerService` channel, drained in `tick` step 3 |
+| Global hotkeys | hotkey thread | `HotkeyService::poll()` |
+| System tray menu | tray thread | `TrayCommand` channel, drained in the timer body before `tick` |
+| OCR indexing and OCR-copy | one-off `std::thread::spawn` per job | writes results to the database; OCR-copy also writes the clipboard |
+| OCR + translate | worker behind the translate popup | `TranslatePopup::poll()`, drained in `tick` step 6 |
+
+OCR is deliberately fire-and-forget: when a new snip is created it is OCR-indexed on a spawned thread (`spawn_ocr_index`) that writes the recognized text straight to the database, so the capture path never blocks on it. The gallery picks the text up on a later refresh.
+
+> **Warning:** When adding background work, never capture a Slint window, model, or `Image` into the spawned thread — they are not `Send`. Send plain data (ids, byte buffers, `image::RgbaImage`) over a channel and rebuild UI objects on the main thread.
+
+## Module map
+
+The codebase is organized by responsibility. Each row below is a `src/*.rs` module (and, where relevant, the `ui/*.slint` markup it drives).
+
+| Module(s) | Responsibility |
+| --- | --- |
+| `src/app/` (`mod.rs`, `input`, `actions`, `gallery`) | `AppState`, the per-tick loop, UI actions, and the gallery model |
+| `src/capture.rs`, `src/dxgi_capture.rs` | Monitor capture — DXGI Desktop Duplication with a GDI fallback |
+| `src/mouse_trigger.rs`, `src/native_mouse_trigger.rs` | Low-level mouse/keyboard hooks that arm and drive selections |
+| `src/slint_overlay.rs` (`ui/overlay.slint`) | Full-screen selection overlay, live or frozen (freeze-first) |
+| `src/floating.rs` (`ui/floating.slint`) | Floating snip windows — drag, resize, crop, border, pin |
+| `src/annotate.rs` (`ui/annotate.slint`) | The annotation editor, including full-resolution flatten |
+| `src/collage.rs` | The collage editor — combine several snips into one image |
+| `src/ocr.rs` | `Windows.Media.Ocr` wrapper, called from worker threads |
+| `src/translate.rs`, `src/translate_popup.rs` | OCR + translate, and its popup window |
+| `src/share.rs`, `src/upload.rs` | Share sheet / MAPI mail / system editor; image-host upload |
+| `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Tray icon, launch-at-login, and the single-instance guard |
+| `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Gallery persistence (SQLite + FTS), settings, and on-disk paths |
+| `src/i18n.rs`, `lang/` | Runtime i18n plus the bundled gettext `.po` catalogs (23 languages) |
+
+A few supporting modules round things out: `src/clipboard.rs` (image and text clipboard), `src/context_menu.rs` (the native right-click menu shared by floating snips and gallery cards), `src/hotkeys.rs` (global hotkey registration), `src/window_metadata.rs` (the foreground-window info recorded with each snip), and `src/window_tamer.rs` (Win11 fade-in and foreground tracking).
+
+### Capture: DXGI first, GDI fallback
+
+Capture goes through `dxgi_capture.rs`, which uses DXGI Desktop Duplication for fast, GPU-side monitor grabs, and falls back to a GDI path when duplication is unavailable. The freeze-first mode (`Win`+`Shift`+`Space`) captures the whole screen the instant Space is pressed, holds that frame in `frozen_pending`, and reuses it when you drag — so click-sensitive UI such as hover tooltips stays in the shot. A watchdog in `tick` expires a stale frozen frame after a few seconds so a large full-screen buffer (tens of megabytes on a 4K monitor) can't linger if you abandon the capture.
+
+### Persistence
+
+Snips are persisted by `src/snip.rs` into a SQLite database with a full-text index, while images and thumbnails live in a cache directory; `src/paths.rs` resolves all of these locations and `src/settings.rs` reads and writes the JSON settings. See [Settings](/en/docs/snipdeck/settings) for the exact file paths and keys.
+
+### Internationalization
+
+A single gettext `.po` per language under `lang/<code>/LC_MESSAGES/` drives **both** sides of the UI: the Slint markup (via `@tr("…")`) and the Rust-side messages (via `i18n::t()`). The catalogs are bundled into the binary at build time, so there is no runtime gettext dependency. See [Languages](/en/docs/snipdeck/languages) for how to add or update a translation.
+
+## The software renderer
+
+Snipdeck forces Slint's **software** renderer instead of the default GPU (femtovg/OpenGL) backend:
+
+```rust
+// src/main.rs
+std::env::set_var("SLINT_BACKEND", "winit-software");
+```
+
+The reason is correctness, not just simplicity. The GPU renderer's window-level transparency depends on per-GPU DWM behavior. On multi-monitor setups with different adapters, the full-screen selection overlay can end up fully opaque on the primary monitor while transparent on a secondary one. Software rendering goes through DWM's standard composition path and behaves identically on every monitor, which matters for the transparent overlay window.
+
+The cost is negligible here: Snipdeck's UI is static — no animations, video, or 3D — so the rendering work is trivial, and skipping the GL context actually lowers memory use because no OpenGL context is created.
+
+## Process and lifecycle details
+
+A few process-level decisions shape how Snipdeck starts and stops:
+
+- **Single instance.** `single_instance::acquire()` runs first; a second launch would fight the first over the global hotkey and the process-wide input hooks, so it exits early (and raises the running window) instead.
+- **High process priority.** On Windows the process is bumped to `HIGH_PRIORITY_CLASS`. Low-level mouse and keyboard hooks have a strict per-callback timeout; at normal priority an idle process can have its hook chain suspended, dropping the first event after a quiet period. High priority keeps the hook callback responsive.
+- **Close-to-tray.** Clicking the window's close button hides Snipdeck to the tray rather than quitting. The loop runs via `run_event_loop_until_quit()`, so it survives with no window shown; only the tray's **Exit** actually quits.
+- **Registry-free autostart.** Launch-at-login drops a shortcut in the `shell:Startup` folder instead of writing a registry `Run` value. See [Privacy & security](/en/docs/snipdeck/privacy-and-security) for the reasoning.
+
+## See also
+
+- [Settings](/en/docs/snipdeck/settings) — the on-disk file layout and every `settings.json` key
+- [Languages](/en/docs/snipdeck/languages) — adding and updating translations
+- [Privacy & security](/en/docs/snipdeck/privacy-and-security) — what stays local and what leaves the machine
+- [Troubleshooting](/en/docs/snipdeck/troubleshooting) — diagnosing capture, hook, and rendering issues

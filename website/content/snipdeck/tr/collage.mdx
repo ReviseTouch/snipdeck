@@ -1,0 +1,128 @@
+---
+title: "Kolaj düzenleyici"
+description: "Birden fazla snip'i dinamik kolaj düzenleyiciyle tek bir görsele birleştirin: canlı önizlemeyle birlikte ızgara, hizalanmış satırlar veya masonry düzenleri."
+order: 3
+category: "features"
+---
+
+Kolaj düzenleyici, birden fazla snip'i üç dinamik düzenden biriyle tek bir görselde birleştirir. Bir avuç dolusu yakalamayı paylaşılabilir tek bir resme dönüştürmenin en hızlı yoludur; kaydettiğiniz dosyayla pikseli pikseline aynı olan canlı bir önizleme sunar.
+
+## Düzenleyiciyi açma
+
+Kolaj düzenleyiciyi galeri araç çubuğundaki **Collage** (Kolaj) düğmesinden açın. Çoğu eylemin aksine, galeri çoklu seçimine dayanmaz: düzenleyici kendi görsel seçicisini (alt kısımda uzanan bir küçük resim tepsisi) taşır, böylece birleştireceğiniz snip'leri düzenleyicinin kendi içinden seçersiniz.
+
+Pencere her zaman üstte ve imlecinizin altındaki monitörün ortasında açılır; bu sayede ekranınızdaki tüm [yüzen snip'lerin](/docs/snipdeck/floating-snips) üzerinde durur.
+
+Düzenleyici açıldığında bir başlangıç kümesi önceden seçilir:
+
+- O anda yüzen durumda olan tüm snip'ler **seçili** başlar ve kolajda zaten yerleşmiş olur.
+- Yüzen snip'lerden hiçbiri tepside mevcut değilse, **ilk birkaç** snip (en fazla dört tanesi) otomatik olarak seçilir; böylece boş bir tuval yerine hemen bir kolaj görürsünüz.
+
+> **Not:** Düzenleyici mevcut snip'lerinizi asla değiştirmez. Kaydetme sırasında bambaşka yeni bir görsel oluşturur ve bunu galeriye yeni bir snip olarak ekler, orijinalleri olduğu gibi bırakır.
+
+## Küçük resim tepsisi
+
+Tepsi, pencerenin altı boyunca uzanır ve düzenleyicinin görsel seçicisidir. Kolaj için mevcut olan her snip'i 84 piksellik bir küçük resim olarak gösterir; sığandan fazlası varsa şerit yatay olarak kaydırılır.
+
+| Eylem | Sonuç |
+| --- | --- |
+| Soluk bir küçük resme dokunun | O snip'i kolaja ekler (sıranın sonuna iliştirilir) |
+| Seçili bir küçük resme dokunun | O snip'i kolajdan kaldırır |
+
+Kolajın parçası olan küçük resimler tam opaklıkta, mavi bir kenarlıkla ve sağ üst köşede numaralı bir rozetle çizilir; kolajda olmayan küçük resimler soluk gösterilir ve rozetleri olmaz.
+
+Numaralı rozet, snip'in **kolaj sırasındaki 1 tabanlı konumudur**. Bir snip eklemek onu mevcut son konumdan sonraya iliştirir; bir tanesini kaldırmak ise geri kalanları yeniden numaralandırır. Bu sıra, her düzende hücrelerin nasıl yerleştirileceğini ve her görselin hangi yuvayı dolduracağını belirler.
+
+> **İpucu:** Görselleri eklediğiniz sıra, göründükleri sıradır. Yeniden sıralamak için kaldırıp yeniden ekleyebilir veya — daha doğrudan bir şekilde — önizlemede iki hücrenin yerini değiştirebilirsiniz (bkz. [Yer değiştirerek yeniden sıralama](#yer-degistirerek-yeniden-siralama)).
+
+## Düzenler
+
+Üst araç çubuğundaki üç düğmeden bir düzen seçin. Üçü de siz görsel ekledikçe, sütun sayısını değiştirdikçe veya kaydırıcıları sürükledikçe canlı olarak yeniden hesaplanır.
+
+| Düzen | Davranış |
+| --- | --- |
+| **Grid** (Izgara) | Tek tip kare hücreler. Her görsel hücresine kapla-sığdır yöntemiyle yerleştirilir (dolduracak şekilde ölçeklenir, ardından ortadan kırpılır). Eksik kalan son satır tam genişliği dolduracak şekilde gerilir, böylece düzensiz bir boşluk kalmaz. |
+| **Rows** (Satırlar) | Hizalanmış, Telegram albümü tarzı satırlar. Görseller en boy oranını korur ve her satır tam genişliği kaplayacak şekilde ölçeklenir. |
+| **Masonry** | Eşit genişlikte, Pinterest tarzı sütunlar. Her görsel en boy oranını korur ve o an en kısa olan sütuna düşer. |
+
+> **Not:** Varsayılan düzen **Rows** (Satırlar) düzenidir.
+
+### Sütun sayısının nasıl kullanıldığı
+
+Sütun denetimi (üst araç çubuğundaki sayının iki yanındaki **−** / **+** düğmeleri) her düzende **1** ile **8** sütun arasında farklı okunur:
+
+- **Grid** (Izgara) — satır başına tam hücre sayısı.
+- **Rows** (Satırlar) — satır başına *yaklaşık* görsel sayısı. Geniş görseller daha fazla yer kaplar, bu yüzden geniş olduklarında bir satır daha az görsel tutabilir.
+- **Masonry** — eşit genişlikteki sütunların sayısı.
+
+Varsayılan değer **3** sütundur.
+
+## Hücre denetimleri ve kaydırıcılar
+
+Alt araç çubuğu düzenleme denetimlerini barındırır.
+
+| Denetim | Aralık | Etki |
+| --- | --- | --- |
+| **Gap** (Boşluk) kaydırıcısı | 0–40 | Hücreler arasındaki ve kolajın kenarları çevresindeki, çalışma birimi cinsinden boşluk. |
+| **Round** (Yuvarlatma) kaydırıcısı | 0–80 | Her hücreye uygulanan köşe yarıçapı. Köşeler kenar yumuşatmalıdır ve yarıçap, bir hücrenin kısa kenarının yarısını asla aşmayacak şekilde sınırlanır. |
+
+Her iki kaydırıcı da geçerli yuvarlatılmış değerini kaydırıcının yanında gösterir ve ikisi de önizlemeyi canlı olarak günceller.
+
+## Arka plan
+
+Kolaj arka planını üst araç çubuğundaki renk örneklerinden seçin. Dört mod mevcuttur:
+
+| Mod | Örnek | Sonuç |
+| --- | --- | --- |
+| Saydam | Dama deseni örneği | Arka plan yok. Kaydedilen PNG tam saydamlığı korur; "arka plan yok" durumunun net okunması için önizlemede koyu bir dama tahtası gösterilir. |
+| Beyaz | Beyaz örnek | Düz beyaz. |
+| Siyah | Siyah örnek | Düz siyah. |
+| Özel | Renk parçası | Tekerlekten seçtiğiniz herhangi bir HSV rengi. |
+
+Özel bir renk ayarlamak için, HSV tekerleği panelini açmak üzere renk örneği satırının sonundaki yuvarlak renk parçasına dokunun:
+
+- **Ton (Hue)**, tekerlek etrafındaki açıdır; **doygunluk (saturation)** ise merkezden olan uzaklıktır. Seçmek için tekerleğin içine dokunun veya sürükleyin.
+- Tekerleğin altındaki (güneş simgeli) **parlaklık kaydırıcısı**, seçilen rengin değerini (açıklığını) ayarlar.
+
+Tekerlekten seçim yapmak arka plan modunu otomatik olarak **Custom** (Özel) moduna geçirir.
+
+> **İpucu:** Kolajı başka bir yüzeyin üzerine bırakmayı planladığınızda — örneğin renkli bir slaytın üzerine yapıştırırken — saydam arka planı kullanın. Hücre köşe yarıçapı, yuvarlatılmış her görselin çevresinde gerçek saydamlık olarak korunur.
+
+## Yer değiştirerek yeniden sıralama
+
+İki görselin yerini değiştirmek için önizlemede iki hücreye dokunun:
+
+1. **Birinci** hücreye dokunun — mavi bir vurgu alır ve beklemedeki yer değiştirme olarak işaretlenir.
+2. **İkinci** bir hücreye dokunun — iki görsel konumlarını takas eder.
+
+Aynı hücreye iki kez dokunmak beklemedeki yer değiştirmeyi iptal eder. Tepsiden bir görsel kaldırmak da beklemedeki tüm yer değiştirmeleri temizler.
+
+Konumlar kolaj sırası olarak saklandığından, bir yer değiştirme önizlemeye, tepsi rozet numaralarına ve kaydedilen görsele anında yansır.
+
+## Klavye
+
+| Tuş | Eylem |
+| --- | --- |
+| `Esc` | Kaydetmeden iptal et ve düzenleyiciyi kapat |
+
+## Kaydetme
+
+Önizlemeden memnun kaldığınızda **Save** (Kaydet) düğmesine dokunun. Düzenleyici:
+
+1. Seçili her snip'i diskten **tam çözünürlükte** yükler (tepsi hız için yalnızca küçük resimleri kullanır).
+2. Önizlemeyle tam olarak aynı düzen matematiğini kullanarak bunları birleştirir, böylece gördüğünüz şey elde ettiğiniz şeydir.
+3. Her görseli, kenar yumuşatmalı yuvarlatılmış köşelerle, seçilen arka planın üzerine alfa harmanıyla hücresine kapla-sığdır yöntemiyle yerleştirir.
+4. Tamamlanan görseli galeriye bambaşka yeni bir snip olarak ekler.
+
+Çıktı, **2048 piksellik uzun kenara** göre boyutlandırılır; kısa kenar ise kolajın en boy oranını izler (kenar başına en fazla 4096 piksele sınırlanır).
+
+Kolaj boşken **Save** (Kaydet) devre dışıdır — en az bir görsel seçili olmalıdır. Bir snip oluşturmadan atıp kapatmak için **Cancel** (İptal) düğmesine dokunun (veya `Esc` tuşuna basın).
+
+> **Not:** Önizleme ve kaydedilen dosya aynı düzen koduyla üretilir, dolayısıyla ekranda düzenlediğiniz kolaj tam olarak elde ettiğiniz görseldir.
+
+## Ayrıca bakınız
+
+- [Yüzen snip'ler](/docs/snipdeck/floating-snips) — içerikleri kolaj düzenleyicide önceden seçili başlayan, sabitlenmiş yer paylaşımları.
+- [Açıklama düzenleyici](/docs/snipdeck/annotation-editor) — tek bir snip'i kalem, şekiller, oklar ve metinle işaretleyin.
+- [Galeri ve arama](/docs/snipdeck/gallery-and-search) — kolaj araç çubuğu düğmesinin bulunduğu ve kaydedilen kolajın indiği yer.
+- [Paylaşma ve dışa aktarma](/docs/snipdeck/sharing-and-export) — kolajı galeriye girdikten sonra gönderin veya yükleyin.

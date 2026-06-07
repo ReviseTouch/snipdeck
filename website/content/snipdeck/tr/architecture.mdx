@@ -1,0 +1,136 @@
+---
+title: "Mimari (katkıda bulunanlar için)"
+description: "Snipdeck'in içeride nasıl yapılandırıldığı: tek iş parçacıklı Slint olay döngüsü, çalışan iş parçacıkları ve kanallar, modül haritası ve yazılım tabanlı görüntüleyici."
+order: 5
+category: "reference"
+---
+
+Bu sayfa, katkıda bulunanlar ve meraklı ileri düzey kullanıcılar içindir. Snipdeck'in nasıl bir araya geldiğini anlatır: tek iş parçacıklı bir Slint olay döngüsü tüm arayüze sahip olurken, işletim sistemi kancaları (hook) ve bloklayan işler kendi iş parçacıklarında çalışır ve sonuçları, her tıkta (tick) bir kez boşaltılan kanallar üzerinden geri verir. Kodu okumak ya da bir özellik eklemek istiyorsanız, buradan başlayın.
+
+> **Not:** Snipdeck, [Slint](https://slint.dev) arayüzüyle Rust dilinde yazılmıştır. Aşağıdaki açıklamalar `src/` ve `ui/` içindeki kaynak kodu yansıtır; modül yolları depo köküne görelidir.
+
+## Genel resim
+
+Snipdeck, arayüze dokunan her şeyi tek bir iş parçacığında — Slint olay döngüsüne sahip olan iş parçacığında — çalıştırır. Bu iş parçacığını bloklayacak her şey (ekran yakalama, OCR çalıştırma, ağ ile iletişim, işletim sistemi giriş kancalarını bekleme) ayrı bir iş parçacığında bulunur ve geri iletişimini kanallar üzerinden yapar. Ana iş parçacığı bu kanalları sabit bir ritimde yoklar ve sonuçları arayüze uygular.
+
+Bu durum, tüm kod tabanının izlediği iki basit kural ortaya koyar:
+
+1. **Arayüz durumu yalnızca ana iş parçacığında değiştirilir.** Slint modelleri, pencereleri ve özellikleri `Send` değildir; bu nedenle ana iş parçacığından asla ayrılmazlar.
+2. **İş parçacıkları arası iş, paylaşılan değişiklikle değil, mesajla geri döner.** Çalışanlar (worker) sonuçlarını bir kanal üzerinden gönderir; ana iş parçacığı bunları bir sonraki tıkında okur.
+
+### Olay döngüsü ve tık
+
+`main()` (`src/main.rs` içinde) süreci kurar, `MainWindow`'u oluşturur, uygulama durumunu inşa eder ve ardından yaklaşık her 8 milisaniyede bir tetiklenen tek bir tekrarlayan Slint zamanlayıcısı başlatır. Bu zamanlayıcı geri çağrısı, uygulamanın kalp atışıdır — gövdesi `AppState::tick()` çağrısını yapar.
+
+```rust
+// src/main.rs (abridged)
+let timer = slint::Timer::default();
+timer.start(
+    slint::TimerMode::Repeated,
+    std::time::Duration::from_millis(8),
+    move || {
+        // drain the tray channel, then:
+        state_for_timer.borrow_mut().tick(&window);
+    },
+);
+main_window.show()?;
+slint::run_event_loop_until_quit()
+```
+
+Her `tick()` (`src/app/mod.rs` içinde) aynı sıralı taramayı yapar:
+
+| Adım | Neyi boşaltır | Kaynak |
+| --- | --- | --- |
+| 1 | Arayüz eylem kuyruğu (Slint geri çağrılarının ittiği düğme tıklamaları, menü seçimleri) | `ACTION_QUEUE` |
+| 2 | Genel kısayol tuşu olayları | `HotkeyService::poll()` |
+| 3 | Fare tetikleme olayları (`Win`+sürükleme seçimleri) | `MouseTriggerService` kanalı |
+| 4 | Açılmayı bekleyen yüzen pencereler (oluşturulduktan bir tık sonraya ertelenir) | `pending_open` |
+| 5 | Yüzen pencere geri çağrıları: sürükleme konumları, yeniden boyutlandırma sonları, kapatma ve menü istekleri | `FloatingManager::drain()` |
+| 6 | Tamamlanmış OCR/çeviri, açıklama (annotation) ve kolaj sonuçları; ardından bildirimleri gösterir ve durumu arayüze yansıtır | `translate_popup`, `annotate`, `collage` |
+
+Her kanal tık başına bir kez boşaltıldığından, her tür arka plan sonucunun arayüz iş parçacığına ulaştığı tam olarak tek bir yer vardır; bu da veri akışını anlaşılır kılar.
+
+> **İpucu:** Slint geri çağrıları (düğme basışları, filtre değişiklikleri, sağ tık menüsü eylemleri) `AppState`'i **doğrudan** değiştirmez. `&mut self`'i kolayca ödünç alamadıkları için, `tick()`'in 1. adımda boşalttığı bir kuyruğa küçük bir `Action` enum değeri iterler. Yeni bir arayüz denetimi eklerseniz aynı deseni izleyin: bir `Action` varyantı ekleyin, onu `wire_callbacks` içindeki Slint geri çağrısından itin ve `tick` içinde işleyin.
+
+### Neden "olayda uyan" yerine bir zamanlayıcı
+
+Zamanlayıcı tabanlı yoklama, çalışan hizmetlerini arka uçtan bağımsız tutar — yalnızca bir kanala ihtiyaç duyarlar, Slint döngüsünü uyandıracak bir tutamağa değil. Ayrıca ince bir Windows tuhaflığına da dayanır: canlı bir pencere yeniden boyutlandırması sırasında Win32 *modal* bir olay döngüsü çalıştırır ve Slint zamanlayıcısı donar. Galerinin yeniden boyutlandırma sırasında akıcı biçimde yeniden parçalanmasını sağlamak için, sütun sayısı geri çağrısı (`on_gallery_cols_changed`) kuyruğa alınan `Action` yolundan geçmek yerine `main()` içinde paylaşılan duruma doğrudan bağlanır; böylece tık askıdayken bile eşzamanlı olarak çalışabilir.
+
+## İş parçacıkları ve kanallar
+
+Yalnızca ana iş parçacığı arayüze dokunur. Aşağıdakiler arka plan çalışanları ve raporladıkları kanallardır:
+
+| Çalışan | Çalıştığı yer | Geri verme şekli |
+| --- | --- | --- |
+| Fare/klavye kancaları (`Win`+sürükleme kurulumu ve seçimi) | İşletim sistemi kanca geri çağrısı / yoklama iş parçacığı | `MouseTriggerService` kanalı, `tick` 3. adımda boşaltılır |
+| Genel kısayol tuşları | kısayol iş parçacığı | `HotkeyService::poll()` |
+| Sistem tepsisi menüsü | tepsi iş parçacığı | `TrayCommand` kanalı, zamanlayıcı gövdesinde `tick`'ten önce boşaltılır |
+| OCR dizinleme ve OCR-kopyalama | iş başına tek seferlik `std::thread::spawn` | sonuçları veritabanına yazar; OCR-kopyalama ayrıca panoya da yazar |
+| OCR + çeviri | çeviri açılır penceresinin arkasındaki çalışan | `TranslatePopup::poll()`, `tick` 6. adımda boşaltılır |
+
+OCR, bilinçli olarak "ateşle ve unut" mantığıyla çalışır: yeni bir kesit oluşturulduğunda, tanınan metni doğrudan veritabanına yazan bir iş parçacığında (`spawn_ocr_index`) OCR ile dizinlenir; böylece yakalama yolu hiçbir zaman buna takılıp kalmaz. Galeri metni daha sonraki bir yenilemede alır.
+
+> **Uyarı:** Arka plan işi eklerken, oluşturulan iş parçacığına asla bir Slint penceresi, modeli ya da `Image` yakalamayın — bunlar `Send` değildir. Düz verileri (kimlikler, bayt arabellekleri, `image::RgbaImage`) bir kanal üzerinden gönderin ve arayüz nesnelerini ana iş parçacığında yeniden inşa edin.
+
+## Modül haritası
+
+Kod tabanı sorumluluğa göre düzenlenmiştir. Aşağıdaki her satır bir `src/*.rs` modülüdür (ve ilgili olduğunda, yönlendirdiği `ui/*.slint` işaretlemesidir).
+
+| Modül(ler) | Sorumluluk |
+| --- | --- |
+| `src/app/` (`mod.rs`, `input`, `actions`, `gallery`) | `AppState`, tık başına döngü, arayüz eylemleri ve galeri modeli |
+| `src/capture.rs`, `src/dxgi_capture.rs` | Monitör yakalama — GDI yedeğiyle birlikte DXGI Desktop Duplication |
+| `src/mouse_trigger.rs`, `src/native_mouse_trigger.rs` | Seçimleri kuran ve yürüten düşük seviyeli fare/klavye kancaları |
+| `src/slint_overlay.rs` (`ui/overlay.slint`) | Tam ekran seçim katmanı, canlı ya da dondurulmuş (önce-dondur) |
+| `src/floating.rs` (`ui/floating.slint`) | Yüzen kesit pencereleri — sürükleme, yeniden boyutlandırma, kırpma, kenarlık, sabitleme |
+| `src/annotate.rs` (`ui/annotate.slint`) | Tam çözünürlükte düzleştirme dahil açıklama (annotation) düzenleyicisi |
+| `src/collage.rs` | Kolaj düzenleyicisi — birkaç kesiti tek bir görüntüde birleştirir |
+| `src/ocr.rs` | Çalışan iş parçacıklarından çağrılan `Windows.Media.Ocr` sarmalayıcısı |
+| `src/translate.rs`, `src/translate_popup.rs` | OCR + çeviri ve onun açılır penceresi |
+| `src/share.rs`, `src/upload.rs` | Paylaşım sayfası / MAPI posta / sistem düzenleyicisi; görüntü barındırma yükleme |
+| `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Tepsi simgesi, oturum açışta başlatma ve tek örnek koruması |
+| `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Galeri kalıcılığı (SQLite + FTS), ayarlar ve diskteki yollar |
+| `src/i18n.rs`, `lang/` | Çalışma zamanı i18n ve birlikte paketlenmiş gettext `.po` kataloglar (23 dil) |
+
+Birkaç destekleyici modül tabloyu tamamlar: `src/clipboard.rs` (görüntü ve metin panosu), `src/context_menu.rs` (yüzen kesitler ve galeri kartları tarafından paylaşılan yerel sağ tık menüsü), `src/hotkeys.rs` (genel kısayol tuşu kaydı), `src/window_metadata.rs` (her kesitle birlikte kaydedilen ön plan penceresi bilgisi) ve `src/window_tamer.rs` (Win11 belirme animasyonu ve ön plan takibi).
+
+### Yakalama: önce DXGI, GDI yedek
+
+Yakalama, hızlı ve GPU tarafında monitör yakalamaları için DXGI Desktop Duplication kullanan `dxgi_capture.rs` üzerinden gerçekleşir ve çoğaltma kullanılamadığında bir GDI yoluna geri döner. Önce-dondur modu (`Win`+`Shift`+`Space`), Space tuşuna basıldığı anda tüm ekranı yakalar, o kareyi `frozen_pending` içinde tutar ve sürüklediğinizde yeniden kullanır — böylece üzerine gelince çıkan araç ipuçları gibi tıklamaya duyarlı arayüz öğeleri görüntüde kalır. `tick` içindeki bir bekçi (watchdog), birkaç saniye sonra eskimiş bir dondurulmuş kareyi sonlandırır; böylece yakalamayı yarıda bırakırsanız büyük bir tam ekran arabelleği (4K monitörde onlarca megabayt) ortalıkta kalamaz.
+
+### Kalıcılık
+
+Kesitler, `src/snip.rs` tarafından tam metin dizinine sahip bir SQLite veritabanında kalıcı hâle getirilir; görüntüler ve küçük resimler ise bir önbellek dizininde bulunur. `src/paths.rs` tüm bu konumları çözer ve `src/settings.rs` JSON ayarlarını okur ve yazar. Tam dosya yolları ve anahtarlar için bkz. [Settings](/docs/snipdeck/settings).
+
+### Uluslararasılaştırma
+
+`lang/<code>/LC_MESSAGES/` altında dil başına tek bir gettext `.po`, arayüzün **her iki** tarafını da yönlendirir: Slint işaretlemesi (`@tr("…")` aracılığıyla) ve Rust tarafındaki mesajlar (`i18n::t()` aracılığıyla). Kataloglar derleme zamanında ikili dosyaya paketlenir; bu nedenle çalışma zamanında bir gettext bağımlılığı yoktur. Bir çevirinin nasıl ekleneceği veya güncelleneceği için bkz. [Languages](/docs/snipdeck/languages).
+
+## Yazılım tabanlı görüntüleyici
+
+Snipdeck, varsayılan GPU (femtovg/OpenGL) arka ucu yerine Slint'in **yazılım** tabanlı görüntüleyicisini zorlar:
+
+```rust
+// src/main.rs
+std::env::set_var("SLINT_BACKEND", "winit-software");
+```
+
+Bunun nedeni yalnızca basitlik değil, doğruluktur. GPU görüntüleyicisinin pencere düzeyindeki saydamlığı, GPU'ya özgü DWM davranışına bağlıdır. Farklı bağdaştırıcılara sahip çoklu monitör kurulumlarında, tam ekran seçim katmanı birincil monitörde tamamen opak, ikincil bir monitörde ise saydam görünebilir. Yazılım tabanlı görüntüleme, DWM'in standart kompozisyon yolundan geçer ve her monitörde aynı şekilde davranır; bu da saydam katman penceresi için önemlidir.
+
+Buradaki maliyet ihmal edilebilir düzeydedir: Snipdeck'in arayüzü durağandır — animasyon, video ya da 3B yok — bu nedenle görüntüleme işi önemsizdir ve GL bağlamını atlamak, hiçbir OpenGL bağlamı oluşturulmadığından bellek kullanımını aslında düşürür.
+
+## Süreç ve yaşam döngüsü ayrıntıları
+
+Birkaç süreç düzeyindeki karar, Snipdeck'in nasıl başlayıp durduğunu şekillendirir:
+
+- **Tek örnek.** İlk olarak `single_instance::acquire()` çalışır; ikinci bir başlatma, genel kısayol tuşu ve süreç genelindeki giriş kancaları üzerinde ilkiyle çatışacağından, bunun yerine erkenden çıkar (ve çalışan pencereyi öne getirir).
+- **Yüksek süreç önceliği.** Windows'ta süreç `HIGH_PRIORITY_CLASS` seviyesine yükseltilir. Düşük seviyeli fare ve klavye kancalarının geri çağrı başına katı bir zaman aşımı vardır; normal öncelikte boştaki bir sürecin kanca zinciri askıya alınabilir ve sessiz bir dönemin ardından gelen ilk olay düşebilir. Yüksek öncelik, kanca geri çağrısını tepkisel tutar.
+- **Tepsiye-kapat.** Pencerenin kapat düğmesine tıklamak, Snipdeck'i kapatmak yerine tepsiye gizler. Döngü `run_event_loop_until_quit()` üzerinden çalışır; bu nedenle hiçbir pencere gösterilmeden hayatta kalır; yalnızca tepsinin **Exit** (Çık) seçeneği gerçekten kapatır.
+- **Kayıt defteri kullanmayan otomatik başlatma.** Oturum açışta başlatma, kayıt defterine bir `Run` değeri yazmak yerine `shell:Startup` klasörüne bir kısayol bırakır. Gerekçesi için bkz. [Privacy & security](/docs/snipdeck/privacy-and-security).
+
+## Ayrıca bakınız
+
+- [Settings](/docs/snipdeck/settings) — diskteki dosya düzeni ve her `settings.json` anahtarı
+- [Languages](/docs/snipdeck/languages) — çeviri ekleme ve güncelleme
+- [Privacy & security](/docs/snipdeck/privacy-and-security) — yerelde ne kalır ve makineden ne ayrılır
+- [Troubleshooting](/docs/snipdeck/troubleshooting) — yakalama, kanca ve görüntüleme sorunlarını teşhis etme

@@ -1,0 +1,121 @@
+---
+title: "Floating snips"
+description: "Work with floating snips: borderless, always-on-top overlays you can drag, resize, pin, crop, rotate, flip, hide, and delete."
+order: 1
+category: "features"
+---
+
+A floating snip is a captured region kept on screen as a lightweight, borderless, always-on-top overlay. It is the fastest way to keep a reference visible while you work in another window. This page covers everything you can do with a floating snip: move and resize it, pin it, crop it down, rotate and flip it, control whether it shows in the taskbar, and how Snipdeck remembers where you left it.
+
+## What a floating snip is
+
+When you capture with `Win` + drag (or `Win`+`Ctrl` + drag to also copy to the clipboard), Snipdeck opens the result as its own borderless window that sits on top of every other application. There is no title bar and no system chrome — just the captured pixels inside a thin, three-band border that stays visible against light or dark backgrounds.
+
+Each floating snip is an independent window. You can have many on screen at once, and each one is also a row in [the gallery](/en/docs/snipdeck/gallery-and-search). Closing a floating window does not delete the snip from the gallery — it only takes it off the screen.
+
+> **Note:** The inner image area is rendered at exactly the captured pixel size, regardless of display scaling. The border is 3 physical pixels per side, so the snip lines up precisely with what was on screen.
+
+## The selection highlight
+
+Click anywhere on a floating snip to select it. The selected snip's border switches to a distinct highlight color while every other floating snip keeps the normal brand-colored border, so you can always tell which one is in focus when several are stacked on the desktop.
+
+The highlight is only shown while Snipdeck is the foreground application. As soon as you switch to another app, the highlight clears and every snip falls back to its default border — a selection never lingers on your desktop while you are working elsewhere. Opening a fresh snip does not auto-select it; selection is always driven by your click.
+
+## Moving a snip
+
+Press and drag anywhere on the image to move the window. The cursor shows the move icon over the body of the snip. Snipdeck applies the drag to the underlying OS window and records the new position as you go.
+
+> **Tip:** The first time you drag a snip, Snipdeck hides its resize handles (see [Resizing](#resizing-and-recapturing) below). The handles re-capture the screen region underneath the window, which only makes sense while the snip is still over its original location — once you have moved it somewhere else, it becomes a free-floating note.
+
+## Pinning (keep across sessions)
+
+A pinned snip is one you want to keep. A small gold dot appears in the top-right corner of a pinned floating window to mark it.
+
+Right-click the snip and toggle **Pin** to pin or unpin it. Pinning affects which snips survive bulk-clear actions:
+
+| Action | What it removes |
+| --- | --- |
+| Clear unpinned | Every snip that is **not** pinned |
+| Clear all | Every snip, pinned or not |
+
+You can also filter the gallery by pinned / unpinned status and sort so that pinned snips come first. See [the gallery](/en/docs/snipdeck/gallery-and-search) for the full filter and sort matrix.
+
+## Resizing and re-capturing
+
+While a snip is still sitting over the spot you captured it from, its border shows eight grab points — four corners and four edge midpoints. Drag any of them to resize.
+
+These handles are special: they do not merely stretch the existing image. When you finish the drag, Snipdeck re-captures the screen region under the new window bounds, so the snip's image and its recorded area update to match. The handles clamp at a minimum window size so you cannot accidentally shrink a snip to nothing.
+
+Once you drag the window away from its original position, the handles disappear, because re-capturing a region the snip no longer overlaps would be meaningless. To get them back on a snip you have already moved, right-click and choose **Resize** (hint: *handles*) — this re-enables the grab points so you can adjust the region again.
+
+> **Note:** Re-capturing reads the live screen, so whatever is currently behind the window is what gets captured. The snip's own border is excluded from the new image automatically, so resizing never bakes the border into your capture.
+
+## Cropping (drag the handles inward)
+
+Cropping trims a snip down to a sub-region of the pixels it already contains — no re-capture, just keeping part of the image.
+
+Right-click the snip and choose **Crop** (hint: *drag inward*). Snipdeck resets the window to a 1:1 view of the image so the crop is pixel-exact, then turns the same eight handles into inward-only crop handles. As you drag a handle inward, the window shrinks and the preview shows exactly the region you are keeping. The border turns a distinct green while you are in crop mode. When you release, Snipdeck commits the crop to the image's real pixels.
+
+| | Resize | Crop |
+| --- | --- | --- |
+| Handle direction | Any direction | Inward only |
+| Effect | Re-captures the screen under the new bounds | Keeps a sub-region of the existing pixels |
+| Where it reads from | The live screen | The snip's own image |
+
+## Rotating and flipping
+
+Right-click the snip to reach the **Transform** row, which acts on the image's real pixels:
+
+| Control | Effect |
+| --- | --- |
+| Rotate (counter-clockwise) | Rotate the image 90° counter-clockwise |
+| Rotate (clockwise) | Rotate the image 90° clockwise |
+| 180° | Rotate the image a half-turn |
+| Flip horizontal | Mirror left-to-right |
+| Flip vertical | Mirror top-to-bottom |
+
+Each transform rewrites the snip's image, so the change persists in the gallery and in anything you export afterwards.
+
+## Hiding versus deleting
+
+These two actions look similar but do very different things:
+
+- **Hide from screen** (right-click, hint: *hide*) closes the floating window but keeps the snip in the gallery. The snip is simply no longer floating on your desktop. You can bring all hidden floating snips back later — Snipdeck remembers which snips were floating and can reopen them together.
+- **Delete** (right-click, hint: *remove*) closes the window **and** removes the snip from the gallery, along with its cached image and thumbnail. This is permanent.
+
+> **Warning:** Delete removes the snip everywhere, not just from the screen. If you only want to clear your desktop, use **Hide from screen** so the snip stays in the gallery.
+
+You can also **middle-click** a floating snip to close (hide) it quickly without opening the menu.
+
+## Show floating windows in the taskbar
+
+By default, floating snips do **not** appear in the Windows taskbar or the Alt+Tab list — they float on top of everything without cluttering your window switcher. Toggle **Show floating windows in the taskbar** from the toolbar to change this.
+
+When you flip the toggle, Snipdeck closes and reopens every currently floating snip so the new windows pick up the correct taskbar state, then saves your choice. The setting is stored in `settings.json` under the `floating_in_taskbar` key (default `false`).
+
+```json
+{
+  "floating_in_taskbar": false
+}
+```
+
+See [Settings](/en/docs/snipdeck/settings) for the full list of configuration keys.
+
+## How the last position is remembered
+
+Snipdeck records a floating snip's screen position as you drag it. That position is stored on the snip and persists across sessions, so when a snip is reopened it returns to exactly where you last left it rather than to its original capture spot.
+
+A snip that has never been moved has no saved position yet, so it opens anchored over the region it was captured from — which is why a brand-new snip still shows its re-capture handles. The moment you drag it, its position is saved and (as described above) the handles are hidden. Resizing and cropping also update the saved position so the snip reopens with the correct geometry.
+
+## Session restore
+
+A snip's floating state is persisted, so any snips you leave floating reopen automatically the next time you launch Snipdeck. The toolbar visibility toggle (default hotkey `Win+Alt+H`) shows or hides every floating snip at once. This session state lives in `state.json`.
+
+Snip lifecycle follows your bulk-clear actions: pinned snips survive **Clear unpinned** while unpinned ones are removed, and **Clear all** removes everything.
+
+## See also
+
+- [Quick start](/en/docs/snipdeck/quick-start) — capture your first snip in seconds
+- [Capture shortcuts](/en/docs/snipdeck/capture-shortcuts) — the modifier matrix for what happens to each capture
+- [The gallery and search](/en/docs/snipdeck/gallery-and-search) — find, filter, and manage every snip
+- [Settings](/en/docs/snipdeck/settings) — `floating_in_taskbar` and other configuration keys

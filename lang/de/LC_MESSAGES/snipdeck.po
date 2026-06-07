@@ -457,3 +457,6 @@ msgstr "Deckkraft"
 
 msgid "draw"
 msgstr "zeichnen"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "Vorschaubildgröße — Klein / Mittel / Groß"

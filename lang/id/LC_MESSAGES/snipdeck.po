@@ -452,3 +452,6 @@ msgstr "Opasitas"
 
 msgid "draw"
 msgstr "gambar"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "Ukuran thumbnail — Kecil / Sedang / Besar"

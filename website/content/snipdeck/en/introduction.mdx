@@ -1,0 +1,120 @@
+---
+title: "Introduction"
+description: "What Snipdeck is, the philosophy behind it, its headline capabilities, and a map of how this documentation is organized."
+order: 1
+category: "getting-started"
+---
+
+Snipdeck is a fast, keyboard-driven screen-snipping app for Windows from [ReviseTouch](https://revisetouch.com). You capture a region, keep snips floating on top of everything, mark them up, OCR-index them in the background, and search hundreds of screenshots from one dense gallery — all from a native Rust app with a software-rendered [Slint](https://slint.dev) UI. This page explains what Snipdeck is, the ideas behind it, and where to go next in these docs.
+
+## What Snipdeck is
+
+Snipdeck is a free and open-source (MIT-licensed) snipping tool. It runs from a single portable `snipdeck.exe` — there is no installer — and lives in the system tray, ready to capture the moment you hold `Win` and drag a region.
+
+Unlike the built-in snipping tool, Snipdeck is built around a *deck* of snips: every capture can stay pinned on top of your other windows as a lightweight floating overlay, and every capture is also filed into a searchable gallery and indexed by OCR. That combination — capture, keep on top, mark up, and search — is what Snipdeck is for.
+
+## Philosophy
+
+A handful of principles shape how Snipdeck works:
+
+- **Fast and keyboard-driven.** The primary capture gesture is a modifier plus a drag, with modifiers deciding what happens to the result — no menus to click through first. Editors and popups are reachable with the keyboard and close on `Esc`.
+- **Floating-first.** Captures default to staying pinned on top as borderless overlays you can drag, resize, pin, crop, rotate, and dismiss. Keeping a reference snip in view while you work is the default, not an afterthought.
+- **Fully local and private.** Capture and OCR happen entirely on your machine. OCR uses the built-in `Windows.Media.Ocr` engine — no model download, no network. Nothing leaves your computer unless you explicitly choose to upload or translate, and each of those is opt-in.
+- **Native and lightweight.** Snipdeck is a native Rust app with a software-rendered Slint UI. A single-threaded event loop drives the interface while OS hooks and blocking work run on their own threads.
+- **Open-source.** The full source is available under the MIT license, and the architecture is documented so you can read, build, and contribute.
+
+## Headline capabilities
+
+| Capability | What it does |
+| --- | --- |
+| **Modifier + drag capture** | Hold `Win` and drag a region; modifiers decide whether the snip floats, goes to the clipboard, lands in the gallery, or some combination. |
+| **Freeze-first capture** | `Win`+`Shift`+`Space` dims and freezes the screen *before* you select, so hover tooltips and other click-sensitive UI stay captured. |
+| **Floating snips** | Captures stay pinned on top as lightweight, borderless overlays you can drag, resize, pin, crop, rotate/flip, and dismiss. |
+| **Annotation editor** | Pen, highlighter, shapes, arrows, and text with a full HSV color wheel, adjustable size and opacity, zoom, and undo/redo. |
+| **Collage editor** | Combine several snips into one image with grid, justified-rows, or masonry layouts and a live preview. |
+| **Built-in OCR** | Every snip is OCR-indexed in the background with the OS engine, fully local. |
+| **OCR + translate** | Read a snip's text in another language inline, with starred favorites. |
+| **Powerful gallery** | Full-text search over OCR text, window metadata, monitor, and path; filter by status, content, size, and date in a virtualized grid that stays smooth at thousands of snips. |
+| **Share & export** | Windows share sheet, a new email via Simple MAPI, the system image editor, or an image host — uploads are opt-in with an explicit consent dialog. |
+| **23 languages** | Auto-detected from your OS locale and switchable from the toolbar globe menu. |
+| **Light / dark themes** | A dark theme by default and a light theme, switchable to match your preference. |
+| **Tray home & autostart** | A system-tray home and registry-free launch-at-login. |
+
+## Capture shortcuts at a glance
+
+Hold `Win`, then drag a region with the **left** mouse button. Add modifiers to change what happens to the snip:
+
+| Shortcut | Result |
+| --- | --- |
+| `Win` + drag | Floating snip on screen |
+| `Win`+`Ctrl` + drag | Floating snip **and** copy to clipboard |
+| `Win`+`Alt` + drag | Clipboard only (not added to the gallery) |
+| `Win`+`Shift` + drag | Gallery only (no floating window) |
+| `Win`+`Ctrl`+`Shift` + drag | Gallery **and** clipboard, no floating window |
+| `Win`+`Shift`+`Space`, then drag | **Freeze-first** — freeze the screen, then select on the still image |
+
+You can also right-click the tray icon and choose **New Snip** to arm a one-shot drag capture without holding `Win`.
+
+> **Tip:** The full grid, including in-editor keys, lives on the [Capture shortcuts](/en/docs/snipdeck/capture-shortcuts) and [Keyboard shortcuts](/en/docs/snipdeck/keyboard-shortcuts) pages.
+
+## Who it is for
+
+Snipdeck is built for people who take a lot of screenshots and want to do something with them:
+
+- **Developers and QA** who keep reference UI on top while coding, capture click-sensitive states with freeze-first, and grab error text with OCR.
+- **Support and documentation writers** who mark up snips, build collages, and search a growing pile of captures by their text.
+- **Anyone who values privacy** and wants capture and indexing to stay on their machine, with anything that leaves it gated behind explicit consent.
+
+## Platform
+
+Snipdeck runs on **Windows 10 and 11**. It is Windows-only today because capture, OCR, the tray, and sharing all use Windows-specific APIs. The UI (Slint) and most of the core are already cross-platform, so **macOS and Linux builds are on the way**.
+
+## How this documentation is organized
+
+The docs are grouped so you can start fast and dig deeper as you go.
+
+### Getting started
+
+- [Installation](/en/docs/snipdeck/installation) — download the portable `snipdeck.exe` or build from source.
+- [Quick start](/en/docs/snipdeck/quick-start) — your first capture, in under a minute.
+- [FAQ](/en/docs/snipdeck/faq) — short answers to common questions.
+
+### Capturing
+
+- [Capture shortcuts](/en/docs/snipdeck/capture-shortcuts) — the modifier-plus-drag matrix and freeze-first capture, in full.
+- [Floating snips](/en/docs/snipdeck/floating-snips) — the pinned, always-on-top overlays and everything you can do to them.
+
+### Editing
+
+- [Annotation editor](/en/docs/snipdeck/annotation-editor) — pen, highlighter, shapes, arrows, and text on a single snip.
+- [Collage editor](/en/docs/snipdeck/collage) — combine several snips into one image.
+
+### Text and translation
+
+- [OCR](/en/docs/snipdeck/ocr) — how local, background text recognition works.
+- [OCR + translate](/en/docs/snipdeck/ocr-translate) — read a snip's text in another language.
+
+### Managing snips
+
+- [Gallery and search](/en/docs/snipdeck/gallery-and-search) — the main grid, full-text search, and filters.
+- [Sharing and export](/en/docs/snipdeck/sharing-and-export) — share sheet, MAPI mail, system editor, and image-host upload.
+
+### Reference
+
+- [Keyboard shortcuts](/en/docs/snipdeck/keyboard-shortcuts) — every key, in one place.
+- [Settings](/en/docs/snipdeck/settings) — where data lives and the `settings.json` keys you can edit.
+- [Languages](/en/docs/snipdeck/languages) — the 23 supported UI languages and how detection works.
+- [Privacy and security](/en/docs/snipdeck/privacy-and-security) — what stays local, registry-free autostart, and the upload consent dialog.
+- [Architecture](/en/docs/snipdeck/architecture) — the event loop, threading model, and module map.
+- [Troubleshooting](/en/docs/snipdeck/troubleshooting) — fixes for common problems.
+
+## Made by ReviseTouch
+
+Snipdeck is a free, open-source app from [ReviseTouch](https://revisetouch.com), where we build developer tools and AI products.
+
+## Next steps
+
+- [Installation](/en/docs/snipdeck/installation) — get Snipdeck running.
+- [Quick start](/en/docs/snipdeck/quick-start) — take your first snip.
+- [Capture shortcuts](/en/docs/snipdeck/capture-shortcuts) — learn the modifier-plus-drag matrix.
+- [Privacy and security](/en/docs/snipdeck/privacy-and-security) — understand what stays on your machine.

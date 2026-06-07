@@ -452,3 +452,6 @@ msgstr "Непрозорість"
 
 msgid "draw"
 msgstr "малювати"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "Розмір мініатюр — Малий / Середній / Великий"

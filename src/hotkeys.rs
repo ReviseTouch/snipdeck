@@ -24,23 +24,27 @@ impl HotkeyService {
         let manager = GlobalHotKeyManager::new().context("init global hotkey manager")?;
         let mut bindings = Vec::new();
 
-        let mut try_register = |s: &str, action: HotkeyAction| -> anyhow::Result<()> {
-            let hk = parse_hotkey(s)?;
-            manager
-                .register(hk)
-                .with_context(|| format!("register hotkey {s}"))?;
-            bindings.push((hk.id(), action));
-            Ok(())
+        // Register each hotkey independently. A single combo that Windows or
+        // another app has already reserved (more likely for Win-based combos)
+        // must NOT take down the rest — log it and carry on with whatever
+        // registers, so the user keeps every shortcut that IS available.
+        let mut register = |s: &str, action: HotkeyAction| {
+            match parse_hotkey(s) {
+                Ok(hk) => match manager.register(hk) {
+                    Ok(()) => bindings.push((hk.id(), action)),
+                    Err(e) => log::warn!(
+                        "could not register hotkey {s:?}: {e} (it may be reserved by Windows or another app)"
+                    ),
+                },
+                Err(e) => log::warn!("invalid hotkey {s:?}: {e}"),
+            }
         };
 
-        try_register(&settings.hotkey_snip, HotkeyAction::Snip)?;
-        try_register(&settings.hotkey_snip_clip, HotkeyAction::SnipToClipboard)?;
-        try_register(&settings.hotkey_clip_only, HotkeyAction::ClipboardOnly)?;
-        try_register(
-            &settings.hotkey_toggle_visibility,
-            HotkeyAction::ToggleVisibility,
-        )?;
-        try_register(&settings.hotkey_gallery, HotkeyAction::Gallery)?;
+        register(&settings.hotkey_snip, HotkeyAction::Snip);
+        register(&settings.hotkey_snip_clip, HotkeyAction::SnipToClipboard);
+        register(&settings.hotkey_clip_only, HotkeyAction::ClipboardOnly);
+        register(&settings.hotkey_toggle_visibility, HotkeyAction::ToggleVisibility);
+        register(&settings.hotkey_gallery, HotkeyAction::Gallery);
 
         Ok(Self {
             _manager: manager,

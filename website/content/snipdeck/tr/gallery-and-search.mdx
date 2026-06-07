@@ -1,0 +1,204 @@
+---
+title: "Galeri ve arama"
+description: "Binlerce yakalamada bile akıcı kalan yoğun, sanallaştırılmış bir ızgaradan her snip'i göz atın, filtreleyin, sıralayın ve tam metin arama yapın."
+order: 6
+category: "features"
+---
+
+Galeri, Snipdeck'in ana çalışma alanıdır: yakaladığınız her snip'in yoğun, sanallaştırılmış bir ızgarası; OCR metni ile pencere meta verileri üzerinde tam metin arama, katmanlı filtreler, sıralama ve kart başına eylemler içerir. İster bir düzine snip'iniz olsun ister birkaç bin, akıcı kalır.
+
+## Galeri çalışma alanı
+
+Ana pencere yukarıdan aşağıya şöyle düzenlenmiştir: bir **araç çubuğu** (yakalama ve genel eylemler), bir **filtre satırı** (filtre düğmeleri, arama, sıfırlama), **ızgaranın** kendisi ve en altta canlı sayımları gösteren bir **durum çubuğu**.
+
+Izgara, duyarlı bir kart düzenidir. Snipdeck mevcut genişliği ölçer ve satır başına sığabilecek kadar çok kart yerleştirir, pencereyi yeniden boyutlandırdıkça anlık olarak yeniden akar. Her sütun en fazla 240 piksel genişliğindedir; kartlar yeniden boyutlandırma sırasında 130 piksellik bir alt sınıra kadar esner, böylece kırpılmak yerine sıkışırlar.
+
+> **Not:** Izgara **sanallaştırılmıştır** — yalnızca gerçekten ekranda olan satırlar oluşturulur ve her kart küçük resmini ekrana kaydığı anda tembel (lazy) olarak çözer. Çözülmüş küçük resimler sınırlı bir önbellekte (en fazla 400) tutulur, böylece kaç snip'iniz olursa olsun bellek sabit kalır. Galeriyi binlerce snip'te duyarlı tutan şey budur.
+
+### Bir kartın anatomisi
+
+Her kart, snip'in küçük resmini temaya duyarlı bir dama tahtası arka planının üzerinde gösterir (böylece çerçeveli ve saydam snip'ler net görünür) ve buna ek olarak bir dizi rozet ve meta veri içerir.
+
+| Öğe | Konum | Anlamı |
+| --- | --- | --- |
+| Küçük resim | Kartın üstü | Snip, gerçek en-boy oranında, açılır gölgeli bir "yaprak" gibi yüzer biçimde çizilir. |
+| `pinned` rozeti | Sol üst | Snip sabitlenmiştir ve "Clear unpinned" işleminden sağ çıkar. |
+| `on screen` rozeti | Sol üst | Snip'in şu anda açık bir [yüzen penceresi](/docs/snipdeck/floating-snips) vardır. |
+| `OCR` rozeti | Sol üst | Bu snip için OCR metni indekslenmiştir. |
+| `WIN` rozeti | Sol üst | Pencere meta verileri (başlık, uygulama, işlem) yakalanmıştır. |
+| Boyut düğmesi | Sağ üst | Snip'in piksel boyutları, örn. `1920×1080`. |
+| Boyutlar | Kartın altı | Aynı boyutlar, `px` cinsinden. |
+| Tarih | Kartın altı | Yakalama zamanı, yerel saat diliminizde `DD Mon HH:MM` olarak gösterilir. |
+| Kaynak satırı | Kartın altı | Monitör etiketi; pencere bilgisi yakalandığında buna `· window` eklenir. |
+| Önizleme satırı | Kartın altı | Tek satırlık bir ipucuyla birlikte bir `TAG`, `OCR` veya `WIN` çipi (aşağıya bakın). |
+
+Önizleme satırı, Snipdeck'in snip hakkında bildiklerini öncelik sırasına göre özetler:
+
+- **`TAG`** — snip'in bir etiketi varsa, etiket metni gösterilir.
+- **`OCR`** — aksi takdirde OCR metni indekslenmişse, "OCR text indexed" yazar.
+- **`WIN`** — aksi takdirde pencere bilgisi yakalanmışsa, "Window info indexed" yazar.
+
+Bunların hiçbiri olmayan bir kart önizleme satırı göstermez.
+
+## Arama
+
+Arama kutusu filtre satırında bulunur (ve `Ctrl`+`F` ile odaklanır). Yer tutucusu — **text / OCR / window / monitor / path** — aradığı alanların listesidir. Yazdıkça ızgarayı canlı olarak filtreler; **×** düğmesi (veya alanın temizlenmesi) onu sıfırlar.
+
+Arama **tam metin** üzerinde çalışır ve diskteki indekse karşı yürütülür, böylece kartta görünmeyen içeriği de kapsar. Tek bir sorgu, şu alanların tümünde eşleştirilir:
+
+| Alan | Örnek eşleşme |
+| --- | --- |
+| OCR metni | [OCR](/docs/snipdeck/ocr) tarafından ekran görüntüsünün içinde tanınan kelimeler. |
+| Etiket / tag | Snip'e verdiğiniz bir etiket. |
+| Pencere başlığı | Yakalanan pencerenin başlık çubuğu metni. |
+| Uygulama adı | Anlaşılır uygulama adı. |
+| İşlem adı | Yürütülebilir dosyanın işlem adı, örn. `chrome`. |
+| Yürütülebilir yol | Yakalayan uygulamanın `.exe` dosyasının tam yolu. |
+| Monitör etiketi | Snip'in geldiği monitör. |
+| Boyutlar | `WxH` boyut dizesi, örn. `1920x1080`. |
+
+### Eşleştirme nasıl çalışır
+
+Arama, SQLite ile desteklenir. Yazdığınızda Snipdeck sorgunuzu alfasayısal olmayan karakterlerden parçalara (token) böler ve bir **önek, tüm parçalar** tam metin sorgusu çalıştırır: her parça bir önek olarak eşleşmelidir (`AND` ile birleştirilir). Yani `inv rec`, OCR metni hem "invoice" hem de "receipt" içeren bir snip'le, herhangi bir sırada eşleşir.
+
+> **İpucu:** Parçalar önek olarak eşleştirildiği için kısmi kelimeler yazabilirsiniz — `dash`, "dashboard"u bulur. Sonuçları daraltmak için daha fazla kelime ekleyin; her kelime, snip'in indekslenmiş metninde veya meta verilerinde bir yerde geçmelidir.
+
+Bir sorgu için tam metin yolu kullanılamıyorsa, Snipdeck şeffaf biçimde aynı alanlarda bir alt dize (`LIKE`) aramasına ve son olarak yüklü snip'lerin etiketleri, monitörü ve boyutları üzerinde bellek içi bir eşleştirmeye geri döner — böylece arama başarısız olmak yerine her zaman bir şey döndürür.
+
+> **Not:** OCR ve pencere meta verileri, bir yakalamadan sonra **arka planda** indekslenir. Az önce aldığınız bir snip, indeksleme bir an sonra tamamlanana kadar bir OCR aramasıyla eşleşmeyebilir.
+
+## Filtreler
+
+Filtre satırında, arama kutusundan önce beş filtre düğmesi bulunur. Her düğme, her tıklamada seçenekleri arasında **döngüsel olarak geçer**; son seçeneğin ötesine tıklamak onu **All** (Tümü) konumuna geri döndürür. "All" konumunda olmayan bir düğme vurgulanır ve [durum çubuğu](#durum-cubugu-ve-sayimlar) şu anda kaç snip'in filtrelerden geçtiğini gösterir.
+
+Beş filtrenin tümü ve arama, **AND** ile birleşir — bir snip'in görünmesi için her etkin filtreyi karşılaması gerekir.
+
+### Status (Durum)
+
+Snip'in sabitlenme ve ekranda olma durumuna göre filtreler.
+
+| Değer | Gösterir |
+| --- | --- |
+| All | Her snip (varsayılan). |
+| Pinned | Yalnızca sabitlenmiş snip'ler. |
+| Unpinned | Yalnızca sabitlenmemiş snip'ler. |
+| On screen | Yalnızca şu anda açık bir yüzen penceresi olan snip'ler. |
+| Hidden | Yalnızca açık yüzen penceresi olmayan snip'ler. |
+
+### Content (İçerik)
+
+Snipdeck'in snip için indekslediklerine göre filtreler.
+
+| Değer | Gösterir |
+| --- | --- |
+| All | Her snip (varsayılan). |
+| Has OCR | İndekslenmiş OCR metni olan snip'ler. |
+| No OCR | OCR metni olmayan snip'ler. |
+| Has window | Yakalanmış pencere meta verisi olan snip'ler. |
+| No window | Pencere meta verisi olmayan snip'ler. |
+| Tagged | Boş olmayan bir etikete sahip snip'ler. |
+
+### Size (Boyut)
+
+Piksel alanına veya en-boy oranına göre filtreler.
+
+| Değer | Kural |
+| --- | --- |
+| All | Her snip (varsayılan). |
+| Small | 250.000 pikselin altında. |
+| Medium | 250.000 ile 1.000.000 piksel arasında. |
+| Large | 1.000.000 piksel veya daha fazla. |
+| Wide | Genişlik, yüksekliğin 1,3 katından fazla. |
+| Tall | Yükseklik, genişliğin 1,3 katından fazla. |
+| Square | Uzun kenar, kısa kenarın 1,2 katından fazla değil. |
+
+### Date (Tarih)
+
+Yakalama zamanına göre, şimdiye göreli olarak filtreler.
+
+| Değer | Gösterir |
+| --- | --- |
+| All | Her snip (varsayılan). |
+| Today | Bugün yakalananlar (yerel takvim gününüz). |
+| 24 hours | Son 24 saatte yakalananlar. |
+| 7 days | Son 7 günde yakalananlar. |
+| 30 days | Son 30 günde yakalananlar. |
+
+### Sort (Sıralama)
+
+**Sort** düğmesi, ızgaranın sırasını kontrol eder. Sekiz mod arasında döngüsel olarak geçer:
+
+| Değer | Sıra |
+| --- | --- |
+| Newest | En yeniler önce (varsayılan). |
+| Oldest | En eskiler önce. |
+| Pinned | Önce sabitlenmiş snip'ler, sonra en yeniler. |
+| Largest | En büyük piksel alanı önce. |
+| Smallest | En küçük piksel alanı önce. |
+| Width | En geniş önce. |
+| Height | En uzun önce. |
+| Monitor | Monitör etiketine göre gruplanmış, sonra en yeniler. |
+
+> **İpucu:** **Reset** (Sıfırla) düğmesi (sıfırlama simgesiyle, filtre satırının sonunda) arama kutusunu temizler ve her filtreyi ve sıralamayı tek tıklamada varsayılanına döndürür. Herhangi bir filtre, sıralama veya arama etkin olduğunda vurgulanır.
+
+## Kartlarla etkileşim
+
+### Yüzdürmeyi açıp kapatmak için tıklayın
+
+Bir karta tıklamak **yüzen penceresini açıp kapatır**. Snip şu anda ekranda değilse, tıklamak [yüzen snip'ini](/docs/snipdeck/floating-snips) açar; zaten yüzüyorsa, tıklamak onu yeniden gizler. `on screen` rozeti ve **On screen** sayımı buna göre güncellenir.
+
+### Üzerine gelme eylemleri
+
+Bir kartın üzerine geldiğinizde, küçük resmin sağ alt köşesinde bir dizi hızlı eylem ortaya çıkar:
+
+| Simge | Eylem |
+| --- | --- |
+| Copy | Snip görüntüsünü panoya kopyalar. |
+| Save | Snip'i bir dosyaya kaydeder. |
+| Pin | Sabitleme durumunu açıp kapatır (sabitlendiğinde simge yanar). |
+| Trash | Snip'i siler. |
+
+### Tam menü için sağ tıklayın
+
+Bir karta sağ tıklamak tam bağlam menüsünü açar — bir yüzen snip'te aldığınız menünün aynısı. Tek bir snip için eksiksiz eylem kümesidir:
+
+- Görüntüyü panoya **Copy** (Kopyala).
+- **OCR + Clipboard** — [OCR](/docs/snipdeck/ocr) çalıştır ve tanınan metni kopyala.
+- **OCR + Translate** — [çeviri açılır penceresini](/docs/snipdeck/ocr-translate) aç.
+- **Annotate** — [açıklama düzenleyicisini](/docs/snipdeck/annotation-editor) aç.
+- **Share** — Windows paylaşım sayfası, **Mail** (MAPI eki), sistem **editor**ünde aç veya bir görüntü barındırma hizmetine **Upload** (Yükle). Bkz. [Paylaşma ve dışa aktarma](/docs/snipdeck/sharing-and-export).
+- **Transform** — 90° / 180° döndür, yatay / dikey çevir.
+- **Crop** (Kırp) ve **Resize** (Yeniden boyutlandır).
+- **Hide from screen** (Ekrandan gizle) / **Delete** (Sil).
+
+## Durum çubuğu ve sayımlar
+
+Pencerenin altındaki durum çubuğu, canlı sayımları ve snip'lerinizin diskteki boyutunu gösterir:
+
+| Alan | Anlamı |
+| --- | --- |
+| Total | Galerideki her snip. |
+| Pinned | Kaç snip'in sabitlendiği. |
+| On screen | Şu anda kaç yüzen pencerenin açık olduğu. |
+| Filtered | Geçerli filtrelerden ve aramadan kaç snip'in geçtiği — yani kaç kartın gösterildiği. |
+| Storage size | Diskteki tüm snip görüntü dosyalarının toplam boyutu. |
+| `Ctrl+F search` | `Ctrl`+`F` tuşunun arama kutusunu odakladığını hatırlatan bir not. |
+
+Henüz hiç snip yakalanmadığında, ızgaranın yerini sizi `Win` + sol fare ile bir bölge yakalamaya yönlendiren ve OCR, pencere bilgisi ile filtrelerin arka planda indekslendiğini belirten boş bir durum alır.
+
+## Araç çubuğu eylemleri
+
+Filtre satırının üzerindeki araç çubuğu, yakalama ve galeri geneli eylemleri barındırır:
+
+- **New**, **Snip + Clip** ve **Clip only** — yeni bir yakalama başlat (bkz. [Yakalama ve kısayollar](/docs/snipdeck/capture-shortcuts)).
+- **Collage** (Kolaj) — [kolaj düzenleyicisini](/docs/snipdeck/collage) aç.
+- **Show / hide on-screen snips** (ekrandaki snip'leri göster / gizle) ve **show / hide floating snips in the taskbar** (yüzen snip'leri görev çubuğunda göster / gizle).
+- **Clear unpinned** ve **Clear all** — snip'leri toplu olarak kaldır (sabitlenmiş snip'ler "Clear unpinned" işleminden sağ çıkar).
+- Tema değiştirici, **language** (dil) küre menüsü, **launch at login** (oturum açılışında başlat) ve **About** (Hakkında).
+
+## Ayrıca bakın
+
+- [Yüzen snip'ler](/docs/snipdeck/floating-snips) — kart tıklamasının açıp kapattığı her zaman üstte kalan katmanlar.
+- [OCR](/docs/snipdeck/ocr) — aramayı besleyen metnin nasıl indekslendiği.
+- [Paylaşma ve dışa aktarma](/docs/snipdeck/sharing-and-export) — sağ tıklama menüsündeki Share alt menüsü.
+- [Klavye kısayolları](/docs/snipdeck/keyboard-shortcuts) — arama için `Ctrl`+`F` dahil.

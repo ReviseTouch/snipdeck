@@ -1,0 +1,123 @@
+---
+title: "Installation"
+description: "Download Snipdeck as a single portable executable, run it from the system tray, build it from source, and turn on registry-free launch-at-login."
+order: 2
+category: "getting-started"
+---
+
+This page covers everything you need to get Snipdeck running: the system requirements, downloading the portable executable, what happens on first launch, building from source, and enabling launch-at-login. Snipdeck ships as one self-contained `.exe` with no installer, so getting started takes seconds.
+
+## System requirements
+
+Snipdeck is a Windows-only desktop app today.
+
+| Requirement | Detail |
+| --- | --- |
+| Operating system | Windows 10 or Windows 11 |
+| Architecture | x64 |
+| Install footprint | A single `snipdeck.exe` — no installer, no background services |
+| Dependencies | None to ship. OCR uses the built-in `Windows.Media.Ocr` engine, so there is no model download and no network requirement for capture or indexing |
+
+> **Note:** macOS and Linux builds are on the way. The UI (Slint) and most of the core are already cross-platform, but capture, OCR, the tray, and sharing currently rely on Windows-specific APIs, so Snipdeck is Windows-only for now.
+
+## Download the executable
+
+Snipdeck is distributed as a single portable executable.
+
+1. Open the [Releases](https://github.com/hasantr/snipdeck/releases) page.
+2. Download the latest `snipdeck.exe`.
+3. Put it anywhere you like — your `Downloads` folder, a tools directory, or a USB drive. There is no installer and nothing is written to `Program Files`.
+
+Because it is portable, you run the file directly. To "uninstall," you simply delete `snipdeck.exe` (and, if you want to remove your data, the folders listed under [Where your data lives](#where-your-data-lives)).
+
+> **Tip:** Windows SmartScreen may warn the first time you run a newly downloaded executable. Choose **More info → Run anyway** to launch it.
+
+## First launch
+
+Double-click `snipdeck.exe` to start it. On first run, Snipdeck:
+
+- Creates its settings and data folders (see [Where your data lives](#where-your-data-lives)).
+- Picks your UI language from the OS locale — you can override it from the globe menu in the toolbar (see [Languages](/en/docs/snipdeck/languages)).
+- Adds an icon to the **system tray** (the notification area near the clock).
+
+Snipdeck is tray-first: closing the main window leaves it running in the tray, ready to capture. Right-click the tray icon for the menu:
+
+| Tray action | What it does |
+| --- | --- |
+| **New Snip** | Arms a one-shot drag capture without holding `Win` |
+| **Launch at Login** | Toggles registry-free launch-at-login (checkmark shows current state) |
+| Show / open | Brings the gallery window back to the front |
+| Quit | Fully exits Snipdeck |
+
+Snipdeck runs as a single instance — launching the executable again brings the existing window forward instead of starting a second copy.
+
+To start capturing immediately, hold `Win` and drag a region. See [Quick start](/en/docs/snipdeck/quick-start) and the full [capture shortcuts](/en/docs/snipdeck/capture-shortcuts).
+
+### Where your data lives
+
+Snipdeck stores its settings and snip data in the standard per-user locations:
+
+```text
+%APPDATA%\Snipdeck\settings.json        User settings (JSON)
+%LOCALAPPDATA%\Snipdeck\                snips.db, state.json, and cache\ (images + thumbnails)
+Pictures\Snipdeck\                      Default folder for Save
+```
+
+These folders are created on first run. For the settings keys you can edit, see [Settings](/en/docs/snipdeck/settings).
+
+## Build from source
+
+If you prefer to build it yourself, Snipdeck compiles with stable Rust.
+
+**Requirements:**
+
+- [Rust](https://rustup.rs/) (stable toolchain)
+- Windows 10 or 11
+- Git
+
+Clone the repository and build a release binary:
+
+```powershell
+git clone https://github.com/hasantr/snipdeck.git
+cd snipdeck
+cargo build --release
+```
+
+The compiled binary lands at:
+
+```text
+target\release\snipdeck.exe
+```
+
+This is the same single portable executable you would download from Releases — copy it wherever you want and run it directly.
+
+> **Note:** All 23 language catalogs are compiled into the binary at build time from the bundled gettext `.po` files, so there is no runtime gettext dependency. See [Languages](/en/docs/snipdeck/languages) for how localization is wired up.
+
+## Launch at login
+
+Snipdeck can start automatically when you sign in, and it does so **without touching the registry**.
+
+To enable it, right-click the tray icon and toggle **Launch at Login**. The checkmark in the menu reflects the current state.
+
+### How it works
+
+Instead of writing a value under `HKCU\…\CurrentVersion\Run`, Snipdeck drops a normal shortcut into your per-user Startup folder:
+
+```text
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Snipdeck.lnk
+```
+
+This is the ordinary, user-visible autostart mechanism that the Windows Settings UI itself manages. The registry `Run` key is the autostart vector that antivirus and EDR tools most often flag heuristically, so Snipdeck deliberately avoids it. Toggling **Launch at Login** off simply deletes the `Snipdeck.lnk` shortcut.
+
+Because the shortcut points at the executable's current location, the file works wherever `snipdeck.exe` is. If you later move the executable to a new folder, toggle **Launch at Login** off and on again so the shortcut targets the new path.
+
+> **Tip:** You can see (and remove) the shortcut yourself at any time — open the Run dialog (`Win`+`R`), type `shell:Startup`, and press Enter to browse the same Startup folder.
+
+For more on Snipdeck's privacy-conscious defaults, see [Privacy and security](/en/docs/snipdeck/privacy-and-security).
+
+## Next steps
+
+- [Quick start](/en/docs/snipdeck/quick-start) — take your first snip in under a minute.
+- [Capture shortcuts](/en/docs/snipdeck/capture-shortcuts) — the full modifier matrix for capturing.
+- [Settings](/en/docs/snipdeck/settings) — every key in `settings.json` and what it controls.
+- [Privacy and security](/en/docs/snipdeck/privacy-and-security) — why launch-at-login is registry-free and how uploads stay opt-in.

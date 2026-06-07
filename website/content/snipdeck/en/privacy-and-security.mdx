@@ -1,0 +1,117 @@
+---
+title: "Privacy & security"
+description: "Exactly what Snipdeck keeps local, the two features that use the network, and how it starts at login without touching the registry."
+order: 1
+category: "legal"
+---
+
+Snipdeck is built to keep your screenshots on your machine. Capture and OCR are fully local, and the only two features that touch the network — image uploads and OCR + Translate — are opt-in and clearly scoped. This page is the reference for exactly what stays local, what leaves, and where your data lives on disk.
+
+## The short version
+
+| Feature | Network? | What is sent |
+| --- | --- | --- |
+| Region capture | No | Nothing — pixels never leave your machine. |
+| OCR indexing | No | Nothing — text is recognized locally and stored in your gallery database. |
+| Gallery, search, floating snips, annotation, collage | No | Nothing. |
+| Launch-at-login | No | Nothing — and no registry write. |
+| **Upload** (to an image host) | Yes, opt-in | The image, only after you confirm an explicit consent dialog. |
+| **OCR + Translate** | Yes | Only the OCR-recognized **text**, to Google's public translate endpoint. |
+
+By default, with Upload and OCR + Translate untouched, **Snipdeck makes no network connections at all.**
+
+## What stays fully local
+
+### Capture
+
+Capturing a region is a purely local operation. Snipdeck reads the screen with Windows capture APIs (DXGI Desktop Duplication, with a GDI fallback) and writes the result to your local cache. Nothing about a capture — not the pixels, not the window metadata, not the monitor it came from — is sent anywhere.
+
+### OCR indexing
+
+Every snip is OCR-indexed in the background so you can search your screenshots by their text. This runs entirely on your machine using the operating system's built-in engine, `Windows.Media.Ocr`.
+
+- There is **no model download** and **no network request** for OCR.
+- The recognized text is stored only in your local gallery database (`snips.db`) and its full-text search index.
+- OCR is never sent to a server for recognition or indexing.
+
+> **Note:** `Windows.Media.Ocr` is the same OCR engine that ships with Windows. Snipdeck does not bundle or call any cloud OCR service. See [OCR](/en/docs/snipdeck/ocr) for how indexing and search work.
+
+### The gallery and everything in it
+
+Your gallery, search, [floating snips](/en/docs/snipdeck/floating-snips), the [annotation editor](/en/docs/snipdeck/annotation-editor), and the [collage editor](/en/docs/snipdeck/collage) all operate on local files only. Full-text search runs against the local SQLite database; no query you type is sent off the machine.
+
+## Launch-at-login is registry-free
+
+Many apps register themselves to start at login by writing a value under the `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` registry key. That key is the autostart mechanism antivirus and EDR tools most often flag, because malware abuses it for persistence.
+
+Snipdeck deliberately does **not** use it. Instead, when you enable launch-at-login, Snipdeck drops an ordinary shortcut (`.lnk`) into your **Startup** folder:
+
+```text
+shell:Startup
+```
+
+This resolves to:
+
+```text
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup
+```
+
+This is the same, ordinary, user-visible mechanism Windows itself exposes through **Task Manager → Startup apps** and File Explorer. It avoids the autostart registry key that security tooling treats as suspicious, and it is fully transparent: you can see the shortcut, and you can delete it yourself to disable autostart.
+
+> **Tip:** To confirm what starts at login, paste `shell:Startup` into the File Explorer address bar. If Snipdeck's launch-at-login is enabled, you will see a `Snipdeck` shortcut there; removing the file disables it, exactly like any other startup app.
+
+## Uploads are opt-in
+
+The **Upload** action (under a snip's **Share** menu) sends an image to a public image host so you can share a link. This is the only feature that sends your **image pixels** off the machine, and it never happens silently.
+
+- **Nothing is uploaded without consent.** Before any upload, Snipdeck shows an explicit consent dialog that names the destination host. Cancel the dialog and nothing leaves your machine.
+- **Public-by-link hosts are not encrypted.** The two supported hosts (catbox.moe by default, or Imgur as an opt-in alternative) produce an unlisted URL, but **anyone who has that link can open the image, and it is not encrypted in transit at rest by Snipdeck.** Treat any uploaded snip as public.
+- **Anonymous catbox.moe uploads cannot be deleted by you** afterward. Choose the destination accordingly.
+
+> **Warning:** Do not upload sensitive content — credentials, personal data, anything confidential — to a public-by-link host. Once a link exists, you should assume it can be opened by anyone who obtains it.
+
+The other [sharing and export](/en/docs/snipdeck/sharing-and-export) actions stay local except where you direct them: **Save** writes to disk, **Mail** hands the image to your mail client as an attachment via Simple MAPI, **Share** invokes the Windows share sheet, and **Open in editor** launches the system image editor. Whether those go on to send anything is governed by the app you hand off to, not by Snipdeck.
+
+You can choose the upload host with the `upload_service` key; see [Settings](/en/docs/snipdeck/settings) for details.
+
+## OCR + Translate uses the network
+
+[OCR + Translate](/en/docs/snipdeck/ocr-translate) reads a snip's text in another language. To translate, it has to reach a translation service — this is the one place where recognized text leaves your machine.
+
+- Snipdeck first runs OCR **locally** (`Windows.Media.Ocr`) to recognize the text in the snip.
+- It then sends **only that recognized text** to Google's public `translate_a` endpoint to be translated.
+- **The image itself is never sent** for translation — only the text string.
+- The translated text is used to populate the translate popup and nowhere else.
+
+> **Note:** OCR + Translate is the only feature that transmits content from a snip beyond an upload you explicitly confirm. If you never open OCR + Translate, no recognized text is ever sent anywhere. The plain **OCR + Clipboard** action stays fully local — it recognizes text and copies it without any network request.
+
+## Where your data lives on disk
+
+All of Snipdeck's data sits in standard per-user Windows folders. Nothing is stored in a cloud account.
+
+| Path | Contents |
+| --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | Your user settings. |
+| `%LOCALAPPDATA%\Snipdeck\snips.db` | The gallery database (SQLite + full-text search index), including OCR text. |
+| `%LOCALAPPDATA%\Snipdeck\state.json` | Window/session state. |
+| `%LOCALAPPDATA%\Snipdeck\cache\` | Full-resolution snip images and thumbnails. |
+| `%USERPROFILE%\Pictures\Snipdeck\` | Default folder for the **Save** action. |
+
+Because everything is local, removing your data is straightforward: quit Snipdeck and delete the folders above. The `cache\` folder together with `snips.db` holds every captured snip — back them up or wipe them as a set.
+
+> **Tip:** Paste `%LOCALAPPDATA%\Snipdeck` into the File Explorer address bar to jump straight to your snips, the database, and the cache. See [Settings](/en/docs/snipdeck/settings) for the full breakdown of each file.
+
+## Summary
+
+- **Capture and OCR are fully local.** Nothing is sent for capturing or indexing your screenshots.
+- **Launch-at-login never touches the registry.** Snipdeck uses a `shell:Startup` shortcut you can see and remove.
+- **Uploads are opt-in** behind a consent dialog that names the destination, and public-by-link hosts are not encrypted.
+- **OCR + Translate** sends only recognized text — never the image — to Google's public translate endpoint.
+- **Your data stays on your machine** in standard per-user folders, with no cloud account involved.
+
+## See also
+
+- [Settings](/en/docs/snipdeck/settings) — file locations and the `upload_service` key.
+- [OCR](/en/docs/snipdeck/ocr) — fully local text recognition and indexing.
+- [OCR + translate](/en/docs/snipdeck/ocr-translate) — the one feature that sends recognized text.
+- [Sharing & export](/en/docs/snipdeck/sharing-and-export) — Upload, Mail, Share, and the consent dialog.

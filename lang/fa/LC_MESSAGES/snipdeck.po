@@ -452,3 +452,6 @@ msgstr "کدری"
 
 msgid "draw"
 msgstr "بکشید"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "اندازه بندانگشتی — کوچک / متوسط / بزرگ"

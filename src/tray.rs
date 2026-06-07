@@ -20,6 +20,8 @@ pub enum TrayCommand {
     NewSnip,
     /// Flip launch-at-login.
     ToggleAutostart,
+    /// Relaunch Snipdeck elevated via one UAC prompt (one-shot, no persistence).
+    RunAsAdmin,
     /// Quit the whole app.
     Exit,
 }
@@ -30,6 +32,11 @@ pub struct TrayService {
 
 #[cfg(target_os = "windows")]
 static TRAY_TX: std::sync::OnceLock<Sender<TrayCommand>> = std::sync::OnceLock::new();
+
+/// Shared tray-icon UID (used both when adding the icon and when removing it
+/// from another thread in [`shutdown`]).
+#[cfg(target_os = "windows")]
+const TRAY_UID: u32 = 0x5350;
 
 /// Create the tray icon (on its own thread) and return a handle whose `rx`
 /// the caller polls for menu commands.
@@ -70,6 +77,33 @@ pub fn focus_main_window() {
 
 #[cfg(not(target_os = "windows"))]
 pub fn focus_main_window() {}
+
+/// Remove the tray icon from outside the tray thread. Used on the
+/// "restart elevated" path, where the process exits via `quit_event_loop`
+/// (which never reaches the tray thread's own cleanup) so the icon would
+/// otherwise linger as a ghost until the next hover.
+#[cfg(target_os = "windows")]
+pub fn shutdown() {
+    use windows::core::{w, PCWSTR};
+    use windows::Win32::UI::Shell::{Shell_NotifyIconW, NIM_DELETE, NOTIFYICONDATAW};
+    use windows::Win32::UI::WindowsAndMessaging::FindWindowW;
+    unsafe {
+        if let Ok(hwnd) = FindWindowW(w!("SnipdeckTrayWindow"), PCWSTR::null()) {
+            if !hwnd.0.is_null() {
+                let nid = NOTIFYICONDATAW {
+                    cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
+                    hWnd: hwnd,
+                    uID: TRAY_UID,
+                    ..Default::default()
+                };
+                let _ = Shell_NotifyIconW(NIM_DELETE, &nid);
+            }
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn shutdown() {}
 
 /// Apply the embedded app icon to the main window's title bar / Alt-Tab.
 /// Returns true once the window exists and the icon has been applied, so the
@@ -131,12 +165,14 @@ mod win {
         true
     }
 
+    use super::TRAY_UID;
+
     const WM_TRAYICON: u32 = WM_APP + 1;
-    const TRAY_UID: u32 = 0x5350;
     const ID_SHOW: u32 = 1;
     const ID_NEWSNIP: u32 = 2;
     const ID_AUTOSTART: u32 = 3;
     const ID_EXIT: u32 = 4;
+    const ID_RUNADMIN: u32 = 5;
 
     pub unsafe fn run() {
         let hinstance = GetModuleHandleW(None).unwrap_or_default();
@@ -254,6 +290,18 @@ mod win {
             ID_AUTOSTART as usize,
             PCWSTR(autostart_label.as_ptr()),
         );
+        // One-shot "Run as administrator": relaunch elevated via UAC so a
+        // capture can reach over administrator (UAC-elevated) windows. Pointless
+        // once we are already elevated, so hide it then.
+        if !crate::elevate::is_elevated() {
+            let admin_label = HSTRING::from(crate::i18n::t("Run as administrator").as_str());
+            let _ = AppendMenuW(
+                menu,
+                MF_STRING,
+                ID_RUNADMIN as usize,
+                PCWSTR(admin_label.as_ptr()),
+            );
+        }
         let _ = AppendMenuW(menu, MF_SEPARATOR, 0, PCWSTR::null());
         let exit = HSTRING::from(crate::i18n::t("Exit").as_str());
         let _ = AppendMenuW(menu, MF_STRING, ID_EXIT as usize, PCWSTR(exit.as_ptr()));
@@ -278,6 +326,7 @@ mod win {
             ID_SHOW => send(TrayCommand::Show),
             ID_NEWSNIP => send(TrayCommand::NewSnip),
             ID_AUTOSTART => send(TrayCommand::ToggleAutostart),
+            ID_RUNADMIN => send(TrayCommand::RunAsAdmin),
             ID_EXIT => {
                 remove_icon(hwnd);
                 send(TrayCommand::Exit);

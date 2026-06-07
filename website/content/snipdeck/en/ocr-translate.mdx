@@ -1,0 +1,130 @@
+---
+title: "OCR + Translate"
+description: "Read the text inside any snip in another language: run OCR, then translate the recognized text into 30+ target languages inline."
+order: 5
+category: "features"
+---
+
+OCR + Translate reads the text out of a snip with the local OCR engine and translates it into the language of your choice, right next to the capture. It is built for the moment you screenshot something you cannot read — a foreign dialog box, a menu, a line of code comments — and want the meaning without leaving Snipdeck.
+
+## Opening the translate popup
+
+Right-click a [floating snip](/en/docs/snipdeck/floating-snips) or a gallery thumbnail and choose **OCR + Translate**. A compact, always-on-top popup opens beside the snip and immediately shows a `translating…` state while the work runs in the background.
+
+Behind the scenes, two steps run on a worker thread so the UI never freezes:
+
+1. **OCR** — the snip is read with the local `Windows.Media.Ocr` engine (the same engine used by [OCR + Clipboard](/en/docs/snipdeck/ocr)). No model download, no network.
+2. **Translate** — the recognized text is sent to be translated into your chosen target language, and the result is filled into the popup.
+
+The popup opens to the **right** of the snip, or to its **left** if the right side would run off the screen, and is always clamped to stay fully on the monitor so it is never clipped at an edge.
+
+> **Note:** Translation needs the network; OCR does not. See [The network note](#the-network-note) for exactly what is sent and where.
+
+## Anatomy of the popup
+
+The popup is divided into a few clear regions, top to bottom:
+
+| Region | What it shows |
+| --- | --- |
+| **Title bar** | A drag handle (drag it to move the window) and the auto-detected source language followed by an arrow, e.g. `German →`. The close button is on the right. |
+| **Target language** | The active target language label (in orange) and a **More ▾** button that opens the full language list. |
+| **Quick-pick pills** | A row of one-tap language pills — your favorites — showing short codes like `EN`, `TR`, `DE`. The active target is highlighted in the brand orange. |
+| **Source (OCR)** | The text the OCR engine recognized, with its own **copy** button. |
+| **Translation** | The translated text (or an error), which grows as you resize the window. |
+| **Copy translation** | A button that copies the translated text to the clipboard. |
+
+The window can be dragged by its title bar and resized from the bottom-right grip. A resize sticks across re-opens for the rest of the session.
+
+## Picking a target language
+
+There are two ways to choose the language to translate into.
+
+### Quick-pick pills
+
+The pill strip holds your favorite languages as compact, one-tap buttons. Tap a pill to switch the target; the popup re-translates the already-recognized text on the fly — it does **not** re-run OCR — so the new translation appears in a moment. The currently active language stays highlighted.
+
+> **Tip:** If you switch languages while the very first translation is still in flight, Snipdeck re-targets the in-flight result to your newest choice automatically — you never get a stale translation.
+
+### The "More" list
+
+Tap **More ▾** to open the full list of every supported target language. Each row shows the language name, its code (e.g. `zh-CN`), and a **star** for favouriting.
+
+- **Tap a row** to select that language and close the list.
+- **Tap the star** to add or remove that language from your quick-pick pills, without selecting it or closing the list.
+
+### Supported target languages
+
+Snipdeck offers the following target languages in the **More** list:
+
+| Code | Language | Code | Language |
+| --- | --- | --- | --- |
+| `tr` | Turkish | `ja` | Japanese |
+| `en` | English | `ko` | Korean |
+| `de` | German | `zh-CN` | Chinese (Simpl.) |
+| `fr` | French | `zh-TW` | Chinese (Trad.) |
+| `es` | Spanish | `id` | Indonesian |
+| `it` | Italian | `th` | Thai |
+| `ru` | Russian | `vi` | Vietnamese |
+| `ar` | Arabic | `bg` | Bulgarian |
+| `pt` | Portuguese | `cs` | Czech |
+| `nl` | Dutch | `hu` | Hungarian |
+| `sv` | Swedish | `az` | Azerbaijani |
+| `pl` | Polish | `fa` | Persian |
+| `ro` | Romanian | `he` | Hebrew |
+| `el` | Greek | `hi` | Hindi |
+| `uk` | Ukrainian | | |
+
+The **source** language is not something you choose: it is auto-detected from the recognized text, and the detected language is shown in the title bar (for example `German →`).
+
+## Favorites
+
+The quick-pick pills are your favorites. Star a language in the **More** list to add it as a pill; un-star it to remove the pill. Snipdeck always keeps **at least one** favorite, so the pill strip is never empty.
+
+The default set of favorites is:
+
+```json
+["en", "es", "fr", "de", "it", "pt", "ru", "ar"]
+```
+
+Both your default target language and your favorites are remembered in [settings](/en/docs/snipdeck/settings) and restored next time:
+
+| Setting key | Default | Meaning |
+| --- | --- | --- |
+| `translate_target` | `"en"` | The target language the popup starts on |
+| `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | The quick-pick pill languages, in order |
+
+These live in:
+
+```
+%APPDATA%\Snipdeck\settings.json
+```
+
+> **Note:** There is no settings window yet. Your last-used target language and favorite changes are persisted automatically as you use the popup — you do not need to edit the file by hand to keep them.
+
+## Copying the result
+
+The popup gives you two independent copy actions:
+
+- The **copy** button next to **Source (OCR)** copies the recognized source text.
+- The **Copy translation** button at the bottom copies the translated text.
+
+Both write straight to the Windows clipboard.
+
+## The network note
+
+This is the one feature in Snipdeck that uses the network, so it is worth being precise about what leaves your machine.
+
+- Only the **OCR-recognized text** — the plain string the local OCR engine read out of the snip — is sent over the network. The image itself never leaves your machine.
+- That text is sent to **Google's public `translate_a` endpoint** (`translate.googleapis.com/translate_a/single`) to be translated, and the translated text is returned.
+- The recognized text is used for **nothing else**. It is not stored remotely, logged by Snipdeck, or sent anywhere other than to perform the translation you asked for.
+
+> **Warning:** Because the recognized text is sent to a public translation endpoint, avoid using OCR + Translate on snips containing passwords, tokens, or other sensitive text. OCR and the rest of Snipdeck stay fully local — only this translate step touches the network.
+
+The endpoint is keyless and free, but unofficial: it can be rate-limited or change shape. When that happens the popup degrades gracefully — it shows an error message in red instead of a translation, and you can switch language to retry. If OCR succeeded but translation failed, the recognized **source text is still shown** so you can copy it.
+
+## See also
+
+- [OCR](/en/docs/snipdeck/ocr) — the local, network-free OCR engine and OCR + Clipboard.
+- [Floating snips](/en/docs/snipdeck/floating-snips) — the pinned overlays you can right-click to translate.
+- [Settings](/en/docs/snipdeck/settings) — where `translate_target` and `translate_favs` are stored.
+- [Privacy and security](/en/docs/snipdeck/privacy-and-security) — the full picture of what stays local and what touches the network.

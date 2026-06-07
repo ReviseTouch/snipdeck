@@ -86,6 +86,20 @@ mit dem Ausschnitt geschieht:
 Du kannst auch mit der rechten Maustaste auf das Tray-Symbol klicken → **Neuer Ausschnitt**, um eine einmalige Zieherfassung zu aktivieren, ohne
 `Win` zu halten.
 
+### Globale Tastenkürzel
+
+Neben `Win` + Ziehen registriert Snipdeck fünf konfigurierbare globale Tastenkürzel:
+
+| Tastenkürzel | Aktion |
+| --- | --- |
+| `Win`+`Alt`+`H` | Alle Ausschnitte auf dem Bildschirm ein- / ausblenden |
+| `Ctrl`+`Shift`+`A` | Neuer Ausschnitt |
+| `Ctrl`+`Shift`+`C` | Neuer Ausschnitt **und** in die Zwischenablage kopieren |
+| `Ctrl`+`Shift`+`X` | Nur Zwischenablage |
+| `Ctrl`+`Shift`+`G` | Galerie öffnen |
+
+Ändere sie über die `hotkey_*`-Schlüssel in `settings.json`.
+
 ---
 
 ## ✏️ Anmerkungseditor

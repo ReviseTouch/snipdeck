@@ -21,10 +21,35 @@ pub fn acquire() -> bool {
     true
 }
 
+/// Like [`acquire`], but for an instance that was just relaunched elevated by a
+/// still-running medium instance (the tray "Run as administrator" handoff).
+#[cfg(not(target_os = "windows"))]
+pub fn acquire_after_handoff() -> bool {
+    true
+}
+
 #[cfg(target_os = "windows")]
 pub fn acquire() -> bool {
+    acquire_inner(false)
+}
+
+/// Like [`acquire`], but used by an instance that was just relaunched elevated
+/// from a still-running medium instance (the tray "Run as administrator"
+/// handoff). The predecessor is exiting concurrently, so instead of mistaking
+/// the brief lock overlap for "already running" and quitting — which would
+/// leave *no* instance running at all — this waits a short while for the old
+/// instance to release the lock, then takes it over.
+#[cfg(target_os = "windows")]
+pub fn acquire_after_handoff() -> bool {
+    acquire_inner(true)
+}
+
+#[cfg(target_os = "windows")]
+fn acquire_inner(wait_for_handoff: bool) -> bool {
     use windows::core::{w, PCWSTR};
-    use windows::Win32::Foundation::{GetLastError, ERROR_ALREADY_EXISTS, FALSE};
+    use windows::Win32::Foundation::{
+        CloseHandle, GetLastError, ERROR_ACCESS_DENIED, ERROR_ALREADY_EXISTS, FALSE,
+    };
     use windows::Win32::System::Threading::CreateMutexW;
     use windows::Win32::UI::WindowsAndMessaging::{
         FindWindowW, IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE,
@@ -37,21 +62,60 @@ pub fn acquire() -> bool {
     let name = w!("Local\\Snipdeck-SingleInstance-7f1c9e2a");
 
     unsafe {
+        // Elevated-handoff path: the medium instance that spawned us is
+        // exiting right now but may still hold the lock for a few ms. Poll
+        // until it lets go (then this fresh, high-integrity mutex is ours)
+        // rather than seeing the brief overlap as "already running" and
+        // quitting — which would leave NO instance running at all. We must
+        // close our own reference on every miss, otherwise it keeps the
+        // object alive and the predecessor's exit never frees it.
+        if wait_for_handoff {
+            // ~3s budget at 50ms steps: generous for a process exit, yet
+            // bounded so a wedged predecessor can't hang the relaunch forever.
+            for _ in 0..60 {
+                let probe = CreateMutexW(None, FALSE, name);
+                let probe_err = GetLastError();
+                let Ok(handle) = probe else {
+                    // Can't even open it (unexpected here) — stop waiting and
+                    // fall through to the normal one-shot logic below.
+                    break;
+                };
+                if probe_err != ERROR_ALREADY_EXISTS {
+                    // Clean creation: the predecessor is gone and this handle
+                    // is ours. Leak it (held for the whole process lifetime).
+                    return true;
+                }
+                let _ = CloseHandle(handle);
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+            // Handoff didn't complete in time — fall through and take the lock
+            // best-effort so the user still gets their elevated instance.
+        }
+
         let created = CreateMutexW(None, FALSE, name);
 
         // Read the last error immediately: on the success path the
         // windows-rs wrapper does not touch the thread-local last-error,
         // so this still reflects CreateMutexW's own result.
-        let already_running = GetLastError() == ERROR_ALREADY_EXISTS;
+        let last_err = GetLastError();
+
+        // A bare creation failure is treated as a guard malfunction and we
+        // fail open (the user is never locked out). The one exception is
+        // ERROR_ACCESS_DENIED: that means the named mutex already exists at a
+        // HIGHER integrity level than us — e.g. an elevated Snipdeck launched
+        // by the "run as administrator at login" task — which a medium
+        // process cannot open. That is "already running", not a malfunction,
+        // so fall through to the raise-and-bail path instead of spawning a
+        // second instance that would fight over the hooks and hotkey.
+        if created.is_err() && last_err != ERROR_ACCESS_DENIED {
+            return true;
+        }
 
         // The handle is intentionally leaked: `HANDLE` has no `Drop`, so the
         // mutex stays owned for the whole process lifetime and the OS frees
         // it on exit.
-        if created.is_err() {
-            // Could not create the lock at all — fail open so the user is
-            // never locked out by a guard malfunction.
-            return true;
-        }
+        let already_running =
+            last_err == ERROR_ALREADY_EXISTS || last_err == ERROR_ACCESS_DENIED;
 
         if already_running {
             // Another instance holds the lock. Surface its window so the

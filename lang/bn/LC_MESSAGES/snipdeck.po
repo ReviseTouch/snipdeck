@@ -452,3 +452,6 @@ msgstr "অস্বচ্ছতা"
 
 msgid "draw"
 msgstr "আঁকুন"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "থাম্বনেইলের আকার — ছোট / মাঝারি / বড়"

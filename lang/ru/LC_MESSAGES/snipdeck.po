@@ -457,3 +457,6 @@ msgstr "Непрозрачность"
 
 msgid "draw"
 msgstr "рисовать"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "Размер миниатюр — Маленький / Средний / Большой"

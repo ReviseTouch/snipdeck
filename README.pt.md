@@ -86,6 +86,20 @@ acontece com o recorte:
 Você também pode clicar com o botão direito no ícone da bandeja → **Novo Recorte** para preparar uma captura de arrastar única sem
 segurar `Win`.
 
+### Atalhos globais
+
+Além de `Win` + arrastar, o Snipdeck registra cinco atalhos globais configuráveis:
+
+| Atalho | Ação |
+| --- | --- |
+| `Win`+`Alt`+`H` | Mostrar / ocultar todos os recortes na tela |
+| `Ctrl`+`Shift`+`A` | Novo recorte |
+| `Ctrl`+`Shift`+`C` | Novo recorte **e** copiar para a área de transferência |
+| `Ctrl`+`Shift`+`X` | Somente área de transferência |
+| `Ctrl`+`Shift`+`G` | Abrir a galeria |
+
+Altere-os com as chaves `hotkey_*` em `settings.json`.
+
 ---
 
 ## ✏️ Editor de anotações

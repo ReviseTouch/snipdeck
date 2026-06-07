@@ -452,3 +452,6 @@ msgstr "不透明度"
 
 msgid "draw"
 msgstr "描く"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "サムネイルのサイズ — 小 / 中 / 大"

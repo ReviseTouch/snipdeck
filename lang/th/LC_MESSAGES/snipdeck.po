@@ -452,3 +452,6 @@ msgstr "ความทึบ"
 
 msgid "draw"
 msgstr "วาด"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "ขนาดภาพย่อ — เล็ก / กลาง / ใหญ่"

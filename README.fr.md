@@ -86,6 +86,20 @@ arrive à la capture :
 Vous pouvez aussi faire un clic droit sur l'icône de la zone de notification → **Nouvelle capture** pour armer une capture par glisser unique sans
 maintenir `Win`.
 
+### Raccourcis clavier globaux
+
+Outre `Win` + glisser, Snipdeck enregistre cinq raccourcis clavier globaux configurables :
+
+| Raccourci | Action |
+| --- | --- |
+| `Win`+`Alt`+`H` | Afficher / masquer toutes les captures à l'écran |
+| `Ctrl`+`Shift`+`A` | Nouvelle capture |
+| `Ctrl`+`Shift`+`C` | Nouvelle capture **et** copie dans le presse-papiers |
+| `Ctrl`+`Shift`+`X` | Presse-papiers uniquement |
+| `Ctrl`+`Shift`+`G` | Ouvrir la galerie |
+
+Modifiez-les avec les clés `hotkey_*` dans `settings.json`.
+
 ---
 
 ## ✏️ Éditeur d'annotation

@@ -1,0 +1,111 @@
+---
+title: "Sorun Giderme"
+description: "Yakalama, OCR, çeviri ve antivirüs sorunları için, Snipdeck'in gerçekte nasıl çalıştığına dayanan somut çözümler."
+order: 4
+category: "reference"
+---
+
+Bu sayfa, kullanıcıların en sık karşılaştığı sorunları ve her birinin pratik çözümünü bir araya getirir; ayrıca çözümün mantıklı gelmesi için sorunun *neden* ortaya çıktığını da kısaca açıklar. Bu davranışların çoğu birer hata değil, Snipdeck'in ekranı nasıl yakaladığına ve metni nasıl okuduğuna ilişkin bilinçli ödünleşimlerdir.
+
+Buradaki bir açıklama gördüğünüz durumla örtüşmüyorsa, [SSS](/docs/snipdeck/faq) bölümüne göz atın ya da projenin GitHub sayfasında bir sorun (issue) açın.
+
+## `Win` + sürükleme ilk seferde tetiklenmiyor
+
+**Belirti.** Snipdeck bir süre boşta kaldıktan sonra, ilk `Win` + sürükleme — genellikle ikincil bir monitörde — hiçbir şey yapmaz. İkinci deneme ve ondan sonraki her deneme kusursuz çalışır.
+
+**Neden olur.** Snipdeck, yakalamaları bir Windows düşük seviyeli giriş kancasından (`WH_MOUSE_LL` / `WH_KEYBOARD_LL`) etkinleştirir. Bu kancaların geri çağırma (callback) başına katı bir zaman aşımı vardır: işleminiz *normal* öncelikte boşta beklerken Windows, kanca zincirini askıya alabilir ve sessiz bir dönemin ardından teslim edilen ilk olayı düşürebilir. Düşürülen bu olay sizin ilk `Win` + sürüklemenizdir, dolayısıyla yakalama hiç etkinleşmez.
+
+**Çözüm zaten yerleşik.** Windows'ta Snipdeck, kanca geri çağırmasını boşta kaldıktan sonra da yanıt verir durumda tutmak için başlangıçta kendi işlemini özellikle `HIGH_PRIORITY_CLASS` seviyesine yükseltir. Arayüz durağan olduğundan bunun pratikte bir performans maliyeti yoktur. Yine de zaman zaman ilk sürüklemenin kaçırıldığını görürseniz:
+
+- Yeniden sürükleyin. İkinci deneme her zaman etkinleşir.
+- Yalnızca **bir** Snipdeck örneğinin çalıştığından emin olun. İkinci bir kopya, sistem geneli giriş kancaları üzerinde birincisiyle çekişecektir. Snipdeck oturum başına tek örneği zorunlu kılar, ancak önceki bir oturumdan kalan takılı bir işlem buna engel olabilir — sistem tepsisini ve Görev Yöneticisi'ni kontrol edin.
+
+> **Not:** Yakalama, kayıtlı bir kısayol tuşu yerine sistem geneli bir kancayla yürütüldüğünden, basılı tuttuğunuz değiştirici tuş, tıkladığınız anda işletim sisteminden canlı olarak okunur. `Win` tuşunu sürükleme ortasında bırakırsanız, snip yine de tamamlanır ve Başlat menüsünün açılması engellenir.
+
+## Yakalanan bir snip siyah veya boş çıkıyor
+
+**Belirti.** Az önce aldığınız snip tamamen siyah; ya da belirli bir pencere (donanım hızlandırmalı bir tarayıcı, bir video oynatıcı, bir oyun veya GPU ile birleştirilmiş bir terminal) çevresindeki her şey düzgün yakalanırken siyah görünüyor. Bu en çok çoklu GPU'lu dizüstü bilgisayarlarda görülür.
+
+**Neden olur.** Snipdeck monitörü **DXGI Desktop Duplication API** ile yakalar; bu API, Masaüstü Pencere Yöneticisi'nin (Desktop Window Manager) GPU üzerinde birleştirdiği gerçek kareyi okur. Sade bir GDI `BitBlt` çağrısının siyah olarak çizeceği GPU ile birleştirilmiş ve DirectComposition yüzeylerini yakalayabilmesini sağlayan da budur. Desktop Duplication kullanılamadığında, Snipdeck otomatik olarak **GDI yoluna geri döner**.
+
+Tamamen siyah bir snip şu durumlardan birine girer:
+
+| Neden | Siyah bölge | Düzeltilebilir mi? |
+| --- | --- | --- |
+| DRM korumalı içerik (ör. bir Netflix sekmesi) | Yalnızca o yüzey | Hayır — donanımda zorunlu kılınır |
+| Güvenli / UAC masaüstü ekrandaydı | Tüm kare | Hayır — orada çoğaltma engellenir |
+| HDR veya `B8G8R8A8` olmayan bir çıkış | Tüm monitör | Otomatik olarak GDI'ye geri döner |
+| İmleç noktasıyla eşleşen DXGI çıkışı yok | Tüm monitör | Otomatik olarak GDI'ye geri döner |
+
+**Yapabilecekleriniz:**
+
+- **DRM içeriği kaçınılmazdır.** Korumalı video hem Desktop Duplication altında hem de GDI yedeği altında siyah çıkar. Bu, ekran kaydını önlemek için donanımda zorunlu kılınır; Snipdeck bunu aşamaz ve aşmaya da çalışmaz.
+- **UAC / güvenli masaüstü üzerinde yakalama yapmaktan kaçının.** Snip almadan önce her türlü yükseltme istemini kapatın.
+- **Çoklu GPU'da siyah pencereler genellikle o monitör için çoğaltma yolunun başarısız olduğu** ve hızlandırılmış yüzeyi okuyamayan GDI yedeğinin devreye girdiği anlamına gelir. Pencereyi birincil ekranınıza taşımayı ya da o çıkışta Desktop Duplication'ın başarılı olması için GPU sürücünüzü güncellemeyi deneyin.
+
+> **İpucu:** Snipdeck yol değiştirdiğinde `DXGI capture failed (...); falling back to GDI` kaydını günlüğe yazar. Bu iletileri görmek için yürütülebilir dosyayı bir terminalden çalıştırın; yedek yola düşüp düşmediğinizi bunlar gösterir.
+
+### Arayüzün kendisinin neden sade göründüğü (yazılımsal işleme)
+
+Yakalamadan ayrı olarak, Snipdeck Slint'in GPU hızlandırmalı işleyicisi yerine **yazılımsal işleyicisini** (`SLINT_BACKEND=winit-software`) kullanmaya zorlar. Bu kasıtlıdır: GPU işleyicisinin pencere düzeyindeki saydamlığı, GPU başına değişen DWM davranışına bağlıdır; dolayısıyla farklı adaptörlere sahip çoklu monitör kurulumlarında seçim katmanı bir monitörde opak, diğerinde saydam görünebilirdi. Yazılımsal işleme, DWM'nin standart birleştirme yolundan geçer ve her monitörde tıpatıp aynı davranır. Arayüzde animasyon veya 3B olmadığından görünür bir performans maliyeti yoktur ve GL bağlamının atlanması bellek kullanımını düşürür. Bu bir hata değildir ve bunu değiştirecek bir ayar yoktur.
+
+## Antivirüsünüz veya EDR'niz Snipdeck'i işaretliyor
+
+**Belirti.** Windows Defender, SmartScreen veya kurumsal bir EDR aracısı `snipdeck.exe` hakkında uyarı veriyor, dosyayı karantinaya alıyor ya da oturum açılışında başlamasını engelliyor.
+
+**Neden olur.** Bir ekran kırpma aracı, sezgisel taramalara şüpheli görünen şeyleri haklı olarak yapar: sistem geneli fare ve klavye kancaları kurar, ekranı yakalar ve oturum açılışında kendini başlatır. Snipdeck, hatalı pozitifleri en aza indirmek için özellikle bu şekilde tasarlanmıştır; ancak bağımsız bir geliştiriciden gelen, yepyeni ve imzasız bir ikili dosya yine de SmartScreen gibi itibara dayalı uyarıları tetikleyebilir.
+
+**Snipdeck bundan kaçınmak için neler yapar:**
+
+- **Oturum açılışında başlatma kayıt defterinden bağımsızdır.** Snipdeck bir `HKCU\…\CurrentVersion\Run` değeri **yazmaz** — bu kayıt defteri Run anahtarı, antivirüs ve EDR araçlarının sezgisel olarak en çok işaretlediği tekil otomatik başlatma yöntemidir. Bunun yerine, Windows Ayarlar arayüzünün yönettiği aynı, kullanıcının görebildiği mekanizma olan `shell:Startup` klasörünüze sıradan bir `Snipdeck.lnk` kısayolu bırakır:
+
+  ```text
+  %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Snipdeck.lnk
+  ```
+
+- **İkili dosya UPX ile paketlenmemiştir.** Yürütülebilir paketleyiciler yoğun biçimde kötü amaçlı yazılımla ilişkilendirilir; bu nedenle paketlenmiş ikili dosyalar ek inceleme çeker. Snipdeck'in sürüm profili, tüm program kapsamlı LTO (`lto = "fat"`), tek bir kod üretim birimi ve sembol soyma (`strip = true`) ile ikili dosyayı küçük tutar — ama tam `opt-level = 3` optimizasyonunu korur ve **asla** bir paketleyici çalıştırmaz. Dağıtılan `.exe`, normal, paketlenmemiş bir Rust ikili dosyasıdır.
+
+**Yapabilecekleriniz:**
+
+- SmartScreen "Windows bilgisayarınızı korudu" iletisini gösteriyorsa, [Releases](https://github.com/hasantr/snipdeck/releases) sayfasındaki resmi `snipdeck.exe` için **More info → Run anyway** (Daha fazla bilgi → Yine de çalıştır) seçeneğine tıklayın.
+- Bir EDR aracısı dosyayı karantinaya alıyorsa, yürütülebilir dosya için bir izin listesi istisnası ekleyin ya da tam olarak hangi ikili dosyanın çalıştığını siz denetleyebilesiniz diye onu kaynaktan kendiniz derleyin ([Kurulum](/docs/snipdeck/installation) bölümüne bakın).
+- İkili dosya açık kaynaklı ve paketlenmemiş olduğundan, siz veya güvenlik ekibiniz derlemeyi denetleyebilir ve yeniden üretebilirsiniz.
+
+## OCR hiçbir metin döndürmüyor
+
+**Belirti.** **OCR + Clipboard** (OCR + Pano) işlemini çalıştırıyorsunuz (ya da bir snip'in dizinlenmiş metnini denetliyorsunuz) ve hiçbir şey alamıyorsunuz veya "metin bulunamadı" iletisini görüyorsunuz.
+
+**Neden olur.** Snipdeck, işletim sisteminin yerleşik `Windows.Media.Ocr` motorunu tamamen yerel olarak kullanır. Tanınabilir metni gerçekten bulamadığında boş döner. Yaygın nedenler:
+
+- **Görüntü çok küçük.** WinRT motoru çok küçük görüntülerde (her iki kenarda kabaca 40 pikselin altında) başarısız olur. Snipdeck, OCR'den önce küçük snip'leri otomatik olarak bir Lanczos filtresiyle büyütür; ancak aşırı küçük ya da tek karakterlik kırpmalar yine de boş dönebilir. Biraz daha geniş bir bölge yakalayın.
+- **Okunabilir metin yok** — bölge bir fotoğraf, bir simge, aşırı stilize edilmiş bir logo ya da el yazısı. Motor basılı metni tanır, gelişigüzel glifleri değil.
+- **Yazı sistemi yüklü değil.** OCR, Windows kullanıcı profilinizdeki dilleri kullanır ve `en-US`'a geri döner. Sisteminizde OCR dil paketi bulunmayan bir yazı sistemindeki metni yakalıyorsanız, bu dili **Ayarlar → Saat ve dil → Dil ve bölge** altından yükleyin, dili ekleyin ve isteğe bağlı OCR özelliğinin mevcut olduğundan emin olun.
+- **Düşük kontrast veya ekrandaki çok küçük metin.** Karakterler daha büyük ve net olsun diye kaynak içeriği yakalamadan önce yakınlaştırın.
+
+> **Not:** OCR, galerinin tam metin aramasının çalışması için her snip için arka planda çalışır. Bir snip'in arama metni boşsa, yukarıdaki aynı nedenler geçerlidir.
+
+## OCR + Çeviri başarısız oluyor
+
+**Belirti.** OCR çalışıyor (tanınan metni kopyalayabiliyorsunuz), ancak **OCR + Translate** (OCR + Çeviri) bir hata gösteriyor; genellikle ağ ya da isteğin başarısız olmasıyla ilgili bir şey.
+
+**Neden olur.** OCR'nin aksine çeviri **yerel değildir**. OCR sizin makinenizde gerçekleşir, ardından çevrilmek üzere **yalnızca tanınan metin** Google'ın herkese açık `translate_a` uç noktasına gönderilir. Bu tek ağ çağrısı, bu adımın başarısız olabileceği yerdir:
+
+- **İnternet bağlantısı yok.** Çeviri ağ erişimi gerektirir; OCR gerektirmez. Çevrimdışıysanız OCR yine çalışır, ancak çeviri yapılamaz.
+- **Bir güvenlik duvarı veya proxy isteği engelliyor.** Çağrı, HTTPS üzerinden `translate.googleapis.com` adresine gider. Kurumsal bir proxy ya da içerik filtresi bunu engelleyebilir.
+- **Uç nokta IP'nizi hız sınırlamasına tabi tuttu.** Bu, gayriresmi ve anahtarsız bir uç noktadır. Tek bir IP'den uç noktaya aşırı yüklenmek geçici olarak hız kısıtlamasına takılmanıza yol açabilir. Normal kullanımdan gelen hacim (tıklama başına kısa bir dizgi) önemsizdir, bu yüzden bu nadirdir — bir an bekleyip yeniden deneyin.
+- **İstek zaman aşımına uğradı.** Snipdeck, takılı bir isteğin işçi iş parçacığını mahsur bırakmaması için kısa bir zaman aşımı kullanır. Yavaş bir bağlantıda çağrı zaman aşımına uğrayabilir; yeniden deneyin.
+
+**Yapabilecekleriniz:**
+
+- Çalışan bir internet bağlantınız olduğunu ve bir tarayıcıda `translate.googleapis.com` adresine erişebildiğinizi doğrulayın.
+- Bir proxy ya da filtrenin arkasındaysanız, o ana bilgisayara (host) izin verin.
+- Yeniden deneyin — geçici hatalar ve kısıtlamalar genellikle kendiliğinden geçer. Arayüz, çökmek yerine bir hata iletisine geriler ve yeniden denemenize izin verir.
+
+> **Uyarı:** Çeviri, makinenizden veri gönderen tek özelliktir. Yalnızca OCR ile tanınan metin iletilir, asla görüntü iletilmez ve bu yalnızca çeviriyi açıkça başlattığınızda gerçekleşir. Veri akışının tamamı için [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security) bölümüne bakın.
+
+## Ayrıca bakınız
+
+- [Yakalama kısayolları](/docs/snipdeck/capture-shortcuts) — eksiksiz değiştirici tuş matrisi ve önce dondur (freeze-first) yakalama
+- [OCR](/docs/snipdeck/ocr) ve [OCR + Çeviri](/docs/snipdeck/ocr-translate) — metin tanıma ve çevirinin nasıl çalıştığı
+- [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security) — neyin yerel kaldığı ve neyin makinenizden çıktığı
+- [SSS](/docs/snipdeck/faq) — yaygın sorulara daha kısa yanıtlar

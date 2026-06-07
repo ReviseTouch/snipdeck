@@ -3,10 +3,12 @@ import { OverlayWindow } from "overlay.slint";
 import { ContextMenuWindow } from "context_menu.slint";
 import { TranslatePopupWindow, TransLang } from "translate_popup.slint";
 import { AnnotateWindow, AnnoShape } from "annotate.slint";
+import { CollageWindow, CollageCell, TrayItem } from "collage.slint";
+import { AboutWindow } from "about.slint";
 import { Glyph } from "icons.slint";
 import { ListView, ScrollView } from "std-widgets.slint";
 
-export { FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape }
+export { FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape, CollageWindow, CollageCell, TrayItem, AboutWindow }
 
 // Singleton holding the currently-hovered element's tooltip text + where to
 // show it (window coords). MainWindow draws ONE overlay box from this, on top
@@ -214,6 +216,54 @@ component FilterPill inherits Rectangle {
     }
 }
 
+// Segmented S / M / L control for the gallery card size.
+component SizeToggle inherits Rectangle {
+    in property <bool> dark: true;
+    in property <int> current: 1; // 0 = S, 1 = M, 2 = L
+    in property <string> tooltip: "";
+    callback changed(int);
+
+    height: 30px;
+    width: 90px;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: dark ? #2e2e2e : #dcd9d1;
+    background: dark ? #161616 : #ffffff;
+
+    HorizontalLayout {
+        padding: 3px;
+        spacing: 3px;
+        for opt[i] in ["S", "M", "L"] : cell := Rectangle {
+            horizontal-stretch: 1;
+            border-radius: 4px;
+            property <bool> sel: i == root.current;
+            background: cell.sel
+                ? (root.dark ? #2a2520 : #fbe9d6)
+                : (cell-ta.has-hover ? (root.dark ? #232323 : #f1f0ea) : transparent);
+            cell-ta := TouchArea {
+                clicked => { root.changed(i); }
+                changed has-hover => {
+                    if (self.has-hover && root.tooltip != "") {
+                        Tips.text = root.tooltip;
+                        Tips.x = root.absolute-position.x;
+                        Tips.y = root.absolute-position.y + root.height + 4px;
+                    } else if (Tips.text == root.tooltip) {
+                        Tips.text = "";
+                    }
+                }
+            }
+            Text {
+                text: opt;
+                color: cell.sel ? (root.dark ? #ffb066 : #b85a14) : (root.dark ? #8a8782 : #6e6962);
+                font-size: 12px;
+                font-weight: cell.sel ? 700 : 500;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+    }
+}
+
 component SearchBox inherits Rectangle {
     in-out property <string> value;
     in property <bool> dark: true;
@@ -372,6 +422,8 @@ export component MainWindow inherits Window {
     in-out property <int> size-filter-index: 0;
     in-out property <int> date-filter-index: 0;
     in-out property <int> sort-index: 0;
+    // Card/thumbnail size step: 0 = Small, 1 = Medium (default), 2 = Large.
+    in-out property <int> thumb-size-index: 1;
     in property <string> error-text: "";
     in property <int> gallery-total: 0;
     in property <int> pinned-count: 0;
@@ -382,6 +434,15 @@ export component MainWindow inherits Window {
     in property <string> current-language: "en";
     in property <bool> autostart-enabled: false;
     property <bool> lang-open: false;
+
+    // Card sizing for the gallery grid. `card-w` is the target card width per
+    // size step; the thumbnail area scales with it while the text strip below
+    // stays a fixed height. Derived values drive the row/card/thumb heights and
+    // the cards-per-row formula so the whole grid reflows when the step changes.
+    property <length> card-w: root.thumb-size-index == 0 ? 184px : (root.thumb-size-index == 2 ? 320px : 240px);
+    property <length> thumb-h: root.card-w * 0.617;
+    property <length> card-h: root.thumb-h + 72px;
+    property <length> row-h: root.card-h + 10px;
 
     property <string> status-filter-value: status-filter-index == 1 ? @tr("Pinned") : (status-filter-index == 2 ? @tr("Unpinned") : (status-filter-index == 3 ? @tr("On screen") : (status-filter-index == 4 ? @tr("Hidden") : @tr("All"))));
     property <string> content-filter-value: content-filter-index == 1 ? @tr("Has OCR") : (content-filter-index == 2 ? @tr("No OCR") : (content-filter-index == 3 ? @tr("Has window") : (content-filter-index == 4 ? @tr("No window") : (content-filter-index == 5 ? @tr("Tagged") : @tr("All")))));
@@ -409,12 +470,14 @@ export component MainWindow inherits Window {
     callback new-snip();
     callback new-snip-clip();
     callback new-snip-clip-only();
+    callback collage-create();
     callback toggle-all-visibility();
     callback toggle-floating-in-taskbar();
     callback clear-unpinned();
     callback clear-all();
     callback toggle-autostart();
     callback toggle-theme();
+    callback show-about();
     callback set-language(string);
     callback snip-clicked(string);
     callback snip-context-menu(string);
@@ -435,6 +498,8 @@ export component MainWindow inherits Window {
     callback request-thumb(string);
     // Reports how many cards fit per row so Rust can re-chunk the list.
     callback gallery-cols-changed(int);
+    // Reports the chosen card-size step (0/1/2) so Rust can persist it.
+    callback thumb-size-changed(int);
 
     VerticalLayout {
         spacing: 0px;
@@ -483,49 +548,10 @@ export component MainWindow inherits Window {
                 spacing: 4px;
                 alignment: center;
 
-                // Logo: badge + wordmark, both vertically centred in the row.
-                Rectangle {
-                    width: 112px;
-                    Rectangle {
-                        x: 0px;
-                        y: (parent.height - self.height) / 2;
-                        width: 22px;
-                        height: 22px;
-                        border-radius: 5px;
-                        background: #ff8a3d;
-                        Text {
-                            text: "S";
-                            color: #1a0e05;
-                            font-size: 13px;
-                            font-weight: 700;
-                            horizontal-alignment: center;
-                            vertical-alignment: center;
-                            width: 100%;
-                            height: 100%;
-                        }
-                    }
-                    Text {
-                        x: 30px;
-                        y: 0px;
-                        height: 100%;
-                        text: "Snipdeck";
-                        color: root.c-fg;
-                        font-size: 13px;
-                        font-weight: 600;
-                        vertical-alignment: center;
-                    }
-                    Rectangle {
-                        x: parent.width - 1px;
-                        y: (parent.height - self.height) / 2;
-                        width: 1px;
-                        height: 22px;
-                        background: root.c-divider;
-                    }
-                }
-
                 ToolbarButton { icon: "plus"; label: @tr("New"); kbd: ""; primary: true; dark: root.dark-theme; tooltip: @tr("Take a new snip — drag a region with Win + left click"); width: 84px; clicked => { root.new-snip(); } }
                 ToolbarButton { icon: "copy"; label: @tr("Snip + Clip"); dark: root.dark-theme; tooltip: @tr("Take a snip and copy it to the clipboard"); width: 112px; clicked => { root.new-snip-clip(); } }
                 ToolbarButton { icon: "clipboard"; label: @tr("Clip only"); dark: root.dark-theme; tooltip: @tr("Copy to the clipboard only (without saving to the gallery)"); width: 98px; clicked => { root.new-snip-clip-only(); } }
+                ToolbarButton { icon: "layers"; label: @tr("Collage"); dark: root.dark-theme; tooltip: @tr("Combine several snips into one collage"); width: 96px; clicked => { root.collage-create(); } }
 
                 Rectangle { width: 1px; background: root.c-divider; }
 
@@ -533,7 +559,7 @@ export component MainWindow inherits Window {
                     icon: root.any-floating ? "eye" : "eye-off";
                     dark: root.dark-theme;
                     active: root.any-floating;
-                    tooltip: root.any-floating ? @tr("Hide on-screen snips") : @tr("Show snips on screen");
+                    tooltip: (root.any-floating ? @tr("Hide on-screen snips") : @tr("Show snips on screen")) + " (Win+Alt+H)";
                     clicked => { root.toggle-all-visibility(); }
                 }
                 IconButton {
@@ -551,6 +577,7 @@ export component MainWindow inherits Window {
                 IconButton { icon: root.dark-theme ? "sun" : "moon"; dark: root.dark-theme; tooltip: @tr("Toggle light / dark theme"); clicked => { root.toggle-theme(); } }
                 IconButton { icon: "globe"; dark: root.dark-theme; active: root.lang-open; tooltip: @tr("Language"); clicked => { root.lang-open = !root.lang-open; } }
                 IconButton { icon: "power"; dark: root.dark-theme; active: root.autostart-enabled; tooltip: @tr("Launch at Login"); clicked => { root.toggle-autostart(); } }
+                IconButton { icon: "info"; dark: root.dark-theme; tooltip: @tr("About Snipdeck"); clicked => { root.show-about(); } }
             }
             Rectangle {
                 y: parent.height - 1px;
@@ -639,6 +666,15 @@ export component MainWindow inherits Window {
                     cleared => { root.search-changed(""); }
                     horizontal-stretch: 1;
                     min-width: 220px;
+                }
+                SizeToggle {
+                    dark: root.dark-theme;
+                    current: root.thumb-size-index;
+                    tooltip: @tr("Thumbnail size — Small / Medium / Large");
+                    changed(i) => {
+                        root.thumb-size-index = i;
+                        root.thumb-size-changed(i);
+                    }
                 }
                 ToolbarButton {
                     icon: "reset";
@@ -730,6 +766,15 @@ export component MainWindow inherits Window {
                         cleared => { root.search-changed(""); }
                         horizontal-stretch: 1;
                     }
+                    SizeToggle {
+                        dark: root.dark-theme;
+                        current: root.thumb-size-index;
+                        tooltip: @tr("Thumbnail size — Small / Medium / Large");
+                        changed(i) => {
+                            root.thumb-size-index = i;
+                            root.thumb-size-changed(i);
+                        }
+                    }
                     ToolbarButton {
                         icon: "reset";
                         label: @tr("Reset");
@@ -775,14 +820,15 @@ export component MainWindow inherits Window {
             }
         }
 
-        if root.rows.length > 0 : Rectangle {
+        if root.rows.length > 0 : grid := Rectangle {
             vertical-stretch: 1;
 
             // Cards-per-row, computed where the real width is known and
             // reported to Rust, which chunks the flat list into rows of this
             // many cards. The grid stays responsive while the ListView only
-            // instantiates the rows actually on screen.
-            property <int> cols: max(1, Math.floor((self.width - 13px - 20px + 10px) / (240px + 10px)));
+            // instantiates the rows actually on screen. Scales with the chosen
+            // card width so S/M/L packs more or fewer cards per row.
+            property <int> cols: max(1, Math.floor((self.width - 13px - 20px + 10px) / (root.card-w + 10px)));
             init => { root.gallery-cols-changed(self.cols); }
             changed cols => { root.gallery-cols-changed(self.cols); }
 
@@ -794,7 +840,7 @@ export component MainWindow inherits Window {
                 vertical-scrollbar-policy: ScrollBarPolicy.always-off;
 
                 for row[r] in root.rows : Rectangle {
-                    height: 230px;
+                    height: root.row-h;
 
                     HorizontalLayout {
                         padding-left: 10px;
@@ -804,14 +850,17 @@ export component MainWindow inherits Window {
                         spacing: 10px;
 
                         for snip[c] in row : Rectangle {
-                            // Flexible width: a transient column-count mismatch
-                            // during a resize squishes the cards instead of
-                            // clipping them; capped at 240px so a short row's
-                            // cards never balloon past their normal size.
+                            // Full rows are justified: cards stretch to fill the
+                            // whole width (no max cap) so there's no dead gutter
+                            // on the right. A short last row keeps its cards at
+                            // the natural `card-w` and the trailing spacer below
+                            // soaks up the slack, leaving them left-packed. The
+                            // min-width keeps a transient resize mismatch from
+                            // squishing cards to nothing.
                             horizontal-stretch: 1;
-                            min-width: 130px;
-                            max-width: 240px;
-                            height: 220px;
+                            min-width: root.card-w * 0.5;
+                            max-width: row.length >= grid.cols ? 100000px : root.card-w;
+                            height: root.card-h;
                             // Lazy-load the thumbnail once this card is realized.
                             init => { root.request-thumb(snip.id); }
 
@@ -840,7 +889,7 @@ export component MainWindow inherits Window {
                     x: 0px;
                     y: 0px;
                     width: parent.width;
-                    height: 148px;
+                    height: root.thumb-h;
                     background: root.dark-theme ? #181818 : #e7e3da;
                     clip: true;
 
@@ -934,9 +983,9 @@ export component MainWindow inherits Window {
 
                 Rectangle {
                     x: 0px;
-                    y: 148px;
+                    y: root.thumb-h;
                     width: parent.width;
-                    height: parent.height - 148px;
+                    height: parent.height - root.thumb-h;
                     background: transparent;
 
                     VerticalLayout {
@@ -1003,10 +1052,12 @@ export component MainWindow inherits Window {
                 }
                     }
 
-                        // Trailing flexible spacer soaks up leftover width so
-                        // the cards stay left-packed (a short last row won't
-                        // spread its cards across the whole width).
-                        Rectangle { horizontal-stretch: 1; }
+                        // Trailing flexible spacer soaks up leftover width so a
+                        // short last row stays left-packed at the natural card
+                        // size instead of stretching its few cards across the
+                        // whole width. Full rows omit it so their cards justify
+                        // edge-to-edge.
+                        if row.length < grid.cols : Rectangle { horizontal-stretch: 1; }
                 }
             }
             } // lv

@@ -12,6 +12,8 @@
 
 **A fast, keyboard-driven screen-snipping _deck_ for Windows.**
 
+<sub>A free & open-source app by <a href="https://revisetouch.com"><b>ReviseTouch</b></a>.</sub>
+
 Capture a region, keep snips floating on top of everything, mark them up,
 OCR-index them, and search hundreds of screenshots from one dense gallery —
 all from a native Rust app with a software-rendered [Slint](https://slint.dev) UI.
@@ -85,6 +87,20 @@ happens to the snip:
 
 You can also right-click the tray icon → **New Snip** to arm a one-shot drag capture without
 holding `Win`.
+
+### Global hotkeys
+
+Besides `Win` + drag, Snipdeck registers five configurable global hotkeys:
+
+| Hotkey | Action |
+| --- | --- |
+| `Win`+`Alt`+`H` | Show / hide all on-screen snips |
+| `Ctrl`+`Shift`+`A` | New snip |
+| `Ctrl`+`Shift`+`C` | New snip **and** copy to clipboard |
+| `Ctrl`+`Shift`+`X` | Clipboard only |
+| `Ctrl`+`Shift`+`G` | Open the gallery |
+
+Change them with the `hotkey_*` keys in `settings.json`.
 
 ---
 
@@ -253,6 +269,14 @@ threads and hand results back over channels, drained once per tick.
 | `src/i18n.rs`, `lang/` | Runtime i18n + bundled gettext `.po` catalogs (23 languages) |
 
 </details>
+
+---
+
+## ✨ Made by ReviseTouch
+
+Snipdeck is a free, open-source app from **[ReviseTouch](https://revisetouch.com)** —
+we build developer tools and AI products. See what else we're building at
+**[revisetouch.com](https://revisetouch.com)**.
 
 ---
 

@@ -457,3 +457,47 @@ msgstr ""
 
 msgid "draw"
 msgstr ""
+
+#. ── Collage editor ──
+msgid "Collage"
+msgstr ""
+
+msgid "Combine several snips into one collage"
+msgstr ""
+
+msgid "Gap"
+msgstr ""
+
+msgid "Round"
+msgstr ""
+
+msgid "Pick images from the tray below to build a collage"
+msgstr ""
+
+msgid "Add at least two snips to make a collage."
+msgstr ""
+
+msgid "Failed to open collage: {e}"
+msgstr ""
+
+#. ── About window (ReviseTouch is a brand name — do NOT translate it) ──
+msgid "About Snipdeck"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "A fast, free, open-source screen-snipping deck for Windows."
+msgstr ""
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr ""
+
+msgid "Visit ReviseTouch"
+msgstr ""
+
+msgid "Support"
+msgstr ""
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr ""

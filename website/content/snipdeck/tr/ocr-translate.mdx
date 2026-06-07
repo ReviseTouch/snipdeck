@@ -1,0 +1,130 @@
+---
+title: "OCR + Çeviri"
+description: "Herhangi bir snip içindeki metni başka bir dilde okuyun: OCR çalıştırın, ardından tanınan metni 30'dan fazla hedef dile yerinde çevirin."
+order: 5
+category: "features"
+---
+
+OCR + Çeviri, bir snip içindeki metni yerel OCR motoruyla okur ve onu seçtiğiniz dile, tam da yakalamanın yanında çevirir. Okuyamadığınız bir şeyin ekran görüntüsünü aldığınız o an için tasarlanmıştır — yabancı dildeki bir iletişim kutusu, bir menü, bir satır kod yorumu — ve Snipdeck'ten ayrılmadan anlamını öğrenmek istediğinizde işinize yarar.
+
+## Çeviri açılır penceresini açma
+
+Bir [yüzen snip](/docs/snipdeck/floating-snips) ya da bir galeri küçük resmine sağ tıklayın ve **OCR + Çeviri**'yi seçin. Snip'in yanında kompakt, her zaman üstte bir açılır pencere açılır ve işlem arka planda sürerken hemen bir `translating…` (çevriliyor) durumu gösterir.
+
+Perde arkasında, kullanıcı arabiriminin asla donmaması için bir işçi iş parçacığında iki adım çalışır:
+
+1. **OCR** — snip, yerel `Windows.Media.Ocr` motoruyla okunur ([OCR + Pano](/docs/snipdeck/ocr) tarafından kullanılan motorun aynısı). Model indirme yok, ağ kullanımı yok.
+2. **Çeviri** — tanınan metin, seçtiğiniz hedef dile çevrilmek üzere gönderilir ve sonuç açılır pencereye doldurulur.
+
+Açılır pencere snip'in **sağında** açılır; sağ taraf ekranın dışına taşacaksa **solunda** açılır ve bir kenarda asla kırpılmaması için her zaman tamamen monitör üzerinde kalacak şekilde sınırlandırılır.
+
+> **Not:** Çeviri ağa ihtiyaç duyar; OCR duymaz. Tam olarak neyin nereye gönderildiğini öğrenmek için [Ağ notu](#ag-notu) bölümüne bakın.
+
+## Açılır pencerenin anatomisi
+
+Açılır pencere, yukarıdan aşağıya birkaç net bölgeye ayrılmıştır:
+
+| Bölge | Ne gösterir |
+| --- | --- |
+| **Başlık çubuğu** | Bir sürükleme tutamacı (pencereyi taşımak için sürükleyin) ve otomatik algılanan kaynak dilin ardından bir ok, örneğin `German →`. Kapat düğmesi sağdadır. |
+| **Hedef dil** | Etkin hedef dil etiketi (turuncu renkte) ve tam dil listesini açan bir **More ▾** (Daha fazla) düğmesi. |
+| **Hızlı seçim hapları** | Tek dokunuşluk dil haplarından oluşan bir satır — favorileriniz — `EN`, `TR`, `DE` gibi kısa kodlar gösterir. Etkin hedef, marka turuncusuyla vurgulanır. |
+| **Kaynak (OCR)** | OCR motorunun tanıdığı metin, kendi **copy** (kopyala) düğmesiyle. |
+| **Çeviri** | Çevrilen metin (ya da bir hata); pencereyi yeniden boyutlandırdıkça büyür. |
+| **Çeviriyi kopyala** | Çevrilen metni panoya kopyalayan bir düğme. |
+
+Pencere başlık çubuğundan sürüklenebilir ve sağ alttaki tutamaçtan yeniden boyutlandırılabilir. Bir yeniden boyutlandırma, oturumun geri kalanı boyunca yeniden açmalarda korunur.
+
+## Hedef dil seçme
+
+Çevrilecek dili seçmenin iki yolu vardır.
+
+### Hızlı seçim hapları
+
+Hap şeridi, favori dillerinizi kompakt, tek dokunuşluk düğmeler olarak tutar. Hedefi değiştirmek için bir hapa dokunun; açılır pencere, daha önce tanınmış metni anında yeniden çevirir — OCR'ı **yeniden çalıştırmaz** — böylece yeni çeviri bir anda görünür. O an etkin olan dil vurgulu kalır.
+
+> **İpucu:** İlk çeviri henüz devam ederken dilleri değiştirirseniz, Snipdeck devam eden sonucu otomatik olarak en yeni seçiminize yönlendirir — asla eski bir çeviri almazsınız.
+
+### "More" listesi
+
+Desteklenen her hedef dilin tam listesini açmak için **More ▾** (Daha fazla) düğmesine dokunun. Her satır dil adını, kodunu (örneğin `zh-CN`) ve favorilere eklemek için bir **yıldız** gösterir.
+
+- O dili seçmek ve listeyi kapatmak için **bir satıra dokunun**.
+- Dili seçmeden ya da listeyi kapatmadan, o dili hızlı seçim haplarınıza eklemek veya çıkarmak için **yıldıza dokunun**.
+
+### Desteklenen hedef diller
+
+Snipdeck, **More** (Daha fazla) listesinde aşağıdaki hedef dilleri sunar:
+
+| Kod | Dil | Kod | Dil |
+| --- | --- | --- | --- |
+| `tr` | Türkçe | `ja` | Japonca |
+| `en` | İngilizce | `ko` | Korece |
+| `de` | Almanca | `zh-CN` | Çince (Basit.) |
+| `fr` | Fransızca | `zh-TW` | Çince (Gelen.) |
+| `es` | İspanyolca | `id` | Endonezce |
+| `it` | İtalyanca | `th` | Tayca |
+| `ru` | Rusça | `vi` | Vietnamca |
+| `ar` | Arapça | `bg` | Bulgarca |
+| `pt` | Portekizce | `cs` | Çekçe |
+| `nl` | Felemenkçe | `hu` | Macarca |
+| `sv` | İsveççe | `az` | Azerice |
+| `pl` | Lehçe | `fa` | Farsça |
+| `ro` | Romence | `he` | İbranice |
+| `el` | Yunanca | `hi` | Hintçe |
+| `uk` | Ukraynaca | | |
+
+**Kaynak** dil seçtiğiniz bir şey değildir: tanınan metinden otomatik olarak algılanır ve algılanan dil başlık çubuğunda gösterilir (örneğin `German →`).
+
+## Favoriler
+
+Hızlı seçim hapları sizin favorilerinizdir. Bir dili hap olarak eklemek için **More** (Daha fazla) listesinde yıldızlayın; hapı kaldırmak için yıldızı geri alın. Snipdeck her zaman **en az bir** favori tutar, böylece hap şeridi asla boş kalmaz.
+
+Varsayılan favori kümesi şudur:
+
+```json
+["en", "es", "fr", "de", "it", "pt", "ru", "ar"]
+```
+
+Hem varsayılan hedef diliniz hem de favorileriniz [ayarlarda](/docs/snipdeck/settings) hatırlanır ve bir sonraki seferde geri yüklenir:
+
+| Ayar anahtarı | Varsayılan | Anlamı |
+| --- | --- | --- |
+| `translate_target` | `"en"` | Açılır pencerenin başladığı hedef dil |
+| `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Hızlı seçim hapı dilleri, sıralı olarak |
+
+Bunlar şurada bulunur:
+
+```
+%APPDATA%\Snipdeck\settings.json
+```
+
+> **Not:** Henüz bir ayarlar penceresi yok. Son kullandığınız hedef dil ve favori değişiklikleriniz, açılır pencereyi kullandıkça otomatik olarak kalıcı hale getirilir — bunları korumak için dosyayı elle düzenlemenize gerek yoktur.
+
+## Sonucu kopyalama
+
+Açılır pencere size iki bağımsız kopyalama eylemi sunar:
+
+- **Kaynak (OCR)** yanındaki **copy** (kopyala) düğmesi, tanınan kaynak metni kopyalar.
+- Alttaki **Copy translation** (Çeviriyi kopyala) düğmesi, çevrilen metni kopyalar.
+
+Her ikisi de doğrudan Windows panosuna yazar.
+
+## Ağ notu
+
+Bu, Snipdeck'te ağı kullanan tek özelliktir, bu yüzden makinenizden neyin ayrıldığı konusunda kesin olmakta fayda var.
+
+- Yalnızca **OCR ile tanınan metin** — yerel OCR motorunun snip'ten okuduğu düz dize — ağ üzerinden gönderilir. Görüntünün kendisi asla makinenizden ayrılmaz.
+- Bu metin, çevrilmek üzere **Google'ın herkese açık `translate_a` uç noktasına** (`translate.googleapis.com/translate_a/single`) gönderilir ve çevrilen metin geri döndürülür.
+- Tanınan metin **başka hiçbir şey için** kullanılmaz. Uzaktan saklanmaz, Snipdeck tarafından günlüğe kaydedilmez ya da istediğiniz çeviriyi gerçekleştirmek dışında başka bir yere gönderilmez.
+
+> **Uyarı:** Tanınan metin herkese açık bir çeviri uç noktasına gönderildiği için, parolalar, belirteçler ya da diğer hassas metinleri içeren snipler üzerinde OCR + Çeviri kullanmaktan kaçının. OCR ve Snipdeck'in geri kalanı tamamen yerel kalır — yalnızca bu çeviri adımı ağa dokunur.
+
+Uç nokta anahtarsız ve ücretsizdir, ancak resmi değildir: hız sınırına takılabilir ya da biçimi değişebilir. Bu olduğunda açılır pencere zarif bir şekilde işlevini sürdürür — çeviri yerine kırmızı renkte bir hata mesajı gösterir ve yeniden denemek için dili değiştirebilirsiniz. OCR başarılı olduysa ancak çeviri başarısız olduysa, kopyalayabilmeniz için tanınan **kaynak metin yine de gösterilir**.
+
+## Ayrıca bakın
+
+- [OCR](/docs/snipdeck/ocr) — yerel, ağsız OCR motoru ve OCR + Pano.
+- [Yüzen snipler](/docs/snipdeck/floating-snips) — çevirmek için sağ tıklayabileceğiniz sabitlenmiş katmanlar.
+- [Ayarlar](/docs/snipdeck/settings) — `translate_target` ve `translate_favs` değerlerinin saklandığı yer.
+- [Gizlilik ve güvenlik](/docs/snipdeck/privacy-and-security) — neyin yerel kaldığı ve neyin ağa dokunduğunun tam resmi.

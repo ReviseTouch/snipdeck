@@ -86,6 +86,20 @@ le ocurre al recorte:
 También puedes hacer clic derecho en el icono de la bandeja → **Nuevo recorte** para armar una captura de un solo arrastre sin
 mantener pulsada `Win`.
 
+### Atajos globales
+
+Además de `Win` + arrastre, Snipdeck registra cinco atajos globales configurables:
+
+| Atajo | Acción |
+| --- | --- |
+| `Win`+`Alt`+`H` | Mostrar / ocultar todos los recortes en pantalla |
+| `Ctrl`+`Shift`+`A` | Nuevo recorte |
+| `Ctrl`+`Shift`+`C` | Nuevo recorte **y** copia al portapapeles |
+| `Ctrl`+`Shift`+`X` | Solo portapapeles |
+| `Ctrl`+`Shift`+`G` | Abrir la galería |
+
+Cámbialos con las claves `hotkey_*` en `settings.json`.
+
 ---
 
 ## ✏️ Editor de anotaciones

@@ -452,3 +452,6 @@ msgstr "Opacidade"
 
 msgid "draw"
 msgstr "desenhar"
+
+msgid "Thumbnail size — Small / Medium / Large"
+msgstr "Tamanho da miniatura — Pequeno / Médio / Grande"

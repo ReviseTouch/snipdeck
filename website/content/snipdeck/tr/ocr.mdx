@@ -1,0 +1,90 @@
+---
+title: "OCR (metin tanıma)"
+description: "Snipdeck, tam metin galeri aramasını ve tek tıkla metin kopyalamayı mümkün kılmak için her kırpıntıdaki metni Windows OCR motoruyla yerel olarak nasıl okur?"
+order: 4
+category: "features"
+---
+
+Snipdeck, ekran görüntülerinizin içindeki metni okur; böylece daha sonra bu metni arayabilir ve düz metin olarak kopyalayabilirsiniz. Tanıma işlemi, herhangi bir model indirilmeden ve internet bağlantısı olmadan, doğrudan işletim sisteminin kendi OCR motoru üzerinde yerel olarak çalışır. Bu sayede hassas görüntüler bile asla makinenizden dışarı çıkmaz.
+
+Bu sayfa, arka plan dizinlemesinin nasıl çalıştığını, tanınan metnin galeri aramasını nasıl beslediğini ve **OCR + Clipboard** (OCR + Pano) eyleminin bir kırpıntının metnini istek üzerine nasıl kopyaladığını açıklar.
+
+## Snipdeck'te OCR ne işe yarar?
+
+OCR (optik karakter tanıma), bir kırpıntının piksellerini makinece okunabilir metne dönüştürür. Snipdeck bunu iki amaçla kullanır:
+
+- **Dizinleme** — yakaladığınız her kırpıntı arka planda okunur ve metni saklanır; böylece o kırpıntıyı, içinde geçen kelimeleri yazarak daha sonra bulabilirsiniz.
+- **Kopyalama** — herhangi bir kırpıntıya sağ tıklayarak tanınan metnini doğrudan panoya kopyalayabilir, ardından bir düzenleyiciye, sohbete veya terminale yapıştırabilirsiniz.
+
+Bir kırpıntının metnini yalnızca kopyalamak yerine başka bir dilde okumak isterseniz [OCR + Translate](/docs/snipdeck/ocr-translate) sayfasına bakın.
+
+## Motor
+
+Windows'ta Snipdeck, yerleşik `Windows.Media.Ocr` motorunu kullanır — işletim sistemiyle birlikte gelen aynı OCR bileşenidir (Windows 8.1'de tanıtılmış ve Windows 11 boyunca geliştirilmiştir).
+
+| Özellik | Ayrıntı |
+| --- | --- |
+| Motor | `Windows.Media.Ocr` (işletim sistemine yerleşik) |
+| Model indirme | Yok — motor Windows ile birlikte gelir |
+| Ağ erişimi | Yok — tanıma tamamen yereldir |
+| Dil | Windows kullanıcı profili dillerinizden seçilir |
+| Yedek dil | OCR destekli bir dil yüklü değilse `en-US` |
+
+> **Not:** OCR, işletim sistemi motorunu kullandığı için okuyabildiği diller Windows'ta yüklü dil paketlerine bağlıdır. Snipdeck önce profilinizin dillerini kullanmasını Windows'tan ister; böylece yüklü bir paket (örneğin İngilizce veya Türkçe) otomatik olarak seçilir. Profilinizde OCR destekli bir dil yoksa Snipdeck `en-US` diline geri döner.
+
+Tanıma işlemi, bir kırpıntı okunurken galeri arayüzünün asla kilitlenmemesi için ayrı bir çalışan iş parçacığında çalışır. Çok küçük görüntüler (kısa kenarı 40 px'in altında olanlar), işletim sistemi motoru çok küçük girdilerle zorlandığından, tanımadan önce yüksek kaliteli bir filtreyle büyütülür — bu otomatik olarak gerçekleşir ve herhangi bir ayar yapmanıza gerek yoktur.
+
+## Otomatik arka plan dizinleme
+
+OCR için ayrıca istekte bulunmanıza gerek yoktur. Bir kırpıntı yakalandığı anda Snipdeck, tanımayı arka planda başlatır:
+
+1. Kırpıntı galeriye kaydedilir ve anında gösterilir — yakalama işlemi asla OCR'yi beklemez.
+2. Bir arka plan iş parçacığı, kırpıntının metnini işletim sistemi motoruyla okur.
+3. Tanınan metin, kırpıntının kaydına yazılır ve tam metin arama dizinine eklenir.
+
+Bu işlem eşzamansız (asynchronous) olduğundan, yeni yakalanmış bir kırpıntı, görünmesinin hemen ardından değil, kısa bir an sonra metniyle aranabilir hâle gelir. Okunabilir metin içermeyen yakalamalar (düz bir renk, içinde yazı olmayan bir fotoğraf) yalnızca OCR metni üretmez; bu da sorun değildir — kırpıntı yine kaydedilir ve diğer üst verileriyle aranabilir.
+
+> **İpucu:** Etkinleştirilecek bir şey yoktur. Bir kırpıntıyı her zamanki gibi yakalayın (bkz. [Capture shortcuts](/docs/snipdeck/capture-shortcuts)) ve OCR dizinlemesi kendiliğinden gerçekleşsin.
+
+## Tam metin galeri araması
+
+Tanınan metin, her kırpıntının diğer üst verileriyle birlikte yerel bir SQLite tam metin dizininde dizinlenir. Galeri arama kutusuna yazdığınızda Snipdeck, sorgunuzu bunların tümüyle eşleştirir:
+
+| Alan | Neyle eşleştiğine örnek |
+| --- | --- |
+| OCR metni | Ekran görüntüsünün *içinde* geçen kelimeler ve ifadeler |
+| Etiket | Kırpıntının adı/etiketi |
+| Monitör etiketi | Kırpıntının hangi monitörden geldiği |
+| Boyutlar | Kırpıntının piksel boyutu |
+| Pencere başlığı | Yakalanan pencerenin başlığı |
+| Pencere uygulaması / işlemi | Uygulama veya işlem adı |
+| Pencere yolu | Kaynak pencerenin yürütülebilir dosya yolu |
+
+Bu, bir hata iletisindeki bir kelimeyi arayarak bir hata penceresinin ekran görüntüsünü ya da sayfada yer alan bir ifadeyle bir web sayfasının kırpıntısını — hiç etiketlememiş olsanız bile — bulabileceğiniz anlamına gelir. Tam arama söz dizimi, filtreler ve sonuçların nasıl sıralandığı için [Gallery and search](/docs/snipdeck/gallery-and-search) sayfasına bakın.
+
+> **Not:** Aramaya yalnızca OCR ile dizinlenmiş kırpıntılar metniyle katkıda bulunur. Saniyeler önce yakalanmış bir kırpıntı, dizinleme tamamlanana kadar iç metniyle henüz görünmeyebilir; pencere başlığı gibi üst veriler ise hemen kullanılabilir.
+
+## OCR + Clipboard
+
+Tek bir kırpıntıdan metni çıkarmak için yüzen bir kırpıntıya **ya da** bir galeri küçük resmine sağ tıklayın ve **OCR + Clipboard** (OCR + Pano) seçeneğini belirleyin.
+
+- Kırpıntı zaten OCR ile dizinlenmişse, saklanan metni anında panoya kopyalar.
+
+- Henüz dizinlenmemişse Snipdeck, görüntüyü o anda okur, sonucu saklar ve kopyalar.
+
+Her iki durumda da tanınan metin panonuzda, yapıştırmaya hazır olur. Bu eylem aynı zamanda kırpıntının saklanan OCR metnini de güncel tutar; böylece aramaya da katkı sağlar.
+
+> **İpucu:** Metni seçemediğiniz bir ekran görüntüsünden — örneğin bir uzak masaüstünden, bir video karesinden veya görüntü olarak işlenmiş bir PDF'ten — bir kod parçacığını, URL'yi veya hata iletisini almak için **OCR + Clipboard** (OCR + Pano) seçeneğini kullanın.
+
+Tanıma, görüntüde herhangi bir metin bulamazsa hiçbir şey kopyalanmaz. Metni olduğu gibi kopyalamak yerine çeviriden geçirmek için **OCR + Translate** (OCR + Çevir) seçeneğini kullanın — bkz. [OCR + Translate](/docs/snipdeck/ocr-translate).
+
+## Gizlilik
+
+Yakalama ve OCR tamamen yereldir. `Windows.Media.Ocr` motoru makinenizde çalışır, herhangi bir model indirme gerektirmez ve hiçbir ağ isteği yapmaz; bu nedenle kırpıntılarınızın içeriği, dizinleme ya da kopyalama sırasında hiçbir yere iletilmez. Ağı kullanan tek OCR ile ilişkili özellik, tanınan *metni* (görüntüyü değil) bir çeviri hizmetine gönderen **OCR + Translate** özelliğidir — ve yalnızca onu açıkça çalıştırdığınızda. Tüm ayrıntılar için [Privacy and security](/docs/snipdeck/privacy-and-security) sayfasına bakın.
+
+## Ayrıca bakınız
+
+- [OCR + Translate](/docs/snipdeck/ocr-translate) — bir kırpıntının metnini başka bir dilde okuyun
+- [Gallery and search](/docs/snipdeck/gallery-and-search) — tam metin arama, filtreler ve sıralama
+- [Capture shortcuts](/docs/snipdeck/capture-shortcuts) — değiştirici-tuş-ve-sürükle yakalama ızgarası
+- [Privacy and security](/docs/snipdeck/privacy-and-security) — neyin yerel kaldığı ve neyin ağı kullandığı

@@ -1,0 +1,107 @@
+---
+title: "Klavye ve fare kısayolları"
+description: "Her Snipdeck kısayolunun bağlama göre gruplanmış eksiksiz başvuru kaynağı: yakalama, ek açıklama düzenleyicisi, galeri ve daha fazlası."
+order: 1
+category: "reference"
+---
+
+Bu sayfa, Snipdeck için eksiksiz kısayol başvurusudur ve kısayolları kullandığınız yere göre gruplar: snip yakalama, ek açıklama ve kolaj düzenleyicileri ile galeri. Yakalama modelinin nedenini ve nasılını öğrenmek için [yakalama kısayolları kılavuzuna](/docs/snipdeck/capture-shortcuts) bakın; bu sayfa ise hızlı başvuru içindir.
+
+## Bu sayfa nasıl okunur
+
+Snipdeck'te üç tür kısayol vardır:
+
+- **Yakalama hareketleri** — basılı tutulan bir değiştirici tuş artı sol fare ile sürükleme. Bunlar, çizdiğiniz snip'e ne olacağını belirler.
+- **Genel kısayol tuşları** — Snipdeck odakta olmasa bile her yerde çalışan, yalnızca klavyeyle kullanılan kısayollar. Bunlar sistem genelinde kayıtlıdır ve yapılandırılabilir.
+- **Pencere içi kısayollar** — ek açıklama düzenleyicisi veya galeri gibi belirli bir Snipdeck penceresinin içinde çalışan tuşlar.
+
+Değiştirici tuşlar kod biçiminde yazılır: `Win`, `Ctrl`, `Shift`, `Alt`.
+
+## Yakalama (fare + değiştirici)
+
+Temel hareket, **`Win` tuşunu basılı tutup sol fare düğmesiyle bir bölge sürüklemektir.** Ortaya çıkan snip'e ne olacağını değiştirmek için değiştirici tuşlar ekleyin. Değiştiriciler sürüklemeden *önce ve sürükleme boyunca* basılı tutulmalıdır — Snipdeck, değiştirici durumunu sürüklemenin başladığı anda okur.
+
+| Kısayol | Yüzen snip | Pano | Galeriye eklenir |
+| --- | :---: | :---: | :---: |
+| `Win` + sürükle | Evet | — | Evet |
+| `Win`+`Ctrl` + sürükle | Evet | Evet | Evet |
+| `Win`+`Alt` + sürükle | — | Evet | — |
+| `Win`+`Shift` + sürükle | — | — | Evet |
+| `Win`+`Ctrl`+`Shift` + sürükle | — | Evet | Evet |
+
+> **Not:** `Win`+`Alt` + sürükle, snip'i galeriye eklemeyen **tek** kombinasyondur — "bu bölgeyi kopyala" amacıyla yapılan, kullan-at türünde bir yakalamadır.
+
+### Önce dondurarak yakalama
+
+| Kısayol | Ne yapar |
+| --- | --- |
+| `Win`+`Shift`+`Space`, ardından sürükle | Ekranı karartır ve **dondurur**, ardından durağan görüntü üzerinde seçim yapmanıza izin verir |
+
+Seçim yapmadan *önce* ekranı yakalayıp dondurmak için `Win`+`Shift`+`Space` tuşlarına basın; böylece yalnızca fareyle üzerine gelindiğinde görünen arayüz öğeleri — ipuçları, açılır menüler, menüler — imleciniz hareket etse bile yakalanmış kalır. Sonraki sol sürükleme, bölgeyi dondurulmuş görüntü üzerine çizer; bu sürükleme için `Win` tuşunu basılı tutmaya devam etmenize gerek yoktur.
+
+Matrisin ve önce dondurarak yakalamanın tam anlatımı için bkz. [Yakalama kısayolları](/docs/snipdeck/capture-shortcuts).
+
+## Genel kısayol tuşları
+
+`Win` + sürükle hareketlerine ek olarak Snipdeck, herhangi bir uygulamadan çalışan bir dizi sistem geneli klavye kısayol tuşu kaydeder. Bunlar yakalama matrisini ve görünürlük geçişini yansıtır; böylece Snipdeck'i fare basılı değiştiricileri olmadan kullanabilirsiniz.
+
+| Varsayılan kısayol tuşu | Eylem |
+| --- | --- |
+| `Ctrl`+`Shift`+`A` | Yeni snip (`Win` + sürükle gibi bir bölge yakalamasını hazırlar) |
+| `Ctrl`+`Shift`+`C` | Yeni snip ve panoya kopyala |
+| `Ctrl`+`Shift`+`X` | Yalnızca panoya yakalama (galeriye eklenmez) |
+| `Win`+`Alt`+`H` | Ekrandaki (yüzen) snip'lerin görünürlüğünü aç/kapat |
+| `Ctrl`+`Shift`+`G` | Galeri yakalaması (galeriye kaydedilir) |
+
+> **İpucu:** Bu genel kısayol tuşları yapılandırılabilir. Her biri `settings.json` içinde bir metin dizesi olarak saklanır (`hotkey_snip`, `hotkey_snip_clip`, `hotkey_clip_only`, `hotkey_toggle_visibility` ve `hotkey_gallery` anahtarları). Biçim, `+` ile birleştirilen değiştirici belirteçleri ve sonunda bir tuştan oluşur — örneğin `CtrlShift+A`, `WinAlt+H` veya `Ctrl+Alt+F12`. Tam tuş başvurusu için bkz. [Ayarlar](/docs/snipdeck/settings).
+
+Tanınan değiştirici belirteçler `Ctrl` (veya `Control`), `Shift`, `Alt` ve `Win`'dir (ayrıca `Super`, `Cmd` veya `Meta` olarak da kabul edilir). Tuşlar `A`–`Z` harfleri, `0`–`9` rakamları, `F1`–`F12` işlev tuşları ya da `Space`, `Enter`, `Delete`, `Insert`, `Home`, `End`, `PageUp`, `PageDown` ve `PrintScreen` gibi adlandırılmış tuşlar olabilir.
+
+## Sistem tepsisi
+
+Snipdeck, sistem tepsisinde yer alır. Yakalama hareketlerine klavyesiz bir alternatif olarak bilinmeye değer bir tepsi eylemi vardır.
+
+| Eylem | Ne yapar |
+| --- | --- |
+| Tepsi simgesi → **New Snip** (Yeni Snip) | `Win` tuşunu basılı tutmadan tek seferlik bir sürükleme yakalamasını hazırlar; sonraki sol sürükleme bir bölge yakalar, ardından hazır durumdan çıkar |
+
+## Galeri
+
+Bunlar ana Snipdeck penceresinde (galeride) çalışır.
+
+| Kısayol | Eylem |
+| --- | --- |
+| `Ctrl`+`F` | Arama kutusuna git |
+
+Galerinin altındaki durum çubuğu, bir hatırlatma olarak `Ctrl+F search` ifadesini gösterir. Arama kutusu odaklandıktan sonra, filtrelemek için yazın; tam metin arama OCR metnini, pencere meta verilerini, monitörü ve yolu kapsar. Filtre düğmeleri (Status, Content, Size, Date, Sort) ve arama kutusuna fareyle de erişilebilir — tam filtreleme modeli için bkz. [Galeri ve arama](/docs/snipdeck/gallery-and-search).
+
+> **Not:** Bir galeri küçük resmine (veya yüzen bir snip'e) sağ tıklamak; Kopyala, OCR, Ek Açıklama, Paylaş, Dönüştür, Kırp ve Sil eylemlerini içeren bağlam menüsünü açar. Bunlar klavye kısayolları yerine fareyle kullanılır.
+
+## Ek açıklama düzenleyicisi
+
+Düzenleyiciyi, herhangi bir snip'e sağ tıklayıp **Annotate** (Ek Açıklama) seçeneğini belirleyerek açın. Düzenleyicinin içinde şu tuşlar etkindir:
+
+| Kısayol | Eylem |
+| --- | --- |
+| `Esc` | Kaydetmeden iptal et ve düzenleyiciyi kapat |
+| `Ctrl`+`Z` | Son fırça darbesini geri al |
+| `Ctrl`+`Y` | Yinele |
+
+Aynı geri alma, yineleme ve temizleme eylemleri düzenleyicinin araç çubuğunda düğmeler olarak da bulunur. Araçlar, renk çarkı, boyut ve opaklık kaydırıcıları ile yakınlaştırma için bkz. [Ek açıklama düzenleyicisi](/docs/snipdeck/annotation-editor).
+
+## Kolaj düzenleyicisi
+
+Kolaj düzenleyicisi, birkaç snip'i tek bir görüntüde birleştirir.
+
+| Kısayol | Eylem |
+| --- | --- |
+| `Esc` | Kolaj düzenleyicisini iptal et ve kapat |
+
+Hücreleri düzenleme ve sonucu dışa aktarma için bkz. [Collage](/docs/snipdeck/collage) (Kolaj).
+
+## Ayrıca bakınız
+
+- [Yakalama kısayolları](/docs/snipdeck/capture-shortcuts) — yakalama matrisi ve önce dondurarak yakalama, ayrıntılı olarak açıklanmıştır.
+- [Ayarlar](/docs/snipdeck/settings) — genel kısayol tuşlarını ve diğer varsayılanları `settings.json` içinde değiştirin.
+- [Galeri ve arama](/docs/snipdeck/gallery-and-search) — snip'lerinizi arama ve filtreleme.
+- [Ek açıklama düzenleyicisi](/docs/snipdeck/annotation-editor) — geri al/yinele tuşlarının arkasındaki tam düzenleyici araç seti.

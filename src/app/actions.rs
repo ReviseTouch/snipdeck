@@ -185,6 +185,113 @@ impl AppState {
         self.refresh_gallery(window);
     }
 
+    /// Open the dynamic collage editor. It carries its own thumbnail picker, so
+    /// we just hand it the gallery's snips (most-recent first, capped) and let
+    /// the user pick which to combine; currently-floating snips start selected.
+    pub(crate) fn open_collage(&mut self, window: &MainWindow) {
+        const TRAY_CAP: usize = 80;
+        let mut sources: Vec<CollageSource> = Vec::new();
+        for s in self.gallery.snips.iter().take(TRAY_CAP) {
+            match s.ensure_thumbnail() {
+                Ok(thumb) => sources.push(CollageSource {
+                    id: s.id,
+                    thumb,
+                    path: s.image_path(),
+                }),
+                Err(e) => log::warn!("collage: skipping {} (thumbnail: {e})", s.id),
+            }
+        }
+        if sources.len() < 2 {
+            self.last_error = Some(t("Add at least two snips to make a collage."));
+            return;
+        }
+        let preselect: Vec<Uuid> = self
+            .gallery
+            .snips
+            .iter()
+            .filter(|s| self.floating.windows.contains_key(&s.id))
+            .map(|s| s.id)
+            .collect();
+        if let Err(e) = self.collage.open(sources, preselect, self.scale_factor) {
+            self.last_error = Some(t1("Failed to open collage: {e}", "{e}", &e.to_string()));
+        }
+        let _ = window; // the editor is its own window — nothing to refresh now
+    }
+
+    /// Commit a finished collage as a brand-new snip (image + thumbnail + DB),
+    /// then refresh the gallery so it appears at the top.
+    pub(crate) fn apply_collage(&mut self, image: image::RgbaImage, window: &MainWindow) {
+        let (w, h) = image.dimensions();
+        if w == 0 || h == 0 {
+            return;
+        }
+        let mut snip = make_snip(ScreenRect::new(0, 0, w, h));
+        snip.monitor_label = Some(t("Collage"));
+        if let Err(e) = snip.save_image_png(&image) {
+            self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
+            return;
+        }
+        self.gallery.push_new(snip);
+        let _ = self.gallery.save();
+        self.last_snip_ids = self.gallery.snips.iter().map(|s| s.id).collect();
+        self.refresh_gallery(window);
+    }
+
+    /// Open the About window — app info + a brand-level ReviseTouch funnel.
+    /// The ReviseTouch link (where the app is published) and the GitHub link are
+    /// public; the optional Support button's URL is injected at build time via
+    /// the `SNIPDECK_DONATE_URL` env var, so the donation link ships in the
+    /// binary ONLY and never appears in the public source.
+    pub(crate) fn show_about(&mut self, _window: &MainWindow) {
+        #[cfg(target_os = "windows")]
+        fn open_url(url: &str) {
+            use windows::core::{HSTRING, PCWSTR};
+            use windows::Win32::UI::Shell::ShellExecuteW;
+            use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+            let url = HSTRING::from(url);
+            let op = HSTRING::from("open");
+            unsafe {
+                let _ = ShellExecuteW(
+                    None,
+                    PCWSTR(op.as_ptr()),
+                    PCWSTR(url.as_ptr()),
+                    PCWSTR::null(),
+                    PCWSTR::null(),
+                    SW_SHOWNORMAL,
+                );
+            }
+        }
+        #[cfg(not(target_os = "windows"))]
+        fn open_url(_url: &str) {}
+
+        let w = match crate::AboutWindow::new() {
+            Ok(w) => w,
+            Err(e) => {
+                self.last_error = Some(t1("Failed to open window: {e}", "{e}", &e.to_string()));
+                return;
+            }
+        };
+        w.set_version(SharedString::from(env!("CARGO_PKG_VERSION")));
+        let donate = option_env!("SNIPDECK_DONATE_URL");
+        w.set_has_donate(donate.is_some());
+        w.on_open_revisetouch(|| open_url("https://revisetouch.com"));
+        w.on_open_github(|| open_url("https://github.com/hasantr/snipdeck"));
+        if let Some(url) = donate {
+            w.on_open_donate(move || open_url(url));
+        }
+        let weak = w.as_weak();
+        w.on_close(move || {
+            if let Some(c) = weak.upgrade() {
+                let _ = c.hide();
+            }
+        });
+        w.window()
+            .on_close_requested(|| slint::CloseRequestResponse::HideWindow);
+        w.window().set_size(slint::LogicalSize::new(480.0, 360.0));
+        let _ = w.show();
+        self.about = Some(w);
+    }
+
     /// Make sure `id` has an open floating window. Used by gallery-context-menu
     /// actions (Crop / Resize) that operate on the on-screen window — a no-op
     /// when the snip is already floating.

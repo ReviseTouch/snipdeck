@@ -1,0 +1,204 @@
+---
+title: "Gallery & search"
+description: "Browse, filter, sort, and full-text search every snip from a dense virtualized grid that stays smooth at thousands of captures."
+order: 6
+category: "features"
+---
+
+The gallery is Snipdeck's home workspace: a dense, virtualized grid of every snip you have captured, with full-text search over OCR text and window metadata, layered filters, sorting, and per-card actions. It stays smooth whether you have a dozen snips or several thousand.
+
+## The gallery workspace
+
+The main window is laid out top to bottom: a **toolbar** (capture and global actions), a **filter row** (filter pills, search, reset), the **grid** itself, and a **status bar** along the bottom with live counts.
+
+The grid is a responsive card layout. Snipdeck measures the available width and packs as many cards per row as fit, reflowing live as you resize the window. Each column is up to 240 pixels wide; cards flex down to a 130-pixel minimum during a resize so they squish rather than clip.
+
+> **Note:** The grid is **virtualized** — only the rows actually on screen are ever built, and each card decodes its thumbnail lazily the moment it scrolls into view. Decoded thumbnails are held in a bounded cache (up to 400), so memory stays flat no matter how many snips you have. This is what keeps the gallery responsive at thousands of snips.
+
+### Anatomy of a card
+
+Every card shows the snip's thumbnail over a theme-aware checkerboard backdrop (so letterboxed and transparent snips read clearly), plus a set of badges and metadata.
+
+| Element | Where | Meaning |
+| --- | --- | --- |
+| Thumbnail | Card top | The snip drawn at its true aspect ratio as a floating "sheet" with a drop shadow. |
+| `pinned` badge | Top-left | The snip is pinned and survives "Clear unpinned". |
+| `on screen` badge | Top-left | The snip currently has a [floating window](/en/docs/snipdeck/floating-snips) open. |
+| `OCR` badge | Top-left | OCR text has been indexed for this snip. |
+| `WIN` badge | Top-left | Window metadata (title, app, process) was captured. |
+| Size pill | Top-right | The snip's pixel dimensions, e.g. `1920×1080`. |
+| Dimensions | Card bottom | The same dimensions, in `px`. |
+| Date | Card bottom | The capture time, shown as `DD Mon HH:MM` in your local time zone. |
+| Source line | Card bottom | The monitor label, plus `· window` when window info was captured. |
+| Preview line | Card bottom | A `TAG`, `OCR`, or `WIN` chip with a one-line hint (see below). |
+
+The preview line summarizes what Snipdeck knows about the snip, in priority order:
+
+- **`TAG`** — if the snip has a label, the label text is shown.
+- **`OCR`** — otherwise, if OCR text was indexed, it reads "OCR text indexed".
+- **`WIN`** — otherwise, if window info was captured, it reads "Window info indexed".
+
+A card with none of these shows no preview line.
+
+## Search
+
+The search box lives in the filter row (and is focused by `Ctrl`+`F`). Its placeholder — **text / OCR / window / monitor / path** — is the list of fields it searches. Typing filters the grid live as you type; the **×** button (or clearing the field) resets it.
+
+Search is **full-text** and runs against the on-disk index, so it covers content that is not visible on the card. A single query is matched across all of these fields:
+
+| Field | Example match |
+| --- | --- |
+| OCR text | Words recognized inside the screenshot by [OCR](/en/docs/snipdeck/ocr). |
+| Label / tag | A label you have given the snip. |
+| Window title | The title bar text of the captured window. |
+| App name | The friendly application name. |
+| Process name | The executable's process name, e.g. `chrome`. |
+| Executable path | The full path to the capturing app's `.exe`. |
+| Monitor label | The monitor the snip came from. |
+| Dimensions | The `WxH` size string, e.g. `1920x1080`. |
+
+### How matching works
+
+Search is backed by SQLite. When you type, Snipdeck splits your query on non-alphanumeric characters into tokens and runs a **prefix, all-tokens** full-text query: every token must match as a prefix (`AND`-combined). So `inv rec` matches a snip whose OCR text contains both "invoice" and "receipt", in any order.
+
+> **Tip:** Because tokens are matched as prefixes, you can type partial words — `dash` finds "dashboard". Add more words to narrow the results; each word must appear somewhere in the snip's indexed text or metadata.
+
+If the full-text path is unavailable for a query, Snipdeck transparently falls back to a substring (`LIKE`) search across the same fields, and finally to an in-memory match over the labels, monitor, and dimensions of the loaded snips — so search always returns something rather than failing.
+
+> **Note:** OCR and window metadata are indexed **in the background** after a capture. A snip you just took may not match an OCR search until indexing finishes a moment later.
+
+## Filters
+
+Five filter pills sit in the filter row, before the search box. Each pill **cycles** through its options on every click; clicking past the last option returns it to **All**. A pill that is not on "All" is highlighted, and the [status bar](#status-bar-and-counts) shows how many snips currently pass the filters.
+
+All five filters and the search combine with **AND** — a snip must satisfy every active filter to appear.
+
+### Status
+
+Filters by the snip's pinned and on-screen state.
+
+| Value | Shows |
+| --- | --- |
+| All | Every snip (default). |
+| Pinned | Only pinned snips. |
+| Unpinned | Only snips that are not pinned. |
+| On screen | Only snips with a floating window currently open. |
+| Hidden | Only snips with no floating window open. |
+
+### Content
+
+Filters by what Snipdeck has indexed for the snip.
+
+| Value | Shows |
+| --- | --- |
+| All | Every snip (default). |
+| Has OCR | Snips with indexed OCR text. |
+| No OCR | Snips without OCR text. |
+| Has window | Snips with captured window metadata. |
+| No window | Snips without window metadata. |
+| Tagged | Snips that have a non-empty label. |
+
+### Size
+
+Filters by pixel area or aspect ratio.
+
+| Value | Rule |
+| --- | --- |
+| All | Every snip (default). |
+| Small | Under 250,000 pixels. |
+| Medium | Between 250,000 and 1,000,000 pixels. |
+| Large | 1,000,000 pixels or more. |
+| Wide | Width is more than 1.3× the height. |
+| Tall | Height is more than 1.3× the width. |
+| Square | The long side is no more than 1.2× the short side. |
+
+### Date
+
+Filters by capture time, relative to now.
+
+| Value | Shows |
+| --- | --- |
+| All | Every snip (default). |
+| Today | Captured today (your local calendar day). |
+| 24 hours | Captured in the last 24 hours. |
+| 7 days | Captured in the last 7 days. |
+| 30 days | Captured in the last 30 days. |
+
+### Sort
+
+The **Sort** pill controls the order of the grid. It cycles through eight modes:
+
+| Value | Order |
+| --- | --- |
+| Newest | Newest first (default). |
+| Oldest | Oldest first. |
+| Pinned | Pinned snips first, then newest. |
+| Largest | Biggest pixel area first. |
+| Smallest | Smallest pixel area first. |
+| Width | Widest first. |
+| Height | Tallest first. |
+| Monitor | Grouped by monitor label, then newest. |
+
+> **Tip:** The **Reset** button (with the reset icon, at the end of the filter row) clears the search box and returns every filter and the sort to its default in one click. It is highlighted whenever any filter, sort, or search is active.
+
+## Interacting with cards
+
+### Click to toggle floating
+
+Clicking a card **toggles its floating window**. If the snip is not currently on screen, clicking it opens its [floating snip](/en/docs/snipdeck/floating-snips); if it is already floating, clicking it hides it again. The `on screen` badge and the **On screen** count update to match.
+
+### Hover actions
+
+Hovering a card reveals a row of quick actions in the bottom-right of the thumbnail:
+
+| Icon | Action |
+| --- | --- |
+| Copy | Copy the snip image to the clipboard. |
+| Save | Save the snip to a file. |
+| Pin | Toggle the pinned state (the icon lights up when pinned). |
+| Trash | Delete the snip. |
+
+### Right-click for the full menu
+
+Right-clicking a card opens the full context menu — the same menu you get on a floating snip. It is the complete action set for a single snip:
+
+- **Copy** the image to the clipboard.
+- **OCR + Clipboard** — run [OCR](/en/docs/snipdeck/ocr) and copy the recognized text.
+- **OCR + Translate** — open the [translate popup](/en/docs/snipdeck/ocr-translate).
+- **Annotate** — open the [annotation editor](/en/docs/snipdeck/annotation-editor).
+- **Share** — Windows share sheet, **Mail** (MAPI attachment), open in the system **editor**, or **Upload** to an image host. See [Sharing and export](/en/docs/snipdeck/sharing-and-export).
+- **Transform** — rotate 90° / 180°, flip horizontal / vertical.
+- **Crop** and **Resize**.
+- **Hide from screen** / **Delete**.
+
+## Status bar and counts
+
+The status bar along the bottom of the window shows live counts and the on-disk size of your snips:
+
+| Field | Meaning |
+| --- | --- |
+| Total | Every snip in the gallery. |
+| Pinned | How many snips are pinned. |
+| On screen | How many floating windows are currently open. |
+| Filtered | How many snips pass the current filters and search — i.e. how many cards are showing. |
+| Storage size | The combined size of all snip image files on disk. |
+| `Ctrl+F search` | A reminder that `Ctrl`+`F` focuses the search box. |
+
+When no snips have been captured yet, the grid is replaced by an empty state prompting you to capture a region with `Win` + left mouse, and noting that OCR, window info, and filters are indexed in the background.
+
+## Toolbar actions
+
+The toolbar above the filter row holds capture and gallery-wide actions:
+
+- **New**, **Snip + Clip**, and **Clip only** — start a new capture (see [Capture & shortcuts](/en/docs/snipdeck/capture-shortcuts)).
+- **Collage** — open the [collage editor](/en/docs/snipdeck/collage).
+- **Show / hide on-screen snips** and **show / hide floating snips in the taskbar**.
+- **Clear unpinned** and **Clear all** — bulk-remove snips (pinned snips survive "Clear unpinned").
+- Theme toggle, the **language** globe menu, **launch at login**, and **About**.
+
+## See also
+
+- [Floating snips](/en/docs/snipdeck/floating-snips) — the always-on-top overlays a card click toggles.
+- [OCR](/en/docs/snipdeck/ocr) — how the text that powers search gets indexed.
+- [Sharing and export](/en/docs/snipdeck/sharing-and-export) — the Share submenu in the right-click menu.
+- [Keyboard shortcuts](/en/docs/snipdeck/keyboard-shortcuts) — including `Ctrl`+`F` for search.
