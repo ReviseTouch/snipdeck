@@ -78,6 +78,47 @@ pub fn focus_main_window() {
 #[cfg(not(target_os = "windows"))]
 pub fn focus_main_window() {}
 
+/// Whether the main window currently exists, is visible, and is NOT minimized
+/// — i.e. actually on screen. The timer compares this across ticks to detect
+/// the window reappearing (restored from the taskbar / tray / Start-menu
+/// minimize) so it can kick a repaint.
+#[cfg(target_os = "windows")]
+pub fn is_main_window_shown() -> bool {
+    use windows::core::{w, PCWSTR};
+    use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, IsIconic, IsWindowVisible};
+    unsafe {
+        match FindWindowW(PCWSTR::null(), w!("Snipdeck")) {
+            Ok(hwnd) if !hwnd.0.is_null() => {
+                IsWindowVisible(hwnd).as_bool() && !IsIconic(hwnd).as_bool()
+            }
+            _ => false,
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn is_main_window_shown() -> bool {
+    true
+}
+
+/// Trim the process working set when the window is hidden/minimized so RAM
+/// drops while Snipdeck sits in the tray. The pages move to the standby list
+/// rather than being discarded, so bringing the window back is fast (served
+/// from standby, not re-read from disk). The 8ms timer keeps running for snip
+/// capture, so the set only grows back as far as each tick actually touches —
+/// the gallery thumbnails and render buffers stay parked while hidden.
+#[cfg(target_os = "windows")]
+pub fn trim_working_set() {
+    use windows::Win32::System::Threading::{GetCurrentProcess, SetProcessWorkingSetSize};
+    // Both sizes (SIZE_T)-1 tells Windows to trim the working set to the minimum.
+    unsafe {
+        let _ = SetProcessWorkingSetSize(GetCurrentProcess(), usize::MAX, usize::MAX);
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn trim_working_set() {}
+
 /// Remove the tray icon from outside the tray thread. Used on the
 /// "restart elevated" path, where the process exits via `quit_event_loop`
 /// (which never reaches the tray thread's own cleanup) so the icon would

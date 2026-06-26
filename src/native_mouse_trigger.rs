@@ -26,8 +26,8 @@ mod imp {
     use crossbeam_channel::Sender;
     use windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, WPARAM};
     use windows::Win32::UI::Input::KeyboardAndMouse::{
-        GetAsyncKeyState, SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
-        KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_CONTROL, VK_ESCAPE, VK_F23, VK_LCONTROL, VK_LMENU,
+        GetAsyncKeyState, SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT,
+        KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_CONTROL, VK_ESCAPE, VK_LCONTROL, VK_LMENU,
         VK_LSHIFT, VK_LWIN, VK_MENU, VK_RCONTROL, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SHIFT, VK_SPACE,
     };
     use windows::Win32::UI::WindowsAndMessaging::{
@@ -358,9 +358,9 @@ mod imp {
         // events. Do not synthesize Win/Ctrl/Alt/Shift KEYUP here:
         // doing so can prevent Windows from delivering the later real
         // physical Win-up, leaving our physical state stuck down.
-        // The F23 tap is only a menu-mask so releasing Win after a snip
+        // The disguise tap is only a menu-mask so releasing Win after a snip
         // does not open Start.
-        let inputs = [key_input(VK_F23.0, false), key_input(VK_F23.0, true)];
+        let inputs = [disguise_input(false), disguise_input(true)];
         unsafe {
             SendInput(&inputs, std::mem::size_of::<INPUT>() as i32);
         }
@@ -375,19 +375,24 @@ mod imp {
     }
 
     fn inject_menu_mask_win() {
-        let inputs = [key_input(VK_F23.0, false), key_input(VK_F23.0, true)];
-        unsafe {
-            SendInput(&inputs, std::mem::size_of::<INPUT>() as i32);
-        }
+        let inputs = [disguise_input(false), disguise_input(true)];
+        let sent = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
+        log::info!("Win-key disguise injected (native); SendInput sent {sent}/2");
     }
 
-    fn key_input(vk: u16, up: bool) -> INPUT {
+    /// A disguise-key tap so a lone Win release after a snip can't open the
+    /// Start menu. The key is OS-specific (F23 on Win11, Left-Ctrl on Win10) —
+    /// see `crate::mouse_trigger::disguise_vk_scan`. SYNTHETIC_EXTRA_INFO + the
+    /// injected flag keep our own hook from mistaking it for physical input.
+    fn disguise_input(up: bool) -> INPUT {
+        use windows::Win32::UI::Input::KeyboardAndMouse::KEYBD_EVENT_FLAGS;
+        let (vk, scan) = crate::mouse_trigger::disguise_vk_scan();
         INPUT {
             r#type: INPUT_KEYBOARD,
             Anonymous: INPUT_0 {
                 ki: KEYBDINPUT {
                     wVk: VIRTUAL_KEY(vk),
-                    wScan: 0,
+                    wScan: scan,
                     dwFlags: if up {
                         KEYEVENTF_KEYUP
                     } else {

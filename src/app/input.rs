@@ -1,5 +1,5 @@
 use super::*;
-use crate::i18n::{t, t1};
+use crate::i18n::t1;
 
 impl AppState {
     pub(crate) fn handle_action(&mut self, action: Action, window: &MainWindow) {
@@ -8,13 +8,31 @@ impl AppState {
                 to_clip,
                 keep_float,
             } => {
-                // Button-triggered snip: not yet wired in stage 1 — needs
-                // a click-and-drag overlay mode independent of the Win+
-                // LMouse hook. For now, surface a hint.
-                let _ = (to_clip, keep_float);
-                self.last_error = Some(t(
-                    "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse.",
-                ));
+                // Arm a one-shot region drag, exactly like the capture hotkeys
+                // and the tray's "New Snip": the next left-button drag starts a
+                // snip with NO modifier held. `armed_routing` makes that drag
+                // route its result the way the matching Win+drag combo would.
+                self.armed_routing = Some((to_clip, keep_float));
+                crate::mouse_trigger::arm_snip();
+                // Hide Snipdeck's own window so it's neither captured in the
+                // shot nor in the way of the region the user wants to grab. We
+                // bring it back once the snip finishes (Release) or is cancelled
+                // (Esc) — see `restore_main_after_snip` / `pending_show_main`.
+                let _ = window.hide();
+                self.restore_main_after_snip = true;
+                // Clear any stale banner so the old "not wired up" hint (or a
+                // previous error) doesn't linger over the armed snip.
+                self.last_error = None;
+            }
+            Action::PickColor => {
+                // Start the eyedropper: hide our window so it's out of the way,
+                // arm the hook + show the magnifier loupe. The next click grabs
+                // the pixel (ColorPick event); Esc cancels. The main window comes
+                // back via `pending_show_main` once the pick finishes/cancels.
+                self.color_picker.begin();
+                let _ = window.hide();
+                self.color_pick_hid_main = true;
+                self.last_error = None;
             }
             Action::ToggleFloatingInTaskbar => {
                 self.settings.floating_in_taskbar = !self.settings.floating_in_taskbar;
@@ -374,7 +392,14 @@ impl AppState {
                 if let Some(mut sel) = self.active.take() {
                     sel.end = (x, y);
                     self.overlay.hide();
-                    // Mask the Win key (Win+F23) so a lone Win press can't
+                    // A toolbar-button snip hid the main window; bring it back
+                    // now the drag is done — set before any early-return below
+                    // (region-too-small / save-failed) so it always restores.
+                    if self.restore_main_after_snip {
+                        self.restore_main_after_snip = false;
+                        self.pending_show_main = true;
+                    }
+                    // Mask the Win key (Ctrl tap) so a lone Win press can't
                     // open the Start menu — but keep any modifier the user
                     // is still physically holding. That's what lets you hold
                     // Win and drag several times to take snips back-to-back.
@@ -441,12 +466,35 @@ impl AppState {
                     }
                 }
             }
+            MouseTriggerEvent::ColorPick { x, y } => {
+                // The eyedropper click landed: grab the pixel, copy the HEX, show
+                // the result popup, and (only if we hid it) bring the main window
+                // back. A context-menu-triggered pick leaves the window as-is.
+                self.color_picker.finish(x, y);
+                if std::mem::take(&mut self.color_pick_hid_main) {
+                    self.pending_show_main = true;
+                }
+            }
             MouseTriggerEvent::Cancel => {
+                // Esc during colour-pick: dismiss the loupe and restore the window.
+                if self.color_picker.is_active() {
+                    self.color_picker.cancel();
+                    if std::mem::take(&mut self.color_pick_hid_main) {
+                        self.pending_show_main = true;
+                    }
+                    return;
+                }
                 self.active = None;
                 self.frozen_pending = None;
                 crate::mouse_trigger::clear_freeze();
                 self.overlay.hide();
                 crate::mouse_trigger::force_release_modifiers();
+                // A toolbar-button snip hid the main window; the user cancelled
+                // (Esc), so bring it back rather than leaving it hidden.
+                if self.restore_main_after_snip {
+                    self.restore_main_after_snip = false;
+                    self.pending_show_main = true;
+                }
             }
         }
     }

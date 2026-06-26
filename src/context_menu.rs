@@ -31,6 +31,7 @@ pub enum ContextAction {
     Upload = 15,
     ShowApp = 16,
     Annotate = 17,
+    PickColor = 18,
 }
 
 impl ContextAction {
@@ -54,6 +55,7 @@ impl ContextAction {
             15 => Self::Upload,
             16 => Self::ShowApp,
             17 => Self::Annotate,
+            18 => Self::PickColor,
             _ => return None,
         })
     }

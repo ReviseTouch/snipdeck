@@ -5,10 +5,12 @@ import { TranslatePopupWindow, TransLang } from "translate_popup.slint";
 import { AnnotateWindow, AnnoShape } from "annotate.slint";
 import { CollageWindow, CollageCell, TrayItem } from "collage.slint";
 import { AboutWindow } from "about.slint";
+import { LoupeWindow } from "loupe.slint";
+import { ColorResultWindow } from "color_result.slint";
 import { Glyph } from "icons.slint";
 import { ListView, ScrollView } from "std-widgets.slint";
 
-export { FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape, CollageWindow, CollageCell, TrayItem, AboutWindow }
+export { FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape, CollageWindow, CollageCell, TrayItem, AboutWindow, LoupeWindow, ColorResultWindow }
 
 // Singleton holding the currently-hovered element's tooltip text + where to
 // show it (window coords). MainWindow draws ONE overlay box from this, on top
@@ -471,6 +473,7 @@ export component MainWindow inherits Window {
     callback new-snip-clip();
     callback new-snip-clip-only();
     callback collage-create();
+    callback pick-color();
     callback toggle-all-visibility();
     callback toggle-floating-in-taskbar();
     callback clear-unpinned();
@@ -552,6 +555,7 @@ export component MainWindow inherits Window {
                 ToolbarButton { icon: "copy"; label: @tr("Snip + Clip"); dark: root.dark-theme; tooltip: @tr("Take a snip and copy it to the clipboard"); width: 112px; clicked => { root.new-snip-clip(); } }
                 ToolbarButton { icon: "clipboard"; label: @tr("Clip only"); dark: root.dark-theme; tooltip: @tr("Copy to the clipboard only (without saving to the gallery)"); width: 98px; clicked => { root.new-snip-clip-only(); } }
                 ToolbarButton { icon: "layers"; label: @tr("Collage"); dark: root.dark-theme; tooltip: @tr("Combine several snips into one collage"); width: 96px; clicked => { root.collage-create(); } }
+                ToolbarButton { icon: "wand"; label: @tr("Pick color"); dark: root.dark-theme; tooltip: @tr("Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"); width: 104px; clicked => { root.pick-color(); } }
 
                 Rectangle { width: 1px; background: root.c-divider; }
 
@@ -1132,7 +1136,11 @@ export component MainWindow inherits Window {
                 Rectangle { width: 1px; height: 14px; background: root.c-divider; }
                 Text { text: @tr("Ctrl+F search"); color: root.c-fg4; font-family: "Consolas"; font-size: 10px; vertical-alignment: center; }
             }
+            // Top divider between the gallery and the status bar. Anchored to
+            // y:0 — without it Slint centres this 1px line vertically, so it cut
+            // straight across the middle of the status text.
             Rectangle {
+                y: 0;
                 width: parent.width;
                 height: 1px;
                 background: root.c-divider;

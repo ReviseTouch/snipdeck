@@ -31,7 +31,10 @@ component MenuItem inherits Rectangle {
     in property <color> icon-color: #8a8782;
     in property <bool> stub: false;
     in property <bool> danger: false;
+    // One-line description shown in the menu's bottom strip while hovered.
+    in property <string> tip: "";
     callback clicked();
+    callback hovered(string);
 
     height: 28px;
     border-radius: 4px;
@@ -84,6 +87,9 @@ component MenuItem inherits Rectangle {
     }
 
     ta := TouchArea {
+        changed has-hover => {
+            if (self.has-hover && root.tip != "") { root.hovered(root.tip); }
+        }
         clicked => { root.clicked(); }
     }
 }
@@ -96,7 +102,10 @@ component TransformBtn inherits Rectangle {
     // the share row overrides them (e.g. WhatsApp green).
     in property <color> tint: #b8b6b1;
     in property <color> tint-hover: #e8e6e2;
+    // One-line description shown in the menu's bottom strip while hovered.
+    in property <string> tip: "";
     callback clicked();
+    callback hovered(string);
 
     height: 30px;
     min-width: 34px;
@@ -123,6 +132,9 @@ component TransformBtn inherits Rectangle {
     }
 
     ta := TouchArea {
+        changed has-hover => {
+            if (self.has-hover && root.tip != "") { root.hovered(root.tip); }
+        }
         clicked => { root.clicked(); }
     }
 }
@@ -138,10 +150,14 @@ export component ContextMenuWindow inherits Window {
 
     // "Show Snipdeck" is shown only for a floating snip's menu, not the gallery.
     in property <bool> show-app-item: true;
+    // Description of the item the mouse is currently over, shown in the bottom
+    // strip so every action — especially the icon-only Share/Transform buttons —
+    // says what it does on hover.
+    property <string> current-tip: "";
 
     width: 220px;
-    // +20px over the item stack for the close-button header row.
-    height: root.show-app-item ? 388px : 358px;
+    // Item stack + 20px header row + ~44px hover-description strip.
+    height: root.show-app-item ? 460px : 430px;
 
     Rectangle {
         width: parent.width;
@@ -186,24 +202,40 @@ export component ContextMenuWindow inherits Window {
                 icon: "copy";
                 label: @tr("Copy");
                 hint: "img";
+                tip: @tr("Copy the snip image to the clipboard");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(2); }
             }
             MenuItem {
                 icon: "ocr";
                 label: @tr("OCR + Clipboard");
                 hint: "Win OCR";
+                tip: @tr("Read the text in the image and copy it");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(4); }
             }
             MenuItem {
                 icon: "translate";
                 label: @tr("OCR + Translate");
                 hint: @tr("translate");
+                tip: @tr("Read the text, then translate it");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(11); }
+            }
+            MenuItem {
+                icon: "wand";
+                label: @tr("Pick color");
+                hint: @tr("eyedropper");
+                tip: @tr("Pick a color from this snip with the magnifier");
+                hovered(t) => { root.current-tip = t; }
+                clicked => { root.picked(18); }
             }
             if root.show-app-item : Rectangle { height: 1px; background: #262626; }
             if root.show-app-item : MenuItem {
                 icon: "window";
                 label: @tr("Show Snipdeck");
+                tip: @tr("Open the main Snipdeck window");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(16); }
             }
             Rectangle {
@@ -225,13 +257,33 @@ export component ContextMenuWindow inherits Window {
                 padding-right: 6px;
                 spacing: 2px;
                 // Windows share sheet (Mail/WhatsApp/Telegram… all appear there).
-                TransformBtn { icon: "share"; clicked => { root.picked(12); } }
+                TransformBtn {
+                    icon: "share";
+                    tip: @tr("Share via the Windows share sheet");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(12); }
+                }
                 // Direct mail compose with the snip attached (MAPI).
-                TransformBtn { icon: "mail"; clicked => { root.picked(13); } }
+                TransformBtn {
+                    icon: "mail";
+                    tip: @tr("New email with the snip attached");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(13); }
+                }
                 // Open in the system image editor (Paint).
-                TransformBtn { icon: "brush"; clicked => { root.picked(14); } }
-                // Upload to Imgur (anonymous); the resulting link is copied.
-                TransformBtn { icon: "upload"; clicked => { root.picked(15); } }
+                TransformBtn {
+                    icon: "brush";
+                    tip: @tr("Open in the system image editor");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(14); }
+                }
+                // Upload to an image host; the resulting link is copied.
+                TransformBtn {
+                    icon: "upload";
+                    tip: @tr("Upload to an image host, copy the link");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(15); }
+                }
             }
             Rectangle {
                 height: 22px;
@@ -251,35 +303,68 @@ export component ContextMenuWindow inherits Window {
                 padding-left: 6px;
                 padding-right: 6px;
                 spacing: 2px;
-                TransformBtn { icon: "reset"; clicked => { root.picked(5); } }
-                TransformBtn { icon: "rotate-cw"; clicked => { root.picked(6); } }
-                TransformBtn { text: "180°"; clicked => { root.picked(7); } }
-                TransformBtn { icon: "flip-h"; clicked => { root.picked(8); } }
-                TransformBtn { icon: "flip-v"; clicked => { root.picked(9); } }
+                TransformBtn {
+                    icon: "reset";
+                    tip: @tr("Rotate 90° left");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(5); }
+                }
+                TransformBtn {
+                    icon: "rotate-cw";
+                    tip: @tr("Rotate 90° right");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(6); }
+                }
+                TransformBtn {
+                    text: "180°";
+                    tip: @tr("Rotate 180°");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(7); }
+                }
+                TransformBtn {
+                    icon: "flip-h";
+                    tip: @tr("Flip horizontally");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(8); }
+                }
+                TransformBtn {
+                    icon: "flip-v";
+                    tip: @tr("Flip vertically");
+                    hovered(t) => { root.current-tip = t; }
+                    clicked => { root.picked(9); }
+                }
             }
             Rectangle { height: 1px; background: #262626; }
             MenuItem {
                 icon: "pencil";
                 label: @tr("Annotate");
                 hint: @tr("draw");
+                tip: @tr("Draw and mark up the snip");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(17); }
             }
             MenuItem {
                 icon: "crop";
                 label: @tr("Crop");
                 hint: @tr("drag inward");
+                tip: @tr("Crop by dragging the edges inward");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(10); }
             }
             MenuItem {
                 icon: "resize";
                 label: @tr("Resize");
                 hint: @tr("handles");
+                tip: @tr("Resize with the corner handles");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(3); }
             }
             MenuItem {
                 icon: "eye-off";
                 label: @tr("Hide from screen");
                 hint: @tr("hide");
+                tip: @tr("Hide from screen (stays in the gallery)");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(0); }
             }
             Rectangle { height: 1px; background: #262626; }
@@ -288,7 +373,31 @@ export component ContextMenuWindow inherits Window {
                 label: @tr("Delete");
                 hint: @tr("remove");
                 danger: true;
+                tip: @tr("Delete the snip permanently");
+                hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(1); }
+            }
+
+            // Hover-description strip: shows what the hovered item does. Keeps
+            // every action — especially the icon-only Share/Transform buttons —
+            // self-explanatory without cluttering each row.
+            Rectangle { height: 1px; background: #262626; }
+            Rectangle {
+                height: 40px;
+                HorizontalLayout {
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    padding-top: 5px;
+                    Text {
+                        text: root.current-tip != "" ? root.current-tip
+                            : @tr("Hover an item to see what it does");
+                        color: root.current-tip != "" ? #c8c6c2 : #6e6b66;
+                        font-size: 10px;
+                        wrap: word-wrap;
+                        horizontal-stretch: 1;
+                        vertical-alignment: top;
+                    }
+                }
             }
         }
     }

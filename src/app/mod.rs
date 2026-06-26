@@ -63,6 +63,8 @@ pub struct AppState {
     pub translate_popup: TranslatePopup,
     pub annotate: Annotator,
     pub collage: Collager,
+    /// Eyedropper tool: magnifier loupe + picked-colour result popup.
+    color_picker: crate::loupe::ColorPicker,
     /// The About window, kept alive while open (recreated each time it's shown).
     about: Option<AboutWindow>,
 
@@ -75,6 +77,17 @@ pub struct AppState {
     /// when the drag begins. Expired by a watchdog so a stale frozen frame
     /// (~33 MB for a 4K monitor) can't linger or get reused by a later snip.
     frozen_pending: Option<(std::time::Instant, CapturedScreen)>,
+    /// A toolbar-button snip hid the main window so it stays out of the shot;
+    /// once that snip finishes or is cancelled we bring the window back. Set by
+    /// `Action::NewSnip`, consumed on the matching Release/Cancel.
+    restore_main_after_snip: bool,
+    /// Set the instant a button-armed snip ends, asking the tick loop (which
+    /// has the `MainWindow`) to re-show it — `handle_mouse_event` has no window.
+    pending_show_main: bool,
+    /// True when the colour picker hid the main window (toolbar trigger), so we
+    /// know to bring it back when the pick finishes. The context-menu trigger
+    /// leaves the window as-is, so it stays false there.
+    color_pick_hid_main: bool,
     last_error: Option<String>,
     hotkey_error: Option<String>,
 
@@ -156,10 +169,14 @@ impl AppState {
             translate_popup: TranslatePopup::new(),
             annotate: Annotator::new(),
             collage: Collager::new(),
+            color_picker: crate::loupe::ColorPicker::new(),
             about: None,
             active: None,
             armed_routing: None,
             frozen_pending: None,
+            restore_main_after_snip: false,
+            pending_show_main: false,
+            color_pick_hid_main: false,
             last_error: None,
             hotkey_error,
             thumb_cache: std::collections::HashMap::new(),
@@ -228,6 +245,8 @@ impl AppState {
         });
         let p = pending.clone();
         window.on_collage_create(move || p.borrow_mut().push(Action::OpenCollage));
+        let p = pending.clone();
+        window.on_pick_color(move || p.borrow_mut().push(Action::PickColor));
         let p = pending.clone();
         window.on_toggle_all_visibility(move || p.borrow_mut().push(Action::ToggleAllVisibility));
         let p = pending.clone();
@@ -339,6 +358,20 @@ impl AppState {
         let had_events = !events.is_empty();
         for ev in events {
             self.handle_mouse_event(ev);
+        }
+
+        // Colour picker: while active, refresh the magnifier loupe every tick
+        // (sample the desktop around the cursor, reposition the loupe).
+        if self.color_picker.is_active() {
+            self.color_picker.update();
+        }
+
+        // A toolbar-button snip (or the colour picker) hides the main window
+        // during the drag; `handle_mouse_event` (no `MainWindow` in scope) flags
+        // the finish, and we re-show it here once the action completes/cancels.
+        if std::mem::take(&mut self.pending_show_main) {
+            let _ = window.show();
+            crate::tray::focus_main_window();
         }
 
         // Watchdog: a freeze-first arm (Win+Shift+Space) the user pressed then
@@ -593,6 +626,7 @@ fn cursor_screen_pos() -> Option<(i32, i32)> {
 #[derive(Debug)]
 pub(crate) enum Action {
     NewSnip { to_clip: bool, keep_float: bool },
+    PickColor,
     ToggleAllVisibility,
     ToggleFloatingInTaskbar,
     ClearUnpinned,

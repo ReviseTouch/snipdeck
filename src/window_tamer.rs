@@ -89,12 +89,12 @@ mod imp {
     use windows::Win32::UI::WindowsAndMessaging::{
         DispatchMessageW, EnumWindows, GetClassNameW, GetForegroundWindow, GetWindow,
         GetWindowLongPtrW, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
-        PeekMessageW,
-        SetWindowDisplayAffinity, SetWindowLongPtrW, SetWindowPos, TranslateMessage,
+        IsWindowVisible, PeekMessageW,
+        SetWindowDisplayAffinity, SetWindowLongPtrW, SetWindowPos, ShowWindow, TranslateMessage,
         EVENT_OBJECT_CREATE, GWL_EXSTYLE, GWL_HWNDPARENT, GWL_STYLE, GW_OWNER, HWND_TOPMOST, MSG,
         PM_REMOVE, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE,
-        SWP_NOZORDER, WDA_EXCLUDEFROMCAPTURE, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS,
-        WS_CAPTION, WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+        SWP_NOZORDER, SW_HIDE, SW_SHOWNA, WDA_EXCLUDEFROMCAPTURE, WINEVENT_OUTOFCONTEXT,
+        WINEVENT_SKIPOWNPROCESS, WS_CAPTION, WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
     };
 
     const SWEEP_INTERVAL: Duration = Duration::from_millis(16);
@@ -234,12 +234,30 @@ mod imp {
         } else {
             (current_ex | toolwin | noactivate) & !appwin
         };
-        if desired_ex != current_ex {
+        let ex_changed = desired_ex != current_ex;
+        if ex_changed {
             let _ = SetWindowLongPtrW(hwnd, GWL_EXSTYLE, desired_ex);
             changed_shell_visibility = true;
+            log::info!(
+                "configure_floating: in_taskbar={in_taskbar} visible={} ex {current_ex:#x} -> {desired_ex:#x} (toolwindow now {})",
+                IsWindowVisible(hwnd).as_bool(),
+                desired_ex & toolwin != 0,
+            );
         }
 
         if changed_shell_visibility {
+            // SetWindowLongPtr(EXSTYLE) + SWP_FRAMECHANGED is NOT enough to make
+            // the shell ADD or DROP a taskbar button once the window has been
+            // shown: Windows only re-reads WS_EX_TOOLWINDOW / WS_EX_APPWINDOW
+            // when a window transitions hidden -> shown. So when the exstyle
+            // actually changed on an already-visible window, bounce it
+            // hidden -> shown (no-activate, so focus is untouched) to force the
+            // taskbar to re-evaluate. Without this the toolwindow flag is set
+            // but the taskbar button lingers — the regression we were chasing.
+            if ex_changed && IsWindowVisible(hwnd).as_bool() {
+                let _ = ShowWindow(hwnd, SW_HIDE);
+                let _ = ShowWindow(hwnd, SW_SHOWNA);
+            }
             let _ = SetWindowPos(
                 hwnd,
                 HWND_TOPMOST,
@@ -326,8 +344,11 @@ mod imp {
         let title = window_title(hwnd);
         let is_main_window = title == "Snipdeck";
         let is_floating_window = title == "SnipdeckFloating";
-        let is_owned_aux_window =
-            is_floating_window || title == "SnipdeckContextMenu" || title == "SnipdeckOverlay";
+        let is_owned_aux_window = is_floating_window
+            || title == "SnipdeckContextMenu"
+            || title == "SnipdeckOverlay"
+            || title == "SnipdeckLoupe"
+            || title == "SnipdeckColorResult";
         if needs_transition_tame {
             let main_now = MAIN_HWND.load(std::sync::atomic::Ordering::Relaxed);
             log::info!(

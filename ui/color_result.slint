@@ -1,0 +1,123 @@
+// Result popup for the colour picker: a swatch + the HEX and RGB strings, each
+// with a copy button. The HEX is also copied to the clipboard automatically the
+// moment a colour is picked (Rust side), so this is for review / re-copy.
+
+import { Glyph } from "icons.slint";
+
+component CopyRow inherits Rectangle {
+    in property <string> value: "";
+    callback clicked();
+
+    height: 30px;
+    border-radius: 5px;
+    background: ta.has-hover ? #2a2a2a : #232323;
+    border-width: 1px;
+    border-color: #333333;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 8px;
+        spacing: 8px;
+        Text {
+            text: root.value;
+            color: #e8e6e2;
+            font-size: 13px;
+            font-family: "Consolas";
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+        }
+        Rectangle {
+            width: 22px;
+            Glyph {
+                name: "copy";
+                paint: ta.has-hover ? #ffffff : #8a8782;
+                size: 14px;
+                weight: 1.7px;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+            }
+        }
+    }
+
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+export component ColorResultWindow inherits Window {
+    title: "SnipdeckColorResult";
+    no-frame: true;
+    always-on-top: true;
+    background: transparent;
+
+    in property <string> hex: "#000000";
+    in property <string> rgb: "rgb(0, 0, 0)";
+    in property <color> swatch: #000000;
+
+    callback copy-hex();
+    callback copy-rgb();
+    callback dismissed();
+
+    width: 250px;
+    height: 156px;
+
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #1c1c1c;
+        border-radius: 10px;
+        border-width: 1px;
+        border-color: #3a3a3a;
+
+        VerticalLayout {
+            padding: 10px;
+            spacing: 8px;
+
+            HorizontalLayout {
+                height: 44px;
+                spacing: 10px;
+                Rectangle {
+                    width: 44px;
+                    border-radius: 6px;
+                    background: root.swatch;
+                    border-width: 1px;
+                    border-color: #00000088;
+                }
+                Text {
+                    text: @tr("Picked color");
+                    color: #e8e6e2;
+                    font-size: 13px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                }
+                Rectangle {
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 4px;
+                    background: close-ta.has-hover ? #2a2a2a : transparent;
+                    Glyph {
+                        name: "x";
+                        paint: close-ta.has-hover ? #e8e6e2 : #8a8782;
+                        size: 13px;
+                        weight: 1.7px;
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                    }
+                    close-ta := TouchArea {
+                        clicked => { root.dismissed(); }
+                    }
+                }
+            }
+
+            CopyRow {
+                value: root.hex;
+                clicked => { root.copy-hex(); }
+            }
+            CopyRow {
+                value: root.rgb;
+                clicked => { root.copy-rgb(); }
+            }
+        }
+    }
+}

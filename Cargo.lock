@@ -4915,7 +4915,7 @@ dependencies = [
 
 [[package]]
 name = "snipdeck"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ab_glyph",
  "anyhow",
@@ -4925,6 +4925,7 @@ dependencies = [
  "dirs",
  "env_logger",
  "global-hotkey",
+ "i-slint-backend-winit",
  "ico",
  "image",
  "log",

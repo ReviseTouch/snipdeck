@@ -6,15 +6,18 @@ mod autostart;
 mod capture;
 mod clipboard;
 mod collage;
+mod color;
 mod context_menu;
 mod dxgi_capture;
 mod elevate;
 mod floating;
 mod hotkeys;
 mod i18n;
+mod loupe;
 mod mouse_trigger;
 mod native_mouse_trigger;
 mod ocr;
+mod os;
 mod paths;
 mod settings;
 mod share;
@@ -44,16 +47,43 @@ fn bump_process_priority() {
 fn bump_process_priority() {}
 
 fn main() -> Result<(), slint::PlatformError> {
-    // Force Slint's software renderer rather than the default femtovg
-    // (OpenGL) one. femtovg gives us the prettier renderer but its
-    // window-level transparency depends on per-GPU DWM behaviour — on
-    // multi-monitor setups with different adapters the overlay window
-    // ends up fully opaque on the primary monitor while transparent on
-    // a secondary. Software rendering goes through DWM's standard
-    // composition path and behaves identically on every monitor.
+    // Install the winit backend with the SOFTWARE renderer EXPLICITLY via
+    // set_platform, rather than selecting it with the SLINT_BACKEND env var.
+    // Two reasons:
     //
-    // The UI is static (no animations / video / 3D) so the perf hit
-    // is invisible while RAM drops because no GL context is created.
+    //   1. Software rendering (not femtovg/OpenGL): the transparent capture
+    //      overlay must composite identically across multi-monitor / mixed-GPU
+    //      setups. OpenGL window transparency is per-adapter DWM-dependent —
+    //      the overlay came up opaque on the primary monitor and transparent
+    //      on a secondary. Software rendering goes through DWM's standard
+    //      composition path and behaves identically on every monitor. The UI
+    //      is static (no animation/video/3D) so the perf hit is invisible and
+    //      RAM drops because no GL context is created.
+    //
+    //   2. set_platform — NOT the env var — is what unlocks the
+    //      WinitWindowAccessor API (on_winit_window_event / winit_window). We
+    //      need it to force a fresh frame on restore: the software renderer
+    //      otherwise wakes blank because a timer-driven request_redraw isn't
+    //      serviced until a real winit window event arrives. The default
+    //      selector would pick the same backend, but the external API stays
+    //      inaccessible unless we set the platform ourselves.
+    #[cfg(target_os = "windows")]
+    {
+        match i_slint_backend_winit::Backend::new_with_renderer_by_name(Some("software")) {
+            Ok(backend) => match slint::platform::set_platform(Box::new(backend)) {
+                Ok(()) => log::info!("winit-software backend installed via set_platform"),
+                Err(e) => {
+                    log::warn!("set_platform failed ({e:?}); falling back to env-var backend");
+                    std::env::set_var("SLINT_BACKEND", "winit-software");
+                }
+            },
+            Err(e) => {
+                log::warn!("winit-software backend init failed ({e:?}); falling back to env var");
+                std::env::set_var("SLINT_BACKEND", "winit-software");
+            }
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
     std::env::set_var("SLINT_BACKEND", "winit-software");
 
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
@@ -120,6 +150,41 @@ fn main() -> Result<(), slint::PlatformError> {
         .window()
         .on_close_requested(|| slint::CloseRequestResponse::HideWindow);
 
+    // The Slint software renderer can wake from minimize/restore (or tray
+    // hide/show) with a blank or stale frame: a redraw requested from our
+    // 8ms timer only sets a flag and isn't serviced until a *real* window
+    // event arrives — which is exactly why hovering the mouse "fixes" it.
+    // Hook the actual winit events instead and request the redraw from inside
+    // the event loop's own dispatch, so a fresh frame is painted immediately
+    // on restore. The hook is installed from spawn_local AFTER winit_window()
+    // resolves, because the WinitWindowAccessor API only attaches once the
+    // native window exists (and only because we installed the backend via
+    // set_platform above). Mirrors RustWailsChat's lifecycle redraw hook.
+    #[cfg(target_os = "windows")]
+    {
+        let weak_redraw = main_window.as_weak();
+        let _ = slint::spawn_local(async move {
+            use i_slint_backend_winit::winit::event::WindowEvent;
+            use i_slint_backend_winit::{EventResult, WinitWindowAccessor};
+            let Some(w) = weak_redraw.upgrade() else { return };
+            if w.window().winit_window().await.is_err() {
+                log::warn!("winit_window().await failed; restore-redraw hook not installed");
+                return;
+            }
+            w.window().on_winit_window_event(|win, ev| {
+                match ev {
+                    WindowEvent::Focused(true)
+                    | WindowEvent::Resized(_)
+                    | WindowEvent::Occluded(false) => {
+                        win.request_redraw();
+                    }
+                    _ => {}
+                }
+                EventResult::Propagate
+            });
+        });
+    }
+
     let mut state = app::AppState::new(&main_window);
     state.wire_callbacks(&main_window);
     state.refresh_gallery(&main_window);
@@ -161,12 +226,54 @@ fn main() -> Result<(), slint::PlatformError> {
     // bar / Alt-Tab entry, so set it natively once the HWND exists. Retried
     // each tick until the window is found, then latched off.
     let mut window_icon_set = false;
+    // Tracks whether the main window was on screen last tick, so we can release
+    // RAM to the standby list the moment it drops to the tray. (The blank-frame
+    // redraw on restore is handled by the winit event hook above, not here.)
+    let mut prev_shown = false;
     timer.start(
         slint::TimerMode::Repeated,
         std::time::Duration::from_millis(8),
         move || {
             if !window_icon_set {
                 window_icon_set = tray::set_main_window_icon();
+            }
+
+            // When the window drops to the tray / is minimized, release RAM to
+            // the standby list so it costs little while parked yet comes back
+            // fast. The blank-frame redraw on restore is handled by the winit
+            // event hook (Focused/Resized/Occluded) set up before the loop — a
+            // request_redraw from this timer isn't serviced until a real window
+            // event arrives, which is why it used to wake blank until hover.
+            #[cfg(target_os = "windows")]
+            {
+                let now_shown = tray::is_main_window_shown();
+                if now_shown && !prev_shown {
+                    // Restored from tray/minimize. On Windows the winit-software
+                    // renderer presents via GDI gated on WM_PAINT, which winit
+                    // drops for a plain request_redraw OR a raw SetWindowPos. The
+                    // only thing that forces a fresh present is a size change
+                    // routed THROUGH Slint (so its redraw path observes it) and
+                    // split across two event-loop iterations so winit registers
+                    // two distinct sizes: grow 1px now, restore on the next tick.
+                    // (Slint #8592 / #8823 — software renderer blank-on-restore.)
+                    if let Some(window) = weak.upgrade() {
+                        let s = window.window().size();
+                        log::info!("restore detected -> set_size toggle {}x{}", s.width, s.height);
+                        window
+                            .window()
+                            .set_size(slint::PhysicalSize::new(s.width + 1, s.height));
+                        let weak_restore = window.as_weak();
+                        slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+                            if let Some(w) = weak_restore.upgrade() {
+                                w.window().set_size(s);
+                            }
+                        });
+                    }
+                }
+                if !now_shown && prev_shown {
+                    tray::trim_working_set();
+                }
+                prev_shown = now_shown;
             }
             while let Ok(cmd) = tray_rx.try_recv() {
                 match cmd {

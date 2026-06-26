@@ -145,6 +145,13 @@ impl AppState {
                     }
                 }
             }
+            ContextAction::PickColor => {
+                // Same eyedropper as the toolbar, launched from the snip menu.
+                // The snip is on screen, so the screen loupe samples its pixels.
+                // We don't touch the main window here (context menus run on a
+                // floating snip), so `color_pick_hid_main` stays false.
+                self.color_picker.begin();
+            }
         }
     }
 
