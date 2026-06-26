@@ -57,11 +57,19 @@ fn capture_monitor(m: xcap::Monitor, idx: usize) -> anyhow::Result<CapturedScree
     let cx = x + (w / 2) as i32;
     let cy = y + (h / 2) as i32;
     let image = match crate::dxgi_capture::capture_monitor_at(cx, cy) {
-        Some(img) => {
+        // A real desktop is never fully black (the taskbar/chrome alone has
+        // non-black pixels), so an all-black DXGI frame means duplication handed
+        // us an empty / metadata-only frame; don't ship it, fall through to GDI
+        // (which has its own black-retry, `capture_image_robust`). Applies on
+        // both Windows 10 and 11 — the empty-first-frame race happens on both.
+        Some(img) if !is_blank_black(&img) => {
             log::info!("capture path: DXGI Desktop Duplication");
             fit_to(img, w, h)
         }
-        None => {
+        other => {
+            if other.is_some() {
+                log::warn!("DXGI frame came back fully black; falling back to GDI");
+            }
             log::info!("capture path: GDI (xcap)");
             capture_image_robust(&m).context("capturing screen")?
         }

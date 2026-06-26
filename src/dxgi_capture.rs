@@ -43,7 +43,9 @@ mod imp {
         D3D11_CPU_ACCESS_READ, D3D11_CREATE_DEVICE_FLAG, D3D11_MAPPED_SUBRESOURCE, D3D11_MAP_READ,
         D3D11_SDK_VERSION, D3D11_TEXTURE2D_DESC, D3D11_USAGE_STAGING,
     };
-    use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_B8G8R8A8_UNORM;
+    use windows::Win32::Graphics::Dxgi::Common::{
+        DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_R16G16B16A16_FLOAT,
+    };
     use windows::Win32::Graphics::Dxgi::{
         CreateDXGIFactory1, IDXGIAdapter1, IDXGIFactory1, IDXGIOutput1, IDXGIOutputDuplication,
         IDXGIResource, DXGI_ERROR_WAIT_TIMEOUT, DXGI_OUTDUPL_FRAME_INFO,
@@ -99,26 +101,41 @@ mod imp {
         let dup: IDXGIOutputDuplication =
             output1.DuplicateOutput(&device).context("DuplicateOutput")?;
 
-        // Acquire the current frame. The first call after duplication usually
-        // returns the desktop immediately, but can report WAIT_TIMEOUT if
-        // nothing changed yet — retry briefly (the user just moved/clicked,
-        // so a frame is almost always available at once). Bounded so a
-        // pathologically static screen falls back to GDI instead of hanging.
+        // Acquire a frame that actually carries a DESKTOP present.
+        //
+        // The first AcquireNextFrame after a fresh DuplicateOutput frequently
+        // hands back an EMPTY surface (all zeros, LastPresentTime == 0) — the
+        // duplication hasn't been populated by a real present yet. Copying that
+        // gives a fully black snip (confirmed: centre pixel read back 00 00…).
+        // Pointer/metadata-only updates (cursor moved, nothing else) are empty
+        // the same way. So discard any frame with LastPresentTime == 0 and keep
+        // acquiring until a real present lands or we hit the deadline. Bounded
+        // by wall-clock (not attempt count) because metadata frames return
+        // instantly and would otherwise burn the retries in microseconds. If no
+        // present arrives (a truly static desktop), bail to the GDI fallback.
         let mut frame_info = DXGI_OUTDUPL_FRAME_INFO::default();
         let mut resource: Option<IDXGIResource> = None;
         let mut acquired = false;
-        for _ in 0..4 {
-            match dup.AcquireNextFrame(150, &mut frame_info, &mut resource) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(300);
+        while std::time::Instant::now() < deadline {
+            // Release a metadata-only frame from the previous iteration before
+            // re-acquiring, or AcquireNextFrame returns DXGI_ERROR_INVALID_CALL.
+            if resource.take().is_some() {
+                let _ = dup.ReleaseFrame();
+            }
+            match dup.AcquireNextFrame(50, &mut frame_info, &mut resource) {
                 Ok(()) => {
-                    acquired = true;
-                    break;
+                    if frame_info.LastPresentTime != 0 {
+                        acquired = true;
+                        break;
+                    }
                 }
                 Err(e) if e.code() == DXGI_ERROR_WAIT_TIMEOUT => continue,
                 Err(e) => return Err(e).context("AcquireNextFrame"),
             }
         }
         if !acquired {
-            return Err(anyhow!("AcquireNextFrame kept timing out"));
+            return Err(anyhow!("no desktop present within deadline (only empty/metadata frames)"));
         }
         let resource = resource.ok_or_else(|| anyhow!("null desktop resource"))?;
         let frame_tex: ID3D11Texture2D = resource.cast().context("frame as texture")?;
@@ -126,7 +143,14 @@ mod imp {
         let mut tex_desc = D3D11_TEXTURE2D_DESC::default();
         frame_tex.GetDesc(&mut tex_desc);
 
-        if tex_desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM {
+        // Accept the two formats the desktop duplication actually hands us:
+        //   - B8G8R8A8_UNORM: the standard SDR desktop.
+        //   - R16G16B16A16_FLOAT: an HDR desktop (scRGB, linear FP16). When HDR
+        //     is ON, EVERY frame is this format — rejecting it sent us to the GDI
+        //     fallback, which captures GPU/HDR windows as BLACK. We tone-map it
+        //     to SDR 8-bit below instead.
+        let is_hdr = tex_desc.Format == DXGI_FORMAT_R16G16B16A16_FLOAT;
+        if tex_desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM && !is_hdr {
             let _ = dup.ReleaseFrame();
             return Err(anyhow!("unsupported DXGI format {:?}", tex_desc.Format));
         }
@@ -163,16 +187,34 @@ mod imp {
 
         let mut buf = vec![0u8; width * height * 4];
         for y in 0..height {
-            let row = std::slice::from_raw_parts(src.add(y * row_pitch), width * 4);
             let dst = &mut buf[y * width * 4..(y + 1) * width * 4];
-            // BGRA -> RGBA; force opaque alpha (duplication alpha is undefined).
-            for x in 0..width {
-                let s = &row[x * 4..x * 4 + 4];
-                let d = &mut dst[x * 4..x * 4 + 4];
-                d[0] = s[2];
-                d[1] = s[1];
-                d[2] = s[0];
-                d[3] = 255;
+            let row_ptr = src.add(y * row_pitch);
+            if is_hdr {
+                // scRGB FP16: 8 bytes/pixel (4 halfs), linear, 1.0 = SDR white.
+                // Tone-map to sRGB 8-bit (clip HDR highlights / wide gamut).
+                let row = std::slice::from_raw_parts(row_ptr, width * 8);
+                for x in 0..width {
+                    let p = &row[x * 8..x * 8 + 8];
+                    let r = half_to_f32(u16::from_le_bytes([p[0], p[1]]));
+                    let g = half_to_f32(u16::from_le_bytes([p[2], p[3]]));
+                    let b = half_to_f32(u16::from_le_bytes([p[4], p[5]]));
+                    let d = &mut dst[x * 4..x * 4 + 4];
+                    d[0] = linear_to_srgb8(r);
+                    d[1] = linear_to_srgb8(g);
+                    d[2] = linear_to_srgb8(b);
+                    d[3] = 255;
+                }
+            } else {
+                // B8G8R8A8_UNORM -> RGBA; opaque alpha (duplication alpha is undefined).
+                let row = std::slice::from_raw_parts(row_ptr, width * 4);
+                for x in 0..width {
+                    let s = &row[x * 4..x * 4 + 4];
+                    let d = &mut dst[x * 4..x * 4 + 4];
+                    d[0] = s[2];
+                    d[1] = s[1];
+                    d[2] = s[0];
+                    d[3] = 255;
+                }
             }
         }
 
@@ -181,5 +223,43 @@ mod imp {
 
         RgbaImage::from_raw(width as u32, height as u32, buf)
             .ok_or_else(|| anyhow!("RgbaImage::from_raw failed"))
+    }
+
+    /// IEEE-754 binary16 (half) -> f32. Used to read scRGB FP16 HDR frames.
+    fn half_to_f32(h: u16) -> f32 {
+        let sign = (h >> 15) & 1;
+        let exp = (h >> 10) & 0x1f;
+        let mant = h & 0x3ff;
+        let v = if exp == 0 {
+            // Subnormal (or zero).
+            (mant as f32) * 2f32.powi(-24)
+        } else if exp == 0x1f {
+            // Inf / NaN — treat as a large finite value; it'll clamp to white.
+            if mant == 0 {
+                65504.0
+            } else {
+                0.0
+            }
+        } else {
+            (1.0 + (mant as f32) / 1024.0) * 2f32.powi(exp as i32 - 15)
+        };
+        if sign == 1 {
+            -v
+        } else {
+            v
+        }
+    }
+
+    /// Linear scRGB component (1.0 = SDR white) -> 8-bit sRGB. Clips HDR
+    /// highlights (>1) to white and wide-gamut negatives to black, then applies
+    /// the sRGB transfer curve — a plain SDR tone-map of the HDR desktop.
+    fn linear_to_srgb8(v: f32) -> u8 {
+        let v = v.clamp(0.0, 1.0);
+        let s = if v <= 0.0031308 {
+            v * 12.92
+        } else {
+            1.055 * v.powf(1.0 / 2.4) - 0.055
+        };
+        (s * 255.0 + 0.5).clamp(0.0, 255.0) as u8
     }
 }
