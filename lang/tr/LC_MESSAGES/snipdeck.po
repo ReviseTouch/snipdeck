@@ -455,3 +455,127 @@ msgstr "çiz"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "Küçük resim boyutu — Küçük / Orta / Büyük"
+
+#. ── Collage editor ──
+msgid "Collage"
+msgstr "Kolaj"
+
+msgid "Combine several snips into one collage"
+msgstr "Birkaç snip'i tek bir kolajda birleştir"
+
+msgid "Add at least two snips to make a collage."
+msgstr "Kolaj yapmak için en az iki snip ekleyin."
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "Kolaj oluşturmak için aşağıdaki tepsiden görüntü seçin"
+
+msgid "Gap"
+msgstr "Boşluk"
+
+msgid "Round"
+msgstr "Yuvarlaklık"
+
+msgid "Failed to open collage: {e}"
+msgstr "Kolaj açılamadı: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "Pencere açılamadı: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "Görüntü okunamadı: {e}"
+
+#. ── About window ──
+msgid "About Snipdeck"
+msgstr "Snipdeck Hakkında"
+
+msgid "A fast, free, open-source screen-snipping deck for Windows."
+msgstr "Windows için hızlı, ücretsiz, açık kaynaklı bir ekran kırpma destesi."
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "ReviseTouch tarafından yapıldı — geliştirici araçları ve yapay zekâ ürünleri geliştiriyoruz."
+
+msgid "Visit ReviseTouch"
+msgstr "ReviseTouch'ı ziyaret et"
+
+msgid "Support"
+msgstr "Destek"
+
+msgid "Version"
+msgstr "Sürüm"
+
+msgid "Run as administrator"
+msgstr "Yönetici olarak çalıştır"
+
+#. ── Color picker (eyedropper) ──
+msgid "Pick color"
+msgstr "Renk seç"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "Ekranda herhangi bir yerden renk seç — imleci bir büyüteç izler, yakalamak için tıkla"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "Büyüteçle bu snip'ten bir renk seç"
+
+msgid "Picked color"
+msgstr "Seçilen renk"
+
+msgid "eyedropper"
+msgstr "damlalık"
+
+#. ── Context-menu hover descriptions ──
+msgid "Hover an item to see what it does"
+msgstr "Ne yaptığını görmek için bir öğenin üzerine gelin"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "Snip görüntüsünü panoya kopyala"
+
+msgid "Read the text in the image and copy it"
+msgstr "Görüntüdeki metni tanı ve kopyala"
+
+msgid "Read the text, then translate it"
+msgstr "Metni tanı, sonra çevir"
+
+msgid "Open the main Snipdeck window"
+msgstr "Ana Snipdeck penceresini aç"
+
+msgid "Share via the Windows share sheet"
+msgstr "Windows paylaşım sayfasıyla paylaş"
+
+msgid "New email with the snip attached"
+msgstr "Snip ekli yeni e-posta"
+
+msgid "Open in the system image editor"
+msgstr "Sistem görüntü düzenleyicisinde aç"
+
+msgid "Upload to an image host, copy the link"
+msgstr "Görüntü barındırıcısına yükle, bağlantıyı kopyala"
+
+msgid "Rotate 90° left"
+msgstr "90° sola döndür"
+
+msgid "Rotate 90° right"
+msgstr "90° sağa döndür"
+
+msgid "Rotate 180°"
+msgstr "180° döndür"
+
+msgid "Flip horizontally"
+msgstr "Yatay çevir"
+
+msgid "Flip vertically"
+msgstr "Dikey çevir"
+
+msgid "Draw and mark up the snip"
+msgstr "Snip üzerine çiz ve işaretle"
+
+msgid "Crop by dragging the edges inward"
+msgstr "Kenarları içeri sürükleyerek kırp"
+
+msgid "Resize with the corner handles"
+msgstr "Köşe tutamaçlarıyla yeniden boyutlandır"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "Ekrandan gizle (galeride kalır)"
+
+msgid "Delete the snip permanently"
+msgstr "Snip'i kalıcı olarak sil"
