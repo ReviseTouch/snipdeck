@@ -14,25 +14,13 @@
 //! single `upload` entry point so other hosts (0x0, a custom / self-hosted
 //! endpoint, cloud storage) can slot in later without touching the call site.
 
-#[cfg(target_os = "windows")]
 pub fn upload(img: &image::RgbaImage, service: &str, client_id: &str) -> anyhow::Result<()> {
-    win::upload(img, service, client_id)
+    imp::upload(img, service, client_id)
 }
 
-#[cfg(not(target_os = "windows"))]
-pub fn upload(_img: &image::RgbaImage, _service: &str, _client_id: &str) -> anyhow::Result<()> {
-    anyhow::bail!("upload is only supported on Windows")
-}
-
-#[cfg(target_os = "windows")]
-mod win {
+mod imp {
     use anyhow::{anyhow, Context, Result};
     use std::time::Duration;
-    use windows::core::{HSTRING, PCWSTR};
-    use windows::Win32::UI::WindowsAndMessaging::{
-        MessageBoxW, IDOK, MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OK, MB_OKCANCEL,
-        MB_SETFOREGROUND, MB_TOPMOST, MESSAGEBOX_STYLE,
-    };
 
     /// Imgur anonymous image-upload endpoint.
     const IMGUR_ENDPOINT: &str = "https://api.imgur.com/3/image";
@@ -234,14 +222,14 @@ mod win {
                 url,
             )
         };
-        message_box(&body, &crate::i18n::t("Snipdeck — Upload"), MB_ICONINFORMATION);
+        message_box(&body, &crate::i18n::t("Snipdeck — Upload"), Level::Info);
     }
 
     fn notify_err(err: &str) {
         message_box(
             &crate::i18n::t1("Upload failed:\r\n{err}", "{err}", err),
             &crate::i18n::t("Snipdeck — Upload"),
-            MB_ICONERROR,
+            Level::Error,
         );
     }
 
@@ -263,7 +251,7 @@ mod win {
         message_box(
             &body,
             &crate::i18n::t("Snipdeck — Imgur Client-ID required"),
-            MB_ICONINFORMATION,
+            Level::Info,
         );
     }
 
@@ -295,8 +283,20 @@ mod win {
         confirm_box(&body, &crate::i18n::t("Snipdeck — Upload to the internet"))
     }
 
+    /// Severity of a notice, mapped to each platform's own icon/level.
+    #[derive(Clone, Copy)]
+    enum Level {
+        Info,
+        Error,
+    }
+
     /// Topmost OK/Cancel confirmation. Returns true on OK.
+    #[cfg(target_os = "windows")]
     fn confirm_box(body: &str, caption: &str) -> bool {
+        use windows::core::{HSTRING, PCWSTR};
+        use windows::Win32::UI::WindowsAndMessaging::{
+            MessageBoxW, IDOK, MB_ICONWARNING, MB_OKCANCEL, MB_SETFOREGROUND, MB_TOPMOST,
+        };
         let text = HSTRING::from(body);
         let caption = HSTRING::from(caption);
         let ret = unsafe {
@@ -310,10 +310,35 @@ mod win {
         ret == IDOK
     }
 
+    /// Consent prompt off Windows. Anything other than an explicit OK — Cancel,
+    /// a closed window, or a desktop with no dialog backend at all — must read
+    /// as "do not upload", so this compares against Ok rather than negating.
+    #[cfg(not(target_os = "windows"))]
+    fn confirm_box(body: &str, caption: &str) -> bool {
+        matches!(
+            rfd::MessageDialog::new()
+                .set_level(rfd::MessageLevel::Warning)
+                .set_title(caption)
+                .set_description(body)
+                .set_buttons(rfd::MessageButtons::OkCancel)
+                .show(),
+            rfd::MessageDialogResult::Ok
+        )
+    }
+
     /// A topmost message box so the result is seen even when the gallery window
     /// is hidden (the upload finishes on a worker thread, possibly long after
     /// the user moved on).
-    fn message_box(body: &str, caption: &str, icon: MESSAGEBOX_STYLE) {
+    #[cfg(target_os = "windows")]
+    fn message_box(body: &str, caption: &str, level: Level) {
+        use windows::core::{HSTRING, PCWSTR};
+        use windows::Win32::UI::WindowsAndMessaging::{
+            MessageBoxW, MB_ICONERROR, MB_ICONINFORMATION, MB_OK, MB_SETFOREGROUND, MB_TOPMOST,
+        };
+        let icon = match level {
+            Level::Info => MB_ICONINFORMATION,
+            Level::Error => MB_ICONERROR,
+        };
         let text = HSTRING::from(body);
         let caption = HSTRING::from(caption);
         unsafe {
@@ -324,5 +349,18 @@ mod win {
                 MB_OK | icon | MB_SETFOREGROUND | MB_TOPMOST,
             );
         }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    fn message_box(body: &str, caption: &str, level: Level) {
+        rfd::MessageDialog::new()
+            .set_level(match level {
+                Level::Info => rfd::MessageLevel::Info,
+                Level::Error => rfd::MessageLevel::Error,
+            })
+            .set_title(caption)
+            .set_description(body)
+            .set_buttons(rfd::MessageButtons::Ok)
+            .show();
     }
 }

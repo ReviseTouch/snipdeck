@@ -28,17 +28,58 @@ pub fn open_in_editor(img: &image::RgbaImage) -> anyhow::Result<()> {
     win::open_in_editor(img)
 }
 
+/// The Windows share sheet has no portable counterpart — xdg-desktop-portal's
+/// share interface needs a D-Bus round trip we don't ship. Mail and "open in
+/// editor" below cover the cases that matter in practice.
 #[cfg(not(target_os = "windows"))]
 pub fn share_system(_img: &image::RgbaImage) -> anyhow::Result<()> {
-    anyhow::bail!("sharing is only supported on Windows")
+    anyhow::bail!("the system share sheet is Windows-only — use Mail or Save instead")
 }
+
 #[cfg(not(target_os = "windows"))]
-pub fn share_mail(_img: &image::RgbaImage) -> anyhow::Result<()> {
-    anyhow::bail!("sharing is only supported on Windows")
+pub fn share_mail(img: &image::RgbaImage) -> anyhow::Result<()> {
+    unix::spawn_with("xdg-email", &["--attach"], img)
 }
+
 #[cfg(not(target_os = "windows"))]
-pub fn open_in_editor(_img: &image::RgbaImage) -> anyhow::Result<()> {
-    anyhow::bail!("only supported on Windows")
+pub fn open_in_editor(img: &image::RgbaImage) -> anyhow::Result<()> {
+    unix::spawn_with("xdg-open", &[], img)
+}
+
+/// Off Windows both paths reduce to "write a PNG, hand the path to an
+/// xdg-utils helper". The helper resolves the user's actual mail client /
+/// image viewer, so we don't have to guess at desktop environments.
+#[cfg(not(target_os = "windows"))]
+mod unix {
+    use anyhow::{Context, Result};
+    use std::path::PathBuf;
+    use std::process::Command;
+
+    /// The spawned helper reads the file asynchronously — often after we
+    /// return — so the PNG is deliberately left in the temp dir for the OS
+    /// to reap rather than deleted here. Named per process + snip size so
+    /// two shares in flight can't clobber each other's file.
+    fn temp_png(img: &image::RgbaImage) -> Result<PathBuf> {
+        let path = std::env::temp_dir().join(format!(
+            "snipdeck-share-{}-{}x{}.png",
+            std::process::id(),
+            img.width(),
+            img.height()
+        ));
+        img.save_with_format(&path, image::ImageFormat::Png)
+            .with_context(|| format!("writing {} to share", path.display()))?;
+        Ok(path)
+    }
+
+    pub fn spawn_with(program: &str, args: &[&str], img: &image::RgbaImage) -> Result<()> {
+        let path = temp_png(img)?;
+        Command::new(program)
+            .args(args)
+            .arg(&path)
+            .spawn()
+            .with_context(|| format!("could not run {program} — install xdg-utils"))?;
+        Ok(())
+    }
 }
 
 #[cfg(target_os = "windows")]

@@ -269,6 +269,9 @@ fn main() -> Result<(), slint::PlatformError> {
     // Tracks whether the main window was on screen last iteration, so we can
     // release RAM to the standby list the moment it drops to the tray. (The
     // blank-frame redraw on restore is handled by the winit event hook above.)
+    // Windows-only: both the standby-list trim and the blank-on-restore fix
+    // it drives are Win32 concerns.
+    #[cfg(target_os = "windows")]
     let prev_shown = std::cell::Cell::new(false);
     pump::install(std::time::Duration::from_millis(8), move || {
         // `active` reports whether this iteration wants the pump to keep

@@ -7,10 +7,12 @@ name: Build & Release
 # Public repositories get GitHub-hosted runners for FREE with no monthly minute
 # cap, so this costs nothing for an open-source project.
 #
-# NOTE: Linux/macOS are intentionally NOT built here. The code has cfg
-# fallbacks for them, but "compiles" is not "works" — those platforms must be
-# verified by hand on a real machine before any binary is published. Add a
-# matrix back once they're actually tested.
+# NOTE: Linux is COMPILE-CHECKED below but deliberately NOT published. The
+# platform now has real implementations (overlay-driven selection, tray via
+# tray-icon, tesseract OCR, xdg-utils sharing) rather than empty stubs, so a
+# build job catches breakage early — but "compiles" is still not "works".
+# No Linux binary ships until the runtime paths are verified by hand on a real
+# desktop session. macOS remains unbuilt: its OCR backend is still a stub.
 on:
   push:
     branches: [main]
@@ -66,3 +68,33 @@ jobs:
         with:
           files: dist/snipdeck-windows-x64.exe
           fail_on_unmatched_files: true
+
+  # Compile check only — no artifact upload, nothing attached to a Release.
+  # Its job is to catch a Windows-only change that breaks the Linux cfg paths.
+  linux:
+    name: Linux x64 (compile check)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + build
+        uses: Swatinem/rust-cache@v2
+
+      # GTK: rfd dialogs + tray-icon. xcb/xrandr: xcap screen capture.
+      # xkbcommon/wayland: the winit backend. appindicator: the tray host.
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-3-dev \
+            libxcb1-dev libxcb-render0-dev libxcb-shape0-dev \
+            libxcb-xfixes0-dev libxcb-randr0-dev libxrandr-dev \
+            libxkbcommon-dev libwayland-dev \
+            libayatana-appindicator3-dev
+
+      - name: Build (release)
+        run: cargo build --release

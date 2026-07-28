@@ -10,7 +10,11 @@
 //! Implemented natively (no extra crate) via `Shell_NotifyIconW` + a hidden
 //! message window on its own thread, mirroring `native_mouse_trigger`.
 
-use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::Receiver;
+// Only the Windows path keeps a Sender at module scope (in `TRAY_TX`); the
+// Linux tray owns its own inside `linux`.
+#[cfg(target_os = "windows")]
+use crossbeam_channel::Sender;
 
 #[derive(Debug, Clone, Copy)]
 pub enum TrayCommand {
@@ -50,7 +54,11 @@ pub fn start() -> TrayService {
             std::thread::spawn(|| unsafe { win::run() });
         }
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "linux")]
+    {
+        std::thread::spawn(move || linux::run(tx));
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "linux")))]
     {
         let _ = tx;
     }
@@ -157,6 +165,119 @@ pub fn set_main_window_icon() -> bool {
 #[cfg(not(target_os = "windows"))]
 pub fn set_main_window_icon() -> bool {
     true
+}
+
+/// Linux tray, via `tray-icon` (StatusNotifierItem / AppIndicator).
+///
+/// Unlike the Windows side — a hand-rolled `Shell_NotifyIconW` message window
+/// — this needs GTK: the icon must be created on a thread where `gtk::init`
+/// ran, and a GTK main loop has to service it. Both live on this thread, so
+/// the app's Slint/winit loop is untouched.
+///
+/// Every failure path here degrades to "no tray" rather than killing the
+/// thread's caller: on a desktop with no StatusNotifierHost (a stock GNOME
+/// without the AppIndicator extension) the rest of the app still works.
+#[cfg(target_os = "linux")]
+mod linux {
+    use super::TrayCommand;
+    use crossbeam_channel::Sender;
+    use tray_icon::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem};
+    use tray_icon::{Icon, TrayIconBuilder};
+
+    /// Pre-decoded 32x32 RGBA — the same buffer the Windows tray icon uses,
+    /// so both platforms show the identical glyph with no image decoding.
+    const ICON_RGBA: &[u8] = include_bytes!("../assets/tray_32.rgba");
+    const ICON_SIDE: u32 = 32;
+
+    pub fn run(tx: Sender<TrayCommand>) {
+        if let Err(err) = gtk::init() {
+            log::warn!("tray disabled: GTK init failed ({err})");
+            return;
+        }
+
+        let menu = Menu::new();
+        let show = MenuItem::new(crate::i18n::t("Show Snipdeck"), true, None);
+        let new_snip = MenuItem::new(crate::i18n::t("New Snip"), true, None);
+        // Reflects the current state at build time; the menu is rebuilt only
+        // on restart, same as the Windows menu's check mark.
+        let autostart = CheckMenuItem::new(
+            crate::i18n::t("Launch at Login"),
+            true,
+            crate::autostart::is_enabled(),
+            None,
+        );
+        let exit = MenuItem::new(crate::i18n::t("Exit"), true, None);
+        // "Run as administrator" is deliberately absent: the elevated relaunch
+        // is a Windows/UAC concept (see elevate.rs), not a Linux one.
+        if let Err(err) = menu.append_items(&[
+            &show,
+            &new_snip,
+            &PredefinedMenuItem::separator(),
+            &autostart,
+            &PredefinedMenuItem::separator(),
+            &exit,
+        ]) {
+            log::warn!("tray disabled: menu build failed ({err})");
+            return;
+        }
+
+        let icon = match Icon::from_rgba(ICON_RGBA.to_vec(), ICON_SIDE, ICON_SIDE) {
+            Ok(icon) => icon,
+            Err(err) => {
+                log::warn!("tray disabled: icon rejected ({err})");
+                return;
+            }
+        };
+
+        // Held for the lifetime of the GTK loop below — dropping it removes
+        // the icon from the panel.
+        let _tray = match TrayIconBuilder::new()
+            .with_menu(Box::new(menu))
+            .with_tooltip("Snipdeck")
+            .with_icon(icon)
+            .build()
+        {
+            Ok(tray) => tray,
+            Err(err) => {
+                log::warn!("tray unavailable ({err}) — continuing without one");
+                return;
+            }
+        };
+
+        let (show_id, new_id, autostart_id, exit_id) = (
+            show.id().clone(),
+            new_snip.id().clone(),
+            autostart.id().clone(),
+            exit.id().clone(),
+        );
+
+        // Clicks land on tray-icon's own global channel. Forward them onto the
+        // service channel from inside the GTK loop, then wake the pump — it
+        // parks the main thread when idle and would otherwise not drain these
+        // until some unrelated event woke it (see pump.rs).
+        gtk::glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
+            while let Ok(event) = MenuEvent::receiver().try_recv() {
+                let cmd = if event.id == show_id {
+                    Some(TrayCommand::Show)
+                } else if event.id == new_id {
+                    Some(TrayCommand::NewSnip)
+                } else if event.id == autostart_id {
+                    Some(TrayCommand::ToggleAutostart)
+                } else if event.id == exit_id {
+                    Some(TrayCommand::Exit)
+                } else {
+                    None
+                };
+                if let Some(cmd) = cmd {
+                    let _ = tx.send(cmd);
+                    crate::pump::wake();
+                }
+            }
+            gtk::glib::ControlFlow::Continue
+        });
+
+        gtk::main();
+    }
 }
 
 #[cfg(target_os = "windows")]

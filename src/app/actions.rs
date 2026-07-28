@@ -269,7 +269,19 @@ impl AppState {
             }
         }
         #[cfg(not(target_os = "windows"))]
-        fn open_url(_url: &str) {}
+        fn open_url(url: &str) {
+            // `xdg-open` on Linux/BSD, `open` on macOS. Fire-and-forget: a
+            // desktop with no handler registered simply opens nothing, which
+            // is no worse than the no-op this replaced.
+            let opener = if cfg!(target_os = "macos") {
+                "open"
+            } else {
+                "xdg-open"
+            };
+            if let Err(err) = std::process::Command::new(opener).arg(url).spawn() {
+                log::warn!("could not open {url} via {opener}: {err}");
+            }
+        }
 
         let w = match crate::AboutWindow::new() {
             Ok(w) => w,

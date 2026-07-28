@@ -86,6 +86,19 @@ windows = { version = "0.58", features = [
     "Storage_Streams",
 ] }
 
+# Unix-only: `flock` for the single-instance guard (see single_instance.rs).
+# Windows uses a named mutex there instead, so this never enters that build.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+# Linux-only tray. Windows builds its tray natively on Shell_NotifyIconW (see
+# tray.rs) and pulls none of this in. tray-icon needs GTK initialised and a
+# GTK main loop running on the thread that owns the icon, hence the direct gtk
+# dependency; at runtime it also needs libayatana-appindicator3 present.
+[target.'cfg(target_os = "linux")'.dependencies]
+tray-icon = "0.24"
+gtk = "0.18"
+
 [dev-dependencies]
 ico = "0.3"
 

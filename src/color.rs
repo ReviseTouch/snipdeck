@@ -78,9 +78,37 @@ pub fn capture_region(cx: i32, cy: i32, half: i32) -> Option<image::RgbaImage> {
     }
 }
 
+/// Off Windows there is no cheap per-pixel desktop read (GDI's `GetDIBits`
+/// has no portable equivalent), so grab the monitor under the point through
+/// xcap and crop out the window.
+///
+/// NOTE this is a FULL-SCREEN readback per call. That is fine for a one-shot
+/// `pixel_rgb` pick, but it makes the live loupe substantially heavier than
+/// the Windows GDI path, which reads only the few hundred pixels it needs.
 #[cfg(not(target_os = "windows"))]
-pub fn capture_region(_cx: i32, _cy: i32, _half: i32) -> Option<image::RgbaImage> {
-    None
+pub fn capture_region(cx: i32, cy: i32, half: i32) -> Option<image::RgbaImage> {
+    let half = half.max(0);
+    let side = (half * 2 + 1) as u32;
+
+    let monitors = xcap::Monitor::all().ok()?;
+    let monitor = monitors.into_iter().find(|m| {
+        let (mx, my) = (m.x(), m.y());
+        cx >= mx && cx < mx + m.width() as i32 && cy >= my && cy < my + m.height() as i32
+    })?;
+    let (ox, oy) = (monitor.x(), monitor.y());
+    let shot = monitor.capture_image().ok()?;
+
+    // Clamp into the captured image so a pick right at a screen edge still
+    // returns pixels instead of failing outright.
+    let (iw, ih) = (shot.width() as i32, shot.height() as i32);
+    if iw <= 0 || ih <= 0 {
+        return None;
+    }
+    let left = (cx - ox - half).clamp(0, iw - 1);
+    let top = (cy - oy - half).clamp(0, ih - 1);
+    let w = side.min((iw - left) as u32);
+    let h = side.min((ih - top) as u32);
+    Some(image::imageops::crop_imm(&shot, left as u32, top as u32, w, h).to_image())
 }
 
 /// RGB of the single desktop pixel at a screen point.

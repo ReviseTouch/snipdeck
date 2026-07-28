@@ -18,14 +18,76 @@
 /// caller should exit immediately.
 #[cfg(not(target_os = "windows"))]
 pub fn acquire() -> bool {
-    true
+    unix::acquire()
 }
 
 /// Like [`acquire`], but for an instance that was just relaunched elevated by a
 /// still-running medium instance (the tray "Run as administrator" handoff).
+/// That handoff is Windows-only (see `elevate`), so off Windows there is never
+/// a predecessor to wait for and this is a plain [`acquire`].
 #[cfg(not(target_os = "windows"))]
 pub fn acquire_after_handoff() -> bool {
-    true
+    unix::acquire()
+}
+
+/// Unix counterpart of the named mutex: an advisory `flock` on a per-user
+/// file. The kernel releases it when the owning process dies — crash
+/// included — so, like the Windows mutex and unlike a PID file, a stale
+/// lock can never wedge the app.
+///
+/// Unlike Windows we do NOT raise the running instance's window: doing that
+/// portably needs a D-Bus activation service we don't ship. The duplicate
+/// just logs and exits, which is the part that actually matters — two
+/// copies writing the same SQLite gallery is the bug being prevented.
+#[cfg(not(target_os = "windows"))]
+mod unix {
+    use std::fs::OpenOptions;
+    use std::os::unix::io::AsRawFd;
+    use std::path::PathBuf;
+    use std::sync::OnceLock;
+
+    /// Holds the locked file for the whole process lifetime — closing it
+    /// would drop the lock. Never read; kept only for that side effect.
+    static LOCK: OnceLock<std::fs::File> = OnceLock::new();
+
+    /// `$XDG_RUNTIME_DIR/snipdeck.lock` when the session provides one: a
+    /// per-user tmpfs cleared on logout, the same granularity the Windows
+    /// `Local\` namespace gives. Falls back to the data dir otherwise.
+    fn lock_path() -> Option<PathBuf> {
+        let dir = std::env::var_os("XDG_RUNTIME_DIR")
+            .map(PathBuf::from)
+            .or_else(|| dirs::data_dir().map(|d| d.join("snipdeck")))?;
+        std::fs::create_dir_all(&dir).ok()?;
+        Some(dir.join("snipdeck.lock"))
+    }
+
+    pub fn acquire() -> bool {
+        // Every failure below returns `true` (keep running). Refusing to
+        // start because we couldn't create a lock file would turn a guard
+        // against a rare duplicate launch into a hard startup failure.
+        let Some(path) = lock_path() else {
+            log::warn!("single-instance: no runtime/data dir — guard skipped");
+            return true;
+        };
+        let file = match OpenOptions::new().create(true).write(true).open(&path) {
+            Ok(file) => file,
+            Err(err) => {
+                log::warn!("single-instance: cannot open {}: {err}", path.display());
+                return true;
+            }
+        };
+        // LOCK_NB: answer immediately instead of blocking behind the running
+        // instance.
+        if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } != 0 {
+            log::info!(
+                "another Snipdeck instance already holds {} — exiting",
+                path.display()
+            );
+            return false;
+        }
+        let _ = LOCK.set(file);
+        true
+    }
 }
 
 #[cfg(target_os = "windows")]
