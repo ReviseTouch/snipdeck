@@ -19,8 +19,12 @@
 //!     the captured RgbaImage as a background `Image` in the overlay;
 //!     left as a TODO.
 
+use std::cell::Cell;
+use std::rc::Rc;
+
 use slint::{Color, ComponentHandle, Image, PhysicalPosition, Rgba8Pixel, SharedPixelBuffer};
 
+use crate::mouse_trigger::{ModifierSet, MouseTriggerEvent};
 use crate::snip::ScreenRect;
 use crate::OverlayWindow;
 
@@ -31,6 +35,16 @@ pub struct SlintOverlayManager {
     monitor: Option<ScreenRect>,
     scale_factor: f32,
     border_color: (u8, u8, u8),
+    /// Where overlay-driven selection events go: the SAME channel the global
+    /// mouse hook feeds, so the entire selection/crop/floating pipeline works
+    /// unchanged whether the drag came from the hook (Windows) or from the
+    /// overlay's own TouchArea (Linux/Wayland, where global hooks don't
+    /// exist). Shared with the callback closures.
+    event_tx: Option<crossbeam_channel::Sender<MouseTriggerEvent>>,
+    /// (monitor origin, scale factor) snapshot the input callbacks read to
+    /// map window-local logical coords → global physical. Updated on every
+    /// `show_for_monitor`.
+    input_space: Rc<Cell<(i32, i32, f32)>>,
 }
 
 impl SlintOverlayManager {
@@ -40,7 +54,62 @@ impl SlintOverlayManager {
             monitor: None,
             scale_factor: 1.0,
             border_color: (255, 136, 0),
+            event_tx: None,
+            input_space: Rc::new(Cell::new((0, 0, 1.0))),
         }
+    }
+
+    /// Provide the channel overlay-driven selection events are sent into
+    /// (the mouse-trigger channel). Must be set before the first
+    /// `show_for_monitor` for the input-capture path to do anything.
+    pub fn set_event_sender(&mut self, tx: crossbeam_channel::Sender<MouseTriggerEvent>) {
+        self.event_tx = Some(tx);
+    }
+
+    /// Wire the overlay-driven selection callbacks on a freshly created
+    /// window. The overlay is recreated per snip (hide() drops it), so this
+    /// runs once per window.
+    fn wire_input(&self, win: &OverlayWindow) {
+        let Some(tx) = self.event_tx.clone() else {
+            return;
+        };
+        let space = self.input_space.clone();
+        let to_global = move |lx: f32, ly: f32| {
+            let (mx, my, sf) = space.get();
+            (mx + (lx * sf) as i32, my + (ly * sf) as i32)
+        };
+        let send = move |ev: MouseTriggerEvent| {
+            let _ = tx.send(ev);
+            crate::pump::wake();
+        };
+
+        let (tg, snd) = (to_global.clone(), send.clone());
+        win.on_sel_pressed(move |lx, ly| {
+            let (x, y) = tg(lx, ly);
+            snd(MouseTriggerEvent::StartSnip {
+                x,
+                y,
+                mods: ModifierSet {
+                    ctrl: false,
+                    alt: false,
+                    shift: false,
+                },
+            });
+        });
+        let (tg, snd) = (to_global.clone(), send.clone());
+        win.on_sel_moved(move |lx, ly| {
+            let (x, y) = tg(lx, ly);
+            snd(MouseTriggerEvent::Move { x, y });
+        });
+        let (tg, snd) = (to_global.clone(), send.clone());
+        win.on_sel_released(move |lx, ly| {
+            let (x, y) = tg(lx, ly);
+            snd(MouseTriggerEvent::Release { x, y });
+        });
+        let snd = send.clone();
+        win.on_sel_cancelled(move || {
+            snd(MouseTriggerEvent::Cancel);
+        });
     }
 
     pub fn set_border_color(&mut self, r: u8, g: u8, b: u8) {
@@ -73,8 +142,19 @@ impl SlintOverlayManager {
         // visible "close + reopen" flicker between consecutive snips.
         let win = match self.window.take() {
             Some(w) => w,
-            None => OverlayWindow::new()?,
+            None => {
+                let w = OverlayWindow::new()?;
+                self.wire_input(&w);
+                w
+            }
         };
+
+        // Publish the coordinate space for the input callbacks and, on
+        // platforms without a global mouse hook, let the overlay itself
+        // capture the drag.
+        self.input_space
+            .set((area.x, area.y, self.scale_factor));
+        win.set_input_capture(cfg!(not(target_os = "windows")));
 
         let sf = self.scale_factor;
         win.set_outer_w(area.w as f32 / sf);
@@ -99,6 +179,11 @@ impl SlintOverlayManager {
         win.window()
             .set_position(PhysicalPosition::new(area.x, area.y));
         win.show()?;
+        // Route Escape to the overlay's FocusScope so the overlay-driven
+        // path can cancel without the global keyboard hook.
+        if cfg!(not(target_os = "windows")) {
+            win.invoke_grab_keyboard();
+        }
 
         self.window = Some(win);
         Ok(())

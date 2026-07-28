@@ -16,15 +16,22 @@ static SNIP_ARMED: AtomicBool = AtomicBool::new(false);
 /// and expires it via a watchdog (see the tick loop).
 pub(crate) static FREEZE_ARMED: AtomicBool = AtomicBool::new(false);
 
-/// Windows 10 only: armed when a Win+drag snip starts (so the user is holding
-/// Win). When they release Win, that lone Win-up would open the Start menu, and
-/// on Win10 no injected disguise key cancels it. So instead we SUPPRESS the
+/// Armed when a Win+drag snip starts (so the user is holding Win). When they
+/// release Win, that lone Win-up would open the Start menu. We SUPPRESS the
 /// physical Win-up and inject a replacement "Ctrl tap + Win-up" — the proven
 /// AutoHotkey technique: the Ctrl registers as a key pressed during the Win
 /// hold, so the replacement Win-up is no longer "lone" and the menu stays shut.
 /// Consumed by the very next Win key-up (the injected replacement is NOT armed,
-/// so it passes through and actually releases Win). Win11 never arms this.
-static DISGUISE_WINUP_ARMED: AtomicBool = AtomicBool::new(false);
+/// so it passes through and actually releases Win) and cleared by a fresh Win
+/// key-down (covers a release our hook never saw, e.g. on the secure desktop).
+///
+/// Used on BOTH Windows 10 and 11 and by BOTH hook backends. This replaced the
+/// old press-time "inert key" masks (F23 on 11, early Ctrl tap on 10): inert
+/// keys never cancelled the lone-Win on Win10 at all, press-time taps raced
+/// the user's release (thread-spawn latency), and F23 collided with the
+/// Copilot key chord (hardware Copilot = Win+Shift+F23 — exactly what our
+/// injection produced during a Win+Shift+drag snip on Copilot-era machines).
+pub(crate) static DISGUISE_WINUP_ARMED: AtomicBool = AtomicBool::new(false);
 
 /// Colour-picker mode: when armed, the next left-click captures the pixel under
 /// the cursor (sent as `ColorPick`) instead of starting a snip, and Esc cancels.
@@ -51,10 +58,36 @@ pub fn disarm_color_pick() {
     COLOR_PICK_ARMED.store(false, Ordering::Relaxed);
 }
 
+/// Take-and-clear the colour-pick arm (the click that picks the pixel, or an
+/// Esc that cancels the mode). Shared with the native backend.
+pub(crate) fn consume_color_pick() -> bool {
+    COLOR_PICK_ARMED.swap(false, Ordering::Relaxed)
+}
+
 /// Clear the freeze-first intent from the app side so neither hook backend
 /// stays armed after a failed, cancelled, or abandoned freeze.
 pub fn clear_freeze() {
     FREEZE_ARMED.store(false, Ordering::Relaxed);
+}
+
+/// True while a snip selection drag is physically in progress. Mirrored by
+/// whichever hook backend is active (rdev or native) so the pump — which
+/// can't see the backend's private state — knows to keep ticking and stream
+/// the live selection rectangle even if the cursor momentarily stops moving.
+static SNIP_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+pub(crate) fn set_snip_active(active: bool) {
+    SNIP_ACTIVE.store(active, Ordering::Relaxed);
+}
+
+/// Any snip/eyedropper interaction the [`crate::pump`] must stay awake for:
+/// an in-progress drag, a one-shot tray arm, an armed freeze-first frame, or
+/// the colour picker waiting for its click.
+pub fn snip_in_progress() -> bool {
+    SNIP_ACTIVE.load(Ordering::Relaxed)
+        || SNIP_ARMED.load(Ordering::Relaxed)
+        || FREEZE_ARMED.load(Ordering::Relaxed)
+        || COLOR_PICK_ARMED.load(Ordering::Relaxed)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -80,6 +113,9 @@ pub enum MouseTriggerEvent {
 
 pub struct MouseTriggerService {
     pub rx: Receiver<MouseTriggerEvent>,
+    /// Producer side, kept so non-hook sources (the overlay-driven selection
+    /// on Linux/Wayland) can feed the same pipeline.
+    pub tx: Sender<MouseTriggerEvent>,
 }
 
 impl MouseTriggerService {
@@ -89,12 +125,12 @@ impl MouseTriggerService {
         let (tx, rx) = unbounded::<MouseTriggerEvent>();
         if native_backend_enabled() {
             log::info!("mouse trigger backend: native Windows hook");
-            crate::native_mouse_trigger::spawn_listener(tx);
+            crate::native_mouse_trigger::spawn_listener(tx.clone());
         } else {
             log::info!("mouse trigger backend: rdev");
-            spawn_listener(tx);
+            spawn_listener(tx.clone());
         }
-        Self { rx }
+        Self { rx, tx }
     }
 }
 
@@ -103,15 +139,19 @@ fn native_backend_enabled() -> bool {
     {
         static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
         *ENABLED.get_or_init(|| {
-            ["SNIPDECK_NATIVE_MOUSE_HOOK", "SNIPPER_NATIVE_MOUSE_HOOK"]
+            // The native Win32 hook is the DEFAULT on Windows: unlike rdev it
+            // can tell injected input apart (LLKHF_INJECTED + extra-info tag),
+            // which the release-time Start-menu disguise depends on, and it
+            // lets us inject the replacement synchronously from the hook.
+            // Set SNIPDECK_NATIVE_MOUSE_HOOK=0 to fall back to rdev.
+            let disabled = ["SNIPDECK_NATIVE_MOUSE_HOOK", "SNIPPER_NATIVE_MOUSE_HOOK"]
                 .iter()
                 .any(|name| {
                     std::env::var(name)
-                        .map(|value| {
-                            matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "YES")
-                        })
+                        .map(|value| matches!(value.as_str(), "0" | "false" | "FALSE" | "no" | "NO"))
                         .unwrap_or(false)
-                })
+                });
+            !disabled
         })
     }
     #[cfg(not(target_os = "windows"))]
@@ -138,6 +178,14 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
         let pos_cb = last_pos.clone();
         let tx_cb = tx.clone();
 
+        // Funnel every surfaced event through here: send it, then wake the
+        // pump (it may have gone to sleep while idle). Routing all sends
+        // through one place means none can silently miss its wake.
+        let emit = move |ev: MouseTriggerEvent| {
+            let _ = tx_cb.send(ev);
+            crate::pump::wake();
+        };
+
         // Robust input model:
         //   - We use `grab` so we CAN suppress the LMouse press/release
         //     that triggers a snip (otherwise it leaks to apps under
@@ -152,9 +200,9 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
         //     are reconciled against GetAsyncKeyState on every check
         //     (see `modifier_down_now`), so a KeyUp our hook happened to
         //     miss can never leave a modifier stuck "down".
-        //   - To still keep the Start Menu from popping after a
-        //     Win+LMouse snip we inject a lone Win+0xFF filler combo
-        //     (see `force_release_modifiers`), which masks the menu
+        //   - To keep the Start Menu from popping after a Win+LMouse
+        //     snip, the armed post-snip Win-up is suppressed and replaced
+        //     with [Ctrl tap + Win-up] (see `DISGUISE_WINUP_ARMED`),
         //     without touching the real modifier state.
         let result = grab(move |event: Event| -> Option<Event> {
             let s = &*state_cb;
@@ -162,7 +210,24 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
                 EventType::KeyPress(k) => {
                     match k {
                         Key::MetaLeft | Key::MetaRight => {
-                            s.win_down.store(true, Ordering::Relaxed);
+                            // A physical Win press *may* clear a stale disguise
+                            // arm (a release this hook never saw, e.g. on the
+                            // secure desktop) — but ONLY on a genuinely FRESH
+                            // press. A held Win key streams typematic-repeat
+                            // KEYDOWNs a hook can't tell from a fresh press, and
+                            // clearing on a repeat would drop the disguise
+                            // mid-hold → the post-snip Win-up pops Start. `swap`
+                            // returns the PRIOR tracked state: if Win wasn't
+                            // already down it's unambiguously fresh → clear; if it
+                            // was, disambiguate a real repeat from a stale bit via
+                            // GetAsyncKeyState's pre-event state — DOWN = repeat
+                            // (keep the arm), UP = stale (treat as fresh → clear).
+                            // Mirrors the native backend.
+                            let win_vk = if matches!(k, Key::MetaLeft) { 0x5B } else { 0x5C };
+                            let win_was_down = s.win_down.swap(true, Ordering::Relaxed);
+                            if !win_was_down || !async_key_down(win_vk) {
+                                DISGUISE_WINUP_ARMED.store(false, Ordering::Relaxed);
+                            }
                         }
                         Key::ControlLeft | Key::ControlRight => {
                             s.ctrl_down.store(true, Ordering::Relaxed);
@@ -176,15 +241,22 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
                         // Esc leaves colour-pick mode.
                         Key::Escape if COLOR_PICK_ARMED.load(Ordering::Relaxed) => {
                             COLOR_PICK_ARMED.store(false, Ordering::Relaxed);
-                            let _ = tx_cb.send(MouseTriggerEvent::Cancel);
+                            emit(MouseTriggerEvent::Cancel);
                         }
                         Key::Escape
                             if s.snip_active.load(Ordering::Relaxed)
-                                || FREEZE_ARMED.load(Ordering::Relaxed) =>
+                                || FREEZE_ARMED.load(Ordering::Relaxed)
+                                || SNIP_ARMED.load(Ordering::Relaxed) =>
                         {
                             s.snip_active.store(false, Ordering::Relaxed);
+                            set_snip_active(false);
                             FREEZE_ARMED.store(false, Ordering::Relaxed);
-                            let _ = tx_cb.send(MouseTriggerEvent::Cancel);
+                            // Also cancel an un-clicked one-shot arm (toolbar/
+                            // tray/hotkey "New Snip"); otherwise Esc is dead, the
+                            // hidden main window never returns, and the next
+                            // ordinary click gets hijacked into a snip.
+                            consume_armed();
+                            emit(MouseTriggerEvent::Cancel);
                         }
                         // Win+Alt+Space → freeze the screen now (capture hover
                         // tooltips), then drag-select on the still image.
@@ -200,8 +272,13 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
                             // image. Swallow EVERY Win+Shift+Space (incl.
                             // key-repeat); fire FreezeArm only on the first.
                             if !FREEZE_ARMED.swap(true, Ordering::Relaxed) {
+                                // The swallowed Space never reaches the OS, so
+                                // the eventual Win-up could still read as a
+                                // lone Win — arm the release-time disguise
+                                // here too (Win is held by definition).
+                                DISGUISE_WINUP_ARMED.store(true, Ordering::Relaxed);
                                 let (x, y) = cursor_pos_or_last(&pos_cb);
-                                let _ = tx_cb.send(MouseTriggerEvent::FreezeArm { x, y });
+                                emit(MouseTriggerEvent::FreezeArm { x, y });
                             }
                             return None;
                         }
@@ -246,7 +323,7 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
                     // suppress the click (don't let it reach the app below).
                     if COLOR_PICK_ARMED.swap(false, Ordering::Relaxed) {
                         let (x, y) = cursor_pos_or_last(&pos_cb);
-                        let _ = tx_cb.send(MouseTriggerEvent::ColorPick { x, y });
+                        emit(MouseTriggerEvent::ColorPick { x, y });
                         return None;
                     }
                     let armed = consume_armed();
@@ -258,24 +335,21 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
                         && !s.snip_active.load(Ordering::Relaxed)
                     {
                         s.snip_active.store(true, Ordering::Relaxed);
+                        set_snip_active(true);
                         FREEZE_ARMED.store(false, Ordering::Relaxed);
-                        // Win10 + Win held: arm the Win-up replacement so the
-                        // post-snip Win release can't pop the Start menu (see
+                        // Win held: arm the Win-up replacement so the post-snip
+                        // Win release can't pop the Start menu (see
                         // DISGUISE_WINUP_ARMED). Only when Win is the trigger —
-                        // an armed/freeze click has no Win-up to disguise — and
-                        // never on Win11, which the filler-key disguise covers.
-                        if win && cfg!(target_os = "windows") && !crate::os::is_windows_11() {
+                        // an armed/freeze click has no Win-up to disguise.
+                        // Release-time replacement is the ONE technique proven
+                        // on both Win10 and Win11; the old press-time filler
+                        // taps (F23 / early Ctrl) are gone.
+                        if win && cfg!(target_os = "windows") {
                             DISGUISE_WINUP_ARMED.store(true, Ordering::Relaxed);
                         }
                         let (x, y) = cursor_pos_or_last(&pos_cb);
                         let mods = modifier_snapshot(s);
-                        let _ = tx_cb.send(MouseTriggerEvent::StartSnip { x, y, mods });
-                        // Immediately give the shell a "Win+combo" signal
-                        // so even if the user releases Win mid-drag, the
-                        // Start Menu does NOT pop up. Done on a worker
-                        // thread to avoid re-entering the LL hook from
-                        // inside its own callback.
-                        std::thread::spawn(inject_filler_only);
+                        emit(MouseTriggerEvent::StartSnip { x, y, mods });
                         // Suppress the click so apps below don't react.
                         return None;
                     }
@@ -284,8 +358,9 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
                 EventType::ButtonRelease(Button::Left) => {
                     if s.snip_active.load(Ordering::Relaxed) {
                         s.snip_active.store(false, Ordering::Relaxed);
+                        set_snip_active(false);
                         let (x, y) = cursor_pos_or_last(&pos_cb);
-                        let _ = tx_cb.send(MouseTriggerEvent::Release { x, y });
+                        emit(MouseTriggerEvent::Release { x, y });
                         return None;
                     }
                     Some(event)
@@ -294,7 +369,7 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
                     let p = (x as i32, y as i32);
                     *pos_cb.lock() = p;
                     if s.snip_active.load(Ordering::Relaxed) {
-                        let _ = tx_cb.send(MouseTriggerEvent::Move { x: p.0, y: p.1 });
+                        emit(MouseTriggerEvent::Move { x: p.0, y: p.1 });
                     }
                     Some(event)
                 }
@@ -387,84 +462,20 @@ fn current_cursor_pos() -> Option<(i32, i32)> {
     None
 }
 
-/// Inject just the filler-key combo (no modifier KEYUPs). Called from
-/// the Win+LMouse press handler so the Windows shell sees a proper
-/// "Win+combo" early — protects against the user releasing Win
-/// before the snip is finished.
-fn inject_filler_only() {
-    #[cfg(target_os = "windows")]
-    inject_filler_only_win();
-}
-
-#[cfg(target_os = "windows")]
-fn inject_filler_only_win() {
-    inject_win_disguise();
-}
-
-/// The (virtual-key, scan-code) of the Win-key disguise tap, chosen by OS
-/// version so Windows 11 keeps its proven behaviour untouched.
-///
-///  * Windows 11 — F23 (0x86), scan code 0. This is the ORIGINAL disguise that
-///    has always reliably suppressed the lone-Win Start menu on 11; we leave it
-///    exactly as it was.
-///  * Windows 10 — Left-Ctrl (0xA2), scan code 0x1D. On Win10 an inert key
-///    (F23 / 0xFF / F13, even by scan code) does NOT cancel the lone-Win — the
-///    logs showed the key injected yet the menu still popped — so we tap a
-///    MODIFIER instead, the same key AutoHotkey uses to disguise Win. (Win+Ctrl
-///    with no third key is a no-op, so the tap is side-effect-free.)
-#[cfg(target_os = "windows")]
-pub(crate) fn disguise_vk_scan() -> (u16, u16) {
-    if crate::os::is_windows_11() {
-        (0x86, 0x00) // F23
-    } else {
-        (0xA2, 0x1D) // VK_LCONTROL
-    }
-}
-
-/// Inject a disguise-key tap so a lone Win release after a Win+drag snip can't
-/// open the Start menu. The key is OS-specific (see `disguise_vk_scan`). Shared
-/// by both backends.
-#[cfg(target_os = "windows")]
-pub(crate) fn inject_win_disguise() {
-    use windows::Win32::UI::Input::KeyboardAndMouse::{
-        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
-        VIRTUAL_KEY,
-    };
-    let (vk, scan) = disguise_vk_scan();
-    let make = |up: bool| INPUT {
-        r#type: INPUT_KEYBOARD,
-        Anonymous: INPUT_0 {
-            ki: KEYBDINPUT {
-                wVk: VIRTUAL_KEY(vk),
-                wScan: scan,
-                dwFlags: if up {
-                    KEYEVENTF_KEYUP
-                } else {
-                    KEYBD_EVENT_FLAGS(0)
-                },
-                time: 0,
-                dwExtraInfo: 0,
-            },
-        },
-    };
-    let inputs = [make(false), make(true)];
-    let sent = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
-    log::info!("Win-key disguise injected (vk={vk:#x} scan={scan:#x}); SendInput sent {sent}/2");
-}
-
-/// Windows 10 replacement for a lone post-snip Win key-up (the physical one was
+/// Replacement for a lone post-snip Win key-up (the physical one was
 /// suppressed in the hook). Injects `[Ctrl down, Ctrl up, <Win> up]`: while Win
 /// is still logically held (we ate its real up), the Ctrl tap registers as a
 /// key pressed during the hold, so the trailing Win-up is no longer a "lone
 /// Win" and the Start menu stays shut. `left` picks the same Win key (L/R) the
 /// user released. This is the proven AutoHotkey disguise, done at the exact
-/// moment of release — which is what makes it work on Win10 where an early /
-/// stand-alone disguise tap does not.
+/// moment of release — which is what makes it work everywhere an early /
+/// stand-alone disguise tap does not. (rdev fallback path; the default native
+/// backend injects synchronously from its own hook instead.)
 #[cfg(target_os = "windows")]
 fn inject_disguised_winup(left: bool) {
     use windows::Win32::UI::Input::KeyboardAndMouse::{
         SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
-        VIRTUAL_KEY, VK_LCONTROL, VK_LWIN, VK_RWIN,
+        VIRTUAL_KEY, VK_CONTROL, VK_LCONTROL, VK_LWIN, VK_MENU, VK_RWIN, VK_SHIFT,
     };
     let win_vk = if left { VK_LWIN } else { VK_RWIN };
     let key = |vk: VIRTUAL_KEY, up: bool| INPUT {
@@ -483,34 +494,47 @@ fn inject_disguised_winup(left: bool) {
             },
         },
     };
-    let inputs = [
+    // Skip the Ctrl mask tap when another modifier is already physically held:
+    // the Win-up is then non-lone on its own, and an injected Ctrl would form a
+    // real chord — Ctrl+Shift is the default "switch keyboard layout" hotkey on
+    // multi-layout (e.g. Turkish) systems, so a Win+Shift+drag snip would flip
+    // the layout on every release. Inject only the Win-up in that case; still
+    // swallow the physical up (done by the caller). Mirrors the native backend.
+    let other_mod_down =
+        async_key_down(VK_SHIFT.0) || async_key_down(VK_MENU.0) || async_key_down(VK_CONTROL.0);
+    // `full` is [Ctrl down, Ctrl up, Win up]; the masked case sends only the
+    // trailing Win-up (`&full[2..]`).
+    let full = [
         key(VK_LCONTROL, false),
         key(VK_LCONTROL, true),
         key(win_vk, true),
     ];
-    let sent = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
-    log::info!("Win10 disguised Win-up injected (Ctrl tap + Win up); SendInput sent {sent}/3");
+    let inputs: &[INPUT] = if other_mod_down { &full[2..] } else { &full };
+    let sent = unsafe { SendInput(inputs, std::mem::size_of::<INPUT>() as i32) };
+    log::info!(
+        "disguised Win-up injected ({}); SendInput sent {sent}/{}",
+        if other_mod_down { "bare Win up" } else { "Ctrl tap + Win up" },
+        inputs.len()
+    );
 }
 
 #[cfg(not(target_os = "windows"))]
 fn inject_disguised_winup(_left: bool) {}
 
-/// Called after a Win+LMouse snip. Masks the Win key (injects a Win+F23
-/// combo) so a lone Win press can't pop the Start menu — but deliberately
-/// does NOT synthesize modifier KEYUPs.
+/// Called after a Win+LMouse snip finishes or cancels. Deliberately does NOT
+/// synthesize modifier KEYUPs: releasing Win/Ctrl/Alt/Shift here would (a)
+/// drop modifiers the user is *still physically holding*, which breaks the
+/// "keep Win held and drag several times to take multiple snips in a row"
+/// flow, and (b) can stop Windows from later delivering the real physical
+/// Win-up, leaving the key stuck down.
 ///
-/// Releasing Win/Ctrl/Alt/Shift here would (a) drop modifiers the user is
-/// *still physically holding*, which breaks the "keep Win held and drag
-/// several times to take multiple snips in a row" flow, and (b) can stop
-/// Windows from later delivering the real physical Win-up, leaving the key
-/// stuck down. The hook already tracks the real physical state and
-/// GetAsyncKeyState corrects any drift, so only the dummy-key menu-mask is
-/// needed. (This mirrors the native backend's `finish_snip_win`.)
+/// The Start-menu problem itself is handled at release time (the armed Win-up
+/// is swallowed and replaced in the hook — see `DISGUISE_WINUP_ARMED`), so
+/// all that's left here is the native backend's modifier-drift reconciliation.
 pub fn force_release_modifiers() {
     if native_backend_enabled() {
         crate::native_mouse_trigger::force_release_modifiers();
-        return;
     }
-    #[cfg(target_os = "windows")]
-    std::thread::spawn(inject_filler_only_win);
+    // rdev fallback: nothing to do — its tracked state self-corrects against
+    // GetAsyncKeyState on every check (see `modifier_down_now`).
 }

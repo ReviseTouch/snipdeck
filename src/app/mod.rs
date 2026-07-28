@@ -81,6 +81,11 @@ pub struct AppState {
     /// once that snip finishes or is cancelled we bring the window back. Set by
     /// `Action::NewSnip`, consumed on the matching Release/Cancel.
     restore_main_after_snip: bool,
+    /// When a toolbar/tray "New Snip" armed a one-shot drag (and hid the main
+    /// window). If the user then never clicks — no drag starts — a watchdog in
+    /// `tick` uses this to clear the stale arm and re-show the window after a
+    /// bound, instead of stranding the app hidden with the next click hijacked.
+    armed_snip_at: Option<std::time::Instant>,
     /// Set the instant a button-armed snip ends, asking the tick loop (which
     /// has the `MainWindow`) to re-show it — `handle_mouse_event` has no window.
     pending_show_main: bool,
@@ -115,6 +120,13 @@ pub struct AppState {
     /// Main window scale factor, refreshed each tick. Floating
     /// windows reuse it so they end up the exact captured pixel size.
     scale_factor: f32,
+    /// `Some(first-dirty-time)` while floating-window churn (drag/resize
+    /// position updates) awaits a gallery save. Saving on EVERY tick of a
+    /// drag ran a full SQLite upsert (all snips + their FTS rows) 125×/s
+    /// on the main thread, which starved the drag events themselves. We
+    /// mark dirty instead and save once the burst quiets down, with a
+    /// periodic safety flush during long interactions.
+    gallery_dirty: Option<std::time::Instant>,
 }
 
 mod input;
@@ -145,6 +157,9 @@ impl AppState {
         let mouse_trigger = MouseTriggerService::start_polling();
 
         let mut overlay = SlintOverlayManager::new();
+        // Overlay-driven selection (Linux/Wayland) feeds the same event
+        // channel as the global hook, so the pipeline downstream is shared.
+        overlay.set_event_sender(mouse_trigger.tx.clone());
         let [r, g, b] = [
             settings.border_color_active[0],
             settings.border_color_active[1],
@@ -175,6 +190,7 @@ impl AppState {
             armed_routing: None,
             frozen_pending: None,
             restore_main_after_snip: false,
+            armed_snip_at: None,
             pending_show_main: false,
             color_pick_hid_main: false,
             last_error: None,
@@ -188,6 +204,7 @@ impl AppState {
             last_snip_ids: Vec::new(),
             pending_open: Vec::new(),
             scale_factor: 1.0,
+            gallery_dirty: None,
         }
     }
 
@@ -329,7 +346,12 @@ impl AppState {
         let _ = weak;
     }
 
-    pub fn tick(&mut self, window: &MainWindow) {
+    /// Run one iteration of main-thread housekeeping. Returns `true` while
+    /// the app still wants the [`crate::pump`] to keep running — either it
+    /// did work this iteration, or [`AppState::wants_awake`] holds. When it
+    /// returns `false` for a grace period the pump stops and the process
+    /// sleeps until a wake arrives.
+    pub fn tick(&mut self, window: &MainWindow) -> bool {
         // Pull the current OS scale factor so floating windows opened
         // during this tick get sized correctly under HiDPI.
         self.scale_factor = window.window().scale_factor() as f32;
@@ -382,6 +404,38 @@ impl AppState {
                 self.frozen_pending = None;
                 crate::mouse_trigger::clear_freeze();
                 self.overlay.hide();
+                // A toolbar-armed snip (the overlay-driven Linux path) hid
+                // the main window; bring it back or the app is stranded
+                // invisible — on Linux there is no tray to recover from.
+                if self.restore_main_after_snip {
+                    self.restore_main_after_snip = false;
+                    self.pending_show_main = true;
+                }
+                self.armed_snip_at = None;
+            }
+        }
+
+        // Watchdog: a toolbar/tray "New Snip" arms a one-shot drag and hides the
+        // main window, but the click that starts the drag may never come (the
+        // user changes their mind, alt-tabs away, …). Esc cancels, but a "walk
+        // away" leaves the window hidden (only tray Show recovers) and the stale
+        // arm hijacks the next ordinary left-click into a snip. If we armed this
+        // long ago and no selection is in progress — nor a frozen frame pending,
+        // which the watchdog above already covers — give up: clear the arm and
+        // its routing and re-show the window. `active.is_some()` while a drag is
+        // running keeps this from firing on the normal happy path.
+        if let Some(armed_at) = self.armed_snip_at {
+            if armed_at.elapsed() > std::time::Duration::from_secs(12)
+                && self.active.is_none()
+                && self.frozen_pending.is_none()
+            {
+                self.armed_snip_at = None;
+                crate::mouse_trigger::consume_armed();
+                self.armed_routing = None;
+                if self.restore_main_after_snip {
+                    self.restore_main_after_snip = false;
+                    self.pending_show_main = true;
+                }
             }
         }
 
@@ -402,6 +456,11 @@ impl AppState {
             }
         }
         if opened_any {
+            // Seamless snip handoff: the Release handler leaves the overlay
+            // (selection border) on screen for floating results; now that the
+            // floating window is actually shown, drop the overlay. No-op when
+            // the overlay isn't up (e.g. re-opens from the gallery).
+            self.overlay.hide();
             self.refresh_gallery(window);
         }
 
@@ -514,8 +573,26 @@ impl AppState {
         // open menu closes it (the first click elsewhere). No-op when closed.
         self.context_menu.poll_auto_close();
 
-        if had_drain {
-            let _ = self.gallery.save();
+        // Debounced gallery persistence for floating-window churn. A drag
+        // produces position updates on every tick; saving synchronously each
+        // time ran the full snips+FTS upsert 125×/s on the main thread and
+        // made the drag itself stutter. Instead: mark dirty, save once the
+        // burst goes quiet (first tick with no drain), and flush every 2 s
+        // during long interactions so a crash can't lose much.
+        if had_drain && self.gallery_dirty.is_none() {
+            self.gallery_dirty = Some(std::time::Instant::now());
+        }
+        if let Some(since) = self.gallery_dirty {
+            if !had_drain || since.elapsed() >= std::time::Duration::from_secs(2) {
+                // Only clear the dirty flag on success — a failed save (e.g. a
+                // transient SQLITE_BUSY the busy_timeout couldn't outwait) must
+                // leave it set so the next tick retries, or the floating-window
+                // position/pin churn this flush was meant to persist is lost.
+                match self.gallery.save() {
+                    Ok(()) => self.gallery_dirty = None,
+                    Err(e) => log::warn!("debounced gallery save failed, will retry: {e}"),
+                }
+            }
         }
 
         // Refresh gallery model if mouse-hook produced a new snip.
@@ -541,7 +618,46 @@ impl AppState {
         window.set_floating_in_taskbar(self.settings.floating_in_taskbar);
         window.set_dark_theme(self.settings.dark_theme);
 
-        let _ = (had_actions, had_events);
+        // Report activity so the pump keeps running through a burst of work
+        // and only sleeps once things settle (plus the grace period). A
+        // dirty gallery counts as work so the debounced save above always
+        // gets its quiet tick before the pump is allowed to sleep.
+        let did_work =
+            had_actions || had_events || had_drain || opened_any || self.gallery_dirty.is_some();
+        did_work || self.wants_awake()
+    }
+
+    /// Conditions under which the pump must keep ticking even with no fresh
+    /// input: a snip/eyedropper in progress, a frozen frame armed, floating
+    /// windows about to open, or simply the main window on screen. Async
+    /// OCR/translate results and floating-window interactions don't appear
+    /// here — their producers/callbacks call [`crate::pump::wake`] instead.
+    fn wants_awake(&self) -> bool {
+        // The wake sources are Windows-only (global hooks); elsewhere keep
+        // the pump always-on so nothing can strand the loop asleep.
+        #[cfg(not(target_os = "windows"))]
+        {
+            return true;
+        }
+        #[cfg(target_os = "windows")]
+        {
+            crate::tray::is_main_window_shown()
+                || crate::mouse_trigger::snip_in_progress()
+                || self.color_picker.is_active()
+                // Secondary windows that run async work or animations of
+                // their own. Backed by live window visibility, so they stop
+                // holding the pump awake the instant they close. Floating
+                // windows are absent on purpose — their callbacks wake the
+                // pump on demand (see `mod floating`).
+                || self.context_menu.is_shown()
+                || self.translate_popup.is_open()
+                || self.annotate.is_open()
+                || self.collage.is_open()
+                || !self.pending_open.is_empty()
+                || self.frozen_pending.is_some()
+                || self.pending_show_main
+                || self.restore_main_after_snip
+        }
     }
 }
 

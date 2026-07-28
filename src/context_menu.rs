@@ -179,6 +179,13 @@ impl ContextMenuManager {
         Ok(())
     }
 
+    /// True while a menu is actually shown. `hide()` takes the window (the
+    /// prewarmed spare lives in a separate field), so this reliably reflects
+    /// an open menu — the pump stays awake while one is up.
+    pub fn is_shown(&self) -> bool {
+        self.window.is_some()
+    }
+
     pub fn hide(&mut self) {
         if let Some(w) = self.window.take() {
             let _ = w.hide();

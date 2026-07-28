@@ -137,6 +137,15 @@ impl Annotator {
 
     /// Open the editor for snip `id`. `scale` is the UI scale factor (used only
     /// to place the window in physical pixels).
+    /// True while the editor window is on screen. Backed by live window
+    /// visibility (the `window` field lingers `Some` after close), so the
+    /// pump stays awake while the user is annotating and sleeps once closed.
+    pub fn is_open(&self) -> bool {
+        self.window
+            .as_ref()
+            .map_or(false, |w| w.window().is_visible())
+    }
+
     pub fn open(
         &mut self,
         id: Uuid,

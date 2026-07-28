@@ -19,6 +19,7 @@ mod native_mouse_trigger;
 mod ocr;
 mod os;
 mod paths;
+mod pump;
 mod settings;
 mod share;
 mod single_instance;
@@ -46,7 +47,36 @@ fn bump_process_priority() {
 #[cfg(not(target_os = "windows"))]
 fn bump_process_priority() {}
 
+/// Append every panic (any thread) to `<data_dir>/crash.log` with a
+/// backtrace. As a `windows_subsystem = "windows"` app we have no console:
+/// without this, a panic kills the process silently — no Event Log entry,
+/// no WER report, nothing to diagnose from. The previous handler still runs
+/// afterwards so `RUST_LOG`-piped runs keep the stderr message too.
+fn install_crash_log() {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let backtrace = std::backtrace::Backtrace::force_capture();
+        let thread = std::thread::current();
+        let entry = format!(
+            "==== panic at {} (thread {:?}, v{}) ====\n{info}\n{backtrace}\n\n",
+            chrono::Local::now().to_rfc3339(),
+            thread.name().unwrap_or("<unnamed>"),
+            env!("CARGO_PKG_VERSION"),
+        );
+        let path = paths::data_dir().join("crash.log");
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        use std::io::Write;
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+            let _ = f.write_all(entry.as_bytes());
+        }
+        previous(info);
+    }));
+}
+
 fn main() -> Result<(), slint::PlatformError> {
+    install_crash_log();
     // Install the winit backend with the SOFTWARE renderer EXPLICITLY via
     // set_platform, rather than selecting it with the SLINT_BACKEND env var.
     // Two reasons:
@@ -146,9 +176,14 @@ fn main() -> Result<(), slint::PlatformError> {
     // tray's "Exit" is the only thing that actually exits. Paired with
     // `run_event_loop_until_quit()` below so the loop survives with no
     // window shown.
-    main_window
-        .window()
-        .on_close_requested(|| slint::CloseRequestResponse::HideWindow);
+    //
+    // On Linux there is no tray (yet): hiding would strand the app running
+    // with no way to bring it back, so the X simply quits.
+    main_window.window().on_close_requested(|| {
+        #[cfg(not(target_os = "windows"))]
+        let _ = slint::quit_event_loop();
+        slint::CloseRequestResponse::HideWindow
+    });
 
     // The Slint software renderer can wake from minimize/restore (or tray
     // hide/show) with a blank or stale frame: a redraw requested from our
@@ -180,6 +215,11 @@ fn main() -> Result<(), slint::PlatformError> {
                     }
                     _ => {}
                 }
+                // Any main-window event (restore, focus, mouse, keys)
+                // means the user is interacting — wake the pump so its
+                // housekeeping (and the UI action queue) runs. Coalesced,
+                // so it's a cheap atomic while already awake.
+                crate::pump::wake();
                 EventResult::Propagate
             });
         });
@@ -190,10 +230,10 @@ fn main() -> Result<(), slint::PlatformError> {
     state.refresh_gallery(&main_window);
 
     // Drive the cross-thread event pumps (hotkeys, mouse triggers) from
-    // a Slint timer. Slint owns the main-thread event loop; keep this
-    // short so native mouse-hook events reach the overlay without a
-    // visible drag/click delay.
-    let timer = slint::Timer::default();
+    // the event-driven pump (see `mod pump`). It runs this housekeeping at
+    // an 8 ms cadence *while there is work* — short enough that native
+    // mouse-hook events reach the overlay without a visible drag/click
+    // delay — then stops the timer so the process sleeps when idle.
     let weak = main_window.as_weak();
     let state = std::rc::Rc::new(std::cell::RefCell::new(state));
 
@@ -224,96 +264,120 @@ fn main() -> Result<(), slint::PlatformError> {
     let state_for_timer = state.clone();
     // winit doesn't apply the exe's embedded icon to the window's own title
     // bar / Alt-Tab entry, so set it natively once the HWND exists. Retried
-    // each tick until the window is found, then latched off.
-    let mut window_icon_set = false;
-    // Tracks whether the main window was on screen last tick, so we can release
-    // RAM to the standby list the moment it drops to the tray. (The blank-frame
-    // redraw on restore is handled by the winit event hook above, not here.)
-    let mut prev_shown = false;
-    timer.start(
-        slint::TimerMode::Repeated,
-        std::time::Duration::from_millis(8),
-        move || {
-            if !window_icon_set {
-                window_icon_set = tray::set_main_window_icon();
-            }
+    // each iteration until the window is found, then latched off.
+    let window_icon_set = std::cell::Cell::new(false);
+    // Tracks whether the main window was on screen last iteration, so we can
+    // release RAM to the standby list the moment it drops to the tray. (The
+    // blank-frame redraw on restore is handled by the winit event hook above.)
+    let prev_shown = std::cell::Cell::new(false);
+    pump::install(std::time::Duration::from_millis(8), move || {
+        // `active` reports whether this iteration wants the pump to keep
+        // running. It's OR-ed from work done here plus `AppState::tick`,
+        // which adds its own "wants to stay awake" conditions.
+        let mut active = false;
 
-            // When the window drops to the tray / is minimized, release RAM to
-            // the standby list so it costs little while parked yet comes back
-            // fast. The blank-frame redraw on restore is handled by the winit
-            // event hook (Focused/Resized/Occluded) set up before the loop — a
-            // request_redraw from this timer isn't serviced until a real window
-            // event arrives, which is why it used to wake blank until hover.
-            #[cfg(target_os = "windows")]
-            {
-                let now_shown = tray::is_main_window_shown();
-                if now_shown && !prev_shown {
-                    // Restored from tray/minimize. On Windows the winit-software
-                    // renderer presents via GDI gated on WM_PAINT, which winit
-                    // drops for a plain request_redraw OR a raw SetWindowPos. The
-                    // only thing that forces a fresh present is a size change
-                    // routed THROUGH Slint (so its redraw path observes it) and
-                    // split across two event-loop iterations so winit registers
-                    // two distinct sizes: grow 1px now, restore on the next tick.
-                    // (Slint #8592 / #8823 — software renderer blank-on-restore.)
+        if !window_icon_set.get() {
+            window_icon_set.set(tray::set_main_window_icon());
+            // Keep ticking until the icon latches (the HWND may not exist yet).
+            active = true;
+        }
+
+        // When the window drops to the tray / is minimized, release RAM to
+        // the standby list so it costs little while parked yet comes back
+        // fast. The blank-frame redraw on restore is handled by the winit
+        // event hook (Focused/Resized/Occluded) set up before the loop — a
+        // request_redraw from this pump isn't serviced until a real window
+        // event arrives, which is why it used to wake blank until hover.
+        #[cfg(target_os = "windows")]
+        {
+            let now_shown = tray::is_main_window_shown();
+            if now_shown && !prev_shown.get() {
+                // Restored from tray/minimize. On Windows the winit-software
+                // renderer presents via GDI gated on WM_PAINT, which winit
+                // drops for a plain request_redraw OR a raw SetWindowPos. The
+                // only thing that forces a fresh present is a size change
+                // routed THROUGH Slint (so its redraw path observes it) and
+                // split across two event-loop iterations so winit registers
+                // two distinct sizes: grow 1px now, restore on the next tick.
+                // (Slint #8592 / #8823 — software renderer blank-on-restore.)
+                if let Some(window) = weak.upgrade() {
+                    let s = window.window().size();
+                    log::info!("restore detected -> set_size toggle {}x{}", s.width, s.height);
+                    window
+                        .window()
+                        .set_size(slint::PhysicalSize::new(s.width + 1, s.height));
+                    let weak_restore = window.as_weak();
+                    slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+                        if let Some(w) = weak_restore.upgrade() {
+                            w.window().set_size(s);
+                        }
+                    });
+                }
+                active = true;
+            }
+            if !now_shown && prev_shown.get() {
+                tray::trim_working_set();
+            }
+            prev_shown.set(now_shown);
+        }
+
+        while let Ok(cmd) = tray_rx.try_recv() {
+            active = true;
+            match cmd {
+                tray::TrayCommand::Show => {
                     if let Some(window) = weak.upgrade() {
-                        let s = window.window().size();
-                        log::info!("restore detected -> set_size toggle {}x{}", s.width, s.height);
-                        window
-                            .window()
-                            .set_size(slint::PhysicalSize::new(s.width + 1, s.height));
-                        let weak_restore = window.as_weak();
-                        slint::Timer::single_shot(std::time::Duration::ZERO, move || {
-                            if let Some(w) = weak_restore.upgrade() {
-                                w.window().set_size(s);
-                            }
-                        });
+                        let _ = window.show();
                     }
+                    tray::focus_main_window();
                 }
-                if !now_shown && prev_shown {
-                    tray::trim_working_set();
-                }
-                prev_shown = now_shown;
-            }
-            while let Ok(cmd) = tray_rx.try_recv() {
-                match cmd {
-                    tray::TrayCommand::Show => {
+                tray::TrayCommand::NewSnip => mouse_trigger::arm_snip(),
+                tray::TrayCommand::ToggleAutostart => match autostart::toggle() {
+                    Ok(on) => {
+                        log::info!("launch-at-login set to {on}");
                         if let Some(window) = weak.upgrade() {
-                            let _ = window.show();
+                            window.set_autostart_enabled(on);
                         }
-                        tray::focus_main_window();
                     }
-                    tray::TrayCommand::NewSnip => mouse_trigger::arm_snip(),
-                    tray::TrayCommand::ToggleAutostart => match autostart::toggle() {
-                        Ok(on) => {
-                            log::info!("launch-at-login set to {on}");
-                            if let Some(window) = weak.upgrade() {
-                                window.set_autostart_enabled(on);
-                            }
-                        }
-                        Err(e) => log::warn!("autostart toggle failed: {e}"),
-                    },
-                    tray::TrayCommand::RunAsAdmin => match elevate::relaunch_as_admin() {
-                        // Launched an elevated instance — remove the tray icon
-                        // and exit so it takes over the single-instance lock.
-                        Ok(true) => {
-                            tray::shutdown();
-                            std::process::exit(0);
-                        }
-                        // User dismissed the UAC prompt — stay as we are.
-                        Ok(false) => log::info!("run-as-administrator cancelled by user"),
-                        Err(e) => log::warn!("run-as-administrator failed: {e}"),
-                    },
-                    tray::TrayCommand::Exit => {
-                        let _ = slint::quit_event_loop();
+                    Err(e) => log::warn!("autostart toggle failed: {e}"),
+                },
+                tray::TrayCommand::RunAsAdmin => match elevate::relaunch_as_admin() {
+                    // Launched an elevated instance — remove the tray icon
+                    // and exit so it takes over the single-instance lock.
+                    Ok(true) => {
+                        tray::shutdown();
+                        std::process::exit(0);
                     }
+                    // User dismissed the UAC prompt — stay as we are.
+                    Ok(false) => log::info!("run-as-administrator cancelled by user"),
+                    Err(e) => log::warn!("run-as-administrator failed: {e}"),
+                },
+                tray::TrayCommand::Exit => {
+                    let _ = slint::quit_event_loop();
                 }
             }
-            if let Some(window) = weak.upgrade() {
-                state_for_timer.borrow_mut().tick(&window);
+        }
+
+        if let Some(window) = weak.upgrade() {
+            // try_borrow_mut, NOT borrow_mut: a pump step can re-enter. Some
+            // tick work pumps the Win32 message queue on this thread (e.g.
+            // the share sheet's WinRT `.get()`), which can dispatch a queued
+            // `pump::wake()` invoke — and that invoke runs another step while
+            // the outer tick still holds the borrow. Skipping the nested
+            // iteration is always safe (the outer one is mid-flight); paniced
+            // BorrowMutError here would kill the app silently instead.
+            if let Ok(mut state) = state_for_timer.try_borrow_mut() {
+                if state.tick(&window) {
+                    active = true;
+                }
+            } else {
+                // Re-entrant call: report "active" so the pump stays armed
+                // and the skipped work runs on the next regular tick.
+                active = true;
             }
-        },
-    );
+        }
+
+        active
+    });
 
     main_window.show()?;
     slint::run_event_loop_until_quit()

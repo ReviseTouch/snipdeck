@@ -84,22 +84,43 @@ mod imp {
     use windows::Win32::Graphics::Dwm::{
         DwmSetWindowAttribute, DWMWA_CLOAK, DWMWA_TRANSITIONS_FORCEDISABLED,
     };
-    use windows::Win32::System::Threading::GetCurrentProcessId;
+    use windows::Win32::System::Threading::{GetCurrentProcessId, GetCurrentThreadId};
     use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
     use windows::Win32::UI::WindowsAndMessaging::{
-        DispatchMessageW, EnumWindows, GetClassNameW, GetForegroundWindow, GetWindow,
+        DispatchMessageW, EnumWindows, GetClassNameW, GetForegroundWindow, GetMessageW, GetWindow,
         GetWindowLongPtrW, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
-        IsWindowVisible, PeekMessageW,
+        IsWindowVisible, KillTimer, PostThreadMessageW, SetTimer,
         SetWindowDisplayAffinity, SetWindowLongPtrW, SetWindowPos, ShowWindow, TranslateMessage,
         EVENT_OBJECT_CREATE, GWL_EXSTYLE, GWL_HWNDPARENT, GWL_STYLE, GW_OWNER, HWND_TOPMOST, MSG,
-        PM_REMOVE, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE,
-        SWP_NOZORDER, SW_HIDE, SW_SHOWNA, WDA_EXCLUDEFROMCAPTURE, WINEVENT_OUTOFCONTEXT,
-        WINEVENT_SKIPOWNPROCESS, WS_CAPTION, WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+        SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER,
+        SWP_NOSIZE, SWP_NOZORDER, SW_HIDE, SW_SHOWNA, WDA_EXCLUDEFROMCAPTURE,
+        WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS, WM_APP, WM_TIMER, WS_CAPTION,
+        WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
     };
 
-    const SWEEP_INTERVAL: Duration = Duration::from_millis(16);
-    const LOOP_IDLE_SLEEP: Duration = Duration::from_millis(4);
+    /// Follow-up sweep cadence while there is active window churn.
+    const SWEEP_INTERVAL_MS: u32 = 16;
     const FLOATING_REVEAL_DELAY: Duration = Duration::from_millis(120);
+    /// How long follow-up sweeps keep running after the last
+    /// window-creation event (or taskbar-policy toggle). Covers the
+    /// "title assigned just after OBJECT_CREATE" race the sweep exists
+    /// for, with a wide margin.
+    const ACTIVE_AFTER_EVENT: Duration = Duration::from_secs(2);
+
+    /// Custom thread message: re-apply the taskbar policy now (posted by
+    /// `set_floating_in_taskbar` from the main thread).
+    const WM_APP_RESWEEP: u32 = WM_APP + 1;
+
+    /// The tamer thread's id, so other threads can post WM_APP_RESWEEP.
+    static TAMER_THREAD_ID: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+    thread_local! {
+        /// Deadline until which the follow-up sweep timer keeps firing.
+        /// Extended by every OBJECT_CREATE / taskbar toggle. Tamer thread only.
+        static ACTIVE_UNTIL: std::cell::Cell<Option<Instant>> = const { std::cell::Cell::new(None) };
+        /// Id of the armed thread timer (0 = none). Tamer thread only.
+        static SWEEP_TIMER: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    }
 
     /// Whether floating snip windows should appear in the taskbar. Set
     /// via `set_floating_in_taskbar` from settings; read by tame_hwnd
@@ -140,24 +161,45 @@ mod imp {
                 WINEVENT_OUTOFCONTEXT,
             );
 
-            // Initial sweep to tame any windows that already existed
-            // when the hook was installed (e.g., the main viewport).
-            sweep_now();
+            TAMER_THREAD_ID.store(GetCurrentThreadId(), std::sync::atomic::Ordering::Relaxed);
 
-            // Pump messages for the hook + belt-and-suspenders sweep.
-            let mut last_sweep = Instant::now();
+            // Initial sweep to tame any windows that already existed
+            // when the hook was installed (e.g., the main viewport), plus
+            // a short window of follow-up sweeps for late startup windows.
+            sweep_now();
+            extend_active_window();
+
+            // Block in GetMessageW at zero CPU. Crucially, OUTOFCONTEXT
+            // WinEvent callbacks are dispatched from INSIDE GetMessageW the
+            // instant they arrive — so a new HWND is tamed while the main
+            // thread is still setting the window up, BEFORE `show()`. That
+            // ordering is what keeps windows from ever being style-fixed
+            // while visible (which needs a hide/show bounce → the fullscreen
+            // black flicker). A parked MsgWaitForMultipleObjects loop lost
+            // that race: it does NOT dispatch WinEvents while waiting, so
+            // windows were seen only after they were already on screen.
+            //
+            // Timed work (the 16 ms belt-and-suspenders sweep for ~2 s after
+            // each creation event, and pending delayed reveals) runs off a
+            // thread timer (WM_TIMER wakes GetMessageW), armed on demand and
+            // killed when idle — so a quiet system stays at zero wake-ups.
             let mut msg = MSG::default();
-            loop {
-                while PeekMessageW(&mut msg, None, 0, 0, PM_REMOVE).as_bool() {
-                    let _ = TranslateMessage(&msg);
-                    DispatchMessageW(&msg);
+            while GetMessageW(&mut msg, None, 0, 0).0 > 0 {
+                match msg.message {
+                    // Thread timers (no HWND) are not dispatched to a wndproc;
+                    // handle them right here.
+                    WM_TIMER => on_sweep_timer(),
+                    WM_APP_RESWEEP => {
+                        // Taskbar policy toggled: re-apply to existing
+                        // floating windows now and keep sweeping briefly.
+                        sweep_now();
+                        extend_active_window();
+                    }
+                    _ => {
+                        let _ = TranslateMessage(&msg);
+                        DispatchMessageW(&msg);
+                    }
                 }
-                if last_sweep.elapsed() >= SWEEP_INTERVAL {
-                    sweep_now();
-                    last_sweep = Instant::now();
-                }
-                reveal_due_windows();
-                std::thread::sleep(LOOP_IDLE_SLEEP);
             }
         }
     }
@@ -185,7 +227,10 @@ mod imp {
             // capturable so the user can take a new snip *over* an existing
             // floating snip (WDA_EXCLUDEFROMCAPTURE made them invisible to the
             // DXGI capture, so over-snips grabbed the content behind instead).
-            configure_floating_hwnd(hwnd, owner_hwnd, in_taskbar, false);
+            // Bounce allowed: this creation-path call happens before/right
+            // after show, and floating windows are the ones whose taskbar
+            // button must track the setting.
+            configure_floating_hwnd(hwnd, owner_hwnd, in_taskbar, false, true);
         }
     }
 
@@ -203,6 +248,7 @@ mod imp {
         _owner_hwnd: isize,
         in_taskbar: bool,
         exclude_from_capture: bool,
+        allow_visibility_bounce: bool,
     ) {
         let mut changed_shell_visibility = false;
 
@@ -254,7 +300,21 @@ mod imp {
             // hidden -> shown (no-activate, so focus is untouched) to force the
             // taskbar to re-evaluate. Without this the toolwindow flag is set
             // but the taskbar button lingers — the regression we were chasing.
-            if ex_changed && IsWindowVisible(hwnd).as_bool() {
+            //
+            // ONLY for windows whose taskbar button actually matters (floating
+            // snips — `allow_visibility_bounce`). Bouncing the fullscreen snip
+            // OVERLAY made it flash as a huge black rectangle mid-snip: the
+            // event-driven tamer can lose the race with `show()` and see the
+            // overlay only after it's visible, and hiding/re-showing a
+            // software-rendered fullscreen window paints black until the next
+            // present. A transient taskbar button on those windows is far
+            // cheaper than the flicker.
+            if allow_visibility_bounce && ex_changed && IsWindowVisible(hwnd).as_bool() {
+                log::info!(
+                    "visibility BOUNCE (hide/show) on hwnd={:?} title={:?}",
+                    hwnd.0,
+                    window_title(hwnd),
+                );
                 let _ = ShowWindow(hwnd, SW_HIDE);
                 let _ = ShowWindow(hwnd, SW_SHOWNA);
             }
@@ -297,7 +357,44 @@ mod imp {
         if hwnd.0.is_null() {
             return;
         }
+        // A window was just created — schedule follow-up sweeps to catch
+        // late title assignment. Runs on the tamer thread (dispatched from
+        // its GetMessageW), so the thread-local timer state is ours.
+        extend_active_window();
         tame_hwnd(hwnd);
+    }
+
+    /// Extend the follow-up sweep deadline and make sure the sweep timer is
+    /// armed. Tamer thread only (thread-local state + thread timer).
+    fn extend_active_window() {
+        ACTIVE_UNTIL.with(|a| a.set(Some(Instant::now() + ACTIVE_AFTER_EVENT)));
+        SWEEP_TIMER.with(|t| {
+            if t.get() == 0 {
+                let id = unsafe { SetTimer(None, 0, SWEEP_INTERVAL_MS, None) };
+                t.set(id);
+            }
+        });
+    }
+
+    /// One firing of the follow-up sweep timer: sweep + service delayed
+    /// reveals; disarm once the active window expired and nothing is pending.
+    fn on_sweep_timer() {
+        unsafe {
+            sweep_now();
+            reveal_due_windows();
+        }
+        let reveals_pending = REVEAL_AT.with(|r| !r.borrow().is_empty());
+        let still_active = ACTIVE_UNTIL
+            .with(|a| a.get())
+            .is_some_and(|deadline| Instant::now() < deadline);
+        if !reveals_pending && !still_active {
+            SWEEP_TIMER.with(|t| {
+                if t.get() != 0 {
+                    let _ = unsafe { KillTimer(None, t.get()) };
+                    t.set(0);
+                }
+            });
+        }
     }
 
     unsafe fn sweep_now() {
@@ -374,7 +471,10 @@ mod imp {
             if main_hwnd != 0 {
                 let in_taskbar = FLOATING_IN_TASKBAR.load(std::sync::atomic::Ordering::Relaxed);
                 let in_taskbar = is_floating_window && in_taskbar;
-                configure_floating_hwnd(hwnd, main_hwnd, in_taskbar, false);
+                // Bounce only floating snips: the sweep can reach a window
+                // AFTER it became visible, and bouncing e.g. the fullscreen
+                // overlay there flashes a black rectangle mid-snip.
+                configure_floating_hwnd(hwnd, main_hwnd, in_taskbar, false, is_floating_window);
             }
         }
 
@@ -388,6 +488,14 @@ mod imp {
 
     pub fn set_floating_in_taskbar(in_taskbar: bool) {
         FLOATING_IN_TASKBAR.store(in_taskbar, std::sync::atomic::Ordering::Relaxed);
+        // The sweep re-applies the policy to existing floating windows; ask
+        // the tamer thread (parked in GetMessageW) to do one now.
+        let tid = TAMER_THREAD_ID.load(std::sync::atomic::Ordering::Relaxed);
+        if tid != 0 {
+            unsafe {
+                let _ = PostThreadMessageW(tid, WM_APP_RESWEEP, WPARAM(0), LPARAM(0));
+            }
+        }
     }
 
     pub fn app_is_foreground() -> bool {

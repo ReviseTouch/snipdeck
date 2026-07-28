@@ -111,6 +111,15 @@ impl Collager {
     /// Open the editor with `sources` in the tray. `preselect` lists snip ids to
     /// start in the collage (e.g. the currently-floating ones); if none match,
     /// the first few sources are auto-selected so the user sees a collage at once.
+    /// True while the editor window is on screen. Backed by live window
+    /// visibility (the `window` field lingers `Some` after close), so the
+    /// pump stays awake while the user is building a collage.
+    pub fn is_open(&self) -> bool {
+        self.window
+            .as_ref()
+            .map_or(false, |w| w.window().is_visible())
+    }
+
     pub fn open(
         &mut self,
         sources_in: Vec<CollageSource>,

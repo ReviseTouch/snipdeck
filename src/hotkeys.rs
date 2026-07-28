@@ -1,5 +1,6 @@
 use crate::settings::Settings;
 use anyhow::{anyhow, Context};
+use crossbeam_channel::{unbounded, Receiver};
 use global_hotkey::{
     hotkey::{Code, HotKey, Modifiers},
     GlobalHotKeyEvent, GlobalHotKeyManager,
@@ -17,12 +18,25 @@ pub enum HotkeyAction {
 pub struct HotkeyService {
     _manager: GlobalHotKeyManager,
     bindings: Vec<(u32, HotkeyAction)>,
+    rx: Receiver<GlobalHotKeyEvent>,
 }
 
 impl HotkeyService {
     pub fn start(settings: &Settings) -> anyhow::Result<Self> {
         let manager = GlobalHotKeyManager::new().context("init global hotkey manager")?;
         let mut bindings = Vec::new();
+
+        // Route hotkey events through our own channel via a handler (rather
+        // than the crate's default global receiver) so we can WAKE THE PUMP
+        // on each press. A hotkey can fire while Snipdeck sleeps in the tray;
+        // the handler runs on the crate's own thread, forwards the event and
+        // wakes us so `poll()` delivers it. `wake()` only fires on a real
+        // registered hotkey — not on every keystroke.
+        let (tx, rx) = unbounded();
+        GlobalHotKeyEvent::set_event_handler(Some(move |event: GlobalHotKeyEvent| {
+            let _ = tx.send(event);
+            crate::pump::wake();
+        }));
 
         // Register each hotkey independently. A single combo that Windows or
         // another app has already reserved (more likely for Win-based combos)
@@ -49,15 +63,15 @@ impl HotkeyService {
         Ok(Self {
             _manager: manager,
             bindings,
+            rx,
         })
     }
 
     /// Drain global hotkey events from the global-hotkey crate's receiver and
     /// translate them to actions in our inbox. Call this from the egui update loop.
     pub fn poll(&self) -> Vec<HotkeyAction> {
-        let receiver = GlobalHotKeyEvent::receiver();
         let mut out = Vec::new();
-        while let Ok(event) = receiver.try_recv() {
+        while let Ok(event) = self.rx.try_recv() {
             if event.state != global_hotkey::HotKeyState::Pressed {
                 continue;
             }

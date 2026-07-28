@@ -50,7 +50,8 @@ component ToolBtn inherits Rectangle {
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;
         border-radius: 18px;
-        background: root.active ? #4b4b4f : (ta.has-hover ? #2f2f31 : transparent);
+        background: root.active ? #4b4b4f : (ta.pressed ? #3d3d40 : (ta.has-hover ? #2f2f31 : transparent));
+        animate background { duration: 80ms; }
         Glyph {
             name: root.icon;
             paint: root.active ? #ffffff : #d8d6d2;
@@ -81,8 +82,9 @@ component Swatch inherits Rectangle {
         border-radius: 7px;
         clip: true;
         background: root.is-transparent ? #ffffff : root.tone;
-        border-width: root.active ? 3px : 1px;
-        border-color: root.active ? #0a84ff : #ffffff66;
+        border-width: root.active ? 3px : (ta.pressed ? 2px : 1px);
+        border-color: root.active ? #0a84ff : (ta.pressed ? #ffffffcc : #ffffff66);
+        animate border-color, border-width { duration: 80ms; }
         // Checker for the transparent option.
         if root.is-transparent : Rectangle {
             x: 13px; y: 0; width: 13px; height: 13px; background: #c0c0c4;
@@ -111,7 +113,8 @@ component ColorChip inherits Rectangle {
         border-radius: 15px;
         background: root.tint;
         border-width: root.open ? 3px : 2px;
-        border-color: root.open ? #ffffff : #ffffffaa;
+        border-color: root.open ? #ffffff : (ta.pressed ? #ffffffff : #ffffffaa);
+        animate border-color { duration: 80ms; }
     }
     ta := TouchArea {
         clicked => { root.clicked(); }
@@ -180,9 +183,10 @@ component TextButton inherits Rectangle {
         y: (parent.height - self.height) / 2;
         border-radius: 17px;
         opacity: root.enabled ? 1.0 : 0.4;
-        background: root.accent
-            ? (ta.has-hover ? #2a93ff : #0a84ff)
-            : (ta.has-hover ? #38383a : transparent);
+        background: ta.pressed
+            ? (root.accent ? #0a6fe0 : #48484a)
+            : (root.accent ? (ta.has-hover ? #2a93ff : #0a84ff) : (ta.has-hover ? #38383a : transparent));
+        animate background { duration: 80ms; }
         Text {
             text: root.label;
             color: root.accent ? #ffffff : #e8e6e2;
@@ -409,7 +413,8 @@ export component CollageWindow inherits Window {
                                 y: (parent.height - self.height) / 2;
                                 border-radius: 10px;
                                 clip: true;
-                                background: #1e1e20;
+                                background: ta.pressed ? #2a2a2d : #1e1e20;
+                                animate background { duration: 80ms; }
                                 border-width: it.order > 0 ? 2px : 0px;
                                 border-color: #0a84ff;
                                 Image {

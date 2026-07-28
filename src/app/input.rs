@@ -14,6 +14,22 @@ impl AppState {
                 // route its result the way the matching Win+drag combo would.
                 self.armed_routing = Some((to_clip, keep_float));
                 crate::mouse_trigger::arm_snip();
+                // Stamp when we armed so the tick watchdog can recover if the
+                // user arms a snip, hides the main window, then never clicks
+                // (Esc already cancels; this covers the "walk away" case).
+                self.armed_snip_at = Some(std::time::Instant::now());
+                // Remember where the window is BEFORE hiding it — the
+                // overlay-driven path below uses its centre to pick the
+                // monitor to freeze (no global cursor without a hook).
+                #[cfg(not(target_os = "windows"))]
+                let centre = {
+                    let pos = window.window().position();
+                    let size = window.window().size();
+                    (
+                        pos.x + size.width as i32 / 2,
+                        pos.y + size.height as i32 / 2,
+                    )
+                };
                 // Hide Snipdeck's own window so it's neither captured in the
                 // shot nor in the way of the region the user wants to grab. We
                 // bring it back once the snip finishes (Release) or is cancelled
@@ -23,6 +39,15 @@ impl AppState {
                 // Clear any stale banner so the old "not wired up" hint (or a
                 // previous error) doesn't linger over the armed snip.
                 self.last_error = None;
+                // No global mouse hook on Linux/Wayland — an armed click can
+                // never arrive. Instead: freeze the screen NOW (same flow as
+                // Win+Shift+Space) and let the overlay's own input capture
+                // drive the drag; `armed_routing` set above still applies.
+                #[cfg(not(target_os = "windows"))]
+                self.handle_mouse_event(MouseTriggerEvent::FreezeArm {
+                    x: centre.0,
+                    y: centre.1,
+                });
             }
             Action::PickColor => {
                 // Start the eyedropper: hide our window so it's out of the way,
@@ -278,12 +303,18 @@ impl AppState {
                     if armed_at.elapsed() < std::time::Duration::from_secs(12) {
                         let source_window = crate::window_metadata::capture_at_point(x, y);
                         self.overlay.update_sel(x, y, x, y);
+                        // A hotkey/toolbar arm may have chosen an explicit
+                        // routing (the overlay-driven Linux path always comes
+                        // through here); plain Win+Shift+Space keeps the old
+                        // default: floating, no clipboard.
+                        let (to_clipboard, keep_floating) =
+                            self.armed_routing.take().unwrap_or((false, true));
                         self.active = Some(ActiveSelection {
                             captured,
                             start: (x, y),
                             end: (x, y),
-                            to_clipboard: false,
-                            keep_floating: true,
+                            to_clipboard,
+                            keep_floating,
                             source_window,
                         });
                         return;
@@ -391,7 +422,14 @@ impl AppState {
             MouseTriggerEvent::Release { x, y } => {
                 if let Some(mut sel) = self.active.take() {
                     sel.end = (x, y);
-                    self.overlay.hide();
+                    // Overlay handoff: when the result is a floating snip, the
+                    // overlay (with the selection border) stays up until the
+                    // floating window is actually shown — `tick` hides it right
+                    // after processing `pending_open`. Hiding it here opened a
+                    // visible gap (crop + PNG write + SQLite + one tick) where
+                    // the selection blinked out before the snip appeared.
+                    // Every non-floating / error path below hides explicitly.
+                    //
                     // A toolbar-button snip hid the main window; bring it back
                     // now the drag is done — set before any early-return below
                     // (region-too-small / save-failed) so it always restores.
@@ -399,6 +437,9 @@ impl AppState {
                         self.restore_main_after_snip = false;
                         self.pending_show_main = true;
                     }
+                    // The armed snip has now started/finished; drop the watchdog
+                    // timestamp so it can't fire a spurious recovery later.
+                    self.armed_snip_at = None;
                     // Mask the Win key (Ctrl tap) so a lone Win press can't
                     // open the Start menu — but keep any modifier the user
                     // is still physically holding. That's what lets you hold
@@ -415,6 +456,7 @@ impl AppState {
                     log::info!("Release: region={:?}", region);
                     if region.w < 4 || region.h < 4 {
                         log::info!("Region too small, ignoring");
+                        self.overlay.hide();
                         return;
                     }
                     let monitor_label = sel.captured.monitor_label.clone();
@@ -423,6 +465,7 @@ impl AppState {
                             let mut snip = make_snip(region);
                             snip.monitor_label = Some(monitor_label);
                             if let Err(e) = snip.save_image_png(&image) {
+                                self.overlay.hide();
                                 self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
                                 return;
                             }
@@ -437,7 +480,16 @@ impl AppState {
                             let snip_id = snip.id;
                             let keep_float = sel.keep_floating;
                             self.gallery.push_new(snip);
-                            let _ = self.gallery.save();
+                            // Surface a persistence failure instead of dropping
+                            // it. The busy_timeout in `open_db` makes a
+                            // SQLITE_BUSY loss rare now, but if the row still
+                            // fails to commit the PNG is orphaned and the snip
+                            // vanishes on next launch — tell the user rather than
+                            // lose it silently.
+                            if let Err(e) = self.gallery.save() {
+                                self.last_error =
+                                    Some(t1("Failed to save snip: {e}", "{e}", &e.to_string()));
+                            }
                             if let Some(window_info) = sel.source_window.take() {
                                 let window_info = crate::window_metadata::with_selection_confidence(
                                     window_info,
@@ -456,11 +508,17 @@ impl AppState {
                                 keep_float
                             );
                             if keep_float {
+                                // Floating result: the overlay stays visible
+                                // until tick opens this window (seamless
+                                // handoff — see the comment at Release above).
                                 self.pending_open.push(snip_id);
+                            } else {
+                                self.overlay.hide();
                             }
                             self.last_snip_ids.clear();
                         }
                         Err(e) => {
+                            self.overlay.hide();
                             self.last_error = Some(t1("Failed to crop region: {e}", "{e}", &e.to_string()));
                         }
                     }
@@ -486,6 +544,12 @@ impl AppState {
                 }
                 self.active = None;
                 self.frozen_pending = None;
+                // Drop any capture routing armed by a toolbar/tray/hotkey
+                // trigger, plus its watchdog timestamp; otherwise a cancelled
+                // arm's stale routing (e.g. clipboard-only) would mis-route a
+                // later, unrelated Win+drag.
+                self.armed_routing = None;
+                self.armed_snip_at = None;
                 crate::mouse_trigger::clear_freeze();
                 self.overlay.hide();
                 crate::mouse_trigger::force_release_modifiers();

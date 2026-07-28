@@ -82,6 +82,16 @@ impl TranslatePopup {
     /// never clipped at an edge (the software renderer won't repaint a region
     /// that was off-screen). `scale` is the UI scale factor, used to size the
     /// popup in physical pixels for the clamp maths.
+    /// True while the popup is actually on screen (not merely constructed —
+    /// `window` lingers `Some` after close). Backed by the window's live
+    /// visibility, so the pump can stay awake while async OCR/translate
+    /// results are still landing and stop the moment the user closes it.
+    pub fn is_open(&self) -> bool {
+        self.window
+            .as_ref()
+            .map_or(false, |w| w.window().is_visible())
+    }
+
     pub fn open(
         &mut self,
         id: Uuid,
@@ -373,6 +383,9 @@ fn spawn_ocr_translate(tx: Sender<TransResult>, id: Uuid, image: image::RgbaImag
             },
         };
         let _ = tx.send(result);
+        // Result is enqueued; wake the pump so `poll()` drains it into the
+        // popup even if the loop had gone to sleep behind the spinner.
+        crate::pump::wake();
     });
 }
 
@@ -393,6 +406,7 @@ fn spawn_retranslate(tx: Sender<TransResult>, id: Uuid, source: String, target: 
             },
         };
         let _ = tx.send(result);
+        crate::pump::wake();
     });
 }
 

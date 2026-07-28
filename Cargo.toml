@@ -1,6 +1,6 @@
 [package]
 name = "snipdeck"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 description = "A fast Windows screen-snipping deck: capture regions, keep floating snips on screen, OCR-index, search, and manage hundreds of screenshots."
 authors = ["Hasan Salihoğlu <hsn.salihoglu@gmail.com>"]
@@ -29,7 +29,7 @@ global-hotkey = "0.5"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "gif", "tiff"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.32", features = ["bundled", "functions"] }
 dirs = "5"
 rfd = "0.14"
 chrono = { version = "0.4", features = ["serde"] }

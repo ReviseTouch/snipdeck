@@ -33,7 +33,8 @@ component TransLangBtn inherits Rectangle {
     border-radius: 6px;
     border-width: 1px;
     border-color: active ? #d96a1f : (ta.has-hover ? #3a3a3a : #2a2a2a);
-    background: active ? #2a1d12 : (ta.has-hover ? #242424 : transparent);
+    background: active ? #2a1d12 : (ta.pressed ? #2e2e2e : (ta.has-hover ? #242424 : transparent));
+    animate background { duration: 80ms; }
 
     Text {
         text: root.label;
@@ -154,7 +155,8 @@ export component TranslatePopupWindow inherits Window {
                     Rectangle {
                         width: 22px; height: 22px;
                         border-radius: 6px;
-                        background: xta.has-hover ? #2a2a2a : transparent;
+                        background: xta.pressed ? #3a3a3a : (xta.has-hover ? #2a2a2a : transparent);
+                        animate background { duration: 80ms; }
                         Glyph {
                             name: "x";
                             paint: xta.has-hover ? #e8e6e2 : #8a8782;
@@ -190,7 +192,8 @@ export component TranslatePopupWindow inherits Window {
                     border-radius: 5px;
                     border-width: 1px;
                     border-color: root.dd-open ? #d96a1f : #3a3a3a;
-                    background: dd-ta.has-hover || root.dd-open ? #242424 : transparent;
+                    background: dd-ta.pressed ? #2e2e2e : (dd-ta.has-hover || root.dd-open ? #242424 : transparent);
+                    animate background { duration: 80ms; }
                     Text {
                         text: @tr("More ▾");
                         color: dd-ta.has-hover || root.dd-open ? #e8e6e2 : #b8b6b1;
@@ -227,7 +230,8 @@ export component TranslatePopupWindow inherits Window {
                 Rectangle {
                     width: 64px; height: 18px;
                     border-radius: 4px;
-                    background: cs-ta.has-hover ? #242424 : transparent;
+                    background: cs-ta.pressed ? #2e2e2e : (cs-ta.has-hover ? #242424 : transparent);
+                    animate background { duration: 80ms; }
                     border-width: 1px;
                     border-color: #2a2a2a;
                     Text {
@@ -298,7 +302,8 @@ export component TranslatePopupWindow inherits Window {
             Rectangle {
                 height: 34px;
                 border-radius: 8px;
-                background: copy-ta.has-hover ? #ffa05c : #ff8a3d;
+                background: copy-ta.pressed ? #e5731f : (copy-ta.has-hover ? #ffa05c : #ff8a3d);
+                animate background { duration: 80ms; }
                 HorizontalLayout {
                     alignment: center;
                     spacing: 7px;
@@ -342,7 +347,8 @@ export component TranslatePopupWindow inherits Window {
                         border-radius: 5px;
                         background: l.code == root.target-lang
                             ? #2a1d12
-                            : (lang-ta.has-hover ? #2a2a2a : transparent);
+                            : (lang-ta.pressed ? #333333 : (lang-ta.has-hover ? #2a2a2a : transparent));
+                        animate background { duration: 80ms; }
                         // Row click selects the language (declared first so the
                         // star below sits on top and claims its own clicks).
                         lang-ta := TouchArea {

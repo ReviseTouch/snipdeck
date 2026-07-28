@@ -18,6 +18,21 @@ export component OverlayWindow inherits Window {
     in property <length> outer-w: 1920px;
     in property <length> outer-h: 1080px;
 
+    // Overlay-driven selection (Linux/Wayland path): when true, the overlay
+    // itself captures the pointer and drives the drag through the callbacks
+    // below. On Windows this stays false — the global mouse hook feeds the
+    // selection and the overlay is a passive visual. Coordinates are
+    // window-local logical px; Rust converts to global physical.
+    in property <bool> input-capture: false;
+    callback sel-pressed(length, length);
+    callback sel-moved(length, length);
+    callback sel-released(length, length);
+    callback sel-cancelled();
+
+    public function grab-keyboard() {
+        esc-scope.focus();
+    }
+
     // Frozen-screen backdrop (Win+Shift+Space "freeze first" mode): when
     // `frozen` is true the overlay shows `frozen-bg` — the snapshot taken the
     // instant Space was pressed — so selection happens on a still image and
@@ -122,6 +137,41 @@ export component OverlayWindow inherits Window {
         border-color: border-color;
         border-width: 1px;
         visible: selecting && sel-w > 2px && sel-h > 2px;
+    }
+
+    // Input layer for the overlay-driven path. Declared after the visuals so
+    // it sits on top and receives the pointer; draws nothing. `moved` only
+    // fires while a button is down, which is exactly the drag we want.
+    esc-scope := FocusScope {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        enabled: input-capture;
+        key-pressed(event) => {
+            if (event.text == Key.Escape) {
+                root.sel-cancelled();
+                return accept;
+            }
+            reject
+        }
+        if input-capture : TouchArea {
+            x: 0px;
+            y: 0px;
+            width: parent.width;
+            height: parent.height;
+            mouse-cursor: crosshair;
+            pointer-event(ev) => {
+                if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.down) {
+                    root.sel-pressed(self.mouse-x, self.mouse-y);
+                } else if (ev.button == PointerEventButton.left && ev.kind == PointerEventKind.up) {
+                    root.sel-released(self.mouse-x, self.mouse-y);
+                }
+            }
+            moved => {
+                root.sel-moved(self.mouse-x, self.mouse-y);
+            }
+        }
     }
 
     // W × H readout — anchored at the bottom-right of the selection.

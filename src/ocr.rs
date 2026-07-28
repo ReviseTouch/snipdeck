@@ -74,7 +74,7 @@ pub fn engine_name() -> &'static str {
 
 #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
 pub fn engine_name() -> &'static str {
-    "unsupported"
+    "tesseract"
 }
 
 fn upscale_if_tiny(image: &image::RgbaImage) -> Option<image::RgbaImage> {
@@ -173,7 +173,53 @@ pub fn extract_text(_image: &image::RgbaImage) -> anyhow::Result<String> {
     anyhow::bail!("macOS Vision OCR backend is not wired up yet")
 }
 
+/// Linux backend: shell out to the user's own `tesseract` if it is
+/// installed (runtime detection — no bundled binaries, no downloads; the
+/// distro package is the trusted install path). Absent tesseract, OCR
+/// degrades gracefully: callers already treat an Err as "skip indexing".
 #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
-pub fn extract_text(_image: &image::RgbaImage) -> anyhow::Result<String> {
-    anyhow::bail!("OCR is currently only supported on Windows")
+pub fn extract_text(image: &image::RgbaImage) -> anyhow::Result<String> {
+    use anyhow::Context;
+    use std::process::Command;
+
+    // Which language packs are installed? Prefer Turkish+English when
+    // present; otherwise let tesseract use its default (eng).
+    let langs = Command::new("tesseract")
+        .arg("--list-langs")
+        .output()
+        .context(
+            "tesseract not found — install it for OCR (e.g. `sudo apt install tesseract-ocr tesseract-ocr-tur`)",
+        )?;
+    let installed = String::from_utf8_lossy(&langs.stdout);
+    let mut wanted: Vec<&str> = Vec::new();
+    for lang in ["tur", "eng"] {
+        if installed.lines().any(|l| l.trim() == lang) {
+            wanted.push(lang);
+        }
+    }
+
+    // tesseract reads files, not pipes (portably) — hand it a temp PNG.
+    let tmp = std::env::temp_dir().join(format!("snipdeck-ocr-{}.png", std::process::id()));
+    image
+        .save_with_format(&tmp, image::ImageFormat::Png)
+        .context("writing temp PNG for tesseract")?;
+    let mut cmd = Command::new("tesseract");
+    cmd.arg(&tmp).arg("stdout");
+    if !wanted.is_empty() {
+        cmd.arg("-l").arg(wanted.join("+"));
+    }
+    let out = cmd.output().context("running tesseract")?;
+    let _ = std::fs::remove_file(&tmp);
+
+    if !out.status.success() {
+        anyhow::bail!(
+            "tesseract failed: {}",
+            String::from_utf8_lossy(&out.stderr).trim()
+        );
+    }
+    let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    if text.is_empty() {
+        anyhow::bail!("OCR returned empty — no text found in the image");
+    }
+    Ok(text)
 }

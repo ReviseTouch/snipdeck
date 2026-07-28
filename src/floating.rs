@@ -155,6 +155,7 @@ impl FloatingManager {
         let shared = self.shared.clone();
         let weak = win.as_weak();
         win.on_drag_delta(move |dx, dy| {
+            crate::pump::wake();
             if let Some(c) = weak.upgrade() {
                 let pos = c.window().position();
                 let nx = pos.x + dx as i32;
@@ -172,6 +173,7 @@ impl FloatingManager {
         let shared_menu = self.shared.clone();
         let weak_menu = win.as_weak();
         win.on_right_pressed(move |lx, ly| {
+            crate::pump::wake();
             if let Some(c) = weak_menu.upgrade() {
                 let pos = c.window().position();
                 let sx = pos.x + (lx as f32) as i32;
@@ -185,11 +187,13 @@ impl FloatingManager {
 
         let shared_close = self.shared.clone();
         win.on_middle_pressed(move || {
+            crate::pump::wake();
             shared_close.borrow_mut().pending_close.push(snip_id);
         });
 
         let shared_select = self.shared.clone();
         win.on_pressed(move || {
+            crate::pump::wake();
             shared_select.borrow_mut().pending_select.push(snip_id);
         });
 
@@ -200,6 +204,7 @@ impl FloatingManager {
         // fires.
         let weak_res = win.as_weak();
         win.on_resize_delta(move |side, dx, dy| {
+            crate::pump::wake();
             let Some(c) = weak_res.upgrade() else {
                 return;
             };
@@ -273,6 +278,7 @@ impl FloatingManager {
 
         let shared_resize_end = self.shared.clone();
         win.on_resize_end(move || {
+            crate::pump::wake();
             shared_resize_end
                 .borrow_mut()
                 .pending_resize_end
@@ -280,6 +286,12 @@ impl FloatingManager {
         });
 
         win.show()?;
+        // NOTE: this never resolves an HWND on the winit backend (the native
+        // window handle isn't exposed through raw-window-handle here — logs
+        // show "not available yet" even after show). The style work actually
+        // happens in window_tamer's OBJECT_CREATE hook, which fires while the
+        // window is still hidden. Kept as a harmless fallback for backends
+        // where the handle does resolve.
         crate::window_tamer::configure_floating_window(
             win.window(),
             owner_window,

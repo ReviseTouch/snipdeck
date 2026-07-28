@@ -38,7 +38,7 @@ mod imp {
         WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_SYSKEYDOWN, WM_SYSKEYUP,
     };
 
-    use crate::mouse_trigger::{ModifierSet, MouseTriggerEvent, FREEZE_ARMED};
+    use crate::mouse_trigger::{ModifierSet, MouseTriggerEvent, DISGUISE_WINUP_ARMED, FREEZE_ARMED};
 
     const MOD_LWIN: u8 = 1 << 0;
     const MOD_RWIN: u8 = 1 << 1;
@@ -201,6 +201,12 @@ mod imp {
         let is_down = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
         let is_up = message == WM_KEYUP || message == WM_SYSKEYUP;
 
+        // Snapshot the tracked Win state BEFORE `update_modifier` folds this
+        // event in — the stale-arm clear further down needs to know whether Win
+        // was already (physically) down to tell an auto-repeat from a fresh
+        // press (WH_KEYBOARD_LL carries no previous-state bit).
+        let win_was_down = (state.physical_mods.load(Ordering::Relaxed) & WIN_BITS) != 0;
+
         if (is_down || is_up) && !keyboard_event_is_injected(event.flags) {
             state.update_modifier(event.vkCode as u16, event.scanCode, event.flags, is_down);
         }
@@ -208,11 +214,60 @@ mod imp {
         let vk = event.vkCode as u16;
 
         if is_down && vk == VK_ESCAPE.0 {
+            let was_color = crate::mouse_trigger::consume_color_pick();
             let was_active = state.snip_active.swap(false, Ordering::Relaxed);
             let was_armed = FREEZE_ARMED.swap(false, Ordering::Relaxed);
-            if was_active || was_armed {
+            // Also cancel a one-shot arm (toolbar/tray/hotkey "New Snip") that
+            // hasn't been clicked yet — otherwise Esc is dead, the hidden main
+            // window never comes back, and the next ordinary left-click gets
+            // hijacked into a snip.
+            let was_snip_armed = crate::mouse_trigger::consume_armed();
+            crate::mouse_trigger::set_snip_active(false);
+            if was_color || was_active || was_armed || was_snip_armed {
                 let _ = state.tx.send(MouseTriggerEvent::Cancel);
+                crate::pump::wake();
             }
+        }
+
+        // A physical Win key-up while the disguise is armed (a Win+drag snip
+        // happened during this hold): swallow it and synchronously replace it
+        // with [Ctrl tap + Win-up] so the OS never sees a "lone Win" and the
+        // Start menu stays shut. Injected events must pass through untouched —
+        // the replacement's own Win-up arrives right back here.
+        if is_up
+            && (vk == VK_LWIN.0 || vk == VK_RWIN.0)
+            && !keyboard_event_is_injected(event.flags)
+            && DISGUISE_WINUP_ARMED.swap(false, Ordering::Relaxed)
+        {
+            if inject_disguised_winup_sync(vk) {
+                return LRESULT(1);
+            }
+            // Injection failed (UIPI — an elevated window has focus?). Let
+            // the physical Win-up through: the Start menu may open, but a
+            // suppressed-and-unreplaced up would leave the Win key stuck
+            // down at the OS level, which is far worse.
+        }
+        // A physical Win press *may* clear a stale arm (a release our hook never
+        // saw, e.g. one that landed on the secure desktop), so normal Start-menu
+        // usage isn't eaten later — but ONLY on a genuinely FRESH press. A held
+        // Win key streams typematic-repeat KEYDOWNs, and WH_KEYBOARD_LL cannot
+        // tell a repeat from a fresh press (KBDLLHOOKSTRUCT has no previous-state
+        // bit). Clearing on a repeat would drop the disguise mid-hold — user
+        // holds Win, drags (arm set on WM_LBUTTONDOWN), a Win auto-repeat clears
+        // the arm, then Win-up passes through undisguised and pops Start. This is
+        // deterministic on keyboards/drivers that deliver held-modifier repeats
+        // (many laptops, gaming keyboards, RDP): the "works on dev machines,
+        // fails on some PCs" signature. So: if Win wasn't already tracked down
+        // this is unambiguously fresh → clear. If it was, it's either a real
+        // repeat or a stale bit (a release we never saw); disambiguate with
+        // GetAsyncKeyState's pre-event hardware state — DOWN = real repeat (keep
+        // the arm), UP = stale bit (treat as fresh → clear).
+        if is_down
+            && (vk == VK_LWIN.0 || vk == VK_RWIN.0)
+            && !keyboard_event_is_injected(event.flags)
+            && (!win_was_down || !async_key_down(vk))
+        {
+            DISGUISE_WINUP_ARMED.store(false, Ordering::Relaxed);
         }
 
         // Win+Shift+Space → freeze the screen now (capture hover tooltips),
@@ -227,8 +282,14 @@ mod imp {
             // Swallow EVERY Win+Shift+Space (including key-repeat); fire
             // FreezeArm only once.
             if !FREEZE_ARMED.swap(true, Ordering::Relaxed) {
+                // The Space that would have counted as "a key during the Win
+                // hold" never reaches the OS (we swallow it), so the eventual
+                // Win-up could still read as a lone Win. Arm the release-time
+                // disguise here too — Win is held by definition of the chord.
+                DISGUISE_WINUP_ARMED.store(true, Ordering::Relaxed);
                 if let Some((x, y)) = cursor_pos() {
                     let _ = state.tx.send(MouseTriggerEvent::FreezeArm { x, y });
+                    crate::pump::wake();
                 }
             }
             return LRESULT(1);
@@ -256,30 +317,50 @@ mod imp {
 
         match message {
             WM_LBUTTONDOWN if !injected => {
+                // Colour-pick mode: grab the pixel under the cursor and
+                // suppress the click (don't let it reach the app below).
+                if crate::mouse_trigger::consume_color_pick() {
+                    let _ = state.tx.send(MouseTriggerEvent::ColorPick {
+                        x: event.pt.x,
+                        y: event.pt.y,
+                    });
+                    crate::pump::wake();
+                    return LRESULT(1);
+                }
                 let armed = crate::mouse_trigger::consume_armed();
+                let win = state.win_down();
                 // freeze_armed lets the click start the selection with NO
                 // modifier held — the screen is already frozen (Win+Shift+Space
                 // "freeze first", Win+Shift+S style).
-                if state.win_down() || armed || FREEZE_ARMED.load(Ordering::Relaxed) {
+                if win || armed || FREEZE_ARMED.load(Ordering::Relaxed) {
                     if !state.snip_active.swap(true, Ordering::Relaxed) {
+                        crate::mouse_trigger::set_snip_active(true);
                         FREEZE_ARMED.store(false, Ordering::Relaxed);
+                        // The user is holding Win: arm the release-time
+                        // disguise so the eventual Win-up (whenever it comes —
+                        // mid-drag or several snips later) can't pop Start.
+                        if win {
+                            DISGUISE_WINUP_ARMED.store(true, Ordering::Relaxed);
+                        }
                         let mods = state.modifier_snapshot();
                         let _ = state.tx.send(MouseTriggerEvent::StartSnip {
                             x: event.pt.x,
                             y: event.pt.y,
                             mods,
                         });
-                        std::thread::spawn(inject_menu_mask_win);
+                        crate::pump::wake();
                     }
                     return LRESULT(1);
                 }
             }
             WM_LBUTTONUP => {
                 if state.snip_active.swap(false, Ordering::Relaxed) {
+                    crate::mouse_trigger::set_snip_active(false);
                     let _ = state.tx.send(MouseTriggerEvent::Release {
                         x: event.pt.x,
                         y: event.pt.y,
                     });
+                    crate::pump::wake();
                     return LRESULT(1);
                 }
             }
@@ -289,6 +370,7 @@ mod imp {
                         x: event.pt.x,
                         y: event.pt.y,
                     });
+                    crate::pump::wake();
                 }
             }
             _ => {}
@@ -357,13 +439,10 @@ mod imp {
         // Native hook tracks physical modifier state from non-injected
         // events. Do not synthesize Win/Ctrl/Alt/Shift KEYUP here:
         // doing so can prevent Windows from delivering the later real
-        // physical Win-up, leaving our physical state stuck down.
-        // The disguise tap is only a menu-mask so releasing Win after a snip
-        // does not open Start.
-        let inputs = [disguise_input(false), disguise_input(true)];
-        unsafe {
-            SendInput(&inputs, std::mem::size_of::<INPUT>() as i32);
-        }
+        // physical Win-up, leaving our physical state stuck down. The
+        // Start-menu problem itself is handled at release time (the armed
+        // Win-up is swallowed and replaced in `keyboard_proc`), so all
+        // that's left here is drift correction.
         if let Some(state) = HOOK_STATE.get().cloned() {
             std::thread::spawn(move || {
                 for delay_ms in [30, 120, 300] {
@@ -374,25 +453,43 @@ mod imp {
         }
     }
 
-    fn inject_menu_mask_win() {
-        let inputs = [disguise_input(false), disguise_input(true)];
-        let sent = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
-        log::info!("Win-key disguise injected (native); SendInput sent {sent}/2");
-    }
-
-    /// A disguise-key tap so a lone Win release after a snip can't open the
-    /// Start menu. The key is OS-specific (F23 on Win11, Left-Ctrl on Win10) —
-    /// see `crate::mouse_trigger::disguise_vk_scan`. SYNTHETIC_EXTRA_INFO + the
-    /// injected flag keep our own hook from mistaking it for physical input.
-    fn disguise_input(up: bool) -> INPUT {
+    /// Swallow-and-replace for a post-snip Win release: the physical Win-up
+    /// was suppressed by the hook; emit `[Ctrl down, Ctrl up, Win up]` in its
+    /// place. The Ctrl tap counts as a key pressed during the Win hold, so
+    /// the trailing Win-up is no longer a "lone Win" and the Start menu stays
+    /// shut — AutoHotkey's MenuMaskKey technique, applied at the exact moment
+    /// of release. Ctrl (not F23): inert keys never cancelled the lone-Win on
+    /// Win10, and F23 formed the hardware Copilot chord (Win+Shift+F23)
+    /// during Win+Shift+drag snips on Copilot-key machines.
+    ///
+    /// Runs SYNCHRONOUSLY inside the hook callback: spawning a thread here
+    /// opened a race where the replacement landed after other input — or
+    /// never (UIPI) — leaving Win logically stuck down. SYNTHETIC_EXTRA_INFO
+    /// + the injected flag keep our own hook from re-processing the
+    /// replacement. Returns whether all three events were injected; on
+    /// failure the caller must let the physical Win-up through.
+    fn inject_disguised_winup_sync(win_vk: u16) -> bool {
         use windows::Win32::UI::Input::KeyboardAndMouse::KEYBD_EVENT_FLAGS;
-        let (vk, scan) = crate::mouse_trigger::disguise_vk_scan();
-        INPUT {
+        // The Ctrl tap's only job is to be "a key pressed during the Win hold"
+        // so the replacement Win-up isn't a lone Win (which would pop Start).
+        // But if another modifier is ALREADY physically held at release time,
+        // the OS has already seen a key during the hold — the Win-up is non-lone
+        // on its own — and injecting Ctrl would form a real chord: Ctrl+Shift is
+        // the default "switch keyboard layout" hotkey on multi-layout systems
+        // (ubiquitous on Turkish setups), so a Win+Shift+drag snip would
+        // silently flip the layout on every release. (A Ctrl tap while the user
+        // holds Ctrl would also inject a spurious Ctrl-up.) So skip the mask tap
+        // whenever Shift/Alt/Ctrl is down and inject only the Win-up; still
+        // swallow+replace the physical up. GetAsyncKeyState reads live hardware.
+        let other_mod_down = async_key_down(VK_SHIFT.0)
+            || async_key_down(VK_MENU.0)
+            || async_key_down(VK_CONTROL.0);
+        let key = |vk: u16, up: bool| INPUT {
             r#type: INPUT_KEYBOARD,
             Anonymous: INPUT_0 {
                 ki: KEYBDINPUT {
                     wVk: VIRTUAL_KEY(vk),
-                    wScan: scan,
+                    wScan: 0,
                     dwFlags: if up {
                         KEYEVENTF_KEYUP
                     } else {
@@ -402,6 +499,30 @@ mod imp {
                     dwExtraInfo: SYNTHETIC_EXTRA_INFO,
                 },
             },
+        };
+        // `full` is [Ctrl down, Ctrl up, Win up]; the masked case sends only the
+        // trailing Win-up (`&full[2..]`), so `winup` stays referenced either way.
+        let full = [
+            key(VK_LCONTROL.0, false),
+            key(VK_LCONTROL.0, true),
+            key(win_vk, true),
+        ];
+        let inputs: &[INPUT] = if other_mod_down { &full[2..] } else { &full };
+        let sent = unsafe { SendInput(inputs, std::mem::size_of::<INPUT>() as i32) };
+        let ok = sent as usize == inputs.len();
+        if ok {
+            if other_mod_down {
+                log::info!("disguised Win-up injected (bare Win up; held modifier already masks)");
+            } else {
+                log::info!("disguised Win-up injected (Ctrl tap + Win up)");
+            }
+        } else {
+            log::warn!(
+                "disguised Win-up injection incomplete: SendInput sent {sent}/{} \
+                 (elevated window focused?); passing physical Win-up through",
+                inputs.len()
+            );
         }
+        ok
     }
 }

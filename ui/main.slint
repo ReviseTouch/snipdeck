@@ -61,11 +61,16 @@ component ToolbarButton inherits Rectangle {
     border-radius: 6px;
     border-width: primary ? 1px : (active ? 1px : 0px);
     border-color: primary ? (dark ? #d96a1f : #b85a14) : (dark ? #4a3520 : #ecd3b0);
-    background: primary
-        ? (ta.has-hover ? (dark ? #ffa05c : #f08540) : (dark ? #ff8a3d : #e5731f))
-        : (danger && ta.has-hover
-            ? (dark ? #3a1a1a : #fbe6e6)
-            : (active ? (dark ? #2a2520 : #fbe9d6) : (ta.has-hover ? (dark ? #262626 : #ecebe5) : transparent)));
+    background: ta.pressed
+        ? (primary ? (dark ? #e5731f : #cc5f14)
+            : (danger ? (dark ? #5a2222 : #f6cccc)
+                : (dark ? #3a3a3a : #dedcd4)))
+        : (primary
+            ? (ta.has-hover ? (dark ? #ffa05c : #f08540) : (dark ? #ff8a3d : #e5731f))
+            : (danger && ta.has-hover
+                ? (dark ? #3a1a1a : #fbe6e6)
+                : (active ? (dark ? #2a2520 : #fbe9d6) : (ta.has-hover ? (dark ? #262626 : #ecebe5) : transparent))));
+    animate background { duration: 80ms; }
 
     HorizontalLayout {
         padding-left: 9px;
@@ -136,7 +141,10 @@ component IconButton inherits Rectangle {
     border-radius: 6px;
     border-width: active ? 1px : 0px;
     border-color: active ? (dark ? #4a3520 : #ecd3b0) : transparent;
-    background: active ? (dark ? #2a2520 : #fbe9d6) : (ta.has-hover ? (danger ? (dark ? #3a1a1a : #fbe6e6) : (dark ? #262626 : #ecebe5)) : transparent);
+    background: ta.pressed
+        ? (danger ? (dark ? #5a2222 : #f6cccc) : (dark ? #3a3a3a : #dedcd4))
+        : (active ? (dark ? #2a2520 : #fbe9d6) : (ta.has-hover ? (danger ? (dark ? #3a1a1a : #fbe6e6) : (dark ? #262626 : #ecebe5)) : transparent));
+    animate background { duration: 80ms; }
 
     Glyph {
         name: root.icon;
@@ -173,7 +181,10 @@ component FilterPill inherits Rectangle {
     border-radius: 6px;
     border-width: 1px;
     border-color: active ? (dark ? #4a3520 : #ecd3b0) : (dark ? #2e2e2e : #dcd9d1);
-    background: active ? (dark ? #221d18 : #fbe9d6) : (ta.has-hover ? (dark ? #1c1c1c : #fbfaf6) : (dark ? #161616 : #ffffff));
+    background: ta.pressed
+        ? (active ? (dark ? #2e2620 : #f5ddc2) : (dark ? #242424 : #eeece4))
+        : (active ? (dark ? #221d18 : #fbe9d6) : (ta.has-hover ? (dark ? #1c1c1c : #fbfaf6) : (dark ? #161616 : #ffffff)));
+    animate background { duration: 80ms; }
 
     HorizontalLayout {
         padding-left: 10px;
@@ -241,7 +252,8 @@ component SizeToggle inherits Rectangle {
             property <bool> sel: i == root.current;
             background: cell.sel
                 ? (root.dark ? #2a2520 : #fbe9d6)
-                : (cell-ta.has-hover ? (root.dark ? #232323 : #f1f0ea) : transparent);
+                : (cell-ta.pressed ? (root.dark ? #2e2e2e : #e6e5df) : (cell-ta.has-hover ? (root.dark ? #232323 : #f1f0ea) : transparent));
+            animate background { duration: 80ms; }
             cell-ta := TouchArea {
                 clicked => { root.changed(i); }
                 changed has-hover => {
@@ -320,7 +332,8 @@ component SearchBox inherits Rectangle {
         width: 18px;
         height: 18px;
         border-radius: 3px;
-        background: clear-touch.has-hover ? (root.dark ? #2a2a2a : #ecebe5) : transparent;
+        background: clear-touch.pressed ? (root.dark ? #3a3a3a : #dcdad2) : (clear-touch.has-hover ? (root.dark ? #2a2a2a : #ecebe5) : transparent);
+        animate background { duration: 80ms; }
         Glyph {
             name: "x";
             paint: clear-touch.has-hover ? (root.dark ? #e8e6e2 : #1a1816) : (root.dark ? #8a8782 : #6e6962);
@@ -383,9 +396,12 @@ component CardAction inherits Rectangle {
     border-radius: 6px;
     border-width: 1px;
     border-color: active_pin ? #c89a1a : (active_float ? #2faa55 : (danger && ta.has-hover ? #a84545 : #ffffff44));
-    background: active_pin
-        ? #ffc832
-        : (active_float ? #4cd47a : (danger && ta.has-hover ? #4a1616ee : (ta.has-hover ? #303030ee : #1b1b1bdd)));
+    background: ta.pressed
+        ? (active_pin ? #e0af1e : (active_float ? #37b863 : (danger ? #661c1cee : #454545ee)))
+        : (active_pin
+            ? #ffc832
+            : (active_float ? #4cd47a : (danger && ta.has-hover ? #4a1616ee : (ta.has-hover ? #303030ee : #1b1b1bdd))));
+    animate background { duration: 80ms; }
 
     Glyph {
         name: root.icon;
@@ -868,7 +884,8 @@ export component MainWindow inherits Window {
                             // Lazy-load the thumbnail once this card is realized.
                             init => { root.request-thumb(snip.id); }
 
-                            background: card-touch.has-hover ? root.c-card-hover : root.c-card;
+                            background: card-touch.pressed ? (root.dark-theme ? #2e2e2e : #ebe9e2) : (card-touch.has-hover ? root.c-card-hover : root.c-card);
+                            animate background { duration: 80ms; }
                 border-color: snip.pinned && snip.floating
                     ? #5a5520
                     : (snip.floating
@@ -1198,7 +1215,8 @@ export component MainWindow inherits Window {
                     border-radius: 5px;
                     background: l.code == root.current-language
                         ? (root.dark-theme ? #2a2520 : #fbe9d6)
-                        : (lang-row.has-hover ? (root.dark-theme ? #2a2a2a : #f0efe9) : transparent);
+                        : (lang-row.pressed ? (root.dark-theme ? #333333 : #e6e5df) : (lang-row.has-hover ? (root.dark-theme ? #2a2a2a : #f0efe9) : transparent));
+                    animate background { duration: 80ms; }
                     lang-row := TouchArea {
                         clicked => { root.set-language(l.code); root.lang-open = false; }
                     }

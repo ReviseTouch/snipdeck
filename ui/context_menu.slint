@@ -38,7 +38,8 @@ component MenuItem inherits Rectangle {
 
     height: 28px;
     border-radius: 4px;
-    background: ta.has-hover && !stub ? (danger ? #3a1a1a : #2a2a2a) : transparent;
+    background: ta.pressed && !stub ? (danger ? #5a2222 : #3a3a3a) : (ta.has-hover && !stub ? (danger ? #3a1a1a : #2a2a2a) : transparent);
+    animate background { duration: 80ms; }
 
     HorizontalLayout {
         padding-left: 8px;
@@ -111,7 +112,8 @@ component TransformBtn inherits Rectangle {
     min-width: 34px;
     horizontal-stretch: 1;
     border-radius: 4px;
-    background: ta.has-hover ? #2a2a2a : transparent;
+    background: ta.pressed ? #3a3a3a : (ta.has-hover ? #2a2a2a : transparent);
+    animate background { duration: 80ms; }
 
     if root.icon != "" : Glyph {
         name: root.icon;
@@ -184,7 +186,8 @@ export component ContextMenuWindow inherits Window {
                 Rectangle {
                     width: 24px;
                     border-radius: 4px;
-                    background: close-ta.has-hover ? #2a2a2a : transparent;
+                    background: close-ta.pressed ? #3a3a3a : (close-ta.has-hover ? #2a2a2a : transparent);
+                    animate background { duration: 80ms; }
                     Glyph {
                         name: "x";
                         paint: close-ta.has-hover ? #e8e6e2 : #8a8782;

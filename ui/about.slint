@@ -17,9 +17,10 @@ component LinkButton inherits Rectangle {
     height: 34px;
     min-width: 96px;
     border-radius: 17px;
-    background: root.accent
-        ? (ta.has-hover ? #2a93ff : #0a84ff)
-        : (ta.has-hover ? #303033 : #232326);
+    background: ta.pressed
+        ? (root.accent ? #0a6fe0 : #3a3a3d)
+        : (root.accent ? (ta.has-hover ? #2a93ff : #0a84ff) : (ta.has-hover ? #303033 : #232326));
+    animate background { duration: 80ms; }
     Text {
         text: root.label;
         color: root.accent ? #ffffff : #e8e6e2;

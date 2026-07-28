@@ -262,7 +262,9 @@ fn search_fts(conn: &Connection, match_query: &str) -> anyhow::Result<Vec<Snip>>
 }
 
 fn search_like(conn: &Connection, query: &str) -> anyhow::Result<Vec<Snip>> {
-    let like = format!("%{}%", query);
+    // Fold the query the same way as the indexed columns (see `tr_fold`)
+    // so the fallback is case-, diacritic- and dotless-`ı` insensitive too.
+    let like = format!("%{}%", search_fold(query));
     let mut stmt = conn.prepare(
         "SELECT DISTINCT
                 s.id, s.created_at, s.x, s.y, s.w, s.h, s.image_file, s.thumb_file,
@@ -270,13 +272,13 @@ fn search_like(conn: &Connection, query: &str) -> anyhow::Result<Vec<Snip>> {
          FROM snips s
          LEFT JOIN snip_ocr o ON o.snip_id = s.id
          LEFT JOIN snip_window win ON win.snip_id = s.id
-         WHERE s.label LIKE ?1 COLLATE NOCASE
-            OR s.monitor_label LIKE ?1 COLLATE NOCASE
-            OR o.text LIKE ?1 COLLATE NOCASE
-            OR win.title LIKE ?1 COLLATE NOCASE
-            OR win.app_name LIKE ?1 COLLATE NOCASE
-            OR win.process_name LIKE ?1 COLLATE NOCASE
-            OR win.exe_path LIKE ?1 COLLATE NOCASE
+         WHERE tr_fold(s.label) LIKE ?1
+            OR tr_fold(s.monitor_label) LIKE ?1
+            OR tr_fold(o.text) LIKE ?1
+            OR tr_fold(win.title) LIKE ?1
+            OR tr_fold(win.app_name) LIKE ?1
+            OR tr_fold(win.process_name) LIKE ?1
+            OR tr_fold(win.exe_path) LIKE ?1
             OR (CAST(s.w AS TEXT) || 'x' || CAST(s.h AS TEXT)) LIKE ?1
          ORDER BY s.pinned DESC, s.created_at DESC",
     )?;
@@ -289,7 +291,7 @@ fn search_like(conn: &Connection, query: &str) -> anyhow::Result<Vec<Snip>> {
 }
 
 fn fts_match_query(query: &str) -> Option<String> {
-    let tokens: Vec<String> = query
+    let tokens: Vec<String> = search_fold(query)
         .split(|ch: char| !ch.is_alphanumeric())
         .filter(|token| !token.is_empty())
         .map(|token| format!("{token}*"))
@@ -299,6 +301,34 @@ fn fts_match_query(query: &str) -> Option<String> {
     } else {
         Some(tokens.join(" AND "))
     }
+}
+
+/// Normalise text for search so matching is case-, diacritic- and
+/// dotted/dotless-`i` insensitive.
+///
+/// SQLite's `unicode61` FTS tokenizer already lowercases and strips most
+/// Latin diacritics, but it does *not* bridge Turkish's dotless `ı`
+/// (U+0131) and dotted `i` — so an OCR'd "ışık" could never be found by
+/// typing "isik", and vice versa. We fold the Turkish letters to their
+/// ASCII base ourselves and apply this identically to both the FTS index
+/// content (`upsert_fts_for_snip`) and the query (`fts_match_query`) so
+/// matches stay symmetric. The same fold backs the `tr_fold()` SQL
+/// function used by the `LIKE` fallback, whose `COLLATE NOCASE` only ever
+/// folded ASCII `A`–`Z`.
+fn search_fold(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for ch in input.chars() {
+        match ch {
+            'ı' | 'İ' | 'I' | 'i' => out.push('i'),
+            'ş' | 'Ş' => out.push('s'),
+            'ğ' | 'Ğ' => out.push('g'),
+            'ç' | 'Ç' => out.push('c'),
+            'ö' | 'Ö' => out.push('o'),
+            'ü' | 'Ü' => out.push('u'),
+            other => out.extend(other.to_lowercase()),
+        }
+    }
+    out
 }
 
 fn default_thumb_file(id: Uuid) -> String {
@@ -420,8 +450,34 @@ fn pngquant_command() -> Option<&'static PathBuf> {
 fn open_db() -> anyhow::Result<Connection> {
     paths::ensure_dirs()?;
     let conn = Connection::open(paths::db_file())?;
+    // WAL allows a single writer at a time; the detached OCR-indexing threads
+    // (`save_ocr_text`, one per snip) write on their own connections
+    // concurrently with the main thread's `gallery.save()`. rusqlite's default
+    // busy handling fails a losing writer instantly with SQLITE_BUSY — and
+    // because the save call sites discarded the error, the snip's DB row never
+    // committed (its PNG left orphaned on disk, the snip gone on next launch).
+    // Wait up to 5 s for the lock instead of racing.
+    conn.busy_timeout(std::time::Duration::from_secs(5))?;
+    register_search_functions(&conn)?;
     init_db(&conn)?;
     Ok(conn)
+}
+
+/// Register the `tr_fold(text)` SQL function so the `LIKE` search
+/// fallback can match with the same Turkish-aware folding as
+/// [`search_fold`]. Idempotent — safe to call on every connection.
+fn register_search_functions(conn: &Connection) -> anyhow::Result<()> {
+    use rusqlite::functions::FunctionFlags;
+    conn.create_scalar_function(
+        "tr_fold",
+        1,
+        FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
+        |ctx| {
+            let value: Option<String> = ctx.get(0)?;
+            Ok(value.map(|s| search_fold(&s)))
+        },
+    )?;
+    Ok(())
 }
 
 fn init_db(conn: &Connection) -> anyhow::Result<()> {
@@ -495,7 +551,7 @@ fn init_fts(conn: &Connection) -> anyhow::Result<()> {
     if fts_needs_recreate(conn)? {
         conn.execute("DROP TABLE IF EXISTS snip_fts", [])?;
         conn.execute(
-            "DELETE FROM meta WHERE key IN ('fts5_index_built_v1', 'fts5_index_built_v2')",
+            "DELETE FROM meta WHERE key IN ('fts5_index_built_v1', 'fts5_index_built_v2', 'fts5_index_built_v3')",
             [],
         )?;
     }
@@ -533,9 +589,11 @@ fn table_columns(conn: &Connection, table: &str) -> anyhow::Result<Vec<String>> 
 }
 
 fn rebuild_fts_if_needed(conn: &Connection) -> anyhow::Result<()> {
+    // v3 re-indexes existing rows through `search_fold` (Turkish-aware
+    // folding). Bumping the key forces one rebuild on upgrade.
     let built: Option<String> = conn
         .query_row(
-            "SELECT value FROM meta WHERE key = 'fts5_index_built_v2'",
+            "SELECT value FROM meta WHERE key = 'fts5_index_built_v3'",
             [],
             |row| row.get(0),
         )
@@ -546,7 +604,7 @@ fn rebuild_fts_if_needed(conn: &Connection) -> anyhow::Result<()> {
 
     rebuild_fts(conn)?;
     conn.execute(
-        "INSERT OR REPLACE INTO meta(key, value) VALUES('fts5_index_built_v2', '1')",
+        "INSERT OR REPLACE INTO meta(key, value) VALUES('fts5_index_built_v3', '1')",
         [],
     )?;
     Ok(())
@@ -787,6 +845,17 @@ fn upsert_fts_for_snip(
     let window = cached_window_fts_text_with_conn(conn, snip.id)?;
     let dims = format!("{}x{}", snip.area.w, snip.area.h);
     let id_text = snip.id.to_string();
+    // Store a search-folded copy of every matchable column. `snip_fts` is
+    // a pure index (its `snip_id` is UNINDEXED and we JOIN back to `snips`
+    // for the displayed rows), so folding here never touches what the user
+    // sees — it just lets the query fold the same way. See `search_fold`.
+    let label = snip.label.as_deref().map(search_fold);
+    let monitor_label = snip.monitor_label.as_deref().map(search_fold);
+    let ocr_text = search_fold(ocr_text);
+    let window_title = window.title.as_deref().map(search_fold);
+    let window_app = window.app_name.as_deref().map(search_fold);
+    let window_process = window.process_name.as_deref().map(search_fold);
+    let window_path = window.exe_path.as_deref().map(search_fold);
     conn.execute(
         "DELETE FROM snip_fts WHERE snip_id = ?1",
         [id_text.as_str()],
@@ -801,14 +870,14 @@ fn upsert_fts_for_snip(
         ",
         params![
             id_text,
-            snip.label.as_deref(),
-            snip.monitor_label.as_deref(),
+            label,
+            monitor_label,
             dims,
             ocr_text,
-            window.title.as_deref(),
-            window.app_name.as_deref(),
-            window.process_name.as_deref(),
-            window.exe_path.as_deref(),
+            window_title,
+            window_app,
+            window_process,
+            window_path,
         ],
     )?;
     Ok(())
@@ -937,4 +1006,39 @@ pub fn save_ocr_text(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn search_fold_bridges_dotless_and_dotted_i() {
+        // The whole point: "ışık" and "isik" must fold to the same thing
+        // so OCR'd Turkish text is findable with a plain ASCII keyboard.
+        assert_eq!(search_fold("ışık"), search_fold("isik"));
+        assert_eq!(search_fold("AÇIK"), search_fold("açık"));
+        assert_eq!(search_fold("İstanbul"), search_fold("istanbul"));
+        assert_eq!(search_fold("GARANTİ"), search_fold("garanti"));
+    }
+
+    #[test]
+    fn search_fold_strips_turkish_diacritics_to_ascii() {
+        assert_eq!(search_fold("Büyükşehir"), "buyuksehir");
+        assert_eq!(search_fold("ŞİŞE GÖZ AĞAÇ"), "sise goz agac");
+        assert_eq!(search_fold("kırmızı"), "kirmizi");
+    }
+
+    #[test]
+    fn search_fold_lowercases_plain_ascii_and_keeps_separators() {
+        assert_eq!(search_fold("Hello World"), "hello world");
+        assert_eq!(search_fold("1920x1080"), "1920x1080");
+    }
+
+    #[test]
+    fn fts_match_query_folds_and_prefixes_tokens() {
+        assert_eq!(fts_match_query("ışık saç").as_deref(), Some("isik* AND sac*"));
+        // No alphanumerics → no FTS query (caller falls back to LIKE).
+        assert_eq!(fts_match_query("   "), None);
+    }
 }

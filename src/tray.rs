@@ -163,6 +163,9 @@ pub fn set_main_window_icon() -> bool {
 fn send(cmd: TrayCommand) {
     if let Some(tx) = TRAY_TX.get() {
         let _ = tx.send(cmd);
+        // Tray clicks arrive while we're idle in the tray — wake the pump so
+        // it drains the command instead of waiting for the next event.
+        crate::pump::wake();
     }
 }
 
