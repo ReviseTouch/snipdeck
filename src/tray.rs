@@ -218,6 +218,24 @@ mod linux {
     const ICON_SIDE: u32 = 32;
 
     pub fn run(tx: Sender<TrayCommand>) {
+        // `libappindicator-sys` PANICS rather than returning an Err when it
+        // can dlopen neither libayatana-appindicator3 nor libappindicator3 —
+        // i.e. exactly the slim desktop / container / WSLg case this is meant
+        // to survive. Found by actually running under WSLg: without this the
+        // thread unwinds and the crash-log hook records a backtrace, which
+        // reads to the user as "Snipdeck crashed" instead of "no tray here".
+        // `TRAY_ACTIVE` stays false either way, so the window's X keeps
+        // quitting rather than hiding into a tray that does not exist.
+        let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run_inner(tx)));
+        if caught.is_err() {
+            log::warn!(
+                "tray unavailable: the appindicator library could not be loaded \
+                 — continuing without a tray"
+            );
+        }
+    }
+
+    fn run_inner(tx: Sender<TrayCommand>) {
         if let Err(err) = gtk::init() {
             log::warn!("tray disabled: GTK init failed ({err})");
             return;

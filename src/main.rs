@@ -55,6 +55,15 @@ fn bump_process_priority() {}
 fn install_crash_log() {
     let previous = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
+        // The Linux tray dlopens libappindicator and PANICS when it is absent
+        // — an expected "this desktop has no tray" outcome that `tray::linux`
+        // catches and degrades from. Logging a backtrace for it would leave a
+        // crash.log on a perfectly healthy run and teach the user to ignore
+        // the file that exists to report real crashes.
+        if info.to_string().contains("appindicator") {
+            previous(info);
+            return;
+        }
         let backtrace = std::backtrace::Backtrace::force_capture();
         let thread = std::thread::current();
         let entry = format!(
