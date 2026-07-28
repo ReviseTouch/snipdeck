@@ -34,6 +34,34 @@ pub struct TrayService {
     pub rx: Receiver<TrayCommand>,
 }
 
+/// Set once the Linux tray icon is actually live on the panel — see
+/// [`can_hide_to_tray`].
+#[cfg(target_os = "linux")]
+static TRAY_ACTIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Whether closing the main window may hide it instead of quitting — i.e.
+/// whether anything exists that can bring it back.
+///
+/// On Windows the `Shell_NotifyIconW` icon is created unconditionally, so this
+/// is always true. On Linux the tray can genuinely fail to appear (a session
+/// with no StatusNotifierHost, e.g. stock GNOME without the AppIndicator
+/// extension), which would otherwise strand a running process with no window
+/// and no way back — so it is a runtime question, not a compile-time one.
+#[cfg(target_os = "windows")]
+pub fn can_hide_to_tray() -> bool {
+    true
+}
+
+#[cfg(target_os = "linux")]
+pub fn can_hide_to_tray() -> bool {
+    TRAY_ACTIVE.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
+pub fn can_hide_to_tray() -> bool {
+    false
+}
+
 #[cfg(target_os = "windows")]
 static TRAY_TX: std::sync::OnceLock<Sender<TrayCommand>> = std::sync::OnceLock::new();
 
@@ -243,6 +271,9 @@ mod linux {
                 return;
             }
         };
+        // Only now may the main window's X hide instead of quitting: there is
+        // finally something that can bring it back.
+        super::TRAY_ACTIVE.store(true, std::sync::atomic::Ordering::Relaxed);
 
         let (show_id, new_id, autostart_id, exit_id) = (
             show.id().clone(),

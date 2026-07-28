@@ -86,6 +86,8 @@ jobs:
 
       # GTK: rfd dialogs + tray-icon. xcb/xrandr: xcap screen capture.
       # xkbcommon/wayland: the winit backend. appindicator: the tray host.
+      # xdo/xtst: rdev's X11 input grab — the linker needs -lxdo, and leaving
+      # it out is what broke the first run of this job.
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -94,7 +96,8 @@ jobs:
             libxcb1-dev libxcb-render0-dev libxcb-shape0-dev \
             libxcb-xfixes0-dev libxcb-randr0-dev libxrandr-dev \
             libxkbcommon-dev libwayland-dev \
-            libayatana-appindicator3-dev
+            libayatana-appindicator3-dev \
+            libxdo-dev libxtst-dev libfontconfig-dev libdbus-1-dev
 
       - name: Build (release)
         run: cargo build --release

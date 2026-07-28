@@ -177,11 +177,14 @@ fn main() -> Result<(), slint::PlatformError> {
     // `run_event_loop_until_quit()` below so the loop survives with no
     // window shown.
     //
-    // On Linux there is no tray (yet): hiding would strand the app running
-    // with no way to bring it back, so the X simply quits.
+    // With no tray there is nothing to bring the window back, so the X must
+    // quit rather than strand a headless process. On Linux the tray can fail
+    // to appear at runtime (no StatusNotifierHost), so this is asked of
+    // `tray::can_hide_to_tray` each time rather than decided at compile time.
     main_window.window().on_close_requested(|| {
-        #[cfg(not(target_os = "windows"))]
-        let _ = slint::quit_event_loop();
+        if !tray::can_hide_to_tray() {
+            let _ = slint::quit_event_loop();
+        }
         slint::CloseRequestResponse::HideWindow
     });
 
