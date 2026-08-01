@@ -115,10 +115,10 @@ impl SurfaceHost {
         let (px, py) = snip.last_position.unwrap_or((snip.area.x, snip.area.y));
         let hosted = HostedSnip {
             id: SharedString::from(snip.id.to_string()),
-            x: (px as f32 / self.scale).into(),
-            y: (py as f32 / self.scale).into(),
-            w: (snip.area.w as f32 / self.scale).into(),
-            h: (snip.area.h as f32 / self.scale).into(),
+            x: px as f32 / self.scale,
+            y: py as f32 / self.scale,
+            w: snip.area.w as f32 / self.scale,
+            h: snip.area.h as f32 / self.scale,
             image,
             selected: self.selected == Some(snip.id),
             pinned: snip.pinned,

@@ -26,10 +26,15 @@ pub fn capture_at(x: i32, y: i32) -> anyhow::Result<CapturedScreen> {
     }) {
         return capture_monitor(m.clone(), idx);
     }
+    // Fall back to the first monitor, not just the primary one. Nothing
+    // guarantees any monitor claims to be primary — some compositors report
+    // none, and a capture that fails outright there would take the whole
+    // feature down over a flag that is only ever a hint.
     let idx = monitors
         .iter()
         .position(|m| m.is_primary())
-        .ok_or_else(|| anyhow!("no monitor found"))?;
+        .or(if monitors.is_empty() { None } else { Some(0) })
+        .ok_or_else(|| anyhow!("no monitors available"))?;
     let monitor = monitors.into_iter().nth(idx).unwrap();
     capture_monitor(monitor, idx)
 }

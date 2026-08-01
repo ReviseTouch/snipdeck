@@ -256,8 +256,8 @@ impl FloatingManager {
             crate::pump::wake();
             if let Some(c) = weak_menu.upgrade() {
                 let pos = c.window().position();
-                let sx = pos.x + (lx as f32) as i32;
-                let sy = pos.y + (ly as f32) as i32;
+                let sx = pos.x + lx as i32;
+                let sy = pos.y + ly as i32;
                 shared_menu
                     .borrow_mut()
                     .pending_menu

@@ -69,7 +69,13 @@ mod unix {
             log::warn!("single-instance: no runtime/data dir — guard skipped");
             return true;
         };
-        let file = match OpenOptions::new().create(true).write(true).open(&path) {
+        let file = match OpenOptions::new()
+            .create(true)
+            // Never truncate: the file is a flock target, not storage, and an
+            // existing one may be held by the instance we are testing for.
+            .truncate(false)
+            .write(true)
+            .open(&path) {
             Ok(file) => file,
             Err(err) => {
                 log::warn!("single-instance: cannot open {}: {err}", path.display());

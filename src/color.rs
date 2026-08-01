@@ -90,13 +90,19 @@ pub fn capture_region(cx: i32, cy: i32, half: i32) -> Option<image::RgbaImage> {
     let half = half.max(0);
     let side = (half * 2 + 1) as u32;
 
-    let monitors = xcap::Monitor::all().ok()?;
-    let monitor = monitors.into_iter().find(|m| {
-        let (mx, my) = (m.x(), m.y());
-        cx >= mx && cx < mx + m.width() as i32 && cy >= my && cy < my + m.height() as i32
-    })?;
-    let (ox, oy) = (monitor.x(), monitor.y());
-    let shot = monitor.capture_image().ok()?;
+    // Go through `capture::capture_at` rather than picking a monitor here.
+    //
+    // This used to search for the monitor containing (cx, cy) by comparing
+    // against `Monitor::width()/height()`, which xcap reports in LOGICAL pixels
+    // — while cx/cy arrive from the pointer in PHYSICAL ones. On a 3200x2000
+    // panel at 166% the monitor rect only reaches 1920x1200, so any pick in the
+    // right or bottom of the screen matched no monitor at all and the eyedropper
+    // returned None: no error, no colour, nothing. `capture_at` already resolves
+    // the monitor, falls back to the primary, and hands back a rect that is in
+    // the same space as its image.
+    let captured = crate::capture::capture_at(cx, cy).ok()?;
+    let (ox, oy) = (captured.area.x, captured.area.y);
+    let shot = captured.image;
 
     // Clamp into the captured image so a pick right at a screen edge still
     // returns pixels instead of failing outright.
