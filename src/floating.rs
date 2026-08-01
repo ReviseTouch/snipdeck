@@ -365,6 +365,14 @@ impl FloatingManager {
                 .push(snip_id);
         });
 
+        // Fix the surface size BEFORE mapping. Setting `outer-w`/`outer-h`
+        // alone only takes effect when Slint first lays the window out, which
+        // happens after the compositor has already mapped and placed it — the
+        // window is centred at its default size and then grows down and right,
+        // leaving it visibly off-centre. Sizing the window up front means the
+        // placement GNOME picks is the placement for the size we actually want.
+        win.window()
+            .set_size(slint::LogicalSize::new(outer_w, outer_h));
         win.show()?;
         // NOTE: this never resolves an HWND on the winit backend (the native
         // window handle isn't exposed through raw-window-handle here — logs
