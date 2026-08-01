@@ -96,6 +96,14 @@ export component FloatingWindow inherits Window {
     // coords; we forward deltas, and Rust applies them to the OS window
     // position.  This avoids needing raw HWND access for moves.
     callback drag-delta(length, length);
+    // Fired the moment a left press lands, before any movement.
+    //
+    // Wayland has no way for a client to move its own window, so the
+    // delta-based path above does nothing there. What it *does* allow is
+    // handing the drag to the compositor (`xdg_toplevel.move`), which must be
+    // requested from the press itself — hence a separate callback rather than
+    // waiting for the first `drag-delta`.
+    callback drag-start();
     callback right-pressed(length, length);
     callback middle-pressed();
     // Fired on any pointer press over the snip so Rust can mark this one
@@ -282,6 +290,7 @@ export component FloatingWindow inherits Window {
                         touch.last-x = touch.mouse-x;
                         touch.last-y = touch.mouse-y;
                         touch.dragging = true;
+                        root.drag-start();
                     } else if (ev.button == PointerEventButton.right) {
                         root.right-pressed(touch.mouse-x, touch.mouse-y);
                     } else if (ev.button == PointerEventButton.middle) {

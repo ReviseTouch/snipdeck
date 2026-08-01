@@ -16,13 +16,50 @@ pub enum HotkeyAction {
 }
 
 pub struct HotkeyService {
-    _manager: GlobalHotKeyManager,
-    bindings: Vec<(u32, HotkeyAction)>,
-    rx: Receiver<GlobalHotKeyEvent>,
+    backend: Backend,
+}
+
+/// Which mechanism actually owns the shortcuts.
+///
+/// `Native` is the `global-hotkey` crate: Win32 on Windows, X11 on Unix. Under
+/// Wayland the X11 side registers against XWayland and never receives a press,
+/// so `Portal` takes over there — see `portal_hotkeys` for why that is the only
+/// workable route and what changes for the user.
+enum Backend {
+    Native {
+        _manager: GlobalHotKeyManager,
+        bindings: Vec<(u32, HotkeyAction)>,
+        rx: Receiver<GlobalHotKeyEvent>,
+    },
+    #[cfg(target_os = "linux")]
+    Portal {
+        rx: Receiver<HotkeyAction>,
+    },
 }
 
 impl HotkeyService {
     pub fn start(settings: &Settings) -> anyhow::Result<Self> {
+        // Wayland first, and only on Wayland: an X11 session keeps the native
+        // path, where the user's configured combo applies verbatim with no
+        // portal dialog and no compositor veto.
+        #[cfg(target_os = "linux")]
+        if crate::portal_hotkeys::should_use_portal() {
+            match crate::portal_hotkeys::spawn(settings) {
+                Ok(rx) => {
+                    log::info!("hotkey backend: xdg-desktop-portal GlobalShortcuts");
+                    return Ok(Self {
+                        backend: Backend::Portal { rx },
+                    });
+                }
+                // Not fatal: a desktop whose portal lacks GlobalShortcuts still
+                // gets whatever XWayland manages to deliver, which is better
+                // than refusing to start.
+                Err(e) => log::warn!(
+                    "portal global shortcuts unavailable ({e:#}); falling back to the X11 backend"
+                ),
+            }
+        }
+
         let manager = GlobalHotKeyManager::new().context("init global hotkey manager")?;
         let mut bindings = Vec::new();
 
@@ -60,27 +97,41 @@ impl HotkeyService {
         register(&settings.hotkey_toggle_visibility, HotkeyAction::ToggleVisibility);
         register(&settings.hotkey_gallery, HotkeyAction::Gallery);
 
+        log::info!("hotkey backend: global-hotkey ({} bound)", bindings.len());
         Ok(Self {
-            _manager: manager,
-            bindings,
-            rx,
+            backend: Backend::Native {
+                _manager: manager,
+                bindings,
+                rx,
+            },
         })
     }
 
-    /// Drain global hotkey events from the global-hotkey crate's receiver and
-    /// translate them to actions in our inbox. Call this from the egui update loop.
+    /// Drain pending global-hotkey events and translate them to actions in our
+    /// inbox. Call this from the pump loop.
     pub fn poll(&self) -> Vec<HotkeyAction> {
         let mut out = Vec::new();
-        while let Ok(event) = self.rx.try_recv() {
-            if event.state != global_hotkey::HotKeyState::Pressed {
-                continue;
+        match &self.backend {
+            Backend::Native { bindings, rx, .. } => {
+                while let Ok(event) = rx.try_recv() {
+                    if event.state != global_hotkey::HotKeyState::Pressed {
+                        continue;
+                    }
+                    if let Some(action) = bindings
+                        .iter()
+                        .find_map(|(id, a)| (*id == event.id).then_some(*a))
+                    {
+                        out.push(action);
+                    }
+                }
             }
-            if let Some(action) = self
-                .bindings
-                .iter()
-                .find_map(|(id, a)| (*id == event.id).then_some(*a))
-            {
-                out.push(action);
+            // The portal thread has already resolved the shortcut id to an
+            // action and only emits presses, so there is nothing to filter.
+            #[cfg(target_os = "linux")]
+            Backend::Portal { rx } => {
+                while let Ok(action) = rx.try_recv() {
+                    out.push(action);
+                }
             }
         }
         out

@@ -19,7 +19,15 @@ mod native_mouse_trigger;
 mod ocr;
 mod os;
 mod paths;
+/// Wayland global shortcuts. Linux-only: every other platform has a working
+/// `global-hotkey` backend and never reaches for the portal.
+#[cfg(target_os = "linux")]
+mod portal_hotkeys;
 mod pump;
+/// Raw Wayland input-region control. Linux-only: every other platform can
+/// place and stack its own windows and never needs this.
+#[cfg(target_os = "linux")]
+mod wayland_input_region;
 mod settings;
 mod share;
 mod single_instance;

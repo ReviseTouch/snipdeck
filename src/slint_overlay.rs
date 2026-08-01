@@ -176,8 +176,29 @@ impl SlintOverlayManager {
             }
             None => win.set_frozen(false),
         }
+        // Placement, then fullscreen — both, everywhere but Windows.
+        //
+        // The position picks the monitor: X11 (including XWayland) honours it
+        // exactly, and Wayland silently ignores it, which costs nothing. The
+        // fullscreen request is what actually sizes the surface, and it is the
+        // only placement Wayland honours at all. Doing both means one code path
+        // lands the overlay correctly on a Wayland session, on an X11 session,
+        // and on the XWayland hybrid — none of which agree on what a window may
+        // ask for.
+        //
+        // Sizing it by hand instead (`area.w / scale_factor`) is what produced
+        // the third-of-the-screen overlay: the app's scale factor, the overlay
+        // window's own scale factor and xcap's units were all different numbers
+        // on a fractionally-scaled display. Fullscreen removes the arithmetic
+        // rather than trying to get it right.
+        //
+        // Windows keeps the explicit rect: it is exact across a multi-monitor
+        // virtual desktop, where fullscreen only ever covers one monitor.
         win.window()
             .set_position(PhysicalPosition::new(area.x, area.y));
+        if !cfg!(target_os = "windows") {
+            win.window().set_fullscreen(true);
+        }
         win.show()?;
         // Route Escape to the overlay's FocusScope so the overlay-driven
         // path can cancel without the global keyboard hook.
@@ -189,13 +210,50 @@ impl SlintOverlayManager {
         Ok(())
     }
 
+    /// Re-read the window's real geometry into the layout properties.
+    ///
+    /// Fullscreen is granted asynchronously: the size reported straight after
+    /// `show()` is still the pre-fullscreen one (often 0x0). Meanwhile the
+    /// root element's width/height are bound to `outer-w`/`outer-h`, so the
+    /// frozen backdrop and the dim panels keep whatever size we guessed and
+    /// cover only part of the surface — the overlay looked cropped along the
+    /// right and bottom edges.
+    ///
+    /// Rather than predict the size, adopt it: the compositor is the authority
+    /// on how big a fullscreen surface is, and on what scale factor it carries
+    /// (which need not match the main window's on a mixed X11/Wayland setup).
+    /// Cheap enough to call every tick while the overlay is up.
+    pub fn sync_to_window(&self) {
+        let Some(win) = &self.window else { return };
+        let size = win.window().size();
+        if size.width == 0 || size.height == 0 {
+            return;
+        }
+        let sf = win.window().scale_factor().max(0.001);
+        let (w, h) = (size.width as f32 / sf, size.height as f32 / sf);
+        if (win.get_outer_w() - w).abs() > 0.5 || (win.get_outer_h() - h).abs() > 0.5 {
+            log::debug!("overlay resized to {}x{} logical (sf={sf})", w, h);
+            win.set_outer_w(w);
+            win.set_outer_h(h);
+        }
+        // Keep the input mapping on the same scale as the surface, or the drag
+        // lands somewhere other than where the pointer is.
+        if let Some(monitor) = self.monitor {
+            self.input_space.set((monitor.x, monitor.y, sf));
+        }
+    }
+
     /// Update the selection rectangle. Coordinates are in *global*
     /// physical-pixel screen space (i.e. what rdev/winit hand us).
     pub fn update_sel(&self, x1: i32, y1: i32, x2: i32, y2: i32) {
         let (Some(win), Some(monitor)) = (&self.window, &self.monitor) else {
             return;
         };
-        let sf = self.scale_factor;
+        // The overlay's own scale factor, not the main window's: under XWayland
+        // beside a fractionally-scaled Wayland session the two disagree, and
+        // using the wrong one drew the selection rectangle offset from the
+        // pointer.
+        let sf = win.window().scale_factor().max(0.001);
         let sx = (x1.min(x2) - monitor.x) as f32 / sf;
         let sy = (y1.min(y2) - monitor.y) as f32 / sf;
         let sw = ((x1 - x2).abs()) as f32 / sf;

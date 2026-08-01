@@ -89,6 +89,14 @@ pub struct AppState {
     /// Set the instant a button-armed snip ends, asking the tick loop (which
     /// has the `MainWindow`) to re-show it — `handle_mouse_event` has no window.
     pending_show_main: bool,
+    /// Deferred screen freeze: `(x, y, not-before)`.
+    ///
+    /// Hiding a window is asynchronous — the compositor still has to unmap it
+    /// and repaint what was underneath. Freezing the screen in the same tick as
+    /// `window.hide()` therefore captured Snipdeck's own window sitting in the
+    /// shot. We stamp a deadline instead and let `tick` fire the freeze once the
+    /// compositor has had a couple of frames to catch up.
+    pending_freeze_arm: Option<(i32, i32, std::time::Instant)>,
     /// True when the colour picker hid the main window (toolbar trigger), so we
     /// know to bring it back when the pick finishes. The context-menu trigger
     /// leaves the window as-is, so it stays false there.
@@ -192,6 +200,7 @@ impl AppState {
             restore_main_after_snip: false,
             armed_snip_at: None,
             pending_show_main: false,
+            pending_freeze_arm: None,
             color_pick_hid_main: false,
             last_error: None,
             hotkey_error,
@@ -381,6 +390,22 @@ impl AppState {
         for ev in events {
             self.handle_mouse_event(ev);
         }
+
+        // Deferred screen freeze: `begin_region_snip` hid our own window and
+        // asked for the capture to happen a few frames later, once the
+        // compositor has actually taken it off screen. Fire it when due.
+        if let Some((x, y, due)) = self.pending_freeze_arm {
+            if std::time::Instant::now() >= due {
+                self.pending_freeze_arm = None;
+                self.handle_mouse_event(MouseTriggerEvent::FreezeArm { x, y });
+            }
+        }
+
+        // The overlay adopts the compositor's idea of its own size/scale, which
+        // only becomes known a frame or two after the fullscreen request lands.
+        self.overlay.sync_to_window();
+        #[cfg(not(target_os = "windows"))]
+        self.context_menu.sync_to_window();
 
         // Colour picker: while active, refresh the magnifier loupe every tick
         // (sample the desktop around the cursor, reposition the loupe).
@@ -657,6 +682,10 @@ impl AppState {
                 || self.frozen_pending.is_some()
                 || self.pending_show_main
                 || self.restore_main_after_snip
+                // A pending freeze is a timer, not an event: if the pump sleeps
+                // now, nothing wakes it when the deadline passes and the snip
+                // never starts.
+                || self.pending_freeze_arm.is_some()
         }
     }
 }

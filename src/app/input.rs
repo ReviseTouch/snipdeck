@@ -1,54 +1,27 @@
 use super::*;
 use crate::i18n::t1;
 
+/// How long to let the compositor repaint after we hide our own window, before
+/// grabbing the screen.
+///
+/// `window.hide()` only *requests* the unmap; the window stays on screen until
+/// the compositor processes it and repaints what was behind. Capturing in the
+/// same tick photographed Snipdeck's own window.
+///
+/// The wait has to outlast the compositor's close animation, not just the
+/// unmap: GNOME fades a closing window over roughly 200 ms, and anything
+/// shorter catches it mid-fade — a ghost of the window in the shot. 250 ms
+/// clears that with margin and still reads as immediate.
+#[cfg(not(target_os = "windows"))]
+const FREEZE_AFTER_HIDE: std::time::Duration = std::time::Duration::from_millis(250);
+
 impl AppState {
     pub(crate) fn handle_action(&mut self, action: Action, window: &MainWindow) {
         match action {
             Action::NewSnip {
                 to_clip,
                 keep_float,
-            } => {
-                // Arm a one-shot region drag, exactly like the capture hotkeys
-                // and the tray's "New Snip": the next left-button drag starts a
-                // snip with NO modifier held. `armed_routing` makes that drag
-                // route its result the way the matching Win+drag combo would.
-                self.armed_routing = Some((to_clip, keep_float));
-                crate::mouse_trigger::arm_snip();
-                // Stamp when we armed so the tick watchdog can recover if the
-                // user arms a snip, hides the main window, then never clicks
-                // (Esc already cancels; this covers the "walk away" case).
-                self.armed_snip_at = Some(std::time::Instant::now());
-                // Remember where the window is BEFORE hiding it — the
-                // overlay-driven path below uses its centre to pick the
-                // monitor to freeze (no global cursor without a hook).
-                #[cfg(not(target_os = "windows"))]
-                let centre = {
-                    let pos = window.window().position();
-                    let size = window.window().size();
-                    (
-                        pos.x + size.width as i32 / 2,
-                        pos.y + size.height as i32 / 2,
-                    )
-                };
-                // Hide Snipdeck's own window so it's neither captured in the
-                // shot nor in the way of the region the user wants to grab. We
-                // bring it back once the snip finishes (Release) or is cancelled
-                // (Esc) — see `restore_main_after_snip` / `pending_show_main`.
-                let _ = window.hide();
-                self.restore_main_after_snip = true;
-                // Clear any stale banner so the old "not wired up" hint (or a
-                // previous error) doesn't linger over the armed snip.
-                self.last_error = None;
-                // No global mouse hook on Linux/Wayland — an armed click can
-                // never arrive. Instead: freeze the screen NOW (same flow as
-                // Win+Shift+Space) and let the overlay's own input capture
-                // drive the drag; `armed_routing` set above still applies.
-                #[cfg(not(target_os = "windows"))]
-                self.handle_mouse_event(MouseTriggerEvent::FreezeArm {
-                    x: centre.0,
-                    y: centre.1,
-                });
-            }
+            } => self.begin_region_snip(to_clip, keep_float, window),
             Action::PickColor => {
                 // Start the eyedropper: hide our window so it's out of the way,
                 // arm the hook + show the magnifier loupe. The next click grabs
@@ -254,24 +227,69 @@ impl AppState {
         }
     }
 
+    /// Every "capture a region now" trigger funnels through here: the toolbar
+    /// button, the tray item and the three capture hotkeys.
+    ///
+    /// Off Windows there is no global mouse hook to wait on — Wayland forbids
+    /// one outright — so the overlay drives the drag itself: freeze the screen
+    /// and let its own input capture take over. That freeze is *deferred*; see
+    /// `pending_freeze_arm` for why firing it here would photograph the window
+    /// we just hid.
+    pub(crate) fn begin_region_snip(
+        &mut self,
+        to_clip: bool,
+        keep_float: bool,
+        window: &MainWindow,
+    ) {
+        // Arm a one-shot region drag: the next left-button drag starts a snip
+        // with NO modifier held, routed the way the matching Win+drag would.
+        self.armed_routing = Some((to_clip, keep_float));
+        crate::mouse_trigger::arm_snip();
+        // Stamp when we armed so the tick watchdog can recover if the user arms
+        // a snip, hides the main window, then never clicks (Esc already
+        // cancels; this covers the "walk away" case).
+        self.armed_snip_at = Some(std::time::Instant::now());
+
+        // Read the geometry BEFORE hiding: the overlay path uses the window's
+        // centre to pick which monitor to freeze (no global cursor without a
+        // hook), and a hidden window reports nothing useful.
+        #[cfg(not(target_os = "windows"))]
+        let centre = {
+            let pos = window.window().position();
+            let size = window.window().size();
+            (
+                pos.x + size.width as i32 / 2,
+                pos.y + size.height as i32 / 2,
+            )
+        };
+
+        // Hide Snipdeck's own window so it is neither captured in the shot nor
+        // in the way of the region the user wants. It comes back when the snip
+        // finishes (Release) or is cancelled (Esc) — see
+        // `restore_main_after_snip` / `pending_show_main`.
+        let _ = window.hide();
+        self.restore_main_after_snip = true;
+        // Clear any stale banner so a previous error doesn't linger over the
+        // armed snip.
+        self.last_error = None;
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.pending_freeze_arm =
+                Some((centre.0, centre.1, std::time::Instant::now() + FREEZE_AFTER_HIDE));
+        }
+    }
+
     pub(crate) fn handle_hotkey(&mut self, action: HotkeyAction, window: &MainWindow) {
         match action {
-            // The three capture hotkeys arm a one-shot region drag (like the
-            // tray's "New Snip"); `armed_routing` makes the next drag route the
-            // same way the matching Win+drag combo would, even with no modifier
-            // held during the drag.
-            HotkeyAction::Snip => {
-                self.armed_routing = Some((false, true));
-                crate::mouse_trigger::arm_snip();
-            }
-            HotkeyAction::SnipToClipboard => {
-                self.armed_routing = Some((true, true));
-                crate::mouse_trigger::arm_snip();
-            }
-            HotkeyAction::ClipboardOnly => {
-                self.armed_routing = Some((true, false));
-                crate::mouse_trigger::arm_snip();
-            }
+            // The three capture hotkeys go through the same entry point as the
+            // toolbar button and the tray item. They used to only `arm_snip()`,
+            // which is enough on Windows (the global hook delivers the drag) but
+            // a dead end everywhere else: Wayland has no global hook, so the
+            // armed click never arrived and the hotkeys did nothing at all.
+            HotkeyAction::Snip => self.begin_region_snip(false, true, window),
+            HotkeyAction::SnipToClipboard => self.begin_region_snip(true, true, window),
+            HotkeyAction::ClipboardOnly => self.begin_region_snip(true, false, window),
             // Acts on the existing windows — no capture flow needed.
             HotkeyAction::ToggleVisibility => {
                 self.handle_action(Action::ToggleAllVisibility, window);
@@ -379,6 +397,7 @@ impl AppState {
                     }
                     Err(e) => {
                         self.overlay.hide();
+                        log::warn!("snip capture failed: {e:#}");
                         self.last_error = Some(t1("Failed to capture screen: {e}", "{e}", &e.to_string()));
                     }
                 }
@@ -409,6 +428,10 @@ impl AppState {
                         // it stays armed and the next plain click starts a snip.
                         crate::mouse_trigger::clear_freeze();
                         self.overlay.hide();
+                        // The banner only has room for the outermost context
+                        // ("capturing screen"), which on Wayland hides whatever
+                        // the compositor actually refused. Log the whole chain.
+                        log::warn!("freeze capture failed: {e:#}");
                         self.last_error = Some(t1("Failed to freeze screen: {e}", "{e}", &e.to_string()));
                     }
                 }
@@ -430,11 +453,18 @@ impl AppState {
                     // the selection blinked out before the snip appeared.
                     // Every non-floating / error path below hides explicitly.
                     //
-                    // A toolbar-button snip hid the main window; bring it back
-                    // now the drag is done — set before any early-return below
-                    // (region-too-small / save-failed) so it always restores.
-                    if self.restore_main_after_snip {
-                        self.restore_main_after_snip = false;
+                    // A toolbar/tray/hotkey snip hid the main window. Whether it
+                    // comes back depends on what the snip leaves behind: a
+                    // floating snip IS the result, and throwing the gallery up
+                    // over it would bury what the user just captured. So the
+                    // window stays hidden on that path and the snip owns the
+                    // screen.
+                    //
+                    // Every failure path below re-checks `restore_main` and
+                    // restores explicitly — a snip that produced nothing must
+                    // never strand the user with no window at all.
+                    let restore_main = std::mem::take(&mut self.restore_main_after_snip);
+                    if restore_main && !sel.keep_floating {
                         self.pending_show_main = true;
                     }
                     // The armed snip has now started/finished; drop the watchdog
@@ -457,6 +487,12 @@ impl AppState {
                     if region.w < 4 || region.h < 4 {
                         log::info!("Region too small, ignoring");
                         self.overlay.hide();
+                        // Nothing was captured, so nothing will be left on
+                        // screen — bring the window back even on the floating
+                        // path we skipped it for above.
+                        if restore_main {
+                            self.pending_show_main = true;
+                        }
                         return;
                     }
                     let monitor_label = sel.captured.monitor_label.clone();
@@ -467,6 +503,12 @@ impl AppState {
                             if let Err(e) = snip.save_image_png(&image) {
                                 self.overlay.hide();
                                 self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
+                                // The floating window can't open without the
+                                // PNG, so the screen would be left empty with
+                                // the error nowhere to be seen.
+                                if restore_main {
+                                    self.pending_show_main = true;
+                                }
                                 return;
                             }
                             if sel.to_clipboard {
@@ -519,7 +561,14 @@ impl AppState {
                         }
                         Err(e) => {
                             self.overlay.hide();
+                            log::warn!("crop failed: {e:#}");
                             self.last_error = Some(t1("Failed to crop region: {e}", "{e}", &e.to_string()));
+                            // No snip was produced, so nothing is left on
+                            // screen — the window has to come back or the
+                            // error has nowhere to appear.
+                            if restore_main {
+                                self.pending_show_main = true;
+                            }
                         }
                     }
                 }
@@ -544,6 +593,10 @@ impl AppState {
                 }
                 self.active = None;
                 self.frozen_pending = None;
+                // Esc between "hide the window" and "freeze the screen" must
+                // drop the pending capture, or the overlay springs up moments
+                // after the user cancelled.
+                self.pending_freeze_arm = None;
                 // Drop any capture routing armed by a toolbar/tray/hotkey
                 // trigger, plus its watchdog timestamp; otherwise a cancelled
                 // arm's stale routing (e.g. clipboard-only) would mis-route a

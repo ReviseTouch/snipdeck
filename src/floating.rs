@@ -152,6 +152,39 @@ impl FloatingManager {
 
         // Wire callbacks.
         let snip_id = snip.id;
+        // Compositor-driven move. Wayland forbids a client from placing its own
+        // window, so `on_drag_delta` below is dead there — but `xdg_toplevel.move`
+        // exists precisely for this: ask the compositor to take over the drag and
+        // it follows the pointer for us. winit exposes it as `drag_window()`, and
+        // it must be requested from the press, before any motion.
+        //
+        // X11 gets the same treatment (winit maps it to _NET_WM_MOVERESIZE),
+        // which also hands off to the window manager rather than fighting it.
+        // Windows keeps the delta path: it works, and it is what the rest of the
+        // Win32 floating-window behaviour is built around.
+        #[cfg(not(target_os = "windows"))]
+        {
+            let shared_drag = self.shared.clone();
+            let weak_drag = win.as_weak();
+            win.on_drag_start(move || {
+                let Some(c) = weak_drag.upgrade() else { return };
+                use i_slint_backend_winit::WinitWindowAccessor;
+                let started = c
+                    .window()
+                    .with_winit_window(|w| w.drag_window().is_ok())
+                    .unwrap_or(false);
+                if !started {
+                    log::debug!("compositor refused the interactive move");
+                    return;
+                }
+                // The compositor owns the drag from here; no motion events reach
+                // us, so mark the snip moved now rather than on the first delta.
+                if shared_drag.borrow_mut().moved_snips.insert(snip_id) {
+                    c.set_show_handles(false);
+                }
+            });
+        }
+
         let shared = self.shared.clone();
         let weak = win.as_weak();
         win.on_drag_delta(move |dx, dy| {

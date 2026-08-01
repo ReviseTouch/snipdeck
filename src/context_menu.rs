@@ -65,6 +65,29 @@ struct Shared {
     pending: Vec<(Uuid, ContextAction)>,
 }
 
+/// Size of the monitor the menu should cover, in LOGICAL pixels.
+///
+/// xcap reports monitor extents in logical units on a scaled Wayland session
+/// (1920x1200 on this 3200x2000 panel at 166%) even though it hands back
+/// physical-pixel images — the same mismatch `capture::normalise_to_image`
+/// exists to absorb. Feeding those numbers to `set_size` as *physical* left the
+/// window covering 60% of the screen, so they go out as logical and Slint
+/// applies the scale factor itself.
+///
+/// Enumerating monitors does not capture anything, so this is cheap enough to
+/// call on every open. Returns the primary monitor, or the first one if none
+/// claims to be primary; `None` when there are no monitors at all, in which
+/// case the caller leaves the window at its natural menu size.
+#[cfg(not(target_os = "windows"))]
+fn screen_size_logical() -> Option<(u32, u32)> {
+    let monitors = xcap::Monitor::all().ok()?;
+    let m = monitors
+        .iter()
+        .find(|m| m.is_primary())
+        .or_else(|| monitors.first())?;
+    Some((m.width(), m.height()))
+}
+
 pub struct ContextMenuManager {
     window: Option<ContextMenuWindow>,
     /// A pre-built, hidden menu window kept ready so the next right-click shows
@@ -77,6 +100,14 @@ pub struct ContextMenuManager {
     /// can reuse the same window for different snips without rebuilding.
     target: Rc<RefCell<Option<Uuid>>>,
     shared: Rc<RefCell<Shared>>,
+    /// Screen point the open menu should be anchored to, in physical pixels.
+    ///
+    /// Only used off Windows, where the menu window covers the whole screen and
+    /// the panel is positioned inside it. The offset can't be computed at open
+    /// time: the fullscreen size and scale factor aren't known until the
+    /// compositor has answered, so `sync_to_window` resolves it a frame later.
+    #[cfg(not(target_os = "windows"))]
+    pending_anchor: Option<(i32, i32)>,
     /// True only when the open menu belongs to a floating snip, so the app loop
     /// dismisses it once that snip's window closes. False for a gallery-card
     /// menu, which has no floating window to track.
@@ -102,6 +133,64 @@ impl ContextMenuManager {
             auto_dismiss: false,
             dismiss_armed: false,
             prev_mouse_down: false,
+            #[cfg(not(target_os = "windows"))]
+            pending_anchor: None,
+        }
+    }
+
+    /// Fit the full-screen menu surface to what the compositor actually gave
+    /// us, and place the panel at the anchor point inside it.
+    ///
+    /// Deferred for the same reason the snip overlay defers: a fullscreen
+    /// request is answered asynchronously, so immediately after `show()` the
+    /// window still reports its old size (often 0x0) and a stale scale factor.
+    /// Called every tick while a menu is open; a no-op once settled.
+    #[cfg(not(target_os = "windows"))]
+    pub fn sync_to_window(&self) {
+        let (Some(win), Some((ax, ay))) = (&self.window, self.pending_anchor) else {
+            return;
+        };
+        let size = win.window().size();
+        if size.width == 0 || size.height == 0 {
+            return;
+        }
+        let sf = win.window().scale_factor().max(0.001);
+        let (sw, sh) = (size.width as f32 / sf, size.height as f32 / sf);
+        win.set_outer_w(sw);
+        win.set_outer_h(sh);
+
+        let (mw, mh) = (win.get_menu_w(), win.get_menu_h());
+
+        // Centre it, deliberately — do NOT try to honour the anchor here.
+        //
+        // The anchor arrives as a click position inside the floating snip's own
+        // window, and turning that into a screen coordinate needs to know where
+        // that window sits. Wayland never tells a client its own position
+        // (`Window::position()` answers 0,0), so the sum is meaningless and the
+        // menu appeared at an arbitrary spot. A predictable centre beats a
+        // wrong guess; the anchor is kept only for the X11/Windows paths and
+        // for whenever a compositor learns to answer that question.
+        let _ = (ax, ay);
+        let x = ((sw - mw) / 2.0).max(0.0);
+        let y = ((sh - mh) / 2.0).max(0.0);
+        log::debug!("menu centred at ({x},{y}) in {sw}x{sh} logical surface (sf={sf})");
+        win.set_menu_x(x);
+        win.set_menu_y(y);
+
+        // The surface covers the screen, so without this it would swallow every
+        // click on the desktop behind it. Confine input to the panel and let the
+        // rest through — the same mechanism panels and desktop widgets use, and
+        // the one that makes a single screen-sized surface viable as a host for
+        // floating snips.
+        let rects = [crate::wayland_input_region::InputRect {
+            x: x as i32,
+            y: y as i32,
+            w: mw as i32,
+            h: mh as i32,
+        }];
+        match crate::wayland_input_region::set_input_rects(win.window(), &rects) {
+            Ok(()) => log::debug!("menu input region confined to the panel"),
+            Err(e) => log::debug!("input region unavailable ({e:#}); surface stays fully clickable"),
         }
     }
 
@@ -173,7 +262,34 @@ impl ContextMenuManager {
         // "Show Snipdeck" is only meaningful from a floating snip — the gallery
         // menu is already opened from the app window.
         w.set_show_app_item(from_floating);
-        w.window().set_position(PhysicalPosition::new(x, y));
+
+        #[cfg(target_os = "windows")]
+        {
+            // The window is the menu: place it at the cursor and be done.
+            w.window().set_position(PhysicalPosition::new(x, y));
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            // Wayland ignores `set_position`, so a menu-sized window lands
+            // wherever the compositor likes — which is what made right-click
+            // look broken. Cover the screen instead and draw the panel at the
+            // cursor inside our own surface.
+            //
+            // Sized to the screen rather than flagged fullscreen: a fullscreen
+            // surface can be handed straight to the display without blending,
+            // and the transparent background then came out solid black over the
+            // whole desktop. An ordinary window that happens to be exactly
+            // screen-sized keeps its alpha, and the compositor has nowhere to
+            // put it but the origin.
+            w.window()
+                .set_position(PhysicalPosition::new(x, y));
+            if let Some((sw, sh)) = screen_size_logical() {
+                w.window()
+                    .set_size(slint::LogicalSize::new(sw as f32, sh as f32));
+            }
+            self.pending_anchor = Some((x, y));
+        }
+
         w.show()?;
         self.window = Some(w);
         Ok(())
@@ -194,6 +310,10 @@ impl ContextMenuManager {
         self.auto_dismiss = false;
         self.dismiss_armed = false;
         self.prev_mouse_down = false;
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.pending_anchor = None;
+        }
     }
 
     /// Dismiss the menu when the user presses a mouse button anywhere outside

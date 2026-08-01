@@ -16,12 +16,23 @@ name = "snipdeck"
 path = "src/main.rs"
 
 [dependencies]
-slint = { version = "1.8", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "raw-window-handle-06"] }
+# femtovg (GPU), NOT the software renderer, and the reason is Wayland-specific:
+# Slint's software path renders through softbuffer, whose Wayland backend
+# allocates `wl_shm::Format::Xrgb8888` — the X means the alpha byte is dropped.
+# A transparent window is therefore impossible there, and the snip overlay and
+# context menu both came out as solid black rectangles over the desktop. A GPU
+# renderer gets an alpha-capable surface and they composite correctly.
+#
+# Windows and X11 were unaffected by the bug; the switch is global because Slint
+# picks its renderer per build, not per window.
+slint = { version = "1.8", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-femtovg", "raw-window-handle-06"] }
 # Direct handle on the winit backend so we can hook real winit window events
-# (Focused/Resized/Occluded) and force a fresh frame on restore — the software
-# renderer otherwise wakes blank because a timer-driven request_redraw isn't
-# serviced until a genuine window event arrives. Features unify with slint's.
-i-slint-backend-winit = { version = "1.16", features = ["renderer-software"] }
+# (Focused/Resized/Occluded) and force a fresh frame on restore — a timer-driven
+# request_redraw isn't serviced until a genuine window event arrives, so the
+# window otherwise wakes blank. Also gives `WinitWindowAccessor`, which is how
+# `floating.rs` reaches `drag_window()` for compositor-driven moves on Wayland.
+# Features unify with slint's.
+i-slint-backend-winit = { version = "1.16", features = ["renderer-femtovg"] }
 raw-window-handle = "0.6"
 xcap = "0.0.14"
 arboard = { version = "3", features = ["image-data"] }
@@ -98,6 +109,29 @@ libc = "0.2"
 [target.'cfg(target_os = "linux")'.dependencies]
 tray-icon = "0.24"
 gtk = "0.18"
+# Wayland global shortcuts (see src/portal_hotkeys.rs).
+#
+# 0.13, NOT the 0.8 that rfd drags in. xdg-desktop-portal returns the
+# CreateSession session_handle as a string, not the object path the spec
+# promised (flatpak/xdg-desktop-portal#609); 0.8's derived deserialiser only
+# accepts `o` and dies with "missing field `session_handle`" against portal
+# 1.22, while 0.13 hand-rolls it to take either. Cargo keeps both copies, so
+# rfd is unaffected.
+#
+# async-io, not tokio (ashpd's default): the app has no async runtime and does
+# not want one — pollster drives these few D-Bus round trips from a plain
+# thread. Only the global_shortcuts feature is enabled; every other portal
+# stays out of the build.
+ashpd = { version = "0.13", default-features = false, features = [
+    "async-io",
+    "global_shortcuts",
+] }
+pollster = "0.3"
+# Raw wl_surface access for `wl_surface.set_input_region` (see
+# src/wayland_input_region.rs). winit already links this exact version, and we
+# attach to its connection rather than opening a second one.
+wayland-client = "0.31"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
 
 [dev-dependencies]
 ico = "0.3"
@@ -109,8 +143,8 @@ slint-build = "1.8"
 winresource = "0.1"
 
 # Tuned for a small binary WITHOUT sacrificing runtime performance:
-#   opt-level = 3      keep full speed optimisation (the software renderer and
-#                      image paths stay fast); we do NOT drop to "s"/"z".
+#   opt-level = 3      keep full speed optimisation (the renderer and image
+#                      paths stay fast); we do NOT drop to "s"/"z".
 #   lto = "fat"        whole-program LTO — aggressive cross-crate inlining and
 #                      dead-code elimination; smaller AND usually faster.
 #   codegen-units = 1  one unit lets LTO see everything (smaller + faster).

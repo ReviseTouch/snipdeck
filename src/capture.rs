@@ -34,6 +34,37 @@ pub fn capture_at(x: i32, y: i32) -> anyhow::Result<CapturedScreen> {
     capture_monitor(monitor, idx)
 }
 
+/// Rescale a monitor rect reported in logical pixels onto the pixel grid of
+/// the image that was actually captured.
+///
+/// The origin is scaled by the same ratio as the size: on a multi-monitor
+/// virtual desktop a monitor's logical origin is offset by the logical widths
+/// of the monitors left of it, so it needs the same treatment as the extent.
+/// Returns the input untouched when the image already matches (ratio 1) or
+/// when either dimension is zero, so a degenerate monitor can never produce a
+/// division by zero or a NaN rect.
+fn normalise_to_image(
+    x: i32,
+    y: i32,
+    w: u32,
+    h: u32,
+    image: &RgbaImage,
+) -> (i32, i32, u32, u32) {
+    let (iw, ih) = (image.width(), image.height());
+    if w == 0 || h == 0 || (iw == w && ih == h) {
+        return (x, y, w, h);
+    }
+    let sx = iw as f64 / w as f64;
+    let sy = ih as f64 / h as f64;
+    log::debug!("monitor rect {w}x{h} rescaled to image {iw}x{ih} (x{sx:.3}, x{sy:.3})");
+    (
+        (x as f64 * sx).round() as i32,
+        (y as f64 * sy).round() as i32,
+        iw,
+        ih,
+    )
+}
+
 fn capture_monitor(m: xcap::Monitor, idx: usize) -> anyhow::Result<CapturedScreen> {
     let x = m.x();
     let y = m.y();
@@ -74,6 +105,18 @@ fn capture_monitor(m: xcap::Monitor, idx: usize) -> anyhow::Result<CapturedScree
             capture_image_robust(&m).context("capturing screen")?
         }
     };
+    // xcap is inconsistent about units on a scaled Wayland session: the
+    // monitor rect comes back in LOGICAL pixels while `capture_image` hands
+    // back a PHYSICAL-pixel buffer. On this 3200x2000 panel at GNOME's 166%
+    // that is 1920x1200 vs 3200x2000 — every consumer that crops the image
+    // with these coordinates, or sizes the overlay from them, ends up off by
+    // the scale factor (the overlay rendered at roughly a third of the screen).
+    //
+    // Normalise the rect onto the image's own pixel grid so `area` and `image`
+    // always describe the same space. Where xcap already agrees — Windows, and
+    // any unscaled session — the ratio is 1 and this is a no-op.
+    let (x, y, w, h) = normalise_to_image(x, y, w, h, &image);
+
     Ok(CapturedScreen {
         area: ScreenRect::new(x, y, w, h),
         image,
@@ -185,17 +228,35 @@ pub fn monitor_label_at(x: i32, y: i32) -> Option<String> {
 
 /// Crop a sub-rect (in virtual-screen coordinates) out of a captured screen.
 pub fn crop(captured: &CapturedScreen, region: ScreenRect) -> anyhow::Result<RgbaImage> {
-    // Translate from screen coords to image-local coords.
-    let lx = region.x - captured.area.x;
-    let ly = region.y - captured.area.y;
-    if lx < 0 || ly < 0 {
-        return Err(anyhow!("region starts outside captured screen"));
+    let (iw, ih) = (captured.image.width(), captured.image.height());
+
+    // Translate from screen coords to image-local coords, clamped to what was
+    // actually captured.
+    //
+    // Dragging into the edge of the screen routinely lands a pixel or two
+    // outside it: the pointer is reported in the overlay's logical space and
+    // scaled up to physical, so rounding alone can push the far corner past the
+    // last row. Rejecting the whole region for that lost the user's snip with
+    // no visible reason — the drag simply produced nothing. Clamping costs a
+    // sliver nobody selected on purpose.
+    let lx = (region.x - captured.area.x).max(0) as u32;
+    let ly = (region.y - captured.area.y).max(0) as u32;
+    if lx >= iw || ly >= ih {
+        return Err(anyhow!("region starts outside the captured screen"));
     }
-    let lx = lx as u32;
-    let ly = ly as u32;
-    if lx + region.w > captured.image.width() || ly + region.h > captured.image.height() {
-        return Err(anyhow!("region extends past captured screen"));
+    let w = region.w.min(iw - lx);
+    let h = region.h.min(ih - ly);
+    if w == 0 || h == 0 {
+        return Err(anyhow!("region does not overlap the captured screen"));
     }
-    let view = captured.image.view(lx, ly, region.w, region.h);
+    if w != region.w || h != region.h {
+        log::debug!(
+            "region {}x{} at ({lx},{ly}) clamped to {w}x{h} inside {iw}x{ih}",
+            region.w,
+            region.h
+        );
+    }
+
+    let view = captured.image.view(lx, ly, w, h);
     Ok(view.to_image())
 }

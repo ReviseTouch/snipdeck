@@ -157,19 +157,49 @@ export component ContextMenuWindow inherits Window {
     // says what it does on hover.
     property <string> current-tip: "";
 
-    width: 220px;
-    // Item stack + 20px header row + ~44px hover-description strip.
-    height: root.show-app-item ? 460px : 430px;
+    // The menu panel's own size. Item stack + 20px header row + ~44px
+    // hover-description strip.
+    in property <length> menu-w: 220px;
+    in property <length> menu-h: root.show-app-item ? 460px : 430px;
+
+    // Where the panel sits inside this window, and how big the window is.
+    //
+    // On Windows the window IS the menu: `outer` matches `menu`, the offset is
+    // zero, and the window is placed at the cursor with `set_position`.
+    //
+    // Wayland forbids a client from placing its own window, so there the window
+    // is instead stretched over the whole screen (transparent) and the panel is
+    // drawn at the cursor *inside* it. The protocol only governs where surfaces
+    // go relative to each other — what we paint within our own surface is ours
+    // to decide, so this recovers exact placement without the compositor's help.
+    in property <length> menu-x: 0px;
+    in property <length> menu-y: 0px;
+    in property <length> outer-w: root.menu-w;
+    in property <length> outer-h: root.menu-h;
+
+    width: outer-w;
+    height: outer-h;
+
+    // Anywhere on the surface that is not the panel dismisses. On Windows this
+    // is the panel's own background (the window is menu-sized); on the
+    // full-screen variant it is the rest of the screen, which is exactly the
+    // "click elsewhere closes the menu" behaviour the Win32 build gets from
+    // `poll_auto_close`.
+    TouchArea {
+        clicked => { root.dismissed(); }
+    }
 
     Rectangle {
-        width: parent.width;
-        height: parent.height;
+        x: root.menu-x;
+        y: root.menu-y;
+        width: root.menu-w;
+        height: root.menu-h;
         background: #1c1c1c;
         border-radius: 6px;
         border-width: 1px;
         border-color: #3a3a3a;
 
-        // Click outside any item closes the menu.
+        // Click on the panel background (but not on an item) closes the menu.
         TouchArea {
             clicked => { root.dismissed(); }
         }
