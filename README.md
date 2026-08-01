@@ -140,8 +140,22 @@ Right-click a floating snip **or** a gallery thumbnail:
 
 ### Download
 
-Grab the latest `snipdeck.exe` from the [**Releases**](https://github.com/hasantr/snipdeck/releases)
-page. It is a single portable executable — no installer.
+**Windows** — grab `snipdeck-windows-x64.exe` from the
+[**Releases**](https://github.com/hasantr/snipdeck/releases) page. A single
+portable executable, no installer.
+
+**Linux (x64)** — grab `snipdeck-linux-x64.tar.gz` from the same page:
+
+```bash
+tar xzf snipdeck-linux-x64.tar.gz
+cd snipdeck-linux-x64
+./install.sh          # into ~/.local, no root; --uninstall reverses it
+```
+
+Then launch it from your applications menu. That is not a style preference: on
+Wayland the desktop portal derives the application id from the `.desktop` entry
+the app was launched through, and without one it refuses to bind any global
+shortcut.
 
 ### Build from source
 

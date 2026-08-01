@@ -7,12 +7,15 @@ name: Build & Release
 # Public repositories get GitHub-hosted runners for FREE with no monthly minute
 # cap, so this costs nothing for an open-source project.
 #
-# NOTE: Linux is COMPILE-CHECKED below but deliberately NOT published. The
-# platform now has real implementations (overlay-driven selection, tray via
-# tray-icon, tesseract OCR, xdg-utils sharing) rather than empty stubs, so a
-# build job catches breakage early — but "compiles" is still not "works".
-# No Linux binary ships until the runtime paths are verified by hand on a real
-# desktop session. macOS remains unbuilt: its OCR backend is still a stub.
+# Linux x64 now SHIPS. The runtime paths that "compiles is not works" was
+# holding out for have since been verified by hand on a real Wayland/GNOME
+# session: region capture and the freeze overlay, global shortcuts through
+# xdg-desktop-portal, tesseract OCR, the tray, dragging. What Wayland does not
+# permit at all — pinning a snip where it was captured, floating above other
+# windows, staying out of the window list — is documented in the README rather
+# than pretended away.
+#
+# macOS remains unbuilt: its OCR backend is still a stub.
 on:
   push:
     branches: [main]
@@ -69,10 +72,8 @@ jobs:
           files: dist/snipdeck-windows-x64.exe
           fail_on_unmatched_files: true
 
-  # Compile check only — no artifact upload, nothing attached to a Release.
-  # Its job is to catch a Windows-only change that breaks the Linux cfg paths.
   linux:
-    name: Linux x64 (compile check)
+    name: Linux x64
     runs-on: ubuntu-latest
 
     steps:
@@ -88,6 +89,10 @@ jobs:
       # xkbcommon/wayland: the winit backend. appindicator: the tray host.
       # xdo/xtst: rdev's X11 input grab — the linker needs -lxdo, and leaving
       # it out is what broke the first run of this job.
+      # GL/EGL: the femtovg renderer. The software renderer needed neither, but
+      # it cannot produce a transparent window on Wayland (softbuffer allocates
+      # Xrgb8888 and drops the alpha), which turned the snip overlay and the
+      # context menu into solid black rectangles.
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -97,7 +102,41 @@ jobs:
             libxcb-xfixes0-dev libxcb-randr0-dev libxrandr-dev \
             libxkbcommon-dev libwayland-dev \
             libayatana-appindicator3-dev \
-            libxdo-dev libxtst-dev libfontconfig-dev libdbus-1-dev
+            libxdo-dev libxtst-dev libfontconfig-dev libdbus-1-dev \
+            libgl1-mesa-dev libegl1-mesa-dev
 
       - name: Build (release)
         run: cargo build --release
+        env:
+          SNIPDECK_DONATE_URL: ${{ secrets.SNIPDECK_DONATE_URL }}
+
+      - name: Run tests
+        run: cargo test --release
+
+      # A tarball rather than a bare binary: the .desktop entry has to be
+      # installed for global shortcuts to work at all on Wayland (the portal
+      # derives the application id from it), so shipping the binary alone would
+      # hand people a build whose shortcuts silently do nothing.
+      - name: Stage artifact
+        run: |
+          mkdir -p dist/snipdeck-linux-x64
+          cp target/release/snipdeck dist/snipdeck-linux-x64/
+          cp packaging/linux/snipdeck.desktop dist/snipdeck-linux-x64/
+          cp packaging/linux/install.sh dist/snipdeck-linux-x64/
+          cp assets/preview_256.png dist/snipdeck-linux-x64/snipdeck.png
+          chmod +x dist/snipdeck-linux-x64/install.sh
+          tar -C dist -czf dist/snipdeck-linux-x64.tar.gz snipdeck-linux-x64
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snipdeck-linux-x64
+          path: dist/snipdeck-linux-x64.tar.gz
+          if-no-files-found: error
+
+      - name: Attach to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/snipdeck-linux-x64.tar.gz
+          fail_on_unmatched_files: true
