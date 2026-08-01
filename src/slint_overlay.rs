@@ -194,9 +194,15 @@ impl SlintOverlayManager {
         //
         // Windows keeps the explicit rect: it is exact across a multi-monitor
         // virtual desktop, where fullscreen only ever covers one monitor.
+        //
+        // X11 could take the explicit rect alone, but it is asked to fullscreen
+        // too: the size arithmetic is the part that went wrong, and letting the
+        // compositor own it on every non-Windows path keeps one behaviour to
+        // reason about rather than two that differ only under HiDPI.
+        let backend = crate::window_env::caps().backend;
         win.window()
             .set_position(PhysicalPosition::new(area.x, area.y));
-        if !cfg!(target_os = "windows") {
+        if backend != crate::window_env::Backend::Windows {
             win.window().set_fullscreen(true);
         }
         win.show()?;

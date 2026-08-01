@@ -37,6 +37,7 @@ mod translate;
 mod translate_popup;
 mod tray;
 mod upload;
+mod window_env;
 mod window_metadata;
 mod window_tamer;
 

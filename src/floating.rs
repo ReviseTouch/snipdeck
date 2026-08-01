@@ -167,6 +167,9 @@ impl FloatingManager {
             let shared_drag = self.shared.clone();
             let weak_drag = win.as_weak();
             win.on_drag_start(move || {
+                if !crate::window_env::caps().interactive_move {
+                    return;
+                }
                 let Some(c) = weak_drag.upgrade() else { return };
                 use i_slint_backend_winit::WinitWindowAccessor;
                 let started = c

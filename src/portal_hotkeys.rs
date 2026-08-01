@@ -56,10 +56,7 @@ pub fn should_use_portal() -> bool {
         Ok("x11") => return false,
         _ => {}
     }
-    let wayland_display = std::env::var("WAYLAND_DISPLAY").is_ok_and(|v| !v.is_empty());
-    let session_is_wayland = std::env::var("XDG_SESSION_TYPE")
-        .is_ok_and(|v| v.eq_ignore_ascii_case("wayland"));
-    wayland_display || session_is_wayland
+    crate::window_env::caps().backend == crate::window_env::Backend::Wayland
 }
 
 /// Bind the configured shortcuts through the portal and stream activations.
