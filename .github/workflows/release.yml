@@ -89,6 +89,15 @@ jobs:
 
       - name: Cache cargo registry + build
         uses: Swatinem/rust-cache@v2
+        with:
+          # Pin the cache to this runner image and this dependency shape.
+          # Without it, moving the job from ubuntu-latest to ubuntu-22.04
+          # restored proc-macro .so files linked against GLIBC_2.39 onto a 2.35
+          # image and the build died loading its own cache; the same stale entry
+          # also carried muda's old feature fingerprint, so it recompiled
+          # against a gtk it no longer had. Bump the version when either the
+          # runner or a dependency's features change.
+          prefix-key: v2-ubuntu2204-notrayxdo
 
       # GTK: rfd dialogs + tray-icon. xcb/xrandr: xcap screen capture.
       # xkbcommon/wayland: the winit backend. appindicator: the tray host.
