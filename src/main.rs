@@ -28,6 +28,7 @@ mod pump;
 /// place and stack its own windows and never needs this.
 #[cfg(target_os = "linux")]
 mod wayland_input_region;
+mod screen;
 mod settings;
 mod share;
 mod single_instance;

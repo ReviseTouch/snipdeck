@@ -218,7 +218,7 @@ impl SurfaceHost {
         // scaled session, so they go out as logical and Slint applies the scale
         // itself — passing them as physical is what left an earlier surface
         // covering 60% of the screen.
-        if let Some((lw, lh)) = monitor_logical_size() {
+        if let Some((lw, lh)) = crate::screen::primary_logical_size() {
             win.window()
                 .set_size(slint::LogicalSize::new(lw as f32, lh as f32));
             self.surface_w = lw as f32;
@@ -353,13 +353,3 @@ impl SurfaceHost {
     }
 }
 
-/// Monitor extents in LOGICAL pixels. See `context_menu::screen_size_logical`
-/// for why xcap's numbers are treated as logical.
-fn monitor_logical_size() -> Option<(u32, u32)> {
-    let monitors = xcap::Monitor::all().ok()?;
-    let m = monitors
-        .iter()
-        .find(|m| m.is_primary())
-        .or_else(|| monitors.first())?;
-    Some((m.width(), m.height()))
-}

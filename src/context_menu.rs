@@ -65,29 +65,6 @@ struct Shared {
     pending: Vec<(Uuid, ContextAction)>,
 }
 
-/// Size of the monitor the menu should cover, in LOGICAL pixels.
-///
-/// xcap reports monitor extents in logical units on a scaled Wayland session
-/// (1920x1200 on this 3200x2000 panel at 166%) even though it hands back
-/// physical-pixel images — the same mismatch `capture::normalise_to_image`
-/// exists to absorb. Feeding those numbers to `set_size` as *physical* left the
-/// window covering 60% of the screen, so they go out as logical and Slint
-/// applies the scale factor itself.
-///
-/// Enumerating monitors does not capture anything, so this is cheap enough to
-/// call on every open. Returns the primary monitor, or the first one if none
-/// claims to be primary; `None` when there are no monitors at all, in which
-/// case the caller leaves the window at its natural menu size.
-#[cfg(not(target_os = "windows"))]
-fn screen_size_logical() -> Option<(u32, u32)> {
-    let monitors = xcap::Monitor::all().ok()?;
-    let m = monitors
-        .iter()
-        .find(|m| m.is_primary())
-        .or_else(|| monitors.first())?;
-    Some((m.width(), m.height()))
-}
-
 pub struct ContextMenuManager {
     window: Option<ContextMenuWindow>,
     /// A pre-built, hidden menu window kept ready so the next right-click shows
@@ -283,7 +260,7 @@ impl ContextMenuManager {
             // put it but the origin.
             w.window()
                 .set_position(PhysicalPosition::new(x, y));
-            if let Some((sw, sh)) = screen_size_logical() {
+            if let Some((sw, sh)) = crate::screen::primary_logical_size() {
                 w.window()
                     .set_size(slint::LogicalSize::new(sw as f32, sh as f32));
             }

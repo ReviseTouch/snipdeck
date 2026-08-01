@@ -1,0 +1,28 @@
+[Desktop Entry]
+Type=Application
+Name=Snipdeck
+GenericName=Screen Snipping Deck
+Comment=Capture screen regions, keep them on screen, search them later
+# Installed builds should point this at the packaged binary. The basename of
+# this file is also the application id the desktop portal resolves, so renaming
+# it silently breaks global shortcuts — see the note below.
+Exec=snipdeck
+Icon=snipdeck
+Terminal=false
+Categories=Graphics;
+StartupNotify=true
+StartupWMClass=snipdeck
+Keywords=screenshot;snip;capture;ocr;
+
+# Why this file is required, not merely nice to have:
+#
+# Global shortcuts on Wayland go through org.freedesktop.portal.GlobalShortcuts,
+# and since xdg-desktop-portal 1.21 that portal refuses a session from a client
+# with no application id ("An app id is required"). For an unsandboxed app the
+# portal derives that id from the systemd scope the process runs in, and the
+# scope is only named after a .desktop entry when the desktop environment
+# launched the app from one — app-gnome-snipdeck-<pid>.scope.
+#
+# Run the binary straight from a terminal and there is no such scope, no app id,
+# and every global shortcut silently fails to bind. Launching from the
+# applications menu is what makes them work.

@@ -19,7 +19,7 @@ OCR-index them, and search hundreds of screenshots from one dense gallery —
 all from a native Rust app with a software-rendered [Slint](https://slint.dev) UI.
 
 ![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white)
-![soon](https://img.shields.io/badge/macOS%20%2F%20Linux-on%20the%20way-lightgrey)
+![linux](https://img.shields.io/badge/Linux-X11%20full%20%2F%20Wayland%20partial-yellow) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
 ![built with](https://img.shields.io/badge/built%20with-Rust%20%2B%20Slint-orange?logo=rust&logoColor=white)
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -201,14 +201,36 @@ binary at build time (no runtime gettext dependency).
 ## 🗺️ Roadmap
 
 - [x] Windows 10 / 11
+- [x] **Linux / X11** — full behaviour
+- [~] **Linux / Wayland** — capture, global shortcuts, OCR and dragging work; pinned
+      and always-on-top snips do not (see below)
 - [ ] **macOS** — on the way
-- [ ] **Linux** — on the way
 - [ ] In-app settings window
 - [ ] More annotation tools (blur / pixelate, numbered step badges, move/edit shapes)
 
-> Snipdeck is Windows-only today because capture, OCR, the tray, and sharing all use
-> Windows-specific APIs. The UI ([Slint](https://slint.dev)) and most of the core are already
-> cross-platform, so **macOS and Linux builds are on the way.**
+### Running on Linux
+
+Install it and **launch it from the applications menu**, not from a terminal.
+Global shortcuts go through the desktop portal, which refuses a session from a
+client with no application id, and an unsandboxed app only gets one when the
+desktop launches it from a `.desktop` entry — see `packaging/linux/snipdeck.desktop`.
+
+Runtime dependencies: `libayatana-appindicator` (tray), `xdotool` (sharing),
+and `tesseract` plus the language data you want (OCR — optional; without it OCR
+is skipped rather than failing).
+
+**What Wayland does not allow.** A Wayland client cannot position its own
+windows, ask where they are, or request that they stay above others; the
+compositor owns all three. So on Wayland a snip opens wherever the compositor
+puts it rather than over the region it was captured from, it cannot float above
+other applications, and it appears in the window list. Everything else — region
+capture, the freeze overlay, global shortcuts, OCR, dragging, the context menu —
+works.
+
+KDE and the wlroots compositors (sway, Hyprland, river, COSMIC) expose
+`wlr-layer-shell`, which grants exactly those three; GNOME/Mutter has declined
+to implement it. `window_env::HostStrategy` names the three ways snips can be
+hosted and picks between them.
 
 ---
 
