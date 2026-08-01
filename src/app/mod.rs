@@ -530,7 +530,7 @@ impl AppState {
         // middle-click that both presses and closes doesn't leave the
         // selection pointing at a window that's already gone).
         if let Some(&id) = drained.select_requests.last() {
-            if self.floating.windows.contains_key(&id) {
+            if self.floating.is_shown(id) {
                 self.floating.select(id);
             }
         }
@@ -590,7 +590,7 @@ impl AppState {
         // once its target is gone. (Runs after every close path above, so
         // it catches all of them uniformly.)
         if let Some(target) = self.context_menu.floating_target() {
-            if !self.floating.windows.contains_key(&target) {
+            if !self.floating.is_shown(target) {
                 self.context_menu.hide();
             }
         }
@@ -639,7 +639,7 @@ impl AppState {
         window.set_size_filter_index(self.filters.size);
         window.set_date_filter_index(self.filters.date);
         window.set_sort_index(self.filters.sort);
-        window.set_any_floating(!self.floating.windows.is_empty());
+        window.set_any_floating(!!self.floating.any_shown());
         window.set_floating_in_taskbar(self.settings.floating_in_taskbar);
         window.set_dark_theme(self.settings.dark_theme);
 

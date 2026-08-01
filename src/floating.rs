@@ -404,6 +404,28 @@ impl FloatingManager {
         }
     }
 
+    /// Is this snip currently shown on screen?
+    ///
+    /// Callers used to reach into `windows` directly, which pinned the whole
+    /// app to "a floating snip is an OS window". It is not, on every platform:
+    /// where the compositor refuses to place or stack windows, snips are drawn
+    /// inside a single host surface instead and there is no per-snip window to
+    /// look up. Asking the question instead of inspecting the storage lets that
+    /// backend swap out underneath.
+    pub fn is_shown(&self, id: Uuid) -> bool {
+        self.windows.contains_key(&id)
+    }
+
+    /// Is anything shown on screen right now?
+    pub fn any_shown(&self) -> bool {
+        !self.windows.is_empty()
+    }
+
+    /// How many snips are on screen.
+    pub fn shown_count(&self) -> usize {
+        self.windows.len()
+    }
+
     pub fn handle(&self, id: Uuid) -> Option<&FloatingHandle> {
         self.windows.get(&id)
     }

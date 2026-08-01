@@ -112,6 +112,64 @@ impl Caps {
     pub fn manages_own_windows(&self) -> bool {
         self.absolute_position && self.always_on_top && self.query_own_position
     }
+
+    /// How floating snips should be put on screen here.
+    pub fn host_strategy(&self) -> HostStrategy {
+        if self.manages_own_windows() {
+            return HostStrategy::WindowPerSnip;
+        }
+        // A layer-shell compositor can give a real overlay surface: positioned,
+        // stacked above normal windows, absent from the taskbar. That is a
+        // strictly better answer than the input-region trick, so prefer it
+        // wherever it exists.
+        if matches!(self.compositor, Compositor::Kde | Compositor::WlrootsLike) {
+            return HostStrategy::LayerShell;
+        }
+        if self.input_region {
+            return HostStrategy::SingleSurface;
+        }
+        // Nothing left to try: snips become ordinary windows wherever the
+        // compositor decides to put them. Degraded, but not broken.
+        HostStrategy::WindowPerSnip
+    }
+}
+
+/// How floating snips get onto the screen.
+///
+/// The three are genuinely different architectures, not switches on one — which
+/// is why the choice lives here rather than being rediscovered at each call
+/// site. Each is a separate piece of work against a separate set of protocols.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HostStrategy {
+    /// One OS window per snip, placed and stacked by us.
+    ///
+    /// The original design, and the only one that needs no tricks. Requires
+    /// absolute positioning, always-on-top and position queries — so Windows
+    /// and X11, including XWayland.
+    WindowPerSnip,
+
+    /// One screen-sized surface hosting every snip as a drawing.
+    ///
+    /// For compositors that refuse window control and offer no layer-shell —
+    /// GNOME/Mutter, in practice. Inside our own surface, position and z-order
+    /// are just layout, so the three things Wayland withholds stop mattering.
+    /// The surface would swallow the desktop's clicks, which is what
+    /// `wl_surface.set_input_region` exists to prevent: input is confined to
+    /// the snip rectangles and everything else falls through.
+    ///
+    /// What it cannot recover: the host surface is still one ordinary window,
+    /// so it cannot sit above fullscreen apps and it keeps one taskbar entry.
+    SingleSurface,
+
+    /// A `wlr-layer-shell` overlay surface.
+    ///
+    /// KWin and the wlroots family (sway, Hyprland, river, COSMIC) implement
+    /// it. A layer surface is positioned by anchor and margin, lives on a
+    /// stacking layer above normal windows, and never appears in the taskbar —
+    /// everything the Win32 path gets, granted properly rather than worked
+    /// around. Mutter has declined to implement it, which is the whole reason
+    /// `SingleSurface` exists.
+    LayerShell,
 }
 
 /// Detect once; a session cannot swap display servers under a running process.
@@ -121,7 +179,8 @@ pub fn caps() -> &'static Caps {
         let caps = detect();
         log::info!(
             "window environment: {:?}/{:?} — position={} on_top={} skip_taskbar={} \
-             query_pos={} interactive_move={} input_region={} transparency={}",
+             query_pos={} interactive_move={} input_region={} transparency={} \
+             -> snip host: {:?}",
             caps.backend,
             caps.compositor,
             caps.absolute_position,
@@ -131,6 +190,7 @@ pub fn caps() -> &'static Caps {
             caps.interactive_move,
             caps.input_region,
             caps.transparency,
+            caps.host_strategy(),
         );
         caps
     })
@@ -256,6 +316,60 @@ mod tests {
             transparency: true,
         };
         assert!(caps.manages_own_windows());
+    }
+
+    #[test]
+    fn windows_and_x11_keep_one_window_per_snip() {
+        let caps = Caps {
+            backend: Backend::X11,
+            compositor: Compositor::NotApplicable,
+            absolute_position: true,
+            query_own_position: true,
+            always_on_top: true,
+            skip_taskbar: false,
+            interactive_move: true,
+            input_region: false,
+            transparency: true,
+        };
+        assert_eq!(caps.host_strategy(), HostStrategy::WindowPerSnip);
+    }
+
+    #[test]
+    fn layer_shell_wins_over_the_input_region_workaround() {
+        for compositor in [Compositor::Kde, Compositor::WlrootsLike] {
+            let caps = Caps {
+                backend: Backend::Wayland,
+                compositor,
+                absolute_position: false,
+                query_own_position: false,
+                always_on_top: false,
+                skip_taskbar: false,
+                interactive_move: true,
+                input_region: true,
+                transparency: true,
+            };
+            assert_eq!(
+                caps.host_strategy(),
+                HostStrategy::LayerShell,
+                "{compositor:?} implements wlr-layer-shell"
+            );
+        }
+    }
+
+    #[test]
+    fn gnome_falls_back_to_a_single_hosting_surface() {
+        let caps = Caps {
+            backend: Backend::Wayland,
+            compositor: Compositor::Gnome,
+            absolute_position: false,
+            query_own_position: false,
+            always_on_top: false,
+            skip_taskbar: false,
+            interactive_move: true,
+            input_region: true,
+            transparency: true,
+        };
+        assert_eq!(caps.host_strategy(), HostStrategy::SingleSurface);
     }
 
     #[test]

@@ -47,7 +47,7 @@ impl AppState {
         self.gallery_cards = items
             .iter()
             .map(|s| {
-                let is_floating = self.floating.windows.contains_key(&s.id);
+                let is_floating = self.floating.is_shown(s.id);
                 let has_ocr = metadata.ocr_ids.contains(&s.id);
                 let has_window = metadata.window_ids.contains(&s.id);
                 let (preview_tag, preview) = snip_preview(s, has_ocr, has_window);
@@ -76,7 +76,7 @@ impl AppState {
         self.rechunk_rows(window);
         window.set_gallery_total(self.gallery.snips.len() as i32);
         window.set_pinned_count(self.gallery.snips.iter().filter(|s| s.pinned).count() as i32);
-        window.set_floating_count(self.floating.windows.len() as i32);
+        window.set_floating_count(self.floating.shown_count() as i32);
         window.set_filtered_count(items.len() as i32);
         window.set_storage_size(SharedString::from(storage_size_text(&self.gallery.snips)));
     }
@@ -128,7 +128,7 @@ impl AppState {
     }
 
     fn matches_status_filter(&self, snip: &crate::snip::Snip) -> bool {
-        let is_floating = self.floating.windows.contains_key(&snip.id);
+        let is_floating = self.floating.is_shown(snip.id);
         match self.filters.status {
             1 => snip.pinned,
             2 => !snip.pinned,

@@ -180,7 +180,7 @@ impl AppState {
         }
         let _ = self.gallery.save();
         self.thumb_cache.remove(&id);
-        if self.floating.windows.contains_key(&id) {
+        if self.floating.is_shown(id) {
             self.floating.close(id);
             if let Some(s) = self.gallery.get(id).cloned() {
                 let sf = self.scale_factor;
@@ -216,7 +216,7 @@ impl AppState {
             .gallery
             .snips
             .iter()
-            .filter(|s| self.floating.windows.contains_key(&s.id))
+            .filter(|s| self.floating.is_shown(s.id))
             .map(|s| s.id)
             .collect();
         if let Err(e) = self.collage.open(sources, preselect, self.scale_factor) {
@@ -315,7 +315,7 @@ impl AppState {
     /// actions (Crop / Resize) that operate on the on-screen window — a no-op
     /// when the snip is already floating.
     fn ensure_floating(&mut self, id: Uuid, window: &MainWindow) {
-        if self.floating.windows.contains_key(&id) {
+        if self.floating.is_shown(id) {
             return;
         }
         let Some(snip) = self.gallery.get(id).cloned() else {
@@ -446,7 +446,7 @@ impl AppState {
         // Force the gallery card + any floating window to pick up the new
         // pixels (the cached decoded thumbnail is now stale).
         self.thumb_cache.remove(&id);
-        if self.floating.windows.contains_key(&id) {
+        if self.floating.is_shown(id) {
             self.floating.close(id);
             if let Some(s) = self.gallery.get(id).cloned() {
                 let sf = self.scale_factor;

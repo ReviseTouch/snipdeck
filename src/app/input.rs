@@ -43,7 +43,7 @@ impl AppState {
                     .gallery
                     .snips
                     .iter()
-                    .filter(|s| self.floating.windows.contains_key(&s.id))
+                    .filter(|s| self.floating.is_shown(s.id))
                     .cloned()
                     .collect();
                 self.floating.close_all();
@@ -60,7 +60,7 @@ impl AppState {
                 self.refresh_gallery(window);
             }
             Action::ToggleAllVisibility => {
-                if self.floating.windows.is_empty() {
+                if !self.floating.any_shown() {
                     // Reopen all floating snips (those marked `floating: true`).
                     let to_open: Vec<crate::snip::Snip> = self
                         .gallery
@@ -165,7 +165,7 @@ impl AppState {
                         Some(window.window()),
                     );
                     if let Some(s) = self.gallery.get_mut(id) {
-                        s.floating = self.floating.windows.contains_key(&id);
+                        s.floating = self.floating.is_shown(id);
                     }
                     let _ = self.gallery.save();
                     self.refresh_gallery(window);
