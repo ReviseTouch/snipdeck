@@ -406,6 +406,7 @@ impl AppState {
         self.overlay.sync_to_window();
         #[cfg(not(target_os = "windows"))]
         self.context_menu.sync_to_window();
+        self.floating.sync();
 
         // Colour picker: while active, refresh the magnifier loupe every tick
         // (sample the desktop around the cursor, reposition the loupe).

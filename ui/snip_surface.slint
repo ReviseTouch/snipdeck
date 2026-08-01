@@ -1,0 +1,111 @@
+// Host surface for floating snips on compositors that refuse window control.
+//
+// Where the desktop lets us place and stack windows, each snip gets its own
+// (see floating.slint). Where it does not — GNOME/Mutter — every snip is drawn
+// inside THIS one screen-sized surface instead. Position and stacking then stop
+// being requests to the compositor and become plain layout, which is the whole
+// point: inside our own surface we are allowed to put things where we like.
+//
+// The surface covers the screen and would therefore swallow every click meant
+// for the desktop. Rust confines pointer input to the snip rectangles with
+// `wl_surface.set_input_region`, so everything between them falls through.
+
+export struct HostedSnip {
+    // Stringified UUID — Slint has no opaque handle type, and the id only ever
+    // travels back to Rust to be parsed again.
+    id: string,
+    // Placement inside the surface, in logical pixels.
+    x: length,
+    y: length,
+    w: length,
+    h: length,
+    image: image,
+    selected: bool,
+    pinned: bool,
+}
+
+export component SnipSurfaceWindow inherits Window {
+    title: "SnipdeckSurface";
+    no-frame: true;
+    // A no-op on Wayland — kept because the same component is what an X11 or
+    // layer-shell host would show, and there it matters.
+    always-on-top: true;
+    background: transparent;
+
+    // Sized by Rust from the monitor, then corrected from the compositor's own
+    // answer once it arrives (a surface does not learn its real size until it
+    // has been configured).
+    in property <length> outer-w: 1920px;
+    in property <length> outer-h: 1200px;
+
+    in property <[HostedSnip]> snips;
+    in property <color> border-selected: #ff8a3d;
+    in property <color> border-normal: #888888;
+
+    callback pressed(string);
+    // Drag deltas in logical pixels. Unlike the window-per-snip path these do
+    // not go to the OS — Rust just moves the rectangle in the model.
+    callback dragged(string, length, length);
+    callback right-pressed(string, length, length);
+    callback middle-pressed(string);
+
+    width: outer-w;
+    height: outer-h;
+
+    for s in snips: Rectangle {
+        x: s.x;
+        y: s.y;
+        width: s.w;
+        height: s.h;
+        border-width: 2px;
+        border-color: s.selected ? border-selected : border-normal;
+        border-radius: 2px;
+        clip: true;
+
+        Image {
+            width: 100%;
+            height: 100%;
+            source: s.image;
+            image-fit: fill;
+        }
+
+        // Pin marker, drawn inside the snip so it needs no extra window.
+        if s.pinned : Rectangle {
+            x: parent.width - 12px;
+            y: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 4px;
+            background: border-selected;
+        }
+
+        touch := TouchArea {
+            property <length> last-x: 0px;
+            property <length> last-y: 0px;
+            property <bool> dragging: false;
+
+            pointer-event(ev) => {
+                if (ev.kind == PointerEventKind.down) {
+                    root.pressed(s.id);
+                    if (ev.button == PointerEventButton.left) {
+                        touch.last-x = touch.mouse-x;
+                        touch.last-y = touch.mouse-y;
+                        touch.dragging = true;
+                    } else if (ev.button == PointerEventButton.right) {
+                        root.right-pressed(s.id, touch.mouse-x, touch.mouse-y);
+                    } else if (ev.button == PointerEventButton.middle) {
+                        root.middle-pressed(s.id);
+                    }
+                }
+                if (ev.kind == PointerEventKind.up && ev.button == PointerEventButton.left) {
+                    touch.dragging = false;
+                }
+            }
+            moved => {
+                if (touch.dragging) {
+                    root.dragged(s.id, touch.mouse-x - touch.last-x, touch.mouse-y - touch.last-y);
+                }
+            }
+        }
+    }
+}

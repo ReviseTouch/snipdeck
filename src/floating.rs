@@ -54,6 +54,12 @@ impl FloatingHandle {
 
 pub struct FloatingManager {
     pub windows: HashMap<Uuid, FloatingHandle>,
+    /// Active when the session cannot host a window per snip and every snip is
+    /// drawn inside one surface instead — see `window_env::HostStrategy` and
+    /// `snip_surface`. When this is `Some`, `windows` stays empty and every
+    /// operation below forwards to it.
+    #[cfg(target_os = "linux")]
+    surface: Option<crate::snip_surface::SurfaceHost>,
     shared: Rc<RefCell<SharedState>>,
     /// The snip whose window is currently "selected" — its border shows the
     /// active colour while every other floating snip shows the inactive one,
@@ -67,8 +73,38 @@ const MIN_OUTER_PHYS: i32 = 32;
 
 impl FloatingManager {
     pub fn new() -> Self {
+        // OPT-IN ONLY, via `SNIPDECK_SNIP_HOST=surface`.
+        //
+        // `host_strategy()` already names SingleSurface as the right answer for
+        // this session, and the host is wired end to end — but it is not fit to
+        // be the default yet. Two things are unfinished, and one may be
+        // unfixable:
+        //
+        //   - dragging loses snips and misbehaves near the surface edges;
+        //   - the co-ordinate spaces still disagree (the surface is sized from
+        //     xcap's logical monitor extents while snips are placed from
+        //     physical capture coordinates);
+        //   - and the host surface is itself an ordinary window, so on GNOME it
+        //     cannot stay above other windows. Drawing the snips correctly does
+        //     not make them behave like Snipdeck if the whole surface drops
+        //     behind the focused app.
+        //
+        // Defaulting to it would trade a working-but-limited setup for a broken
+        // one, so it stays behind the flag until it earns the default.
+        #[cfg(target_os = "linux")]
+        let surface = {
+            if matches!(std::env::var("SNIPDECK_SNIP_HOST").as_deref(), Ok("surface")) {
+                log::info!("floating snips hosted in a single surface (opt-in)");
+                Some(crate::snip_surface::SurfaceHost::new())
+            } else {
+                None
+            }
+        };
+
         Self {
             windows: HashMap::new(),
+            #[cfg(target_os = "linux")]
+            surface,
             shared: Rc::new(RefCell::new(SharedState {
                 pending_pos_writes: HashMap::new(),
                 pending_menu: Vec::new(),
@@ -88,6 +124,14 @@ impl FloatingManager {
         scale_factor: f32,
         owner_window: Option<&slint::Window>,
     ) -> Result<(), slint::PlatformError> {
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = self.surface.as_mut() {
+            if let Err(e) = surface.open(snip, scale_factor) {
+                log::warn!("surface host could not show snip: {e:#}");
+            }
+            return Ok(());
+        }
+
         if self.windows.contains_key(&snip.id) {
             return Ok(());
         }
@@ -347,6 +391,15 @@ impl FloatingManager {
     }
 
     pub fn close(&mut self, id: Uuid) {
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = self.surface.as_mut() {
+            surface.close(id);
+            self.shared.borrow_mut().moved_snips.remove(&id);
+            if self.selected == Some(id) {
+                self.selected = None;
+            }
+            return;
+        }
         if let Some(h) = self.windows.remove(&id) {
             let _ = h.window.hide();
         }
@@ -357,6 +410,13 @@ impl FloatingManager {
     }
 
     pub fn close_all(&mut self) {
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = self.surface.as_mut() {
+            surface.close_all();
+            self.shared.borrow_mut().moved_snips.clear();
+            self.selected = None;
+            return;
+        }
         for (_, h) in self.windows.drain() {
             let _ = h.window.hide();
         }
@@ -368,6 +428,12 @@ impl FloatingManager {
     /// Snipdeck is the foreground app (see `refresh_selection_display`), so
     /// this just stores the intent.
     pub fn select(&mut self, id: Uuid) {
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = self.surface.as_mut() {
+            surface.select(id);
+            self.selected = Some(id);
+            return;
+        }
         self.selected = Some(id);
     }
 
@@ -413,16 +479,28 @@ impl FloatingManager {
     /// look up. Asking the question instead of inspecting the storage lets that
     /// backend swap out underneath.
     pub fn is_shown(&self, id: Uuid) -> bool {
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = &self.surface {
+            return surface.is_shown(id);
+        }
         self.windows.contains_key(&id)
     }
 
     /// Is anything shown on screen right now?
     pub fn any_shown(&self) -> bool {
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = &self.surface {
+            return surface.any_shown();
+        }
         !self.windows.is_empty()
     }
 
     /// How many snips are on screen.
     pub fn shown_count(&self) -> usize {
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = &self.surface {
+            return surface.shown_count();
+        }
         self.windows.len()
     }
 
@@ -472,6 +550,25 @@ impl FloatingManager {
     /// Drain any queued events (position writes from drag, menu requests,
     /// close requests, resize-end signals).
     pub fn drain(&mut self) -> DrainResult {
+        // The surface host reports the same events through its own channel;
+        // merge them so the app loop never learns which host is running.
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = self.surface.as_mut() {
+            let ev = surface.drain();
+            let mut position_updates = HashMap::new();
+            for (id, x, y) in ev.moved {
+                position_updates.insert(id, (x, y));
+            }
+            return DrainResult {
+                position_updates,
+                menu_requests: ev.menu_requests,
+                close_requests: ev.close_requests,
+                // Resize handles are not implemented on the surface host yet.
+                resize_ends: Vec::new(),
+                select_requests: ev.select_requests,
+            };
+        }
+
         let mut sh = self.shared.borrow_mut();
         DrainResult {
             position_updates: std::mem::take(&mut sh.pending_pos_writes),
@@ -479,6 +576,16 @@ impl FloatingManager {
             close_requests: std::mem::take(&mut sh.pending_close),
             resize_ends: std::mem::take(&mut sh.pending_resize_end),
             select_requests: std::mem::take(&mut sh.pending_select),
+        }
+    }
+
+    /// Let the active host reconcile with the compositor. No-op unless the
+    /// single-surface host is running, where the surface has to adopt its real
+    /// size and refresh which rectangles accept input.
+    pub fn sync(&mut self) {
+        #[cfg(target_os = "linux")]
+        if let Some(surface) = self.surface.as_mut() {
+            surface.sync();
         }
     }
 }

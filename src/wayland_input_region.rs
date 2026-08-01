@@ -42,17 +42,24 @@ pub struct InputRect {
 /// decorative overlay. Returns an error on anything that is not a Wayland
 /// window, so callers can fall back rather than assume.
 pub fn set_input_rects(window: &slint::Window, rects: &[InputRect]) -> anyhow::Result<()> {
-    let handle = window.window_handle();
+    // Go through the winit window rather than Slint's own handle: Slint's
+    // adapter can produce a window handle but not always a display handle, and
+    // raw-window-handle then reports "the underlying handle cannot be
+    // represented". winit owns the connection and answers both.
+    use i_slint_backend_winit::WinitWindowAccessor;
+    let handles = window
+        .with_winit_window(|w| {
+            let display = w.display_handle().ok().map(|h| h.as_raw());
+            let surface = w.window_handle().ok().map(|h| h.as_raw());
+            (display, surface)
+        })
+        .ok_or_else(|| anyhow!("not a winit window"))?;
 
-    let display_ptr = match handle
-        .display_handle()
-        .context("no display handle")?
-        .as_raw()
-    {
+    let display_ptr = match handles.0.context("no display handle")? {
         RawDisplayHandle::Wayland(d) => d.display.as_ptr(),
         other => return Err(anyhow!("not a Wayland display: {other:?}")),
     };
-    let surface_ptr = match handle.window_handle().context("no window handle")?.as_raw() {
+    let surface_ptr = match handles.1.context("no window handle")? {
         RawWindowHandle::Wayland(w) => w.surface.as_ptr(),
         other => return Err(anyhow!("not a Wayland surface: {other:?}")),
     };

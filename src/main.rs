@@ -33,6 +33,10 @@ mod share;
 mod single_instance;
 mod slint_overlay;
 mod snip;
+/// `SingleSurface` snip host. Linux-only: it exists because Wayland refuses
+/// the window control the window-per-snip design assumes.
+#[cfg(target_os = "linux")]
+mod snip_surface;
 mod translate;
 mod translate_popup;
 mod tray;

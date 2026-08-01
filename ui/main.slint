@@ -1,3 +1,4 @@
+import { SnipSurfaceWindow, HostedSnip } from "snip_surface.slint";
 import { FloatingWindow } from "floating.slint";
 import { OverlayWindow } from "overlay.slint";
 import { ContextMenuWindow } from "context_menu.slint";
@@ -10,7 +11,7 @@ import { ColorResultWindow } from "color_result.slint";
 import { Glyph } from "icons.slint";
 import { ListView, ScrollView } from "std-widgets.slint";
 
-export { FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape, CollageWindow, CollageCell, TrayItem, AboutWindow, LoupeWindow, ColorResultWindow }
+export { SnipSurfaceWindow, HostedSnip, FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape, CollageWindow, CollageCell, TrayItem, AboutWindow, LoupeWindow, ColorResultWindow }
 
 // Singleton holding the currently-hovered element's tooltip text + where to
 // show it (window coords). MainWindow draws ONE overlay box from this, on top
