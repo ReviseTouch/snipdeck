@@ -74,7 +74,12 @@ jobs:
 
   linux:
     name: Linux x64
-    runs-on: ubuntu-latest
+    # 22.04, deliberately, NOT ubuntu-latest. A Rust binary carries the glibc
+    # version it was linked against as a hard floor: built on 24.04 it demands
+    # GLIBC_2.39 and refuses to start on Ubuntu 22.04, Debian 12 or anything
+    # else older, with an error that looks like a broken download. 22.04 gives
+    # glibc 2.35, which every currently-supported distribution satisfies.
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -87,8 +92,7 @@ jobs:
 
       # GTK: rfd dialogs + tray-icon. xcb/xrandr: xcap screen capture.
       # xkbcommon/wayland: the winit backend. appindicator: the tray host.
-      # xdo/xtst: rdev's X11 input grab — the linker needs -lxdo, and leaving
-      # it out is what broke the first run of this job.
+      # xtst: rdev's X11 input grab.
       # GL/EGL: the femtovg renderer. The software renderer needed neither, but
       # it cannot produce a transparent window on Wayland (softbuffer allocates
       # Xrgb8888 and drops the alpha), which turned the snip overlay and the
@@ -102,7 +106,7 @@ jobs:
             libxcb-xfixes0-dev libxcb-randr0-dev libxrandr-dev \
             libxkbcommon-dev libwayland-dev \
             libayatana-appindicator3-dev \
-            libxdo-dev libxtst-dev libfontconfig-dev libdbus-1-dev \
+            libxtst-dev libfontconfig-dev libdbus-1-dev \
             libgl1-mesa-dev libegl1-mesa-dev
 
       - name: Build (release)

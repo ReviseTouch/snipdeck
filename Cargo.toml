@@ -107,7 +107,15 @@ libc = "0.2"
 # GTK main loop running on the thread that owns the icon, hence the direct gtk
 # dependency; at runtime it also needs libayatana-appindicator3 present.
 [target.'cfg(target_os = "linux")'.dependencies]
-tray-icon = "0.24"
+# `default-features = false` to drop `libxdo`, keeping only `gtk`.
+#
+# libxdo is muda's keyboard-accelerator simulator, which this tray never uses —
+# its menu is clicked, not driven by accelerators. It costs a hard link against
+# libxdo.so, and its soname differs across distributions: Ubuntu ships .so.3,
+# Arch .so.4. A binary built in CI therefore refused to start on Arch with
+# "libxdo.so.3: cannot open shared object file", which is not a runtime
+# dependency to document — it is a released artifact that does not run.
+tray-icon = { version = "0.24", default-features = false, features = ["gtk"] }
 gtk = "0.18"
 # Wayland global shortcuts (see src/portal_hotkeys.rs).
 #
