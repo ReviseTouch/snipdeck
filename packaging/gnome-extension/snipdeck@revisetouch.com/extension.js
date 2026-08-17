@@ -23,11 +23,12 @@
  *
  *     SnipdeckFloating <x>,<y>
  *
- * with x/y in physical screen pixels. A title with no coordinates is still
- * recognised and raised — only the move is skipped. Deliberately not D-Bus: a
- * title is readable the instant the window appears, needs no service to be
- * running, no name to be owned, and no ordering between app and extension
- * start-up.
+ * with x/y in physical screen pixels — the space the app captures in. Mutter
+ * places windows in logical coordinates, so `_toLogical` converts before the
+ * move. A title with no coordinates is still recognised and raised — only the
+ * move is skipped. Deliberately not D-Bus: a title is readable the instant the
+ * window appears, needs no service to be running, no name to be owned, and no
+ * ordering between app and extension start-up.
  */
 
 import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
@@ -132,21 +133,30 @@ export default class SnipdeckExtension extends Extension {
         if (!this._isOurs(window))
             return;
 
-        const id = window.connect('notify::title', () => {
+        // `titleWatch` is the one source of truth for whether that handler is
+        // still connected. Disconnecting an id twice is not an exception in
+        // GJS — it is a GLib warning written straight to the journal, which no
+        // `try` can catch — so it has to be tracked rather than attempted and
+        // forgiven.
+        let titleWatch = window.connect('notify::title', () => {
             if (this._adopt(window)) {
-                window.disconnect(id);
-                this._pending.delete(window);
+                window.disconnect(titleWatch);
+                titleWatch = 0;
+                this._pending?.delete(window);
             }
         });
         this._pending.add(window);
 
         // Stop listening if the window goes away before it is ever titled.
+        // These per-window handlers outlive `disable()`, which is why the sets
+        // they touch are reached optionally.
         const unmanaged = window.connect('unmanaged', () => {
-            try {
-                window.disconnect(id);
-            } catch (_) {}
+            if (titleWatch) {
+                window.disconnect(titleWatch);
+                titleWatch = 0;
+            }
             window.disconnect(unmanaged);
-            this._pending.delete(window);
+            this._pending?.delete(window);
         });
     }
 
@@ -181,10 +191,48 @@ export default class SnipdeckExtension extends Extension {
             // is what the app's coordinates describe — these windows are
             // borderless, so the two coincide, but asking for the frame is
             // correct if that ever changes.
-            window.move_frame(true, at.x, at.y);
+            const to = this._toLogical(at.x, at.y);
+            window.move_frame(true, to.x, to.y);
         }
 
         return true;
+    }
+
+    /**
+     * Physical screen pixels -> Mutter's logical coordinates.
+     *
+     * The title carries physical pixels because that is the space the app
+     * captures in. Mutter lays windows out in logical space, and on a scaled
+     * display the two differ by exactly the scale factor: a 3200x2000 panel at
+     * 1.667 is a 1920x1200 desktop. Handing physical pixels straight to
+     * `move_frame` put every snip 1.667x too far right and down, and pushed
+     * anything captured past logical width off the screen entirely, where
+     * Mutter clamped it to the edge.
+     *
+     * The monitor is found by trying each one's scale and keeping the first
+     * result that lands inside that monitor's logical geometry — exact for a
+     * single display, and for several that share a scale. Monitors with
+     * *different* scales are not solvable from here: the physical origin the
+     * app uses for the second monitor comes from its own capture stack and is
+     * not something Mutter exposes. That case falls back to the primary
+     * monitor's scale and may still be wrong.
+     */
+    _toLogical(x, y) {
+        const display = global.display;
+
+        for (let i = 0; i < display.get_n_monitors(); i++) {
+            const scale = display.get_monitor_scale(i);
+            const lx = Math.round(x / scale);
+            const ly = Math.round(y / scale);
+            const g = display.get_monitor_geometry(i);
+
+            if (lx >= g.x && lx < g.x + g.width &&
+                ly >= g.y && ly < g.y + g.height)
+                return {x: lx, y: ly};
+        }
+
+        const scale = display.get_monitor_scale(display.get_primary_monitor());
+        return {x: Math.round(x / scale), y: Math.round(y / scale)};
     }
 
     /** "SnipdeckFloating 1234,567" -> {x: 1234, y: 567}; null if absent. */

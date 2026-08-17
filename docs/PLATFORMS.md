@@ -90,6 +90,17 @@ never user-visible — these windows are borderless. Deliberately not D-Bus: a
 title is readable the instant the window appears, needs no service running, no
 bus name owned, and no start-up ordering between app and extension.
 
+**The extension converts before it moves.** Physical pixels are what the app
+captures in; Mutter places windows in logical coordinates, and on a scaled
+display the two differ by the scale factor — a 3200x2000 panel at 1.667 is a
+1920x1200 desktop. Passing the title's coordinates through unchanged put every
+snip 1.667x too far right and down and pushed anything captured past the logical
+width off the screen, so `_toLogical` divides by the scale of whichever monitor
+the converted point lands on. Monitors with *different* scales are not solvable
+from inside the extension: the physical origin the app uses for the second
+monitor comes from its capture stack, which Mutter does not expose. That case
+falls back to the primary monitor's scale.
+
 Two properties this arrangement is designed to keep:
 
 - **Optional.** Without the extension Snipdeck behaves like any other Wayland
