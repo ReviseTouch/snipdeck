@@ -65,6 +65,15 @@ struct Shared {
     pending: Vec<(Uuid, ContextAction)>,
 }
 
+/// How long to wait for the pointer to report its position before giving up and
+/// showing the panel centred.
+///
+/// A compositor is under no obligation to send a motion event for a pointer
+/// that is not moving, so this cannot be waited on indefinitely — but it is
+/// long enough that in practice the panel lands at the cursor.
+#[cfg(not(target_os = "windows"))]
+const ANCHOR_GRACE: std::time::Duration = std::time::Duration::from_millis(120);
+
 pub struct ContextMenuManager {
     window: Option<ContextMenuWindow>,
     /// A pre-built, hidden menu window kept ready so the next right-click shows
@@ -85,6 +94,14 @@ pub struct ContextMenuManager {
     /// compositor has answered, so `sync_to_window` resolves it a frame later.
     #[cfg(not(target_os = "windows"))]
     pending_anchor: Option<(i32, i32)>,
+    /// True once the pointer has told us where it is and the panel has been
+    /// placed there. Until then the panel stays hidden.
+    #[cfg(not(target_os = "windows"))]
+    anchored: Rc<std::cell::Cell<bool>>,
+    /// When the current menu was opened, so a pointer that never moves does not
+    /// leave the panel invisible forever.
+    #[cfg(not(target_os = "windows"))]
+    opened_at: std::cell::Cell<std::time::Instant>,
     /// True only when the open menu belongs to a floating snip, so the app loop
     /// dismisses it once that snip's window closes. False for a gallery-card
     /// menu, which has no floating window to track.
@@ -112,6 +129,10 @@ impl ContextMenuManager {
             prev_mouse_down: false,
             #[cfg(not(target_os = "windows"))]
             pending_anchor: None,
+            #[cfg(not(target_os = "windows"))]
+            anchored: Rc::new(std::cell::Cell::new(false)),
+            #[cfg(not(target_os = "windows"))]
+            opened_at: std::cell::Cell::new(std::time::Instant::now()),
         }
     }
 
@@ -138,33 +159,53 @@ impl ContextMenuManager {
 
         let (mw, mh) = (win.get_menu_w(), win.get_menu_h());
 
-        // Centre it, deliberately — do NOT try to honour the anchor here.
+        // Fall back to the centre only until the pointer tells us where it is.
         //
-        // The anchor arrives as a click position inside the floating snip's own
-        // window, and turning that into a screen coordinate needs to know where
-        // that window sits. Wayland never tells a client its own position
-        // (`Window::position()` answers 0,0), so the sum is meaningless and the
-        // menu appeared at an arbitrary spot. A predictable centre beats a
-        // wrong guess; the anchor is kept only for the X11/Windows paths and
-        // for whenever a compositor learns to answer that question.
+        // The anchor handed to `show_for` is a click position inside the
+        // floating snip's own window, and turning that into a screen coordinate
+        // needs that window's position — which Wayland never reveals. But this
+        // surface covers the screen, so once the pointer moves over it, its
+        // surface-local position IS the screen position (see `on_pointer_at`).
+        // The panel stays hidden until then rather than appearing centred and
+        // jumping.
         let _ = (ax, ay);
-        let x = ((sw - mw) / 2.0).max(0.0);
-        let y = ((sh - mh) / 2.0).max(0.0);
-        log::debug!("menu centred at ({x},{y}) in {sw}x{sh} logical surface (sf={sf})");
-        win.set_menu_x(x);
-        win.set_menu_y(y);
+        if !self.anchored.get() {
+            let x = ((sw - mw) / 2.0).max(0.0);
+            let y = ((sh - mh) / 2.0).max(0.0);
+            win.set_menu_x(x);
+            win.set_menu_y(y);
+            // If the pointer never reports in — it can sit perfectly still, and
+            // a compositor need not send a motion event for that — reveal the
+            // centred panel rather than leaving the user with nothing.
+            if self.opened_at.get().elapsed() > ANCHOR_GRACE {
+                win.set_panel_visible(true);
+            }
+        }
 
         // The surface covers the screen, so without this it would swallow every
         // click on the desktop behind it. Confine input to the panel and let the
         // rest through — the same mechanism panels and desktop widgets use, and
         // the one that makes a single screen-sized surface viable as a host for
         // floating snips.
-        let rects = [crate::wayland_input_region::InputRect {
-            x: x as i32,
-            y: y as i32,
-            w: mw as i32,
-            h: mh as i32,
-        }];
+        // Until the pointer has reported in, the region has to be the WHOLE
+        // surface: confine it to the panel first and pointer motion elsewhere
+        // never reaches us, so the anchor could never be learned. Once anchored,
+        // it shrinks to the panel and the desktop becomes clickable again.
+        let rects = if self.anchored.get() {
+            vec![crate::wayland_input_region::InputRect {
+                x: win.get_menu_x() as i32,
+                y: win.get_menu_y() as i32,
+                w: mw as i32,
+                h: mh as i32,
+            }]
+        } else {
+            vec![crate::wayland_input_region::InputRect {
+                x: 0,
+                y: 0,
+                w: sw as i32,
+                h: sh as i32,
+            }]
+        };
         match crate::wayland_input_region::set_input_rects(win.window(), &rects) {
             Ok(()) => log::debug!("menu input region confined to the panel"),
             Err(e) => log::debug!("input region unavailable ({e:#}); surface stays fully clickable"),
@@ -195,6 +236,34 @@ impl ContextMenuManager {
                 let _ = c.hide();
             }
         });
+
+        // Learn where the cursor is, the only way this build can.
+        //
+        // The surface covers the screen and starts at its origin, so a pointer
+        // position reported in surface-local coordinates IS a screen position.
+        // The panel is placed there and revealed; the first report wins, so
+        // moving the mouse afterwards does not drag the menu around.
+        #[cfg(not(target_os = "windows"))]
+        {
+            let anchored = self.anchored.clone();
+            let weak_for_anchor = w.as_weak();
+            w.on_pointer_at(move |px, py| {
+                if anchored.get() {
+                    return;
+                }
+                let Some(c) = weak_for_anchor.upgrade() else { return };
+                let (sw, sh) = (c.get_outer_w(), c.get_outer_h());
+                let (mw, mh) = (c.get_menu_w(), c.get_menu_h());
+                // Keep it fully on screen: a right-click near an edge would
+                // otherwise push the panel off it, and unlike a real popup
+                // nothing is going to reposition it for us.
+                c.set_menu_x(px.min((sw - mw).max(0.0)).max(0.0));
+                c.set_menu_y(py.min((sh - mh).max(0.0)).max(0.0));
+                c.set_panel_visible(true);
+                anchored.set(true);
+            });
+        }
+
         Ok(w)
     }
 
@@ -265,6 +334,9 @@ impl ContextMenuManager {
                     .set_size(slint::LogicalSize::new(sw as f32, sh as f32));
             }
             self.pending_anchor = Some((x, y));
+            self.anchored.set(false);
+            self.opened_at.set(std::time::Instant::now());
+            w.set_panel_visible(false);
         }
 
         w.show()?;
@@ -290,6 +362,7 @@ impl ContextMenuManager {
         #[cfg(not(target_os = "windows"))]
         {
             self.pending_anchor = None;
+            self.anchored.set(false);
         }
     }
 

@@ -180,16 +180,36 @@ export component ContextMenuWindow inherits Window {
     width: outer-w;
     height: outer-h;
 
+    // Where the pointer is, in surface-local coordinates.
+    //
+    // On the screen-covering variant those ARE screen coordinates, which is the
+    // only way this build can learn where the cursor is: Wayland tells a client
+    // nothing about the pointer outside its own surfaces, and the right-click
+    // that opened the menu arrived in the floating snip's window, whose position
+    // on screen is equally unknowable. Cover the screen and the question answers
+    // itself.
+    callback pointer-at(length, length);
+
+    // Held back until the anchor is known, so the panel appears at the cursor
+    // rather than appearing centred and then jumping to it.
+    in property <bool> panel-visible: true;
+
     // Anywhere on the surface that is not the panel dismisses. On Windows this
     // is the panel's own background (the window is menu-sized); on the
     // full-screen variant it is the rest of the screen, which is exactly the
     // "click elsewhere closes the menu" behaviour the Win32 build gets from
     // `poll_auto_close`.
-    TouchArea {
+    surface-ta := TouchArea {
         clicked => { root.dismissed(); }
+        moved => { root.pointer-at(surface-ta.mouse-x, surface-ta.mouse-y); }
+        pointer-event(ev) => {
+            if (ev.kind == PointerEventKind.move) {
+                root.pointer-at(surface-ta.mouse-x, surface-ta.mouse-y);
+            }
+        }
     }
 
-    Rectangle {
+    if root.panel-visible : Rectangle {
         x: root.menu-x;
         y: root.menu-y;
         width: root.menu-w;
