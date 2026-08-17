@@ -399,7 +399,20 @@ fn main() -> Result<(), slint::PlatformError> {
                     }
                     tray::focus_main_window();
                 }
-                tray::TrayCommand::NewSnip => mouse_trigger::arm_snip(),
+                // Route through the action queue, NOT straight to arm_snip():
+                // arming alone waits for a global mouse hook to deliver the
+                // drag, which exists on Windows and nowhere else. Off Windows
+                // the click never came and the menu item did nothing.
+                tray::TrayCommand::NewSnip => {
+                    if !app::queue_action(app::Action::NewSnip {
+                        to_clip: false,
+                        keep_float: true,
+                    }) {
+                        // Before the UI is wired there is nothing to queue into;
+                        // fall back to the old behaviour so Windows still arms.
+                        mouse_trigger::arm_snip();
+                    }
+                }
                 tray::TrayCommand::ToggleAutostart => match autostart::toggle() {
                     Ok(on) => {
                         log::info!("launch-at-login set to {on}");

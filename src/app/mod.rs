@@ -880,3 +880,25 @@ thread_local! {
     static ACTION_QUEUE: std::cell::RefCell<Option<Rc<std::cell::RefCell<Vec<Action>>>>> =
         std::cell::RefCell::new(None);
 }
+
+/// Queue an action from outside the UI callbacks — the tray, in practice.
+///
+/// The tray used to reach past this and call `mouse_trigger::arm_snip()`
+/// directly, which is enough on Windows (the global hook delivers the drag that
+/// follows) and a dead end everywhere else: Wayland has no global hook, so the
+/// armed click never arrived and "New Snip" did nothing at all. Going through
+/// the queue puts the tray on exactly the path the toolbar button takes,
+/// including hiding our own window and the deferred freeze.
+///
+/// Returns false if the queue is not installed yet (before `wire_callbacks`),
+/// so a very early tray click is dropped rather than silently lost.
+pub(crate) fn queue_action(action: Action) -> bool {
+    ACTION_QUEUE.with(|q| match q.borrow().as_ref() {
+        Some(pending) => {
+            pending.borrow_mut().push(action);
+            crate::pump::wake();
+            true
+        }
+        None => false,
+    })
+}
