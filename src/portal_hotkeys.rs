@@ -56,7 +56,7 @@ pub fn should_use_portal() -> bool {
         Ok("x11") => return false,
         _ => {}
     }
-    crate::window_env::caps().backend == crate::window_env::Backend::Wayland
+    crate::window_env::caps().session_is_wayland
 }
 
 /// Bind the configured shortcuts through the portal and stream activations.

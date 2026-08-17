@@ -97,6 +97,21 @@ pub struct Caps {
     /// swallow every click on the desktop behind it.
     pub input_region: bool,
 
+    /// Is the *session* driven by a Wayland compositor, regardless of how this
+    /// client happens to be connected?
+    ///
+    /// Deliberately different from `backend == Wayland`, and the difference
+    /// matters: a client started with `WAYLAND_DISPLAY` unset inside a Wayland
+    /// session talks X11 through XWayland and gets X11 window management — but
+    /// the compositor is still Mutter or KWin, and global shortcuts still have
+    /// to go through the portal, because GNOME does not route them to XWayland
+    /// clients. Keying the shortcut backend off `backend` silently disabled
+    /// every shortcut the moment the app was run under XWayland.
+    ///
+    /// So: window management follows how the client connects; global shortcuts
+    /// follow what the compositor is.
+    pub session_is_wayland: bool,
+
     /// Does a transparent window actually composite?
     ///
     /// Not a display-server property but a renderer one: Slint's software
@@ -210,6 +225,7 @@ fn detect() -> Caps {
         // the rest of the Win32 floating-window behaviour is built around.
         interactive_move: false,
         input_region: false,
+        session_is_wayland: false,
         transparency: true,
     }
 }
@@ -217,6 +233,11 @@ fn detect() -> Caps {
 #[cfg(not(target_os = "windows"))]
 fn detect() -> Caps {
     let backend = detect_backend();
+    // XDG_SESSION_TYPE describes the SESSION, which is exactly what is wanted
+    // here and exactly what must not be used for `backend`.
+    let session_is_wayland = std::env::var("XDG_SESSION_TYPE")
+        .is_ok_and(|v| v.eq_ignore_ascii_case("wayland"))
+        || backend == Backend::Wayland;
     let compositor = if backend == Backend::Wayland {
         detect_compositor()
     } else {
@@ -238,6 +259,7 @@ fn detect() -> Caps {
             skip_taskbar: false,
             interactive_move: true,
             input_region: true,
+            session_is_wayland,
             // True only because the build selects femtovg in Cargo.toml. Going
             // back to `renderer-software` would make this false and take the
             // snip overlay and the context menu with it.
@@ -255,6 +277,7 @@ fn detect() -> Caps {
             skip_taskbar: false,
             interactive_move: true,
             input_region: false,
+            session_is_wayland,
             transparency: true,
         },
         Backend::Windows => unreachable!("handled by the windows cfg"),
@@ -313,6 +336,7 @@ mod tests {
             skip_taskbar: false,
             interactive_move: true,
             input_region: false,
+            session_is_wayland: false,
             transparency: true,
         };
         assert!(caps.manages_own_windows());
@@ -329,6 +353,7 @@ mod tests {
             skip_taskbar: false,
             interactive_move: true,
             input_region: false,
+            session_is_wayland: false,
             transparency: true,
         };
         assert_eq!(caps.host_strategy(), HostStrategy::WindowPerSnip);
@@ -346,6 +371,7 @@ mod tests {
                 skip_taskbar: false,
                 interactive_move: true,
                 input_region: true,
+                session_is_wayland: true,
                 transparency: true,
             };
             assert_eq!(
@@ -367,6 +393,7 @@ mod tests {
             skip_taskbar: false,
             interactive_move: true,
             input_region: true,
+            session_is_wayland: true,
             transparency: true,
         };
         assert_eq!(caps.host_strategy(), HostStrategy::SingleSurface);
@@ -383,6 +410,7 @@ mod tests {
             skip_taskbar: false,
             interactive_move: true,
             input_region: true,
+            session_is_wayland: true,
             transparency: true,
         };
         assert!(!caps.manages_own_windows());
