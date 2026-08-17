@@ -129,7 +129,10 @@ jobs:
       # A tarball rather than a bare binary: the .desktop entry has to be
       # installed for global shortcuts to work at all on Wayland (the portal
       # derives the application id from it), so shipping the binary alone would
-      # hand people a build whose shortcuts silently do nothing.
+      # hand people a build whose shortcuts silently do nothing. The GNOME Shell
+      # extension rides along for the same reason — on GNOME Wayland it is what
+      # places snips and keeps them on top, and install.sh only installs what it
+      # finds beside itself.
       - name: Stage artifact
         run: |
           mkdir -p dist/snipdeck-linux-x64
@@ -137,6 +140,7 @@ jobs:
           cp packaging/linux/snipdeck.desktop dist/snipdeck-linux-x64/
           cp packaging/linux/install.sh dist/snipdeck-linux-x64/
           cp assets/preview_256.png dist/snipdeck-linux-x64/snipdeck.png
+          cp -r packaging/gnome-extension/snipdeck@revisetouch.com dist/snipdeck-linux-x64/
           chmod +x dist/snipdeck-linux-x64/install.sh
           tar -C dist -czf dist/snipdeck-linux-x64.tar.gz snipdeck-linux-x64
 

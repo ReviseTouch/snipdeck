@@ -43,7 +43,18 @@ export component FloatingWindow inherits Window {
     // identify our floating snips and apply WDA_EXCLUDEFROMCAPTURE —
     // that way re-capturing the screen behind a resize handle doesn't
     // include the snip's own border in the new image.
-    title: "SnipdeckFloating";
+    // Marker AND placement channel.
+    //
+    // Windows: `window_tamer` finds these windows by title to apply
+    // WS_EX_TOOLWINDOW and owner styling.
+    //
+    // Linux/Wayland: the GNOME extension in packaging/gnome-extension reads the
+    // coordinates appended here — "SnipdeckFloating <x>,<y>" — and does the
+    // placing and raising that a Wayland client is not allowed to do for
+    // itself. Never user-visible: these windows are borderless and skip the
+    // window list.
+    in property <string> win-title: "SnipdeckFloating";
+    title: root.win-title;
     no-frame: true;
     always-on-top: true;
     background: transparent;

@@ -186,6 +186,20 @@ impl FloatingManager {
         let pos = snip
             .last_position
             .unwrap_or((snip.area.x - 3, snip.area.y - 3));
+
+        // Publish the intended position in the title, where the GNOME extension
+        // can read it. `set_position` below is silently ignored on Wayland, so
+        // without this the snip lands wherever the compositor likes; the
+        // extension does the placing and raising on our behalf.
+        //
+        // Harmless where it is not needed: the title is never shown (these
+        // windows are borderless) and Windows only ever matches on the prefix.
+        if !crate::window_env::caps().absolute_position {
+            win.set_win_title(slint::SharedString::from(format!(
+                "SnipdeckFloating {},{}",
+                pos.0, pos.1
+            )));
+        }
         win.window()
             .set_position(PhysicalPosition::new(pos.0, pos.1));
         crate::window_tamer::configure_floating_window(

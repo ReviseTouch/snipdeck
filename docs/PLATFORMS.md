@@ -59,6 +59,51 @@ Three architectures, chosen by capability, not by OS:
 `LayerShell` is preferred over `SingleSurface` wherever it exists, because it
 grants the capability rather than working around its absence.
 
+### 2a. The GNOME Shell extension — asking from the inside
+
+GNOME is the one case where none of the three is satisfying. It has no
+`wlr-layer-shell`, and `SingleSurface` cannot fix the part that matters most:
+its host surface is itself an ordinary window, so on Mutter it drops behind the
+focused app and takes every snip with it. Drawing snips correctly is worth
+little if the whole surface cannot stay on top.
+
+What *can* stay on top is code running inside the shell. So the default on GNOME
+stays `WindowPerSnip` — one real window per snip — and
+`packaging/gnome-extension/snipdeck@revisetouch.com` supplies the three things
+the client is not allowed to do for itself:
+
+| Withheld from the client | What the extension calls |
+|---|---|
+| placement | `meta_window.move_frame()` |
+| stacking | `meta_window.make_above()` |
+| absence from the window list | filters `WindowSwitcherPopup._getWindowList` ¹ |
+
+¹ Mutter exposes only `is_skip_taskbar`, derived from the window type — the flag
+cannot be *set* by anyone, application or extension. Filtering the list the
+switcher builds is the remaining lever. Only the window switcher is patched; the
+application switcher still shows Snipdeck once, which is correct.
+
+**Placement travels in the window title.** For floating snips the title is set
+to `SnipdeckFloating <x>,<y>` in physical screen pixels (`floating.rs`, guarded
+by `!caps().absolute_position` so Windows and X11 keep the bare marker). It is
+never user-visible — these windows are borderless. Deliberately not D-Bus: a
+title is readable the instant the window appears, needs no service running, no
+bus name owned, and no start-up ordering between app and extension.
+
+Two properties this arrangement is designed to keep:
+
+- **Optional.** Without the extension Snipdeck behaves like any other Wayland
+  client. Nothing detects it, nothing waits for it, nothing fails without it.
+- **Reversible.** `disable()` restores the switcher unconditionally. A monkey
+  patch left behind after disable is how an extension breaks a desktop it is no
+  longer running in.
+
+Known limit: the extension reads the title once, when the window is first
+titled. A snip dragged afterwards is moved by Mutter, and since
+`query_own_position` is false the app never learns where it ended up — so
+`last_position` is not persisted on GNOME Wayland and the snip reopens where it
+was captured.
+
 ### 3. Backends — one file per platform mechanism
 
 Where a feature genuinely has no shared implementation, the module carries the

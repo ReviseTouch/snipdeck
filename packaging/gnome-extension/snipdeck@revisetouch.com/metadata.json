@@ -1,0 +1,9 @@
+{
+  "uuid": "snipdeck@revisetouch.com",
+  "name": "Snipdeck",
+  "description": "Pins Snipdeck's floating snips where they were captured and keeps them above other windows. Wayland does not let an application do either for itself — the compositor owns window placement and stacking — but code running inside GNOME Shell can. Without this extension Snipdeck still works; its snips just open wherever the compositor puts them and sit in the normal window stack.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "url": "https://github.com/hasantr/snipdeck",
+  "settings-schema": null,
+  "session-modes": ["user"]
+}

@@ -216,8 +216,9 @@ binary at build time (no runtime gettext dependency).
 
 - [x] Windows 10 / 11
 - [x] **Linux / X11** — full behaviour
-- [~] **Linux / Wayland** — capture, global shortcuts, OCR and dragging work; pinned
-      and always-on-top snips do not (see below)
+- [~] **Linux / Wayland** — capture, global shortcuts, OCR and dragging work.
+      On GNOME the bundled shell extension also restores placement and
+      always-on-top; on other compositors those are still missing (see below)
 - [ ] **macOS** — on the way
 - [ ] In-app settings window
 - [ ] More annotation tools (blur / pixelate, numbered step badges, move/edit shapes)
@@ -235,16 +236,33 @@ is skipped rather than failing).
 
 **What Wayland does not allow.** A Wayland client cannot position its own
 windows, ask where they are, or request that they stay above others; the
-compositor owns all three. So on Wayland a snip opens wherever the compositor
-puts it rather than over the region it was captured from, it cannot float above
-other applications, and it appears in the window list. Everything else — region
-capture, the freeze overlay, global shortcuts, OCR, dragging, the context menu —
-works.
+compositor owns all three. So on a bare Wayland session a snip opens wherever the
+compositor puts it rather than over the region it was captured from, it cannot
+float above other applications, and it appears in the window list. Everything
+else — region capture, the freeze overlay, global shortcuts, OCR, dragging, the
+context menu — works.
 
 KDE and the wlroots compositors (sway, Hyprland, river, COSMIC) expose
 `wlr-layer-shell`, which grants exactly those three; GNOME/Mutter has declined
 to implement it. `window_env::HostStrategy` names the three ways snips can be
 hosted and picks between them.
+
+**On GNOME, a shell extension closes the gap.** What a client may not do, code
+running inside GNOME Shell may. `install.sh` therefore also installs
+`snipdeck@revisetouch.com` (from `packaging/gnome-extension/`) when it detects a
+GNOME session — a single file that watches for Snipdeck's snip windows and
+places them where they were captured, keeps them above other windows, sticks
+them to every workspace, and takes them out of the window switcher. Placement
+travels in the window title, which is never visible on these borderless windows.
+
+Log out and back in after installing; GNOME Shell cannot reload extensions in
+place on Wayland, because it *is* the compositor holding your session. The
+extension is entirely optional — without it Snipdeck behaves like any other
+Wayland client — and it touches nothing beyond Snipdeck's own windows.
+
+Still missing on GNOME Wayland: a snip you drag is moved by Mutter, and the app
+is never told where it landed, so its position is not remembered across
+restarts.
 
 ---
 
