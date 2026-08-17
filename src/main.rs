@@ -136,10 +136,50 @@ fn main() -> Result<(), slint::PlatformError> {
             }
         }
     }
+    // Linux: femtovg, installed the same way and for the same second reason —
+    // `set_platform` is what unlocks `WinitWindowAccessor`, which the Wayland
+    // paths depend on for `drag_window()` and for reaching the raw `wl_surface`
+    // to set an input region.
+    //
+    // The renderer is NOT software here, and asking for it by that name was an
+    // active bug: this line still said "winit-software" after the build moved to
+    // femtovg (Wayland transparency is impossible on the software path — see
+    // Cargo.toml). Slint answered "unrecognized renderer software, falling back
+    // to FemtoVG", which worked under Wayland but left the main window unmapped
+    // under XWayland — the app came up invisible with only a tray icon.
     #[cfg(not(target_os = "windows"))]
-    std::env::set_var("SLINT_BACKEND", "winit-software");
+    {
+        match i_slint_backend_winit::Backend::new_with_renderer_by_name(Some("femtovg")) {
+            Ok(backend) => match slint::platform::set_platform(Box::new(backend)) {
+                Ok(()) => log::info!("winit-femtovg backend installed via set_platform"),
+                Err(e) => log::warn!("set_platform failed ({e:?}); using the default backend"),
+            },
+            Err(e) => log::warn!("winit-femtovg backend init failed ({e:?}); using the default"),
+        }
+    }
 
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
+    // Claim an xdg application id. Must happen after `set_platform` (there is no
+    // context to store it in before that) and before the first window is shown —
+    // winit reads it once, while building the window attributes.
+    //
+    // Slint sends `xdg_toplevel.set_app_id` ONLY when this has been set; leave it
+    // alone and every Snipdeck window reaches the compositor anonymous. That is
+    // not cosmetic on GNOME: the shell extension identifies our snips by
+    // `wm_class`, which Mutter fills from the app id, so without this it matches
+    // nothing and never places or raises a single snip. It is also what lets the
+    // shell tie our windows to snipdeck.desktop for the icon and window list.
+    //
+    // The string has to stay "snipdeck", matching snipdeck.desktop's basename and
+    // its StartupWMClass, or the association breaks.
+    #[cfg(not(target_os = "windows"))]
+    match slint::set_xdg_app_id("snipdeck") {
+        Ok(()) => log::info!("xdg app id set to \"snipdeck\""),
+        Err(e) => log::warn!(
+            "could not set the xdg app id ({e:?}); the GNOME extension will not see our windows"
+        ),
+    }
 
     // Only one Snipdeck per session. A second launch would fight the first
     // over the global hotkey and the process-wide input hooks; bail out
