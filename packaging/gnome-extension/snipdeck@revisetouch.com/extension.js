@@ -42,6 +42,13 @@ const SNIP_TITLE = 'SnipdeckFloating';
 
 export default class SnipdeckExtension extends Extension {
     enable() {
+        // One line at start-up, so a session can be asked which build of
+        // this file it is actually running. GNOME Shell caches the loaded
+        // module, and on Wayland it cannot re-import one without a new
+        // session — without this marker there is no way to tell a fix that
+        // did not work from a fix that was never loaded.
+        log(`snipdeck: enable() placement=first-frame coords=logical`);
+
         this._handles = [];
         this._pending = new Set();
         this._placing = new Set();
