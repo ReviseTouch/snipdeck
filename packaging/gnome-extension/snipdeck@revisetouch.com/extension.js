@@ -44,6 +44,7 @@ export default class SnipdeckExtension extends Extension {
     enable() {
         this._handles = [];
         this._pending = new Set();
+        this._placing = new Set();
 
         this._handles.push([
             global.display,
@@ -121,6 +122,8 @@ export default class SnipdeckExtension extends Extension {
         // rather than the extension stopping.
         this._pending?.clear();
         this._pending = null;
+        this._placing?.clear();
+        this._placing = null;
     }
 
     _onWindowCreated(window) {
@@ -177,6 +180,27 @@ export default class SnipdeckExtension extends Extension {
         if (!title || !title.startsWith(SNIP_TITLE))
             return false;
 
+        // Once now, because a window adopted from `enable()` is already placed
+        // and this is all it needs...
+        this._apply(window, title);
+
+        // ...and once more after Mutter has had its say. Everything above runs
+        // from `window-created` or `notify::title`, both of which fire BEFORE
+        // the compositor places the window. With `center-new-windows` on — the
+        // GNOME default — Mutter then centres it and the move is simply undone,
+        // which is why a snip landed dead centre rather than merely off by a
+        // bit. `first-frame` is the first moment the window is mapped, placed
+        // and painted, so a move made there is the one that survives.
+        //
+        // Same trap as the sizing fix in 0153733: on this compositor, saying it
+        // early is not saying it at all.
+        this._applyWhenPlaced(window);
+
+        return true;
+    }
+
+    /** Above, on every workspace, and where it was captured. */
+    _apply(window, title) {
         // Above everything. The single reason this extension exists.
         window.make_above();
 
@@ -194,8 +218,31 @@ export default class SnipdeckExtension extends Extension {
             const to = this._toLogical(at.x, at.y);
             window.move_frame(true, to.x, to.y);
         }
+    }
 
-        return true;
+    /**
+     * Re-apply once the compositor has finished placing the window.
+     *
+     * `first-frame` fires exactly once per actor, so this cannot turn into a
+     * fight with the user: a snip dragged later stays where it was dropped.
+     * A window that has already painted by the time we get here — anything
+     * adopted during `enable()` — never fires it again, and does not need to,
+     * because the immediate pass in `_adopt` already landed on a placed window.
+     */
+    _applyWhenPlaced(window) {
+        const actor = window.get_compositor_private();
+        if (!actor || this._placing?.has(window))
+            return;
+
+        this._placing?.add(window);
+        const id = actor.connect('first-frame', () => {
+            actor.disconnect(id);
+            this._placing?.delete(window);
+
+            const title = window.get_title();
+            if (title && title.startsWith(SNIP_TITLE))
+                this._apply(window, title);
+        });
     }
 
     /**
