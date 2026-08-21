@@ -83,6 +83,12 @@ cannot be *set* by anyone, application or extension. Filtering the list the
 switcher builds is the remaining lever. Only the window switcher is patched; the
 application switcher still shows Snipdeck once, which is correct.
 
+**The title is also what identifies a snip.** Not `wm_class`: that reports the
+X11 WM_CLASS property, which a Wayland toplevel need not have, so requiring it
+is a gate that may never open on Wayland — and while it was required, nothing
+was adopted at all: no placement, no always-on-top, no switcher filtering. The
+app id is still set, for the desktop-file association rather than for matching.
+
 **Placement travels in the window title.** For floating snips the title is set
 to `SnipdeckFloating <x>,<y>` in physical screen pixels (`floating.rs`, guarded
 by `!caps().absolute_position` so Windows and X11 keep the bare marker). It is

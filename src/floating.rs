@@ -195,10 +195,20 @@ impl FloatingManager {
         // Harmless where it is not needed: the title is never shown (these
         // windows are borderless) and Windows only ever matches on the prefix.
         if !crate::window_env::caps().absolute_position {
-            win.set_win_title(slint::SharedString::from(format!(
-                "SnipdeckFloating {},{}",
-                pos.0, pos.1
-            )));
+            let title = format!("SnipdeckFloating {},{}", pos.0, pos.1);
+            // The one place the app and the GNOME extension have to agree. When
+            // a snip opens somewhere unexpected, this line says whether the app
+            // asked for the right place or the compositor ignored it.
+            log::info!(
+                "publishing placement in title: {title:?} (area={},{} last_position={:?} sf={})",
+                snip.area.x,
+                snip.area.y,
+                snip.last_position,
+                sf
+            );
+            win.set_win_title(slint::SharedString::from(title));
+        } else {
+            log::info!("absolute_position=true; title stays the bare marker");
         }
         win.window()
             .set_position(PhysicalPosition::new(pos.0, pos.1));

@@ -47,7 +47,7 @@ export default class SnipdeckExtension extends Extension {
         // module, and on Wayland it cannot re-import one without a new
         // session — without this marker there is no way to tell a fix that
         // did not work from a fix that was never loaded.
-        log(`snipdeck: enable() placement=first-frame coords=logical`);
+        log('snipdeck: enable() match=title placement=first-frame coords=logical');
 
         this._handles = [];
         this._pending = new Set();
@@ -140,8 +140,11 @@ export default class SnipdeckExtension extends Extension {
         if (this._adopt(window))
             return;
 
-        if (!this._isOurs(window))
-            return;
+        // Deliberately NOT gated on `_isOurs` here. At `window-created` a snip
+        // is usually untitled, and `wm_class` cannot be relied on to identify
+        // it in the meantime, so there is nothing trustworthy to filter on yet.
+        // Watching every new window until it is titled costs one signal per
+        // window and lets `_adopt` be the only thing that decides.
 
         // `titleWatch` is the one source of truth for whether that handler is
         // still connected. Disconnecting an id twice is not an exception in
@@ -170,9 +173,29 @@ export default class SnipdeckExtension extends Extension {
         });
     }
 
+    /**
+     * Is this one of ours?
+     *
+     * The TITLE is the marker, not `wm_class`. `meta_window_get_wm_class()`
+     * reports the X11 WM_CLASS property, and a Wayland toplevel need not have
+     * one — GNOME Shell matches applications through `ShellWindowTracker`, not
+     * this. Requiring it was a gate that could never open on Wayland, which is
+     * why nothing was ever adopted: not the placement, not `make_above`, not
+     * the switcher filter.
+     *
+     * `SnipdeckFloating` is specific enough to stand on its own, and the app
+     * only ever puts it on windows it wants treated this way. `wm_class` is
+     * still accepted when present, so the X11 path keeps a second signal.
+     */
     _isOurs(window) {
-        const wmClass = window.get_wm_class();
-        return !!wmClass && wmClass.toLowerCase() === WM_CLASS;
+        try {
+            if ((window.get_title() ?? '').startsWith(SNIP_TITLE))
+                return true;
+            const wmClass = window.get_wm_class();
+            return !!wmClass && wmClass.toLowerCase() === WM_CLASS;
+        } catch (_) {
+            return false;
+        }
     }
 
     /**
@@ -186,6 +209,8 @@ export default class SnipdeckExtension extends Extension {
         const title = window.get_title();
         if (!title || !title.startsWith(SNIP_TITLE))
             return false;
+
+        log(`snipdeck: adopting ${JSON.stringify(title)}`);
 
         // Once now, because a window adopted from `enable()` is already placed
         // and this is all it needs...

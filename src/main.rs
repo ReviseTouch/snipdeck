@@ -165,11 +165,14 @@ fn main() -> Result<(), slint::PlatformError> {
     // winit reads it once, while building the window attributes.
     //
     // Slint sends `xdg_toplevel.set_app_id` ONLY when this has been set; leave it
-    // alone and every Snipdeck window reaches the compositor anonymous. That is
-    // not cosmetic on GNOME: the shell extension identifies our snips by
-    // `wm_class`, which Mutter fills from the app id, so without this it matches
-    // nothing and never places or raises a single snip. It is also what lets the
-    // shell tie our windows to snipdeck.desktop for the icon and window list.
+    // alone and every Snipdeck window reaches the compositor anonymous. What this
+    // buys is the shell tying our windows to snipdeck.desktop — the icon, the
+    // window list, the application switcher entry.
+    //
+    // NOT what identifies a snip to the shell extension: that is the window
+    // title. `meta_window_get_wm_class()` reports the X11 WM_CLASS property and
+    // a Wayland toplevel need not have one, so matching on it there is a gate
+    // that may never open. See packaging/gnome-extension.
     //
     // The string has to stay "snipdeck", matching snipdeck.desktop's basename and
     // its StartupWMClass, or the association breaks.
