@@ -496,7 +496,7 @@ impl AppState {
             }
             s.area.w = cw;
             s.area.h = ch;
-            s.last_position = Some(new_pos);
+            s.remember_position(new_pos);
         }
         let _ = self.gallery.save();
         self.thumb_cache.remove(&id);
@@ -536,7 +536,7 @@ impl AppState {
         if let Some(s) = self.gallery.get_mut(id) {
             s.area.w = new_w;
             s.area.h = new_h;
-            s.last_position = Some((wx, wy));
+            s.remember_position((wx, wy));
         }
         let _ = self.gallery.save();
         self.refresh_gallery(window);

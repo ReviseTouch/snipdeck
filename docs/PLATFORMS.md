@@ -138,6 +138,15 @@ titled. A snip dragged afterwards is moved by Mutter, and since
 `last_position` is not persisted on GNOME Wayland and the snip reopens where it
 was captured.
 
+That last sentence describes what `Snip::remember_position` now enforces, and
+for a long time it was simply untrue. Three call sites wrote `last_position`
+from `Window::position()` — or from a drag delta built on it — without asking
+whether the answer meant anything, so Wayland's permanent 0,0 was persisted as
+though it were a real coordinate. Because `floating.rs` reads `last_position`
+*in preference to* the capture rect, any snip that had once been dragged or
+resized reopened in the corner. The capability existed and said the right
+thing; nothing consulted it.
+
 ### 3. Backends — one file per platform mechanism
 
 Where a feature genuinely has no shared implementation, the module carries the

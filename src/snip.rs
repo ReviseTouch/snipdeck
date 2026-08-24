@@ -53,6 +53,27 @@ pub struct Snip {
 }
 
 impl Snip {
+    /// Record where the floating window ended up — but only where that answer
+    /// is real.
+    ///
+    /// Every caller gets its position from `Window::position()`, directly or
+    /// through a drag delta built on it, and on Wayland that answers 0,0 for
+    /// the lifetime of the window: a client is never told where the compositor
+    /// put it. Persisting it stored junk — 0,0 for resize and crop, small or
+    /// negative drift for drags — and `floating.rs` reads `last_position` back
+    /// *in preference to* the capture rect, so a snip that had ever been
+    /// dragged or resized reopened in the corner instead of where it was taken.
+    ///
+    /// `query_own_position` is the capability that says whether the answer can
+    /// be trusted. Where it is false the field simply stays `None`, and the
+    /// snip reopens where it was captured — which is the correct behaviour
+    /// there, not a degradation.
+    pub fn remember_position(&mut self, pos: (i32, i32)) {
+        if crate::window_env::caps().query_own_position {
+            self.last_position = Some(pos);
+        }
+    }
+
     pub fn image_path(&self) -> PathBuf {
         paths::images_dir().join(&self.image_file)
     }

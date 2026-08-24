@@ -499,9 +499,7 @@ impl AppState {
         let mut monitor_changed = false;
         for (id, pos) in drained.position_updates {
             if let Some(s) = self.gallery.get_mut(id) {
-                if s.last_position != Some(pos) {
-                    s.last_position = Some(pos);
-                }
+                s.remember_position(pos);
                 // Detect monitor changes as the window crosses screens.
                 let cx = pos.0 + s.area.w as i32 / 2;
                 let cy = pos.1 + s.area.h as i32 / 2;
