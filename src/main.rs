@@ -100,6 +100,20 @@ fn install_crash_log() {
 
 fn main() -> Result<(), slint::PlatformError> {
     install_crash_log();
+
+    // FIRST, before anything that might want to explain itself.
+    //
+    // This used to sit below the backend installation, which meant every
+    // `log::info!` and `log::warn!` in that block was written to a logger that
+    // did not exist yet and thrown away. The failure that hid behind it: when
+    // `Backend::new_with_renderer_by_name` cannot build a renderer it has
+    // already created winit's event loop, so `set_platform` never runs, Slint
+    // later builds its own backend, and the only thing reaching the terminal is
+    // "EventLoop can't be recreated" — an error about the second attempt, from
+    // which the actual cause cannot be recovered. The line naming the real
+    // failure was being written the whole time, into nothing.
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
     // Install the winit backend with the SOFTWARE renderer EXPLICITLY via
     // set_platform, rather than selecting it with the SLINT_BACKEND env var.
     // Two reasons:
@@ -158,7 +172,6 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     }
 
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     // Claim an xdg application id. Must happen after `set_platform` (there is no
     // context to store it in before that) and before the first window is shown —

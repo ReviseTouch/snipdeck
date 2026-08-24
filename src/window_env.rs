@@ -195,7 +195,8 @@ pub fn caps() -> &'static Caps {
         log::info!(
             "window environment: {:?}/{:?} — position={} on_top={} skip_taskbar={} \
              query_pos={} interactive_move={} input_region={} transparency={} \
-             -> snip host: {:?}",
+             -> snip host (capability answer, not necessarily the one in use \
+             — see FloatingManager::new): {:?}",
             caps.backend,
             caps.compositor,
             caps.absolute_position,
