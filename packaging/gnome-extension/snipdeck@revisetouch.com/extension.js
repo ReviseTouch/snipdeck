@@ -32,6 +32,7 @@
  */
 
 import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
+import * as Workspace from 'resource:///org/gnome/shell/ui/workspace.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 /** WM_CLASS of every Snipdeck window. */
@@ -47,7 +48,7 @@ export default class SnipdeckExtension extends Extension {
         // module, and on Wayland it cannot re-import one without a new
         // session — without this marker there is no way to tell a fix that
         // did not work from a fix that was never loaded.
-        log('snipdeck: enable() match=title placement=first-frame coords=logical');
+        log('snipdeck: enable() match=title placement=first-frame lists=switcher+overview');
 
         this._handles = [];
         this._pending = new Set();
@@ -65,28 +66,37 @@ export default class SnipdeckExtension extends Extension {
         for (const actor of global.get_window_actors())
             this._adopt(actor.meta_window);
 
-        this._patchWindowSwitcher();
+        this._patchWindowLists();
     }
 
     /**
-     * Keep snips out of the window switcher.
+     * Keep snips out of the two places the shell lists windows.
      *
-     * Mutter has no `set_skip_taskbar` — only `is_skip_taskbar`, a read-only
-     * query derived from the window type — so the flag cannot be set by the
-     * application OR by an extension. What can be done is filter the list the
-     * switcher builds, which lives in GNOME Shell's own JavaScript.
+     * Mutter exposes only `is_skip_taskbar`, a read-only query derived from the
+     * window type — the flag cannot be set by the application OR by an
+     * extension. What can be done is filter the lists themselves, which live in
+     * GNOME Shell's own JavaScript.
      *
-     * Only the *window* switcher (Alt+`, and Alt+Tab's per-app expansion) is
-     * touched. The application switcher still shows Snipdeck once, which is
-     * correct: the gallery is a real window the user wants to reach. It is the
-     * dozen pinned snips that should not each be a stop on the way there.
+     * Each patch is taken separately and guarded separately: a future Shell may
+     * rename or restructure either one, and losing a filter is a cosmetic
+     * regression while breaking the switcher or the overview is not.
+     */
+    _patchWindowLists() {
+        this._patchWindowSwitcher();
+        this._patchOverview();
+    }
+
+    /**
+     * Alt+` and Alt+Tab's per-app expansion.
+     *
+     * Only the *window* switcher is touched. The application switcher still
+     * shows Snipdeck once, which is correct: the gallery is a real window the
+     * user wants to reach. It is the dozen pinned snips that should not each be
+     * a stop on the way there.
      */
     _patchWindowSwitcher() {
         const proto = AltTab.WindowSwitcherPopup?.prototype;
         if (!proto?._getWindowList) {
-            // A future Shell may rename or restructure this. Losing the filter
-            // is a cosmetic regression; breaking the switcher is not, so leave
-            // it alone rather than guess.
             log('snipdeck: window switcher not patchable on this Shell version');
             return;
         }
@@ -96,6 +106,36 @@ export default class SnipdeckExtension extends Extension {
         const orig = this._origGetWindowList;
         proto._getWindowList = function () {
             return orig.call(this).filter(w => !isSnip(w));
+        };
+    }
+
+    /**
+     * The Activities overview — what Super shows.
+     *
+     * A separate code path from the switcher, and the one people actually hit:
+     * pressing Super threw every pinned snip into the window picker alongside
+     * real applications. `Workspace._isOverviewWindow` is the single question
+     * the overview asks about each window, and it asks it for no other reason,
+     * so answering "no" for a snip removes it and nothing else.
+     *
+     * Safe for these windows specifically: a window rejected here is dropped
+     * outright only when it has no transient parent, and snips have none —
+     * `window_tamer` is a no-op off Windows. A rejected *transient* would
+     * instead be re-attached to its ancestor as a dialog, which is not a shape
+     * any snip takes.
+     */
+    _patchOverview() {
+        const proto = Workspace.Workspace?.prototype;
+        if (!proto?._isOverviewWindow) {
+            log('snipdeck: overview not patchable on this Shell version');
+            return;
+        }
+
+        const isSnip = w => this._isSnipWindow(w);
+        this._origIsOverviewWindow = proto._isOverviewWindow;
+        const orig = this._origIsOverviewWindow;
+        proto._isOverviewWindow = function (window) {
+            return isSnip(window) ? false : orig.call(this, window);
         };
     }
 
@@ -122,6 +162,11 @@ export default class SnipdeckExtension extends Extension {
             AltTab.WindowSwitcherPopup.prototype._getWindowList =
                 this._origGetWindowList;
             this._origGetWindowList = null;
+        }
+        if (this._origIsOverviewWindow) {
+            Workspace.Workspace.prototype._isOverviewWindow =
+                this._origIsOverviewWindow;
+            this._origIsOverviewWindow = null;
         }
 
         // Windows keep whatever we applied; undoing it on disable would drop

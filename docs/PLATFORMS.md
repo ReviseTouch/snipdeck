@@ -76,12 +76,16 @@ the client is not allowed to do for itself:
 |---|---|
 | placement | `meta_window.move_frame()` |
 | stacking | `meta_window.make_above()` |
-| absence from the window list | filters `WindowSwitcherPopup._getWindowList` ¹ |
+| absence from the window list | filters `WindowSwitcherPopup._getWindowList` and `Workspace._isOverviewWindow` ¹ |
 
 ¹ Mutter exposes only `is_skip_taskbar`, derived from the window type — the flag
-cannot be *set* by anyone, application or extension. Filtering the list the
-switcher builds is the remaining lever. Only the window switcher is patched; the
-application switcher still shows Snipdeck once, which is correct.
+cannot be *set* by anyone, application or extension. Filtering the lists the
+shell builds is the remaining lever, and there are two of them: the Alt+Tab
+window switcher and the Activities overview that Super opens. The overview is
+the one people hit, and it is a separate code path — patching only the switcher
+left every pinned snip sitting in the window picker next to real applications.
+Only the *window* switcher is patched; the application switcher still shows
+Snipdeck once, which is correct.
 
 **The title is also what identifies a snip.** Not `wm_class`: that reports the
 X11 WM_CLASS property, which a Wayland toplevel need not have, so requiring it
