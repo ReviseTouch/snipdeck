@@ -93,6 +93,19 @@ is a gate that may never open on Wayland — and while it was required, nothing
 was adopted at all: no placement, no always-on-top, no switcher filtering. The
 app id is still set, for the desktop-file association rather than for matching.
 
+**The taskbar setting travels the same way.** `floating_in_taskbar` — "show /
+hide floating snips in the taskbar" — becomes `WS_EX_TOOLWINDOW` on Windows and
+has no meaning of its own on Wayland, so on GNOME it is carried to the extension
+as the word `listed` in the title and decides whether a snip appears in the
+overview and the switcher. One setting, one user intent, two different levers.
+Absent means hide, so the default is unchanged and an older build whose titles
+never carry the word behaves exactly as before. The word sits *before* the
+coordinates because the extension parses those with a pattern anchored to the
+end of the title. Placement and stacking are applied either way: being visible
+in the overview is not a reason to stop pinning a snip where it was captured,
+and toggling the setting already closes and reopens every floating snip, so the
+titles refresh without any extra machinery.
+
 **Placement travels in the window title.** For floating snips the title is set
 to `SnipdeckFloating <x>,<y>` in physical screen pixels (`floating.rs`, guarded
 by `!caps().absolute_position` so Windows and X11 keep the bare marker). It is

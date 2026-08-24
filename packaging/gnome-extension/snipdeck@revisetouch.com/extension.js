@@ -41,6 +41,17 @@ const WM_CLASS = 'snipdeck';
 /** Title prefix that marks a floating snip, as opposed to the gallery window. */
 const SNIP_TITLE = 'SnipdeckFloating';
 
+/**
+ * Word in the title asking for this snip to be left in the window lists.
+ *
+ * The app's "show floating snips in the taskbar" setting, carried across. On
+ * Windows that setting becomes WS_EX_TOOLWINDOW; here it decides whether a snip
+ * appears in the overview and the switcher. Absent means hide, which keeps the
+ * default the same as it has always been and makes an older build — one whose
+ * titles never carry the word — behave exactly as before.
+ */
+const LISTED = 'listed';
+
 export default class SnipdeckExtension extends Extension {
     enable() {
         // One line at start-up, so a session can be asked which build of
@@ -48,7 +59,7 @@ export default class SnipdeckExtension extends Extension {
         // module, and on Wayland it cannot re-import one without a new
         // session — without this marker there is no way to tell a fix that
         // did not work from a fix that was never loaded.
-        log('snipdeck: enable() match=title placement=first-frame lists=switcher+overview');
+        log('snipdeck: enable() match=title placement=first-frame lists=switcher+overview listed-flag=on');
 
         this._handles = [];
         this._pending = new Set();
@@ -139,15 +150,27 @@ export default class SnipdeckExtension extends Extension {
         };
     }
 
+    /**
+     * Should this window be kept out of the switcher and the overview?
+     *
+     * A snip, unless its title asks to be listed. Placement and stacking are
+     * applied either way — being visible in the overview is not a reason to
+     * stop pinning a snip where it was captured.
+     */
     _isSnipWindow(window) {
         try {
-            return (
-                this._isOurs(window) &&
-                (window.get_title() ?? '').startsWith(SNIP_TITLE)
-            );
+            const title = window.get_title() ?? '';
+            if (!title.startsWith(SNIP_TITLE))
+                return false;
+            return !this._wantsListing(title);
         } catch (_) {
             return false;
         }
+    }
+
+    /** `SnipdeckFloating listed 100,200` -> true; `SnipdeckFloating 100,200` -> false. */
+    _wantsListing(title) {
+        return title.slice(SNIP_TITLE.length).trimStart().startsWith(LISTED);
     }
 
     disable() {

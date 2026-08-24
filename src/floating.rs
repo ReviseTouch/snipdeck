@@ -195,7 +195,18 @@ impl FloatingManager {
         // Harmless where it is not needed: the title is never shown (these
         // windows are borderless) and Windows only ever matches on the prefix.
         if !crate::window_env::caps().absolute_position {
-            let title = format!("SnipdeckFloating {},{}", pos.0, pos.1);
+            // `listed` carries the taskbar setting across to the shell
+            // extension, which is the only party on this platform that can act
+            // on it. On Windows the same setting becomes WS_EX_TOOLWINDOW; on
+            // GNOME it decides whether a snip appears in the Activities
+            // overview and the window switcher. Same user intent, two very
+            // different levers, one setting.
+            //
+            // It sits BEFORE the coordinates on purpose: the extension parses
+            // those with a pattern anchored to the end of the title, so
+            // anything appended after them would break it.
+            let listed = if settings.floating_in_taskbar { " listed" } else { "" };
+            let title = format!("SnipdeckFloating{listed} {},{}", pos.0, pos.1);
             // The one place the app and the GNOME extension have to agree. When
             // a snip opens somewhere unexpected, this line says whether the app
             // asked for the right place or the compositor ignored it.
