@@ -171,13 +171,18 @@ writes it to `/tmp`, reads it back and decodes it, once per snip. That measured
 five to nine seconds on a 3200x2000 panel and rang the shutter every time, which
 is not a snipping tool — the delay alone made the hotkey feel broken.
 
-`wayland_screencast` negotiates a ScreenCast session once and leaves the
-PipeWire stream running, so a capture is a copy of the most recent frame. Four
-consecutive captures now complete inside the same second. Consent is asked once:
-`PersistMode::ExplicitlyRevoked` plus a restore token in the data directory
-means the dialog does not return on the next launch, and the user can still
-revoke it in their desktop's privacy settings, which is the only place that
-decision belongs.
+`wayland_screencast` brings a ScreenCast session up per snip, takes the first
+frame the compositor hands over through PipeWire, and tears it down again — no
+encode, no disk, no sound. Consent is asked once: `PersistMode::ExplicitlyRevoked`
+plus a restore token in the data directory means the dialog does not return on
+the next launch, and the user can still revoke it in their desktop's privacy
+settings, which is the only place that decision belongs.
+
+Per snip, rather than held open for the process. Holding it open makes a capture
+a `memcpy`, and that was the first shape of this; it is also fragile in a way
+that is worse than slow. Stopping the share from the desktop's indicator kills
+the stream, and a cached last frame is then served for every capture afterwards
+— the screen silently frozen in the past, with nothing to suggest why.
 
 It also fixed a coordinate bug rather than working around one. xcap reported the
 monitor at 1920x1200 and handed back a 3840x2400 buffer, because the portal
@@ -186,9 +191,10 @@ display running at 5/3. PipeWire delivers the panel's true 3200x2000, so the
 capture, the monitor rect and the compositor finally agree on one number.
 
 Two things this costs. The desktop shows its "screen is being shared" indicator
-while the stream is up — that is the compositor telling the truth about what
-this process can see, and it is started on the first capture rather than at
-launch so an idle Snipdeck does not light it. And the Linux build now links
+for the moment a snip is taken — that is the compositor telling the truth about
+what this process can see, and it goes away with the session, which is the truth
+too: that is exactly when this process can see the screen. A tray application
+that lit it all day would read as a program watching you. And the Linux build now links
 libpipewire; that is present wherever PipeWire is the audio server, which on a
 Wayland desktop is everywhere, and xcap is kept as the fallback for anything
 that has no ScreenCast portal at all.
