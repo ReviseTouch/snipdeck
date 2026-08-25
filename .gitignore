@@ -5,6 +5,10 @@
 *.log
 *.out
 
+# Scratch output from poking at the dependency graph (grep over Cargo.lock).
+# Useful while working, never part of the tree.
+/.deps.txt
+
 # OS / editor cruft
 Thumbs.db
 .DS_Store
