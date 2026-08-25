@@ -52,11 +52,14 @@ mod unix {
 
     /// `$XDG_RUNTIME_DIR/snipdeck.lock` when the session provides one: a
     /// per-user tmpfs cleared on logout, the same granularity the Windows
-    /// `Local\` namespace gives. Falls back to the data dir otherwise.
+    /// `Local\` namespace gives. Falls back to the data dir otherwise —
+    /// `paths::data_dir()`, which is where the rest of the app lives. This
+    /// used to build its own `dirs::data_dir()/snipdeck` instead, a third
+    /// directory beside `Snipdeck` and `Snipper` that nothing else knew about.
     fn lock_path() -> Option<PathBuf> {
         let dir = std::env::var_os("XDG_RUNTIME_DIR")
             .map(PathBuf::from)
-            .or_else(|| dirs::data_dir().map(|d| d.join("snipdeck")))?;
+            .unwrap_or_else(crate::paths::data_dir);
         std::fs::create_dir_all(&dir).ok()?;
         Some(dir.join("snipdeck.lock"))
     }
