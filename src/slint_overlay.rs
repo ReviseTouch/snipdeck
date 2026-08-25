@@ -41,10 +41,20 @@ pub struct SlintOverlayManager {
     /// overlay's own TouchArea (Linux/Wayland, where global hooks don't
     /// exist). Shared with the callback closures.
     event_tx: Option<crossbeam_channel::Sender<MouseTriggerEvent>>,
-    /// (monitor origin, scale factor) snapshot the input callbacks read to
-    /// map window-local logical coords → global physical. Updated on every
-    /// `show_for_monitor`.
+    /// (monitor origin, capture scale) snapshot the input callbacks read to
+    /// map window-local logical coords → capture-image space. Updated on every
+    /// `show_for_monitor` and corrected by `sync_to_window` once the real
+    /// surface size is known.
     input_space: Rc<Cell<(i32, i32, f32)>>,
+    /// Has `sync_to_window` adopted the compositor's real geometry yet?
+    ///
+    /// Until it has, every size here is a guess, and drawing the frozen
+    /// backdrop against a guess is what made the overlay appear cropped along
+    /// the right and bottom edges. The image is uploaded immediately and shown
+    /// a frame later, once the numbers are real.
+    synced: Cell<bool>,
+    /// Whether a frozen backdrop was supplied for the current overlay.
+    has_frozen: Cell<bool>,
 }
 
 impl SlintOverlayManager {
@@ -56,6 +66,8 @@ impl SlintOverlayManager {
             border_color: (255, 136, 0),
             event_tx: None,
             input_space: Rc::new(Cell::new((0, 0, 1.0))),
+            synced: Cell::new(false),
+            has_frozen: Cell::new(false),
         }
     }
 
@@ -125,6 +137,28 @@ impl SlintOverlayManager {
     /// first" mode) that snapshot is shown as the backdrop and the selection
     /// happens on the still image; `None` keeps the overlay transparent over the
     /// live desktop (the normal Win+click path).
+    /// Capture-image pixels per overlay logical pixel.
+    ///
+    /// NOT the window's scale factor, and on a fractionally-scaled display not
+    /// equal to it. This panel is 3200x2000 shown as a 1920x1200 desktop — a
+    /// scale of 5/3 — but the portal hands xcap a 3840x2400 buffer, because
+    /// GNOME captures at the fractional scale rounded UP to 2 rather than
+    /// compositing at 5/3. Ask the OS and you get 1.6667; the image is 2.0, and
+    /// the 1.2x between them was the overlay overflowing its own surface and
+    /// the selection landing short of the pointer.
+    ///
+    /// `normalise_to_image` already puts `area` on the image's pixel grid, so
+    /// the honest conversion is measured — image width over the surface's real
+    /// logical width — not asked of anyone. Falls back to the OS scale only
+    /// before the surface has a size, where nothing is drawn anyway.
+    fn capture_scale(&self, win: &OverlayWindow) -> f32 {
+        let outer = win.get_outer_w();
+        match self.monitor {
+            Some(area) if outer > 0.5 && area.w > 0 => area.w as f32 / outer,
+            _ => self.scale_factor,
+        }
+    }
+
     pub fn show_for_monitor(
         &mut self,
         area: ScreenRect,
@@ -137,6 +171,8 @@ impl SlintOverlayManager {
             1.0
         };
         self.monitor = Some(area);
+        // Every size below is provisional until the compositor answers.
+        self.synced.set(false);
 
         // Reuse the existing window if we already have one — avoids a
         // visible "close + reopen" flicker between consecutive snips.
@@ -172,9 +208,16 @@ impl SlintOverlayManager {
                     img.height(),
                 );
                 win.set_frozen_bg(Image::from_rgba8(buf));
-                win.set_frozen(true);
+                // Uploaded now, revealed by `sync_to_window`. Drawing it
+                // against the guessed size is exactly what showed the user a
+                // screen cropped on the right and bottom.
+                self.has_frozen.set(true);
+                win.set_frozen(false);
             }
-            None => win.set_frozen(false),
+            None => {
+                self.has_frozen.set(false);
+                win.set_frozen(false);
+            }
         }
         // Placement, then fullscreen — both, everywhere but Windows.
         //
@@ -242,10 +285,17 @@ impl SlintOverlayManager {
             win.set_outer_w(w);
             win.set_outer_h(h);
         }
-        // Keep the input mapping on the same scale as the surface, or the drag
-        // lands somewhere other than where the pointer is.
+        // Keep the input mapping on the capture's scale, or the drag lands
+        // somewhere other than where the pointer is — 20% short, on this
+        // display. Measured, not asked of the OS: see `capture_scale`.
         if let Some(monitor) = self.monitor {
-            self.input_space.set((monitor.x, monitor.y, sf));
+            self.input_space
+                .set((monitor.x, monitor.y, self.capture_scale(win)));
+        }
+
+        // The numbers are real now, so the backdrop can be shown.
+        if !self.synced.replace(true) && self.has_frozen.get() {
+            win.set_frozen(true);
         }
     }
 
@@ -255,11 +305,11 @@ impl SlintOverlayManager {
         let (Some(win), Some(monitor)) = (&self.window, &self.monitor) else {
             return;
         };
-        // The overlay's own scale factor, not the main window's: under XWayland
-        // beside a fractionally-scaled Wayland session the two disagree, and
-        // using the wrong one drew the selection rectangle offset from the
-        // pointer.
-        let sf = win.window().scale_factor().max(0.001);
+        // The capture's scale, not any window's: the portal rounds a
+        // fractional display scale up when it grabs the screen, so the image
+        // the app works in is a different size from what either window reports.
+        // Using a window's number drew the selection offset from the pointer.
+        let sf = self.capture_scale(win).max(0.001);
         let sx = (x1.min(x2) - monitor.x) as f32 / sf;
         let sy = (y1.min(y2) - monitor.y) as f32 / sf;
         let sw = ((x1 - x2).abs()) as f32 / sf;
