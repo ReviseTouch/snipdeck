@@ -133,7 +133,17 @@ gtk = "0.18"
 ashpd = { version = "0.13", default-features = false, features = [
     "async-io",
     "global_shortcuts",
+    "screencast",
 ] }
+# Wayland screen capture (see src/wayland_screencast.rs).
+#
+# xcap's Wayland path asks GNOME to write a full-screen PNG into /tmp and reads
+# it back — a 3840x2400 encode, a disk round-trip and a decode for every snip,
+# which measured 5-9 seconds on this machine and rings the shutter each time.
+# ScreenCast hands over PipeWire buffers in memory instead. libpipewire is
+# present wherever PipeWire is the audio server, which on a Wayland desktop is
+# everywhere, and the xcap path is kept as the fallback regardless.
+pipewire = "0.10"
 pollster = "0.3"
 # Raw wl_surface access for `wl_surface.set_input_region` (see
 # src/wayland_input_region.rs). winit already links this exact version, and we

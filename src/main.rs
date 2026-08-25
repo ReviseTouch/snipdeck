@@ -43,6 +43,8 @@ mod translate_popup;
 mod tray;
 mod upload;
 mod window_env;
+#[cfg(not(target_os = "windows"))]
+mod wayland_screencast;
 mod window_metadata;
 mod window_tamer;
 

@@ -155,7 +155,7 @@ alternative or an honest stub:
 
 | Feature | Windows | Linux | macOS |
 |---|---|---|---|
-| Capture | DXGI + GDI (`dxgi_capture`) | xcap → portal / X11 | xcap |
+| Capture | DXGI + GDI (`dxgi_capture`) | ScreenCast/PipeWire → xcap ¹ | xcap |
 | OCR (`ocr`) | `Windows.Media.Ocr` | `tesseract` if installed | stub |
 | Tray (`tray`) | `Shell_NotifyIconW` | `tray-icon` + appindicator | — |
 | Global shortcuts (`hotkeys`) | `global-hotkey` | portal, else `global-hotkey` | — |
@@ -164,6 +164,34 @@ alternative or an honest stub:
 | Window styling (`window_tamer`) | `WS_EX_TOOLWINDOW`, owner | no-op ³ | — |
 
 ³ Nothing to set: Wayland has no equivalent, and winit exposes none on X11.
+
+¹ **Why capture does not go through xcap on Wayland.** xcap's Wayland path asks
+GNOME for a screenshot *into a file*: it encodes the whole screen as a PNG,
+writes it to `/tmp`, reads it back and decodes it, once per snip. That measured
+five to nine seconds on a 3200x2000 panel and rang the shutter every time, which
+is not a snipping tool — the delay alone made the hotkey feel broken.
+
+`wayland_screencast` negotiates a ScreenCast session once and leaves the
+PipeWire stream running, so a capture is a copy of the most recent frame. Four
+consecutive captures now complete inside the same second. Consent is asked once:
+`PersistMode::ExplicitlyRevoked` plus a restore token in the data directory
+means the dialog does not return on the next launch, and the user can still
+revoke it in their desktop's privacy settings, which is the only place that
+decision belongs.
+
+It also fixed a coordinate bug rather than working around one. xcap reported the
+monitor at 1920x1200 and handed back a 3840x2400 buffer, because the portal
+rounds a fractional monitor scale UP to the next integer — a scale of 2.0 for a
+display running at 5/3. PipeWire delivers the panel's true 3200x2000, so the
+capture, the monitor rect and the compositor finally agree on one number.
+
+Two things this costs. The desktop shows its "screen is being shared" indicator
+while the stream is up — that is the compositor telling the truth about what
+this process can see, and it is started on the first capture rather than at
+launch so an idle Snipdeck does not light it. And the Linux build now links
+libpipewire; that is present wherever PipeWire is the audio server, which on a
+Wayland desktop is everywhere, and xcap is kept as the fallback for anything
+that has no ScreenCast portal at all.
 
 ## Distribution differences
 

@@ -70,6 +70,36 @@ fn normalise_to_image(
     )
 }
 
+/// The compositor's own buffers, where that is offered.
+///
+/// `None` means "not this platform, or the session could not be had" — never a
+/// hard failure, because the xcap path behind it still works everywhere. On a
+/// multi-monitor setup the cast covers the one monitor the user granted, so a
+/// capture of a different monitor falls through to xcap; that is a limitation
+/// worth removing later, not a reason to withhold the fast path from the
+/// single-monitor case that is nearly everyone.
+#[cfg(not(target_os = "windows"))]
+fn screencast_image() -> Option<image::RgbaImage> {
+    if !crate::wayland_screencast::usable() {
+        return None;
+    }
+    match crate::wayland_screencast::capture() {
+        Ok((_, _, img)) => {
+            log::info!("capture path: ScreenCast (PipeWire)");
+            Some(img)
+        }
+        Err(e) => {
+            log::debug!("screencast capture unavailable ({e:#}); using xcap");
+            None
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn screencast_image() -> Option<image::RgbaImage> {
+    None
+}
+
 fn capture_monitor(m: xcap::Monitor, idx: usize) -> anyhow::Result<CapturedScreen> {
     let x = m.x();
     let y = m.y();
@@ -106,8 +136,17 @@ fn capture_monitor(m: xcap::Monitor, idx: usize) -> anyhow::Result<CapturedScree
             if other.is_some() {
                 log::warn!("DXGI frame came back fully black; falling back to GDI");
             }
-            log::info!("capture path: GDI (xcap)");
-            capture_image_robust(&m).context("capturing screen")?
+            // Wayland first, where xcap's path is not merely slower but
+            // unusable: it asks GNOME to encode the whole screen as a PNG into
+            // /tmp and reads it back, which measured five to nine seconds and
+            // rang the shutter every time. See `wayland_screencast`.
+            match screencast_image() {
+                Some(img) => img,
+                None => {
+                    log::info!("capture path: GDI (xcap)");
+                    capture_image_robust(&m).context("capturing screen")?
+                }
+            }
         }
     };
     // xcap is inconsistent about units on a scaled Wayland session: the
