@@ -218,24 +218,36 @@ impl GalleryState {
         self.snips.insert(0, snip);
     }
 
+    /// Drop a snip: row first, then the files it points at.
+    ///
+    /// The order is the whole point. Deleting the files first and then failing
+    /// to delete the row — SQLITE_BUSY outlasting the timeout, the case
+    /// `open_db` documents as having actually happened — leaves a gallery card
+    /// whose PNG is already gone, and `save()` only ever upserts, so nothing
+    /// removes it afterwards: a permanent ghost. Doing it this way, a failed
+    /// delete leaves the snip whole, and it simply comes back on the next
+    /// launch as though the delete had never been asked for.
     pub fn remove(&mut self, id: Uuid) -> Option<Snip> {
         let pos = self.snips.iter().position(|s| s.id == id)?;
         let snip = self.snips.remove(pos);
-        snip.delete_files();
-        if let Err(err) = delete_snip_from_db(id) {
-            log::warn!("deleting snip from db failed: {err}");
+        match delete_snip_from_db(id) {
+            Ok(()) => snip.delete_files(),
+            Err(err) => log::warn!("deleting snip from db failed, keeping its files: {err}"),
         }
         Some(snip)
     }
 
+    /// Same ordering argument as [`GalleryState::remove`].
     pub fn clear_all(&mut self) {
-        for snip in &self.snips {
-            snip.delete_files();
+        match clear_db_snips() {
+            Ok(()) => {
+                for snip in &self.snips {
+                    snip.delete_files();
+                }
+            }
+            Err(err) => log::warn!("clearing snip db failed, keeping the files: {err}"),
         }
         self.snips.clear();
-        if let Err(err) = clear_db_snips() {
-            log::warn!("clearing snip db failed: {err}");
-        }
     }
 
     pub fn get(&self, id: Uuid) -> Option<&Snip> {
@@ -429,8 +441,16 @@ fn pngquant_best_effort(path: &Path) -> anyhow::Result<()> {
     let original_len = std::fs::metadata(path)?.len();
     let quant_len = std::fs::metadata(&tmp)?.len();
     if quant_len < original_len {
-        std::fs::copy(&tmp, path)?;
-        let _ = std::fs::remove_file(&tmp);
+        // Rename, not copy. This runs on a detached thread while the rest of
+        // the app is already reading the file — the floating window opens a
+        // tick later and decodes it — and a copy truncates the destination
+        // before refilling it. A reader that lands in that window gets a
+        // partial PNG and shows nothing; a crash or power loss in that window
+        // leaves the snip's only copy permanently short, with the database row
+        // still pointing at it. `tmp` is a sibling of `path`, so this is a
+        // same-filesystem rename: the reader sees either file, never half of
+        // one.
+        std::fs::rename(&tmp, path)?;
     } else {
         let _ = std::fs::remove_file(&tmp);
     }
@@ -678,7 +698,18 @@ fn migrate_legacy_json_if_needed(conn: &Connection) -> anyhow::Result<()> {
                         state.snips.len()
                     );
                 }
-                Err(err) => log::warn!("legacy JSON migration failed: {err}"),
+                // Deliberately does NOT fall through to the marker below.
+                // `state.json` is still there and still the only copy of those
+                // snips; a read that failed once — half-written, locked, a
+                // transient IO error — is a reason to try again on the next
+                // launch, not to conclude the user has no legacy gallery.
+                // Marking it migrated here made a single bad read permanent:
+                // the snips stayed in the JSON and nothing ever looked at it
+                // again.
+                Err(err) => {
+                    log::warn!("legacy JSON migration failed, retrying next launch: {err}");
+                    return Ok(());
+                }
             }
         }
     }

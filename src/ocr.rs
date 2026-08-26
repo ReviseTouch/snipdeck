@@ -181,6 +181,7 @@ pub fn extract_text(_image: &image::RgbaImage) -> anyhow::Result<String> {
 pub fn extract_text(image: &image::RgbaImage) -> anyhow::Result<String> {
     use anyhow::Context;
     use std::process::Command;
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     // Which language packs are installed? Prefer Turkish+English when
     // present; otherwise let tesseract use its default (eng).
@@ -199,7 +200,19 @@ pub fn extract_text(image: &image::RgbaImage) -> anyhow::Result<String> {
     }
 
     // tesseract reads files, not pipes (portably) — hand it a temp PNG.
-    let tmp = std::env::temp_dir().join(format!("snipdeck-ocr-{}.png", std::process::id()));
+    //
+    // Named per call, not per process. `spawn_ocr_index` runs one detached
+    // thread per snip, so a name keyed only on the pid is the same name for
+    // all of them: take two snips in quick succession and the second thread
+    // overwrites the PNG the first is about to hand tesseract, which indexes
+    // one snip's text against the other's id — or deletes it mid-read and the
+    // OCR just fails.
+    static SEQ: AtomicU64 = AtomicU64::new(0);
+    let tmp = std::env::temp_dir().join(format!(
+        "snipdeck-ocr-{}-{}.png",
+        std::process::id(),
+        SEQ.fetch_add(1, Ordering::Relaxed)
+    ));
     image
         .save_with_format(&tmp, image::ImageFormat::Png)
         .context("writing temp PNG for tesseract")?;
