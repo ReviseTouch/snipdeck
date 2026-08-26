@@ -21,7 +21,8 @@ impl AppState {
             Action::NewSnip {
                 to_clip,
                 keep_float,
-            } => self.begin_region_snip(to_clip, keep_float, window),
+                to_gallery,
+            } => self.begin_region_snip(to_clip, keep_float, to_gallery, window),
             Action::PickColor => {
                 // Start the eyedropper: hide our window so it's out of the way,
                 // arm the hook + show the magnifier loupe. The next click grabs
@@ -239,11 +240,12 @@ impl AppState {
         &mut self,
         to_clip: bool,
         keep_float: bool,
+        to_gallery: bool,
         window: &MainWindow,
     ) {
         // Arm a one-shot region drag: the next left-button drag starts a snip
         // with NO modifier held, routed the way the matching Win+drag would.
-        self.armed_routing = Some((to_clip, keep_float));
+        self.armed_routing = Some((to_clip, keep_float, to_gallery));
         crate::mouse_trigger::arm_snip();
         // Stamp when we armed so the tick watchdog can recover if the user arms
         // a snip, hides the main window, then never clicks (Esc already
@@ -287,9 +289,9 @@ impl AppState {
             // which is enough on Windows (the global hook delivers the drag) but
             // a dead end everywhere else: Wayland has no global hook, so the
             // armed click never arrived and the hotkeys did nothing at all.
-            HotkeyAction::Snip => self.begin_region_snip(false, true, window),
-            HotkeyAction::SnipToClipboard => self.begin_region_snip(true, true, window),
-            HotkeyAction::ClipboardOnly => self.begin_region_snip(true, false, window),
+            HotkeyAction::Snip => self.begin_region_snip(false, true, true, window),
+            HotkeyAction::SnipToClipboard => self.begin_region_snip(true, true, true, window),
+            HotkeyAction::ClipboardOnly => self.begin_region_snip(true, false, false, window),
             // Acts on the existing windows — no capture flow needed.
             HotkeyAction::ToggleVisibility => {
                 self.handle_action(Action::ToggleAllVisibility, window);
@@ -325,14 +327,15 @@ impl AppState {
                         // routing (the overlay-driven Linux path always comes
                         // through here); plain Win+Shift+Space keeps the old
                         // default: floating, no clipboard.
-                        let (to_clipboard, keep_floating) =
-                            self.armed_routing.take().unwrap_or((false, true));
+                        let (to_clipboard, keep_floating, to_gallery) =
+                            self.armed_routing.take().unwrap_or((false, true, true));
                         self.active = Some(ActiveSelection {
                             captured,
                             start: (x, y),
                             end: (x, y),
                             to_clipboard,
                             keep_floating,
+                            to_gallery,
                             source_window,
                         });
                         return;
@@ -348,19 +351,16 @@ impl AppState {
                 //   Win+Ctrl+Shift+LMouse   → gallery + clipboard, no floating
                 // A global hotkey may have armed an explicit routing; otherwise
                 // derive it from the modifiers held during the drag.
-                let (to_clipboard, keep_floating) = self.armed_routing.take().unwrap_or_else(|| {
-                    if mods.alt {
-                        (true, false)
-                    } else if mods.ctrl && mods.shift {
-                        (true, false)
-                    } else if mods.shift {
-                        (false, false)
-                    } else if mods.ctrl {
-                        (true, true)
-                    } else {
-                        (false, true)
-                    }
-                });
+                //
+                // The third flag is what makes Alt different from Ctrl+Shift.
+                // With only (to_clipboard, keep_floating) both rows read
+                // `(true, false)` — the matrix above promised two routings the
+                // data could not tell apart, and the one that lost was the one
+                // whose whole point was NOT to keep the snip.
+                let (to_clipboard, keep_floating, to_gallery) = self
+                    .armed_routing
+                    .take()
+                    .unwrap_or_else(|| routing_for_modifiers(mods));
                 let source_window = crate::window_metadata::capture_at_point(x, y);
                 if let Some(window) = &source_window {
                     log::info!(
@@ -392,6 +392,7 @@ impl AppState {
                             end: (x, y),
                             to_clipboard,
                             keep_floating,
+                            to_gallery,
                             source_window,
                         });
                     }
@@ -498,6 +499,30 @@ impl AppState {
                     let monitor_label = sel.captured.monitor_label.clone();
                     match capture::crop(&sel.captured, region) {
                         Ok(image) => {
+                            // Clipboard before disk. On the clipboard-only
+                            // routing it is the whole result, and on every
+                            // other one it has no reason to be contingent on
+                            // the PNG write having worked first.
+                            if sel.to_clipboard {
+                                if let Err(e) = clipboard::copy_image(&image) {
+                                    self.last_error = Some(t1("Failed to copy to clipboard: {e}", "{e}", &e.to_string()));
+                                }
+                            }
+                            if !sel.to_gallery {
+                                // Stop before anything is written down: no PNG
+                                // in the cache directory, no row in SQLite, no
+                                // OCR text in the search index. A user who
+                                // reaches for "clipboard only" to grab a
+                                // password is relying on exactly that, and
+                                // until now got the opposite — the snip was
+                                // saved and indexed like any other.
+                                //
+                                // `restore_main` was already honoured above:
+                                // this routing never floats, so the branch
+                                // there has run.
+                                self.overlay.hide();
+                                return;
+                            }
                             let mut snip = make_snip(region);
                             snip.monitor_label = Some(monitor_label);
                             if let Err(e) = snip.save_image_png(&image) {
@@ -510,11 +535,6 @@ impl AppState {
                                     self.pending_show_main = true;
                                 }
                                 return;
-                            }
-                            if sel.to_clipboard {
-                                if let Err(e) = clipboard::copy_image(&image) {
-                                    self.last_error = Some(t1("Failed to copy to clipboard: {e}", "{e}", &e.to_string()));
-                                }
                             }
                             if sel.keep_floating {
                                 snip.floating = true;
@@ -614,5 +634,88 @@ impl AppState {
                 }
             }
         }
+    }
+}
+
+/// The modifier matrix, as a function of the modifiers alone.
+///
+/// Returns `(to_clipboard, keep_floating, to_gallery)`:
+///
+/// | Held                  | Result                              |
+/// |-----------------------|-------------------------------------|
+/// | (none)                | snip + floating window              |
+/// | `Ctrl`                | snip + floating + clipboard         |
+/// | `Alt`                 | clipboard only — nothing persisted  |
+/// | `Shift`               | gallery only, no floating           |
+/// | `Ctrl`+`Shift`        | gallery + clipboard, no floating    |
+///
+/// Split out of the event handler so it can be tested. The bug that motivated
+/// that: `Alt` and `Ctrl`+`Shift` returned the identical pair when the routing
+/// was two booleans, so "clipboard only" quietly saved and OCR-indexed the
+/// snip like any other. Buried in a match arm inside a 600-line handler, there
+/// was nothing that could have caught it.
+fn routing_for_modifiers(mods: crate::mouse_trigger::ModifierSet) -> (bool, bool, bool) {
+    if mods.alt {
+        (true, false, false)
+    } else if mods.ctrl && mods.shift {
+        (true, false, true)
+    } else if mods.shift {
+        (false, false, true)
+    } else if mods.ctrl {
+        (true, true, true)
+    } else {
+        (false, true, true)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::routing_for_modifiers;
+    use crate::mouse_trigger::ModifierSet;
+
+    fn mods(ctrl: bool, alt: bool, shift: bool) -> ModifierSet {
+        ModifierSet { ctrl, alt, shift }
+    }
+
+    #[test]
+    fn alt_is_the_only_routing_that_keeps_nothing() {
+        let (clip, float, gallery) = routing_for_modifiers(mods(false, true, false));
+        assert!(clip, "the clipboard is the entire point");
+        assert!(!float);
+        assert!(
+            !gallery,
+            "\"clipboard only\" has to mean no PNG, no row, no OCR index"
+        );
+    }
+
+    /// The regression itself: these two rows of the matrix are different
+    /// routings and must not collapse onto the same answer again.
+    #[test]
+    fn alt_and_ctrl_shift_are_distinguishable() {
+        let alt = routing_for_modifiers(mods(false, true, false));
+        let ctrl_shift = routing_for_modifiers(mods(true, false, true));
+        assert_ne!(alt, ctrl_shift);
+        assert!(ctrl_shift.2, "Ctrl+Shift is a gallery routing");
+    }
+
+    #[test]
+    fn every_routing_other_than_alt_is_persisted() {
+        for (c, a, s) in [
+            (false, false, false),
+            (true, false, false),
+            (false, false, true),
+            (true, false, true),
+        ] {
+            let (_, _, gallery) = routing_for_modifiers(mods(c, a, s));
+            assert!(gallery, "ctrl={c} alt={a} shift={s} should reach the gallery");
+        }
+    }
+
+    #[test]
+    fn plain_drag_floats_without_touching_the_clipboard() {
+        assert_eq!(
+            routing_for_modifiers(mods(false, false, false)),
+            (false, true, true)
+        );
     }
 }

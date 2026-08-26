@@ -28,6 +28,14 @@ struct ActiveSelection {
     end: (i32, i32),
     to_clipboard: bool,
     keep_floating: bool,
+    /// Does this snip get written down at all?
+    ///
+    /// False only for the clipboard-only routing, where it means what it says:
+    /// no PNG on disk, no row in the database, no OCR text in the search
+    /// index. Two booleans could not express that — "clipboard, no floating"
+    /// and "clipboard only" collapsed onto the same pair — so every snip was
+    /// persisted regardless of what the user asked for.
+    to_gallery: bool,
     source_window: Option<crate::window_metadata::WindowInfo>,
 }
 
@@ -69,9 +77,10 @@ pub struct AppState {
     about: Option<AboutWindow>,
 
     active: Option<ActiveSelection>,
-    /// Capture routing (to_clipboard, keep_floating) armed by a global hotkey,
-    /// applied to the next armed StartSnip instead of the live modifiers.
-    armed_routing: Option<(bool, bool)>,
+    /// Capture routing (to_clipboard, keep_floating, to_gallery) armed by a
+    /// global hotkey, applied to the next armed StartSnip instead of the live
+    /// modifiers.
+    armed_routing: Option<(bool, bool, bool)>,
     /// Win+Shift+Space "freeze first": the screen captured the instant Space
     /// was pressed (with a timestamp), shown frozen in the overlay and reused
     /// when the drag begins. Expired by a watchdog so a stale frozen frame
@@ -253,6 +262,7 @@ impl AppState {
             p.borrow_mut().push(Action::NewSnip {
                 to_clip: false,
                 keep_float: true,
+                to_gallery: true,
             })
         });
         let p = pending.clone();
@@ -260,6 +270,7 @@ impl AppState {
             p.borrow_mut().push(Action::NewSnip {
                 to_clip: true,
                 keep_float: true,
+                to_gallery: true,
             })
         });
         let p = pending.clone();
@@ -267,6 +278,7 @@ impl AppState {
             p.borrow_mut().push(Action::NewSnip {
                 to_clip: true,
                 keep_float: false,
+                to_gallery: false,
             })
         });
         let p = pending.clone();
@@ -769,7 +781,11 @@ fn cursor_screen_pos() -> Option<(i32, i32)> {
 
 #[derive(Debug)]
 pub(crate) enum Action {
-    NewSnip { to_clip: bool, keep_float: bool },
+    NewSnip {
+        to_clip: bool,
+        keep_float: bool,
+        to_gallery: bool,
+    },
     PickColor,
     ToggleAllVisibility,
     ToggleFloatingInTaskbar,

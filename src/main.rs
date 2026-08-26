@@ -425,6 +425,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     if !app::queue_action(app::Action::NewSnip {
                         to_clip: false,
                         keep_float: true,
+                        to_gallery: true,
                     }) {
                         // Before the UI is wired there is nothing to queue into;
                         // fall back to the old behaviour so Windows still arms.
