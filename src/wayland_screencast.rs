@@ -75,6 +75,15 @@ fn write_token(token: &str) {
 /// be a small fraction of this.
 const CAPTURE_TIMEOUT: Duration = Duration::from_secs(30);
 
+/// How long the PipeWire loop waits for its first frame once the stream is up.
+///
+/// Deliberately much shorter than `CAPTURE_TIMEOUT`: by the time the stream
+/// exists the portal has already answered, so the only thing left to wait for
+/// is the compositor sending a buffer. This has to fire *before* the caller
+/// gives up, because the caller giving up does not stop this thread — see the
+/// timer in `pipewire_once`.
+const FIRST_FRAME_DEADLINE: Duration = Duration::from_secs(10);
+
 /// Is this path worth trying at all?
 ///
 /// Only on a Wayland session. Under X11 xcap talks to the X server directly,
@@ -230,6 +239,9 @@ fn pipewire_once(
     let quit = mainloop.clone();
     let sender_state = sender.clone();
     let quit_state = mainloop.clone();
+    // Cloned here rather than at the timer below: `process` takes `sender` by
+    // move when the listener is registered.
+    let sender_timer = sender.clone();
 
     let _listener = stream
         .add_local_listener_with_user_data(())
@@ -423,8 +435,35 @@ fn pipewire_once(
         )
         .context("connecting the capture stream")?;
 
-    // Returns as soon as `process` has a frame, or when the caller's timeout
-    // gives up on us and the thread is left to finish on its own.
+    // A deadline INSIDE the loop, not merely around it.
+    //
+    // `mainloop.run()` returns when `process` has a frame or `state_changed`
+    // reports an error. A stream that does neither leaves this thread running
+    // after `capture()` has already given up on it — and a screencast source
+    // sends on damage rather than on a clock, so "neither" is a real state, not
+    // a hypothetical one. The cost is not the idle thread: `one_shot` never
+    // reaches its `session.close()`, so the cast stays open and the desktop's
+    // screen-sharing indicator stays lit, and every retry stacks another one.
+    // That is exactly the accumulation the per-snip design exists to prevent,
+    // and without this timer it survived in the one path nobody watches.
+    let quit_timer = mainloop.clone();
+    let timer = mainloop.loop_().add_timer(move |_| {
+        if let Some(tx) = sender_timer.lock().unwrap().take() {
+            let _ = tx.try_send(Err(anyhow!(
+                "the compositor sent no frame within {}s",
+                FIRST_FRAME_DEADLINE.as_secs()
+            )));
+        }
+        quit_timer.quit();
+    });
+    timer
+        .update_timer(Some(FIRST_FRAME_DEADLINE), None)
+        .into_result()
+        .map_err(|e| anyhow!("arming the first-frame deadline: {e:?}"))?;
+
+    // Returns once `process` has a frame, the stream reports an error, or the
+    // timer above fires. Every one of those paths unwinds to `one_shot`, which
+    // closes the portal session.
     mainloop.run();
     Ok(())
 }
