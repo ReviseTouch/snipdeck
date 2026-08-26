@@ -24,7 +24,7 @@ pub fn capture_at(x: i32, y: i32) -> anyhow::Result<CapturedScreen> {
         let mh = m.height() as i32;
         x >= mx && x < mx + mw && y >= my && y < my + mh
     }) {
-        return capture_monitor(m.clone(), idx);
+        return capture_monitor(m.clone(), idx, monitors.len());
     }
     // Fall back to the first monitor, not just the primary one. Nothing
     // guarantees any monitor claims to be primary — some compositors report
@@ -35,8 +35,9 @@ pub fn capture_at(x: i32, y: i32) -> anyhow::Result<CapturedScreen> {
         .position(|m| m.is_primary())
         .or(if monitors.is_empty() { None } else { Some(0) })
         .ok_or_else(|| anyhow!("no monitors available"))?;
+    let count = monitors.len();
     let monitor = monitors.into_iter().nth(idx).unwrap();
-    capture_monitor(monitor, idx)
+    capture_monitor(monitor, idx, count)
 }
 
 /// Rescale a monitor rect reported in logical pixels onto the pixel grid of
@@ -72,15 +73,33 @@ fn normalise_to_image(
 
 /// The compositor's own buffers, where that is offered.
 ///
-/// `None` means "not this platform, or the session could not be had" — never a
-/// hard failure, because the xcap path behind it still works everywhere. On a
-/// multi-monitor setup the cast covers the one monitor the user granted, so a
-/// capture of a different monitor falls through to xcap; that is a limitation
-/// worth removing later, not a reason to withhold the fast path from the
-/// single-monitor case that is nearly everyone.
+/// `None` means "not this platform, the session could not be had, or this is
+/// not a setup we can be sure about" — never a hard failure, because the xcap
+/// path behind it still works everywhere.
+///
+/// Single-monitor only, and that restriction is the point. The portal grants a
+/// cast of ONE monitor — whichever the user picked, or whichever the restore
+/// token re-grants without asking — and the stream has no idea which monitor
+/// the caller wanted. This used to hand back the granted monitor's pixels for
+/// a capture of any monitor: `capture_monitor` would then fit the *requested*
+/// monitor's rect onto the *granted* monitor's image, and the snip came out
+/// showing the wrong screen at coordinates belonging to the right one.
+///
+/// The doc here already claimed a capture of a different monitor "falls
+/// through to xcap". It did not; nothing compared them, and the position the
+/// stream reports — which is the only thing that could identify the monitor —
+/// was discarded at the match. Comparing it is not straightforward either:
+/// the stream reports in its own pixels while xcap reports the monitor rect in
+/// logical ones, so on a scaled session the two do not agree on any number.
+/// One monitor is the case where the question cannot arise, and it is also the
+/// case the fast path was justified by — "nearly everyone".
 #[cfg(not(target_os = "windows"))]
-fn screencast_image() -> Option<image::RgbaImage> {
+fn screencast_image(monitor_count: usize) -> Option<image::RgbaImage> {
     if !crate::wayland_screencast::usable() {
+        return None;
+    }
+    if monitor_count != 1 {
+        log::debug!("screencast skipped: {monitor_count} monitors, cast covers only one");
         return None;
     }
     match crate::wayland_screencast::capture() {
@@ -96,11 +115,15 @@ fn screencast_image() -> Option<image::RgbaImage> {
 }
 
 #[cfg(target_os = "windows")]
-fn screencast_image() -> Option<image::RgbaImage> {
+fn screencast_image(_monitor_count: usize) -> Option<image::RgbaImage> {
     None
 }
 
-fn capture_monitor(m: xcap::Monitor, idx: usize) -> anyhow::Result<CapturedScreen> {
+fn capture_monitor(
+    m: xcap::Monitor,
+    idx: usize,
+    monitor_count: usize,
+) -> anyhow::Result<CapturedScreen> {
     let x = m.x();
     let y = m.y();
     let w = m.width();
@@ -140,7 +163,7 @@ fn capture_monitor(m: xcap::Monitor, idx: usize) -> anyhow::Result<CapturedScree
             // unusable: it asks GNOME to encode the whole screen as a PNG into
             // /tmp and reads it back, which measured five to nine seconds and
             // rang the shutter every time. See `wayland_screencast`.
-            match screencast_image() {
+            match screencast_image(monitor_count) {
                 Some(img) => img,
                 None => {
                     log::info!("capture path: GDI (xcap)");

@@ -184,6 +184,14 @@ that is worse than slow. Stopping the share from the desktop's indicator kills
 the stream, and a cached last frame is then served for every capture afterwards
 — the screen silently frozen in the past, with nothing to suggest why.
 
+**Single-monitor sessions only.** The portal grants a cast of one monitor and
+the stream cannot say which monitor a caller wanted, so with more than one
+attached there is no way to know the frame belongs to the screen being snipped.
+Multi-monitor sessions take the xcap path instead — slower, but the right
+screen. Matching them up is not simply a comparison waiting to be written: the
+stream reports its position in its own pixels and xcap reports the monitor rect
+in logical ones, so on a scaled session the two never agree on a number.
+
 It also fixed a coordinate bug rather than working around one. xcap reported the
 monitor at 1920x1200 and handed back a 3840x2400 buffer, because the portal
 rounds a fractional monitor scale UP to the next integer — a scale of 2.0 for a
