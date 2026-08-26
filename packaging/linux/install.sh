@@ -109,7 +109,7 @@ cat <<'EOF'
 Optional runtime dependencies:
   tray icon           libayatana-appindicator  (plus the AppIndicator
                       extension on GNOME, which has no built-in tray)
-  "Share" actions     xdotool
+  "Share" actions     xdg-utils  (xdg-email / xdg-open)
   OCR                 tesseract + the language data you want
                       (absent, OCR is skipped rather than failing)
 EOF

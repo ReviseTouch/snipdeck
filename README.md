@@ -230,7 +230,7 @@ Global shortcuts go through the desktop portal, which refuses a session from a
 client with no application id, and an unsandboxed app only gets one when the
 desktop launches it from a `.desktop` entry — see `packaging/linux/snipdeck.desktop`.
 
-Runtime dependencies: `libayatana-appindicator` (tray), `xdotool` (sharing),
+Runtime dependencies: `libayatana-appindicator` (tray), `xdg-utils` (sharing),
 and `tesseract` plus the language data you want (OCR — optional; without it OCR
 is skipped rather than failing).
 

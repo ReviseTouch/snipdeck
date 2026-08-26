@@ -18,7 +18,11 @@ name: Build & Release
 # macOS remains unbuilt: its OCR backend is still a stub.
 on:
   push:
-    branches: [main]
+    # Feature branches too, not just main. Work here lands on a long-lived
+    # `feat/*` branch and only reaches main much later, so filtering to main
+    # meant the branch where the breakage actually happens was the one branch
+    # never built.
+    branches: [main, 'feat/**']
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -50,6 +54,11 @@ jobs:
           # Left unset, the About window simply hides the donate button — no
           # secret ends up in the source tree or the public binary by default.
           SNIPDECK_DONATE_URL: ${{ secrets.SNIPDECK_DONATE_URL }}
+
+      # The Linux job has always run these; this one never did, so a test that
+      # only fails on Windows could ship.
+      - name: Run tests
+        run: cargo test --release --target x86_64-pc-windows-msvc
 
       - name: Stage artifact
         shell: bash
