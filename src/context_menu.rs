@@ -143,7 +143,15 @@ impl ContextMenuManager {
     /// request is answered asynchronously, so immediately after `show()` the
     /// window still reports its old size (often 0x0) and a stale scale factor.
     /// Called every tick while a menu is open; a no-op once settled.
-    #[cfg(not(target_os = "windows"))]
+    ///
+    /// Linux, not merely "not Windows": every step here answers a Wayland
+    /// constraint — a fullscreen surface standing in for a positioned window,
+    /// a position the compositor will not reveal, an input region handing the
+    /// desktop its clicks back — and the body reaches into
+    /// `wayland_input_region`, which is itself Linux-only. Gated on
+    /// `not(windows)` it also compiled on macOS, where that module does not
+    /// exist and the whole dance answers a problem macOS does not have.
+    #[cfg(target_os = "linux")]
     pub fn sync_to_window(&self) {
         let (Some(win), Some((ax, ay))) = (&self.window, self.pending_anchor) else {
             return;

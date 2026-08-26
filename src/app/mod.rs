@@ -416,7 +416,7 @@ impl AppState {
         // The overlay adopts the compositor's idea of its own size/scale, which
         // only becomes known a frame or two after the fullscreen request lands.
         self.overlay.sync_to_window();
-        #[cfg(not(target_os = "windows"))]
+        #[cfg(target_os = "linux")]
         self.context_menu.sync_to_window();
         self.floating.sync();
 
