@@ -24,6 +24,20 @@ impl AppState {
                 to_gallery,
             } => self.begin_region_snip(to_clip, keep_float, to_gallery, window),
             Action::PickColor => {
+                // Both the pick and its Esc arrive as events from the pointer
+                // hook. With no hook there is no pick and no cancel — and this
+                // is the one tool that hides the main window before waiting, so
+                // "does nothing" would present as the app vanishing: the loupe
+                // cannot follow a cursor it cannot read, clicking does nothing,
+                // Esc does nothing, and on a desktop with no tray there is
+                // nothing left to click. Say so instead, with the window still
+                // on screen to say it in.
+                if crate::mouse_trigger::pointer_hook_failed() {
+                    self.last_error = Some(t(
+                        "The colour picker needs pointer access this session does not grant.",
+                    ));
+                    return;
+                }
                 // Start the eyedropper: hide our window so it's out of the way,
                 // arm the hook + show the magnifier loupe. The next click grabs
                 // the pixel (ColorPick event); Esc cancels. The main window comes
@@ -31,6 +45,7 @@ impl AppState {
                 self.color_picker.begin();
                 let _ = window.hide();
                 self.color_pick_hid_main = true;
+                self.color_pick_started_at = Some(std::time::Instant::now());
                 self.last_error = None;
             }
             Action::ToggleFloatingInTaskbar => {
@@ -598,6 +613,7 @@ impl AppState {
                 // the result popup, and (only if we hid it) bring the main window
                 // back. A context-menu-triggered pick leaves the window as-is.
                 self.color_picker.finish(x, y);
+                self.color_pick_started_at = None;
                 if std::mem::take(&mut self.color_pick_hid_main) {
                     self.pending_show_main = true;
                 }
@@ -606,6 +622,7 @@ impl AppState {
                 // Esc during colour-pick: dismiss the loupe and restore the window.
                 if self.color_picker.is_active() {
                     self.color_picker.cancel();
+                    self.color_pick_started_at = None;
                     if std::mem::take(&mut self.color_pick_hid_main) {
                         self.pending_show_main = true;
                     }

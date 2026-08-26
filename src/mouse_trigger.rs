@@ -38,6 +38,25 @@ pub(crate) static DISGUISE_WINUP_ARMED: AtomicBool = AtomicBool::new(false);
 /// One-shot — cleared on the click or cancel.
 static COLOR_PICK_ARMED: AtomicBool = AtomicBool::new(false);
 
+/// Set when the pointer hook could not be installed at all.
+///
+/// rdev's `grab` needs read access to `/dev/input`, which an ordinary desktop
+/// user does not have unless they are in the `input` group. When it fails, no
+/// click and no Esc ever reaches this module — and callers that hide a window
+/// and then wait for one would wait forever. The failure used to go to stderr
+/// and nowhere else, so nothing could ask about it.
+static POINTER_HOOK_FAILED: AtomicBool = AtomicBool::new(false);
+
+/// Did the pointer hook fail to install?
+///
+/// False also means "not yet known": `grab` blocks for the process lifetime
+/// when it succeeds, so this can only ever report a failure that has already
+/// happened. In practice that is immediate — it fails on the first attempt to
+/// open the device — and long before a user reaches a toolbar button.
+pub fn pointer_hook_failed() -> bool {
+    POINTER_HOOK_FAILED.load(Ordering::Relaxed)
+}
+
 /// Arm a one-shot drag-snip (called from the tray menu).
 pub fn arm_snip() {
     SNIP_ARMED.store(true, Ordering::Relaxed);
@@ -378,7 +397,15 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
         });
 
         if let Err(e) = result {
-            eprintln!("rdev grab error: {e:?}");
+            // Record it, don't just print it. Everything that waits on a click
+            // from this hook — the colour picker above all, which hides the
+            // main window first — needs to be able to find out that no click
+            // is ever coming.
+            POINTER_HOOK_FAILED.store(true, Ordering::Relaxed);
+            log::warn!(
+                "pointer hook unavailable ({e:?}); click-driven tools will not \
+                 receive events. On Linux rdev needs read access to /dev/input."
+            );
         }
     });
 }

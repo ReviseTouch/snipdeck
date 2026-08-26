@@ -110,6 +110,13 @@ pub struct AppState {
     /// know to bring it back when the pick finishes. The context-menu trigger
     /// leaves the window as-is, so it stays false there.
     color_pick_hid_main: bool,
+    /// When the colour picker started, so the tick watchdog can end a pick that
+    /// is never going to finish. Same shape, and the same reason, as
+    /// `armed_snip_at`: the pick waits on a click from the pointer hook, and a
+    /// user who walks away — or a hook that stops delivering after we already
+    /// hid the window — would otherwise leave the app invisible with no way
+    /// back on a desktop that has no tray.
+    color_pick_started_at: Option<std::time::Instant>,
     last_error: Option<String>,
     hotkey_error: Option<String>,
 
@@ -211,6 +218,7 @@ impl AppState {
             pending_show_main: false,
             pending_freeze_arm: None,
             color_pick_hid_main: false,
+            color_pick_started_at: None,
             last_error: None,
             hotkey_error,
             thumb_cache: std::collections::HashMap::new(),
@@ -432,6 +440,25 @@ impl AppState {
         if std::mem::take(&mut self.pending_show_main) {
             let _ = window.show();
             crate::tray::focus_main_window();
+        }
+
+        // Watchdog: the colour picker hid the main window and is waiting for a
+        // click that arrives as a pointer-hook event. `Action::PickColor`
+        // refuses to start when the hook is known to have failed, but "known"
+        // is not "always": the hook can stop delivering after we have already
+        // hidden the window, and a user can simply walk away. Either way the
+        // pick never completes, its Esc never arrives either — the cancel comes
+        // through the same hook — and the app is left invisible with the loupe
+        // up. On a desktop with no tray that is unrecoverable.
+        if let Some(started_at) = self.color_pick_started_at {
+            if started_at.elapsed() > std::time::Duration::from_secs(20) {
+                self.color_pick_started_at = None;
+                self.color_picker.cancel();
+                crate::mouse_trigger::disarm_color_pick();
+                if std::mem::take(&mut self.color_pick_hid_main) {
+                    self.pending_show_main = true;
+                }
+            }
         }
 
         // Watchdog: a freeze-first arm (Win+Shift+Space) the user pressed then

@@ -371,6 +371,9 @@ msgstr ""
 msgid "Failed to copy to clipboard: {e}"
 msgstr ""
 
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr ""
+
 msgid "Failed to copy text to clipboard: {e}"
 msgstr ""
 

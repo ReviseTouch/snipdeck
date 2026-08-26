@@ -366,6 +366,9 @@ msgstr "Düğmeyle tetiklenen kesim henüz Slint portuna bağlanmadı — Win+LM
 msgid "Failed to copy to clipboard: {e}"
 msgstr "Panoya kopyalanamadı: {e}"
 
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "Renk seçici, bu oturumun vermediği bir işaretçi erişimi gerektiriyor."
+
 msgid "Failed to copy text to clipboard: {e}"
 msgstr "Metin panoya kopyalanamadı: {e}"
 
