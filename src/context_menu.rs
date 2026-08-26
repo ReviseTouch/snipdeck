@@ -102,6 +102,18 @@ pub struct ContextMenuManager {
     /// leave the panel invisible forever.
     #[cfg(not(target_os = "windows"))]
     opened_at: std::cell::Cell<std::time::Instant>,
+    /// The input region last handed to the compositor, as `(x, y, w, h)`.
+    ///
+    /// `sync_to_window` runs every tick a menu is open — 125 times a second —
+    /// and `set_input_rects` is not cheap: it opens an event queue, asks the
+    /// display for a fresh `wl_registry` and blocks on a roundtrip. `wl_region`
+    /// gets destroyed afterwards but `wl_registry` cannot be: the protocol
+    /// gives it no destructor, so every one of those stayed on the connection
+    /// until the process exited. The region only ever changes when the panel
+    /// moves, so remembering the last one makes this the no-op the doc above
+    /// always claimed it was.
+    #[cfg(target_os = "linux")]
+    applied_region: std::cell::Cell<Option<(i32, i32, i32, i32)>>,
     /// True only when the open menu belongs to a floating snip, so the app loop
     /// dismisses it once that snip's window closes. False for a gallery-card
     /// menu, which has no floating window to track.
@@ -133,6 +145,8 @@ impl ContextMenuManager {
             anchored: Rc::new(std::cell::Cell::new(false)),
             #[cfg(not(target_os = "windows"))]
             opened_at: std::cell::Cell::new(std::time::Instant::now()),
+            #[cfg(target_os = "linux")]
+            applied_region: std::cell::Cell::new(None),
         }
     }
 
@@ -214,8 +228,19 @@ impl ContextMenuManager {
                 h: sh as i32,
             }]
         };
+        let signature = rects
+            .first()
+            .map(|r| (r.x, r.y, r.w, r.h));
+        if self.applied_region.get() == signature {
+            return;
+        }
         match crate::wayland_input_region::set_input_rects(win.window(), &rects) {
-            Ok(()) => log::debug!("menu input region confined to the panel"),
+            Ok(()) => {
+                self.applied_region.set(signature);
+                log::debug!("menu input region confined to the panel");
+            }
+            // Left uncached deliberately: a failure is worth retrying next
+            // tick, and until one succeeds the surface is fully clickable.
             Err(e) => log::debug!("input region unavailable ({e:#}); surface stays fully clickable"),
         }
     }
@@ -343,6 +368,10 @@ impl ContextMenuManager {
             }
             self.pending_anchor = Some((x, y));
             self.anchored.set(false);
+            // A new menu (or a closed one) needs its region applied afresh;
+            // the cached signature belongs to the previous placement.
+            #[cfg(target_os = "linux")]
+            self.applied_region.set(None);
             self.opened_at.set(std::time::Instant::now());
             w.set_panel_visible(false);
         }
@@ -371,6 +400,10 @@ impl ContextMenuManager {
         {
             self.pending_anchor = None;
             self.anchored.set(false);
+            // A new menu (or a closed one) needs its region applied afresh;
+            // the cached signature belongs to the previous placement.
+            #[cfg(target_os = "linux")]
+            self.applied_region.set(None);
         }
     }
 
