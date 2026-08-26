@@ -248,13 +248,23 @@ impl AppState {
             self.thumb_order.push_back(id);
         }
         while self.thumb_cache.len() > CAP {
-            match self.thumb_order.pop_front() {
-                Some(old) if old != id => {
-                    self.thumb_cache.remove(&old);
+            let Some(old) = self.thumb_order.pop_front() else {
+                break;
+            };
+            if old == id {
+                // The entry just inserted: rotate it to the back rather than
+                // dropping it. Dropped, it stayed in the map with nothing left
+                // tracking it — unevictable for the rest of the session, and
+                // every one of those raised the cache's real ceiling above CAP
+                // permanently.
+                self.thumb_order.push_back(old);
+                if self.thumb_order.len() == 1 {
+                    // It is the only thing left; there is nothing to evict.
+                    break;
                 }
-                Some(_) => {}
-                None => break,
+                continue;
             }
+            self.thumb_cache.remove(&old);
         }
     }
 

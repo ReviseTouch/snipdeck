@@ -294,25 +294,41 @@ fn search_fts(conn: &Connection, match_query: &str) -> anyhow::Result<Vec<Snip>>
     Ok(snips)
 }
 
+/// Make a string safe to drop inside a LIKE pattern.
+///
+/// Backslash first: escaping it after `%` and `_` would put a backslash in
+/// front of the backslashes this function had just added.
+fn escape_like(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_")
+}
+
 fn search_like(conn: &Connection, query: &str) -> anyhow::Result<Vec<Snip>> {
     // Fold the query the same way as the indexed columns (see `tr_fold`)
     // so the fallback is case-, diacritic- and dotless-`ı` insensitive too.
-    let like = format!("%{}%", search_fold(query));
+    //
+    // `%` and `_` are LIKE's own wildcards, so a query containing either was
+    // read as a pattern rather than as text: searching "100%" matched every
+    // snip with "100" anywhere in it, and "a_b" matched "axb". Escaped here
+    // (backslash first, or it would double-escape the escapes it adds) and
+    // declared with ESCAPE on every clause below.
+    let like = format!("%{}%", escape_like(&search_fold(query)));
     let mut stmt = conn.prepare(
-        "SELECT DISTINCT
+        r"SELECT DISTINCT
                 s.id, s.created_at, s.x, s.y, s.w, s.h, s.image_file, s.thumb_file,
                 s.label, s.pinned, s.monitor_label, s.floating, s.last_x, s.last_y
          FROM snips s
          LEFT JOIN snip_ocr o ON o.snip_id = s.id
          LEFT JOIN snip_window win ON win.snip_id = s.id
-         WHERE tr_fold(s.label) LIKE ?1
-            OR tr_fold(s.monitor_label) LIKE ?1
-            OR tr_fold(o.text) LIKE ?1
-            OR tr_fold(win.title) LIKE ?1
-            OR tr_fold(win.app_name) LIKE ?1
-            OR tr_fold(win.process_name) LIKE ?1
-            OR tr_fold(win.exe_path) LIKE ?1
-            OR (CAST(s.w AS TEXT) || 'x' || CAST(s.h AS TEXT)) LIKE ?1
+         WHERE tr_fold(s.label) LIKE ?1 ESCAPE '\'
+            OR tr_fold(s.monitor_label) LIKE ?1 ESCAPE '\'
+            OR tr_fold(o.text) LIKE ?1 ESCAPE '\'
+            OR tr_fold(win.title) LIKE ?1 ESCAPE '\'
+            OR tr_fold(win.app_name) LIKE ?1 ESCAPE '\'
+            OR tr_fold(win.process_name) LIKE ?1 ESCAPE '\'
+            OR tr_fold(win.exe_path) LIKE ?1 ESCAPE '\'
+            OR (CAST(s.w AS TEXT) || 'x' || CAST(s.h AS TEXT)) LIKE ?1 ESCAPE '\'
          ORDER BY s.pinned DESC, s.created_at DESC",
     )?;
     let rows = stmt.query_map([like], snip_from_row)?;
@@ -1092,5 +1108,31 @@ mod tests {
         assert_eq!(fts_match_query("ışık saç").as_deref(), Some("isik* AND sac*"));
         // No alphanumerics → no FTS query (caller falls back to LIKE).
         assert_eq!(fts_match_query("   "), None);
+    }
+}
+
+#[cfg(test)]
+mod like_tests {
+    use super::escape_like;
+
+    /// `%` and `_` are LIKE's wildcards. Unescaped, searching "100%" matched
+    /// every snip containing "100" and "a_b" matched "axb".
+    #[test]
+    fn wildcards_are_neutralised() {
+        assert_eq!(escape_like("100%"), "100\\%");
+        assert_eq!(escape_like("a_b"), "a\\_b");
+    }
+
+    /// Backslash has to be escaped first, or the escapes added for `%` and `_`
+    /// get escaped in turn and the pattern means something else again.
+    #[test]
+    fn a_literal_backslash_survives() {
+        assert_eq!(escape_like("a\\b"), "a\\\\b");
+        assert_eq!(escape_like("\\%"), "\\\\\\%");
+    }
+
+    #[test]
+    fn ordinary_text_is_untouched() {
+        assert_eq!(escape_like("ekran görüntüsü"), "ekran görüntüsü");
     }
 }
