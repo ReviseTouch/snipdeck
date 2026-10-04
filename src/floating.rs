@@ -6,7 +6,7 @@
 //! into `Snip::last_position` so they persist across sessions.
 
 use slint::{ComponentHandle, Image, LogicalPosition, PhysicalPosition, SharedPixelBuffer};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use uuid::Uuid;
@@ -312,88 +312,66 @@ impl FloatingManager {
             shared_select.borrow_mut().pending_select.push(snip_id);
         });
 
-        // Resize: side index drives which edge(s) move. We apply the
-        // geometry change to the OS window directly (same idea as the
-        // drag callback) so the user sees live feedback; the actual
-        // re-capture from the screen happens in app.rs when resize-end
-        // fires.
-        let weak_res = win.as_weak();
-        win.on_resize_delta(move |side, dx, dy| {
+        // Resize and crop: the side index drives which edge(s) move. We apply
+        // the geometry to the OS window directly so the user sees live
+        // feedback; app.rs persists the resize, or commits the crop, when
+        // resize-end fires. Every move is computed from the snapshot taken at
+        // the press — see `ResizeStart` for why adding moves up ran away.
+        let gesture: Rc<Cell<Option<ResizeStart>>> = Rc::new(Cell::new(None));
+
+        let (gesture_start, weak_start) = (gesture.clone(), win.as_weak());
+        win.on_resize_start(move |side| {
+            let Some(c) = weak_start.upgrade() else {
+                return;
+            };
+            let pos = c.window().position();
+            let (l, t) = (c.get_clip_x(), c.get_clip_y());
+            gesture_start.set(Some(ResizeStart {
+                side,
+                pos: (pos.x, pos.y),
+                size: (c.get_outer_w(), c.get_outer_h()),
+                clip: (l, t, l + c.get_clip_w(), t + c.get_clip_h()),
+            }));
+        });
+
+        let (gesture_delta, weak_res) = (gesture.clone(), win.as_weak());
+        win.on_resize_delta(move |_side, dx, dy| {
             crate::pump::wake();
             let Some(c) = weak_res.upgrade() else {
                 return;
             };
+            // A move with no press behind it has nothing to be measured from.
+            let Some(start) = gesture_delta.get() else {
+                return;
+            };
             let sf = c.window().scale_factor();
+            let sf = if sf > 0.001 { sf } else { 1.0 };
+            let pos = c.window().position();
+            let offset = pointer_offset(
+                &start,
+                (dx, dy),
+                (pos.x, pos.y),
+                (c.get_outer_w(), c.get_outer_h()),
+                sf,
+            );
             // Crop mode: the same handles drag inward only and update the
             // source-clip preview instead of stretching the snip.
             if c.get_cropping() {
-                crop_delta(&c, side, dx, dy, sf);
+                let offset_px = ((offset.0 * sf).round() as i32, (offset.1 * sf).round() as i32);
+                let clip = cropped(&start, offset_px, (c.get_img_w(), c.get_img_h()));
+                show_clip(&c, clip, sf);
                 return;
             }
-            let pos = c.window().position();
-            // Work in logical pixels for outer_w/h (the property's unit)
-            // but in physical pixels for position (what set_position wants).
-            let mut new_x = pos.x;
-            let mut new_y = pos.y;
-            let mut new_w_log = c.get_outer_w();
-            let mut new_h_log = c.get_outer_h();
-            let dxp = (dx * sf).round() as i32;
-            let dyp = (dy * sf).round() as i32;
-            let dxl = dx;
-            let dyl = dy;
-            match side {
-                0 => {
-                    new_x += dxp;
-                    new_y += dyp;
-                    new_w_log -= dxl;
-                    new_h_log -= dyl;
-                }
-                1 => {
-                    new_y += dyp;
-                    new_h_log -= dyl;
-                }
-                2 => {
-                    new_y += dyp;
-                    new_w_log += dxl;
-                    new_h_log -= dyl;
-                }
-                3 => {
-                    new_w_log += dxl;
-                }
-                4 => {
-                    new_w_log += dxl;
-                    new_h_log += dyl;
-                }
-                5 => {
-                    new_h_log += dyl;
-                }
-                6 => {
-                    new_x += dxp;
-                    new_w_log -= dxl;
-                    new_h_log += dyl;
-                }
-                7 => {
-                    new_x += dxp;
-                    new_w_log -= dxl;
-                }
-                _ => {}
-            }
-            // Clamp minimum size (in physical px → logical for the prop).
-            let min_log = MIN_OUTER_PHYS as f32 / sf;
-            if new_w_log < min_log {
-                new_w_log = min_log;
-            }
-            if new_h_log < min_log {
-                new_h_log = min_log;
-            }
-            c.set_outer_w(new_w_log);
-            c.set_outer_h(new_h_log);
-            c.window().set_position(PhysicalPosition::new(new_x, new_y));
+            let ((x, y), (w, h)) = resized(&start, offset, sf, MIN_OUTER_PHYS as f32 / sf);
+            c.set_outer_w(w);
+            c.set_outer_h(h);
+            c.window().set_position(PhysicalPosition::new(x, y));
         });
 
         let shared_resize_end = self.shared.clone();
         win.on_resize_end(move || {
             crate::pump::wake();
+            gesture.set(None);
             shared_resize_end
                 .borrow_mut()
                 .pending_resize_end
@@ -645,62 +623,246 @@ pub struct DrainResult {
 #[allow(dead_code)]
 fn _logical_position_marker(_p: LogicalPosition) {}
 
-/// Live crop-handle drag. The clip rect (in image pixels) is the single
-/// source of truth: each handle nudges its edge(s), clamped to stay within
-/// `[0, img]` (so handles only ever move *inward*), and the window geometry
-/// is derived from the clip rect anchored at the position captured when crop
-/// mode began. The `source-clip` binding then previews exactly the kept
-/// region at 1:1.
-fn crop_delta(c: &FloatingWindow, side: i32, dx: f32, dy: f32, sf: f32) {
-    let dxp = (dx * sf).round() as i32;
-    let dyp = (dy * sf).round() as i32;
-    let img_w = c.get_img_w();
-    let img_h = c.get_img_h();
-    let min = 16;
-    let cl = |v: i32, lo: i32, hi: i32| v.min(hi).max(lo);
+/// Smallest crop, in image pixels, on either axis.
+const CROP_MIN: i32 = 16;
 
-    let mut left = c.get_clip_x();
-    let mut top = c.get_clip_y();
-    let mut right = left + c.get_clip_w();
-    let mut bottom = top + c.get_clip_h();
+/// The geometry a resize or crop gesture started from.
+///
+/// Every move recomputes from this, never from the previous move. A handle
+/// reports the pointer's offset since the press measured from where the handle
+/// is *now*, and the handle rides along with the edge it sits on. On Windows and
+/// X11 the window follows the drag, so each report is roughly the latest motion
+/// alone; on Wayland the left and top edges cannot move at all — a client may
+/// not place its own window — so each report carries the whole gesture. Adding
+/// reports up was right for the first and ran away on the second: a left-edge
+/// crop clipped 1+2+3+… pixels per event and committed a 16-px sliver over the
+/// snip's only image. Recovering the pointer's real offset (`pointer_offset`)
+/// and applying it to this snapshot is right on both.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct ResizeStart {
+    /// 0=NW 1=N 2=NE 3=E 4=SE 5=S 6=SW 7=W.
+    side: i32,
+    /// Window position, physical pixels. Always 0,0 on Wayland, which is
+    /// harmless: it is only ever compared with another reading of itself.
+    pos: (i32, i32),
+    /// `outer-w` × `outer-h`, logical pixels.
+    size: (f32, f32),
+    /// The crop clip as `(left, top, right, bottom)`, image pixels.
+    clip: (i32, i32, i32, i32),
+}
 
-    // side index: 0=NW 1=N 2=NE 3=E 4=SE 5=S 6=SW 7=W
-    match side {
-        0 => {
-            left = cl(left + dxp, 0, right - min);
-            top = cl(top + dyp, 0, bottom - min);
+fn moves_left(side: i32) -> bool {
+    matches!(side, 0 | 6 | 7)
+}
+
+fn moves_right(side: i32) -> bool {
+    matches!(side, 2..=4)
+}
+
+fn moves_top(side: i32) -> bool {
+    matches!(side, 0..=2)
+}
+
+fn moves_bottom(side: i32) -> bool {
+    matches!(side, 4..=6)
+}
+
+/// The pointer's offset on screen since the press, logical pixels.
+///
+/// `reported` is the handle's own measurement, taken from wherever the handle
+/// is now; `pos` and `size` are the window's current geometry. A left or top
+/// handle has travelled with the window's origin, a right or bottom handle
+/// with the origin plus the size — add that back and what is left is the
+/// pointer.
+fn pointer_offset(
+    start: &ResizeStart,
+    reported: (f32, f32),
+    pos: (i32, i32),
+    size: (f32, f32),
+    sf: f32,
+) -> (f32, f32) {
+    let moved_x = (pos.0 - start.pos.0) as f32 / sf;
+    let moved_y = (pos.1 - start.pos.1) as f32 / sf;
+    let handle_x = if moves_right(start.side) {
+        moved_x + (size.0 - start.size.0)
+    } else if moves_left(start.side) {
+        moved_x
+    } else {
+        0.0
+    };
+    let handle_y = if moves_bottom(start.side) {
+        moved_y + (size.1 - start.size.1)
+    } else if moves_top(start.side) {
+        moved_y
+    } else {
+        0.0
+    };
+    (reported.0 + handle_x, reported.1 + handle_y)
+}
+
+/// Window geometry for a resize: position in physical pixels, size in logical.
+///
+/// The edge opposite each dragged one stays where it was — including when the
+/// minimum size stops the drag, because the origin is derived from the
+/// clamped size rather than from the pointer.
+fn resized(
+    start: &ResizeStart,
+    offset: (f32, f32),
+    sf: f32,
+    min_log: f32,
+) -> ((i32, i32), (f32, f32)) {
+    let (mut w, mut h) = start.size;
+    if moves_left(start.side) {
+        w -= offset.0;
+    } else if moves_right(start.side) {
+        w += offset.0;
+    }
+    if moves_top(start.side) {
+        h -= offset.1;
+    } else if moves_bottom(start.side) {
+        h += offset.1;
+    }
+    let w = w.max(min_log);
+    let h = h.max(min_log);
+    let x = if moves_left(start.side) {
+        start.pos.0 + ((start.size.0 - w) * sf).round() as i32
+    } else {
+        start.pos.0
+    };
+    let y = if moves_top(start.side) {
+        start.pos.1 + ((start.size.1 - h) * sf).round() as i32
+    } else {
+        start.pos.1
+    };
+    ((x, y), (w, h))
+}
+
+/// Clip rect for a crop, as `(left, top, right, bottom)` in image pixels.
+///
+/// Each dragged edge moves by the pointer's offset, inward only, and the rect
+/// never shrinks below `CROP_MIN` — or below the image itself, for a snip
+/// smaller than that.
+fn cropped(start: &ResizeStart, offset_px: (i32, i32), img: (i32, i32)) -> (i32, i32, i32, i32) {
+    let (l0, t0, r0, b0) = start.clip;
+    let min_w = CROP_MIN.min(img.0);
+    let min_h = CROP_MIN.min(img.1);
+    let clamp = |v: i32, lo: i32, hi: i32| v.min(hi).max(lo);
+    let (mut l, mut t, mut r, mut b) = (l0, t0, r0, b0);
+    if moves_left(start.side) {
+        l = clamp(l0 + offset_px.0, 0, r0 - min_w);
+    } else if moves_right(start.side) {
+        r = clamp(r0 + offset_px.0, l0 + min_w, img.0);
+    }
+    if moves_top(start.side) {
+        t = clamp(t0 + offset_px.1, 0, b0 - min_h);
+    } else if moves_bottom(start.side) {
+        b = clamp(b0 + offset_px.1, t0 + min_h, img.1);
+    }
+    (l, t, r, b)
+}
+
+/// Show a crop clip: the kept region at 1:1, the window shrunk around it and
+/// anchored where crop mode began. The `source-clip` binding does the preview.
+fn show_clip(c: &FloatingWindow, (l, t, r, b): (i32, i32, i32, i32), sf: f32) {
+    c.set_clip_x(l);
+    c.set_clip_y(t);
+    c.set_clip_w(r - l);
+    c.set_clip_h(b - t);
+    let border = c.get_border_len();
+    c.set_outer_w((r - l) as f32 / sf + border * 2.0);
+    c.set_outer_h((b - t) as f32 / sf + border * 2.0);
+    c.window().set_position(PhysicalPosition::new(
+        c.get_crop_anchor_x() + l,
+        c.get_crop_anchor_y() + t,
+    ));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn start(side: i32, pos: (i32, i32), size: (f32, f32), clip: (i32, i32, i32, i32)) -> ResizeStart {
+        ResizeStart {
+            side,
+            pos,
+            size,
+            clip,
         }
-        1 => top = cl(top + dyp, 0, bottom - min),
-        2 => {
-            right = cl(right + dxp, left + min, img_w);
-            top = cl(top + dyp, 0, bottom - min);
-        }
-        3 => right = cl(right + dxp, left + min, img_w),
-        4 => {
-            right = cl(right + dxp, left + min, img_w);
-            bottom = cl(bottom + dyp, top + min, img_h);
-        }
-        5 => bottom = cl(bottom + dyp, top + min, img_h),
-        6 => {
-            left = cl(left + dxp, 0, right - min);
-            bottom = cl(bottom + dyp, top + min, img_h);
-        }
-        7 => left = cl(left + dxp, 0, right - min),
-        _ => {}
     }
 
-    let clip_w = right - left;
-    let clip_h = bottom - top;
-    c.set_clip_x(left);
-    c.set_clip_y(top);
-    c.set_clip_w(clip_w);
-    c.set_clip_h(clip_h);
+    /// The reported bug, replayed: a left-edge crop on Wayland, where the window
+    /// cannot move, so the handle stays put and every report carries the whole
+    /// gesture. Adding reports up clipped 5+10+15+… pixels; the clip has to
+    /// follow the pointer and nothing else.
+    #[test]
+    fn wayland_left_crop_follows_the_pointer_instead_of_accumulating() {
+        let s = start(7, (0, 0), (1006.0, 606.0), (0, 0, 1000, 600));
+        for step in 1..=10 {
+            let pointer = 5.0 * step as f32;
+            // Window never moves on Wayland; the left handle never moves with it.
+            let offset = pointer_offset(&s, (pointer, 0.0), (0, 0), (1006.0 - pointer, 606.0), 1.0);
+            let (l, t, r, b) = cropped(&s, (offset.0 as i32, 0), (1000, 600));
+            assert_eq!((l, t, r, b), (pointer as i32, 0, 1000, 600), "step {step}");
+        }
+    }
 
-    let border = c.get_border_len();
-    c.set_outer_w(clip_w as f32 / sf + border * 2.0);
-    c.set_outer_h(clip_h as f32 / sf + border * 2.0);
-    let ax = c.get_crop_anchor_x();
-    let ay = c.get_crop_anchor_y();
-    c.window()
-        .set_position(PhysicalPosition::new(ax + left, ay + top));
+    /// Windows and X11: the window follows a left-edge drag, so the handle
+    /// moves under the pointer and reports only what is left over. The result
+    /// must be the same pointer-driven size as on Wayland.
+    #[test]
+    fn following_window_left_resize_tracks_the_pointer() {
+        let sf = 2.0;
+        let s = start(7, (100, 100), (200.0, 150.0), (0, 0, 0, 0));
+        let (mut pos, mut size) = (s.pos, s.size);
+        for step in 1..=8 {
+            let pointer = -4.0 * step as f32;
+            let moved = (pos.0 - s.pos.0) as f32 / sf;
+            let offset = pointer_offset(&s, (pointer - moved, 0.0), pos, size, sf);
+            let (p, z) = resized(&s, offset, sf, 16.0);
+            assert!((z.0 - (200.0 - pointer)).abs() < 1e-3, "step {step}: width {}", z.0);
+            (pos, size) = (p, z);
+        }
+    }
+
+    /// A right-edge handle rides along with the width on every platform.
+    #[test]
+    fn right_resize_subtracts_the_handles_own_travel() {
+        let s = start(3, (0, 0), (300.0, 200.0), (0, 0, 0, 0));
+        let mut size = s.size;
+        for step in 1..=6 {
+            let pointer = 7.0 * step as f32;
+            let travelled = size.0 - s.size.0;
+            let offset = pointer_offset(&s, (pointer - travelled, 0.0), (0, 0), size, 1.0);
+            let (_, z) = resized(&s, offset, 1.0, 16.0);
+            assert!((z.0 - (300.0 + pointer)).abs() < 1e-3, "step {step}");
+            size = z;
+        }
+    }
+
+    /// Dragging the left edge past the minimum must not slide the window: the
+    /// right edge stays where it was.
+    #[test]
+    fn minimum_size_keeps_the_opposite_edge_in_place() {
+        let sf = 1.5;
+        let s = start(7, (300, 40), (100.0, 100.0), (0, 0, 0, 0));
+        let min_log = MIN_OUTER_PHYS as f32 / sf;
+        let ((x, y), (w, _)) = resized(&s, (500.0, 0.0), sf, min_log);
+        assert_eq!(w, min_log);
+        assert_eq!(y, 40);
+        let right = x as f32 + w * sf;
+        assert!((right - (300.0 + 100.0 * sf)).abs() <= 1.0, "right edge moved to {right}");
+    }
+
+    /// A snip smaller than `CROP_MIN` cannot be cropped past itself.
+    #[test]
+    fn tiny_image_crop_stays_inside_the_image() {
+        for side in 0..8 {
+            let s = start(side, (0, 0), (16.0, 16.0), (0, 0, 10, 8));
+            for offset in [(-100, -100), (100, 100)] {
+                let (l, t, r, b) = cropped(&s, offset, (10, 8));
+                assert!(0 <= l && l < r && r <= 10, "side {side}: x {l}..{r}");
+                assert!(0 <= t && t < b && b <= 8, "side {side}: y {t}..{b}");
+            }
+        }
+    }
 }

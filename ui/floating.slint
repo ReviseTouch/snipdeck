@@ -1,8 +1,12 @@
 // Re-usable resize handle for floating snip corners/edges.
-// Reports cumulative (dx, dy) since press point — Rust applies geometry
-// changes, the on-screen handle then moves with the window, so the
-// reported delta naturally returns to ~0 between mouse movements (same
-// trick the drag-area uses for window moves).
+//
+// Reports (dx, dy): the pointer's offset since the press, measured from the
+// handle. That is NOT the pointer's offset on screen whenever the handle has
+// moved since — it rides along with the edge it sits on — and on Wayland the
+// left and top edges cannot move at all, because the client is not allowed to
+// place its own window. Rust therefore adds back how far the handle itself has
+// travelled and works from the geometry captured at `resize-start`, never
+// from the previous event (floating.rs, `ResizeStart`).
 component ResizeHandle inherits TouchArea {
     in property <int> side: 0;
     in property <bool> handles-visible: true;
@@ -121,6 +125,7 @@ export component FloatingWindow inherits Window {
     // as the selected snip (and highlight its border accordingly).
     callback pressed();
     // Resize: side index 0=NW, 1=N, 2=NE, 3=E, 4=SE, 5=S, 6=SW, 7=W.
+    callback resize-start(int);
     callback resize-delta(int, length, length);
     callback resize-end();
 
@@ -329,7 +334,7 @@ export component FloatingWindow inherits Window {
             y: -half-handle;
             mouse-cursor: nwse-resize;
             delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
-            started => { root.pressed(); root.resizing = true; }
+            started => { root.pressed(); root.resizing = true; root.resize-start(self.side); }
             ended => { root.resizing = false; root.resize-end(); }
         }
         ResizeHandle {
@@ -339,7 +344,7 @@ export component FloatingWindow inherits Window {
             y: -half-handle;
             mouse-cursor: ns-resize;
             delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
-            started => { root.pressed(); root.resizing = true; }
+            started => { root.pressed(); root.resizing = true; root.resize-start(self.side); }
             ended => { root.resizing = false; root.resize-end(); }
         }
         ResizeHandle {
@@ -349,7 +354,7 @@ export component FloatingWindow inherits Window {
             y: -half-handle;
             mouse-cursor: nesw-resize;
             delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
-            started => { root.pressed(); root.resizing = true; }
+            started => { root.pressed(); root.resizing = true; root.resize-start(self.side); }
             ended => { root.resizing = false; root.resize-end(); }
         }
         ResizeHandle {
@@ -359,7 +364,7 @@ export component FloatingWindow inherits Window {
             y: parent.height / 2 - half-handle;
             mouse-cursor: ew-resize;
             delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
-            started => { root.pressed(); root.resizing = true; }
+            started => { root.pressed(); root.resizing = true; root.resize-start(self.side); }
             ended => { root.resizing = false; root.resize-end(); }
         }
         ResizeHandle {
@@ -369,7 +374,7 @@ export component FloatingWindow inherits Window {
             y: parent.height - half-handle;
             mouse-cursor: nwse-resize;
             delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
-            started => { root.pressed(); root.resizing = true; }
+            started => { root.pressed(); root.resizing = true; root.resize-start(self.side); }
             ended => { root.resizing = false; root.resize-end(); }
         }
         ResizeHandle {
@@ -379,7 +384,7 @@ export component FloatingWindow inherits Window {
             y: parent.height - half-handle;
             mouse-cursor: ns-resize;
             delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
-            started => { root.pressed(); root.resizing = true; }
+            started => { root.pressed(); root.resizing = true; root.resize-start(self.side); }
             ended => { root.resizing = false; root.resize-end(); }
         }
         ResizeHandle {
@@ -389,7 +394,7 @@ export component FloatingWindow inherits Window {
             y: parent.height - half-handle;
             mouse-cursor: nesw-resize;
             delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
-            started => { root.pressed(); root.resizing = true; }
+            started => { root.pressed(); root.resizing = true; root.resize-start(self.side); }
             ended => { root.resizing = false; root.resize-end(); }
         }
         ResizeHandle {
@@ -399,7 +404,7 @@ export component FloatingWindow inherits Window {
             y: parent.height / 2 - half-handle;
             mouse-cursor: ew-resize;
             delta(s, dx, dy) => { root.resize-delta(s, dx, dy); }
-            started => { root.pressed(); root.resizing = true; }
+            started => { root.pressed(); root.resizing = true; root.resize-start(self.side); }
             ended => { root.resizing = false; root.resize-end(); }
         }
     }
