@@ -248,7 +248,8 @@ fn main() -> Result<(), slint::PlatformError> {
     // priority keeps the hook callback responsive.
     bump_process_priority();
 
-    // Same Win11 fade-in / window-tame infra as the eframe build.
+    // Windows: no open/close animation on our windows, floating snips kept
+    // out of the taskbar (no-op elsewhere; see window_tamer).
     window_tamer::start();
 
     let _ = paths::ensure_dirs();
@@ -335,7 +336,7 @@ fn main() -> Result<(), slint::PlatformError> {
         });
     }
 
-    let mut state = app::AppState::new(&main_window);
+    let mut state = app::AppState::new();
     state.wire_callbacks(&main_window);
     state.refresh_gallery(&main_window);
 

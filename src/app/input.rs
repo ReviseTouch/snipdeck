@@ -567,9 +567,9 @@ impl AppState {
                 match capture::capture_at(x, y) {
                     Ok(captured) => {
                         let area = captured.area;
-                        // Slint overlay covers exactly one monitor.
-                        // freeze_screen_during_snip is a TODO on the
-                        // Slint backend (Win32 backend had it).
+                        // The overlay covers exactly this monitor, live: a
+                        // Win+drag selects over the screen as it is. Frozen
+                        // snips arrive through `FreezeArm` instead.
                         if let Err(e) =
                             self.overlay.show_for_monitor(area, self.scale_factor, None)
                         {

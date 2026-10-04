@@ -1,12 +1,9 @@
-// Cross-platform snip-selector overlay.
+// The snip-selector overlay (see src/slint_overlay.rs).
 //
-// Sized & positioned by Rust to cover one monitor's screen rect. Sits
-// always-on-top, borderless, transparent. Draws a dim mask outside the
-// current selection rectangle plus a coloured border on the selection
-// itself, with a tiny W×H readout floating near the corner.
-//
-// NOT a hard replacement for `overlay.rs` (the Win32 layered window) —
-// kept alongside it so each platform can pick whichever it likes.
+// Covers one monitor: always-on-top, borderless, transparent — or showing the
+// frozen capture. Draws a dim mask outside the current selection rectangle
+// plus a coloured border on the selection itself, with a W×H readout near
+// the corner.
 export component OverlayWindow inherits Window {
     title: "SnipdeckOverlay";
     no-frame: true;

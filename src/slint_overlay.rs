@@ -1,23 +1,13 @@
-//! Cross-platform snip selector overlay (Slint).
+//! The snip selection overlay: one window over the monitor being captured,
+//! drawing the selection, the dimmed screen around it and the size readout.
 //!
-//! This is the cross-platform alternative to `overlay.rs` (which is a
-//! Win32 native layered window). On Mac & Linux X11 this is the path
-//! that works; on Wayland it works as long as the compositor honours
-//! `always-on-top` + transparent borderless windows.
-//!
-//! Mirror of the Win32 overlay's public surface, but tracks the
-//! per-monitor area Rust supplies. App code can switch backends by
-//! swapping which type it stores in `AppState`.
-//!
-//! Limitations vs the Win32 overlay:
-//!   - Not click-through. The overlay window receives mouse events;
-//!     since the snip drag is driven by the rdev global hook anyway,
-//!     this is usually fine — events reach both the overlay (ignored)
-//!     and the hook (used).
-//!   - No `freeze_screen_during_snip` mode yet (the Win32 path takes a
-//!     full snapshot and shows it underneath). For Slint we'd render
-//!     the captured RgbaImage as a background `Image` in the overlay;
-//!     left as a TODO.
+//! - Live or frozen. A snip started by Win+drag draws over the screen as it
+//!   is; a freeze-first snip (Win+Shift+Space, and every snip on Linux) shows
+//!   the captured image beneath, so what is selected is what will be saved.
+//! - On Windows the drag comes from the global mouse hook and the overlay only
+//!   draws. Elsewhere there is no such hook, so the overlay captures the drag
+//!   itself and feeds the very channel the hook feeds (`input_capture`): the
+//!   selection, crop and floating pipeline is the same either way.
 
 use std::cell::Cell;
 use std::rc::Rc;

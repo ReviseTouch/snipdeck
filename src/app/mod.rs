@@ -183,7 +183,7 @@ mod actions;
 mod gallery;
 
 impl AppState {
-    pub fn new(window: &MainWindow) -> Self {
+    pub fn new() -> Self {
         let settings = Settings::load();
         let gallery = GalleryState::load();
         let conversions = crate::snip::convert_legacy_pngs(&gallery.snips);
@@ -197,13 +197,8 @@ impl AppState {
             ),
         };
 
-        // The mouse trigger needs a way to wake the UI thread. We use
-        // Slint's invoke-from-event-loop mechanism inside `tick`, so the
-        // service can stay backend-agnostic; we just poll its channel.
-        let _ = window; // (unused for now, kept for symmetry)
-                        // Re-use the same service constructor signature as the eframe app:
-                        // it accepts an egui::Context purely to wake the UI; we pass a
-                        // dummy context-like by going through the alternate constructor.
+        // The hook backends wake the pump themselves; `tick` drains the
+        // channel.
         let mouse_trigger = MouseTriggerService::start_polling();
 
         let mut overlay = SlintOverlayManager::new();

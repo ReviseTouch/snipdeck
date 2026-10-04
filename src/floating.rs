@@ -5,7 +5,7 @@
 //! keyed by snip UUID. Position changes from drag are written back
 //! into `Snip::last_position` so they persist across sessions.
 
-use slint::{ComponentHandle, Image, LogicalPosition, PhysicalPosition, SharedPixelBuffer};
+use slint::{ComponentHandle, Image, PhysicalPosition, SharedPixelBuffer};
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -533,10 +533,6 @@ pub struct DrainResult {
     pub resize_ends: Vec<Uuid>,
     pub select_requests: Vec<Uuid>,
 }
-
-// Silence unused warning for symmetry with eframe build.
-#[allow(dead_code)]
-fn _logical_position_marker(_p: LogicalPosition) {}
 
 /// Smallest crop, in image pixels, on either axis.
 const CROP_MIN: i32 = 16;

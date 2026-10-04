@@ -1,13 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-fn default_freeze() -> bool {
-    false
-}
-
-fn default_live_overlay_migration() -> bool {
-    false
-}
-
 fn default_floating_in_taskbar() -> bool {
     false
 }
@@ -55,20 +47,6 @@ pub struct Settings {
     pub save_dir: PathBuf,
     pub default_format: String, // "png" | "jpg" | "bmp"
     pub border_color_active: [u8; 3],
-    pub border_color_inactive: [u8; 3],
-    pub selection_tint: [u8; 4], // RGBA for the dim overlay outside selection
-    pub include_border_on_save: bool,
-    pub include_border_on_clipboard: bool,
-    /// When true, the selection drag happens on a frozen snapshot of the
-    /// screen rather than the live desktop. Visually identical, but
-    /// eliminates compositor flicker and lets you capture moving content
-    /// without motion artefacts.
-    #[serde(default = "default_freeze")]
-    pub freeze_screen_during_snip: bool,
-    /// Internal one-shot migration: older builds defaulted to frozen
-    /// full-screen snapshots, which can visibly blink on Win11.
-    #[serde(default = "default_live_overlay_migration")]
-    pub live_overlay_default_migrated: bool,
     pub hotkey_snip: String,
     pub hotkey_snip_clip: String,
     pub hotkey_clip_only: String,
@@ -122,12 +100,6 @@ impl Default for Settings {
             save_dir: paths::default_save_dir(),
             default_format: "png".into(),
             border_color_active: [255, 138, 61], // Snipdeck orange
-            border_color_inactive: [136, 136, 136],
-            selection_tint: [0, 0, 0, 55],
-            include_border_on_save: false,
-            include_border_on_clipboard: false,
-            freeze_screen_during_snip: default_freeze(),
-            live_overlay_default_migrated: default_live_overlay_migration(),
             // Ctrl+Alt+Shift, not Ctrl+Shift: Ctrl+Shift+C is copy in every
             // terminal (GNOME Terminal, Ptyxis, Konsole, Windows Terminal) and
             // Ctrl+Shift+A/G are taken in browsers, and a global hotkey takes
@@ -164,20 +136,6 @@ impl Settings {
                 Self::default()
             }
         };
-        // Migrate older builds that wrote a very dark selection tint.
-        if s.selection_tint[3] > 100 {
-            s.selection_tint[3] = 55;
-        }
-        if s.border_color_active == [0, 200, 0] {
-            s.border_color_active = [255, 138, 61];
-        }
-        if s.border_color_inactive == [30, 100, 220] {
-            s.border_color_inactive = [136, 136, 136];
-        }
-        if !s.live_overlay_default_migrated {
-            s.freeze_screen_during_snip = false;
-            s.live_overlay_default_migrated = true;
-        }
         // The translate popup always needs at least one quick-pick pill.
         if s.translate_favs.is_empty() {
             s.translate_favs = default_translate_favs();
