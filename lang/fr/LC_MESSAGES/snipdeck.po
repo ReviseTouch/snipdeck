@@ -16,7 +16,7 @@ msgid "Snip + Clip"
 msgstr "Capture + Copier"
 
 msgid "Clip only"
-msgstr "Copier seul."
+msgstr "Presse-papiers uniquement"
 
 msgid "Close"
 msgstr "Fermer"
