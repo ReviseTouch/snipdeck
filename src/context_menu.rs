@@ -102,18 +102,6 @@ pub struct ContextMenuManager {
     /// leave the panel invisible forever.
     #[cfg(not(target_os = "windows"))]
     opened_at: std::cell::Cell<std::time::Instant>,
-    /// The input region last handed to the compositor, as `(x, y, w, h)`.
-    ///
-    /// `sync_to_window` runs every tick a menu is open — 125 times a second —
-    /// and `set_input_rects` is not cheap: it opens an event queue, asks the
-    /// display for a fresh `wl_registry` and blocks on a roundtrip. `wl_region`
-    /// gets destroyed afterwards but `wl_registry` cannot be: the protocol
-    /// gives it no destructor, so every one of those stayed on the connection
-    /// until the process exited. The region only ever changes when the panel
-    /// moves, so remembering the last one makes this the no-op the doc above
-    /// always claimed it was.
-    #[cfg(target_os = "linux")]
-    applied_region: std::cell::Cell<Option<(i32, i32, i32, i32)>>,
     /// True only when the open menu belongs to a floating snip, so the app loop
     /// dismisses it once that snip's window closes. False for a gallery-card
     /// menu, which has no floating window to track.
@@ -145,8 +133,6 @@ impl ContextMenuManager {
             anchored: Rc::new(std::cell::Cell::new(false)),
             #[cfg(not(target_os = "windows"))]
             opened_at: std::cell::Cell::new(std::time::Instant::now()),
-            #[cfg(target_os = "linux")]
-            applied_region: std::cell::Cell::new(None),
         }
     }
 
@@ -160,11 +146,7 @@ impl ContextMenuManager {
     ///
     /// Linux, not merely "not Windows": every step here answers a Wayland
     /// constraint — a fullscreen surface standing in for a positioned window,
-    /// a position the compositor will not reveal, an input region handing the
-    /// desktop its clicks back — and the body reaches into
-    /// `wayland_input_region`, which is itself Linux-only. Gated on
-    /// `not(windows)` it also compiled on macOS, where that module does not
-    /// exist and the whole dance answers a problem macOS does not have.
+    /// and a position the compositor will not reveal.
     #[cfg(target_os = "linux")]
     pub fn sync_to_window(&self) {
         let (Some(win), Some((ax, ay))) = (&self.window, self.pending_anchor) else {
@@ -204,45 +186,11 @@ impl ContextMenuManager {
             }
         }
 
-        // The surface covers the screen, so without this it would swallow every
-        // click on the desktop behind it. Confine input to the panel and let the
-        // rest through — the same mechanism panels and desktop widgets use, and
-        // the one that makes a single screen-sized surface viable as a host for
-        // floating snips.
-        // Until the pointer has reported in, the region has to be the WHOLE
-        // surface: confine it to the panel first and pointer motion elsewhere
-        // never reaches us, so the anchor could never be learned. Once anchored,
-        // it shrinks to the panel and the desktop becomes clickable again.
-        let rects = if self.anchored.get() {
-            vec![crate::wayland_input_region::InputRect {
-                x: win.get_menu_x() as i32,
-                y: win.get_menu_y() as i32,
-                w: mw as i32,
-                h: mh as i32,
-            }]
-        } else {
-            vec![crate::wayland_input_region::InputRect {
-                x: 0,
-                y: 0,
-                w: sw as i32,
-                h: sh as i32,
-            }]
-        };
-        let signature = rects
-            .first()
-            .map(|r| (r.x, r.y, r.w, r.h));
-        if self.applied_region.get() == signature {
-            return;
-        }
-        match crate::wayland_input_region::set_input_rects(win.window(), &rects) {
-            Ok(()) => {
-                self.applied_region.set(signature);
-                log::debug!("menu input region confined to the panel");
-            }
-            // Left uncached deliberately: a failure is worth retrying next
-            // tick, and until one succeeds the surface is fully clickable.
-            Err(e) => log::debug!("input region unavailable ({e:#}); surface stays fully clickable"),
-        }
+        // The whole surface keeps taking input, as a native menu does: the
+        // first click anywhere outside the panel lands on it and dismisses
+        // the menu (`surface-ta`). Confining input to the panel, as this once
+        // did, handed those clicks to the desktop behind instead — and then
+        // nothing could close the menu but choosing an item.
     }
 
     /// Build a fully-wired (but hidden, unpositioned) menu window. The picked/
@@ -395,15 +343,12 @@ impl ContextMenuManager {
             }
             self.pending_anchor = Some((x, y));
             self.anchored.set(false);
-            // A new menu (or a closed one) needs its region applied afresh;
-            // the cached signature belongs to the previous placement.
-            #[cfg(target_os = "linux")]
-            self.applied_region.set(None);
             self.opened_at.set(std::time::Instant::now());
             w.set_panel_visible(false);
         }
 
         w.show()?;
+        w.invoke_take_focus();
         self.window = Some(w);
         Ok(())
     }
@@ -427,10 +372,6 @@ impl ContextMenuManager {
         {
             self.pending_anchor = None;
             self.anchored.set(false);
-            // A new menu (or a closed one) needs its region applied afresh;
-            // the cached signature belongs to the previous placement.
-            #[cfg(target_os = "linux")]
-            self.applied_region.set(None);
         }
     }
 

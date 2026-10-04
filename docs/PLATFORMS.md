@@ -28,14 +28,14 @@ Wayland, the compositor family (`Compositor`), then answers in capabilities:
 |---|---|---|---|
 | `absolute_position` | ✅ | ✅ | ❌ |
 | `query_own_position` | ✅ | ✅ | ❌ |
-| `always_on_top` | ✅ | ✅ | ❌ |
-| `skip_taskbar` | ✅ | ❌ ¹ | ❌ |
-| `interactive_move` | — ² | ✅ | ✅ |
-| `input_region` | ❌ | ❌ | ✅ |
+| `interactive_move` | — ¹ | ✅ | ✅ |
 
-¹ The EWMH atoms exist; winit does not expose them.
-² Windows drives moves by repositioning on pointer deltas and never needs to
+¹ Windows drives moves by repositioning on pointer deltas and never needs to
 hand the drag to the window manager.
+
+Keeping a window above others and out of the taskbar are missing on Wayland
+too; nothing in the code branches on them, so they are not capabilities here.
+On GNOME the shell extension provides both (below).
 
 Detection keys on `WAYLAND_DISPLAY`, deliberately **not** `XDG_SESSION_TYPE`: a
 client started with the former unset inside a Wayland session talks X11 through

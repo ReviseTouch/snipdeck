@@ -32,10 +32,6 @@ mod pipewire_dl;
 #[cfg(target_os = "linux")]
 mod portal_hotkeys;
 mod pump;
-/// Raw Wayland input-region control. Linux-only: every other platform can
-/// place and stack its own windows and never needs this.
-#[cfg(target_os = "linux")]
-mod wayland_input_region;
 mod screen;
 mod settings;
 mod share;
@@ -168,8 +164,7 @@ fn main() -> Result<(), slint::PlatformError> {
     }
     // Linux: femtovg, installed the same way and for the same second reason —
     // `set_platform` is what unlocks `WinitWindowAccessor`, which the Wayland
-    // paths depend on for `drag_window()` and for reaching the raw `wl_surface`
-    // to set an input region.
+    // paths depend on for `drag_window()`.
     //
     // The renderer is NOT software here, and asking for it by that name was an
     // active bug: this line still said "winit-software" after the build moved to

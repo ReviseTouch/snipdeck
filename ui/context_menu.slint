@@ -199,6 +199,24 @@ export component ContextMenuWindow inherits Window {
     // rather than appearing centred and then jumping to it.
     in property <bool> panel-visible: true;
 
+    // Escape closes the menu, as it closes any menu. Rust focuses this on
+    // every open (`take-focus`).
+    esc := FocusScope {
+        width: 0px;
+        height: 0px;
+        key-pressed(event) => {
+            if (event.text == Key.Escape) {
+                root.dismissed();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    public function take-focus() {
+        esc.focus();
+    }
+
     // Anywhere on the surface that is not the panel dismisses. On Windows this
     // is the panel's own background (the window is menu-sized); on the
     // full-screen variant it is the rest of the screen, which is exactly the
