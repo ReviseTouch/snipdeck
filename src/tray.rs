@@ -161,10 +161,6 @@ pub fn is_main_window_shown() -> bool {
     }
 }
 
-#[cfg(not(target_os = "windows"))]
-pub fn is_main_window_shown() -> bool {
-    true
-}
 
 /// Trim the process working set when the window is hidden/minimized so RAM
 /// drops while Snipdeck sits in the tray. The pages move to the standby list

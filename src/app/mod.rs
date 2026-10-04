@@ -65,6 +65,10 @@ pub struct AppState {
 
     hotkey_service: Option<HotkeyService>,
     pub mouse_trigger: MouseTriggerService,
+    /// Whether the main window is on screen, as of the last tick — the
+    /// pump stays awake while it is (`wants_awake`). Windows asks the OS.
+    #[cfg(not(target_os = "windows"))]
+    main_visible: bool,
     /// Snips from before WebP storage, being converted in the background; see
     /// `snip::convert_legacy_pngs`. `None` once there is nothing to convert.
     conversions: Option<crossbeam_channel::Receiver<crate::snip::Converted>>,
@@ -213,6 +217,8 @@ impl AppState {
             filters: GalleryFilters::default(),
             hotkey_service,
             mouse_trigger,
+            #[cfg(not(target_os = "windows"))]
+            main_visible: true,
             conversions,
             #[cfg(target_os = "linux")]
             bus_events: crate::bus_service::start(),
@@ -414,6 +420,10 @@ impl AppState {
         // Pull the current OS scale factor so floating windows opened
         // during this tick get sized correctly under HiDPI.
         self.scale_factor = window.window().scale_factor() as f32;
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.main_visible = window.window().is_visible();
+        }
 
         // 1. Drain UI action queue.
         let actions: Vec<Action> = ACTION_QUEUE.with(|q| {
@@ -799,15 +809,20 @@ impl AppState {
     /// OCR/translate results and floating-window interactions don't appear
     /// here — their producers/callbacks call [`crate::pump::wake`] instead.
     fn wants_awake(&self) -> bool {
-        // The wake sources are Windows-only (global hooks); elsewhere keep
-        // the pump always-on so nothing can strand the loop asleep.
-        #[cfg(not(target_os = "windows"))]
-        {
-            return true;
-        }
+        // Off Windows this used to answer `true` unconditionally, on the theory
+        // that only Windows' global hooks woke the pump — so a tray-idle
+        // Snipdeck ticked 125 times a second all day, a laptop battery's worth
+        // of wake-ups for nothing. Every Linux source does wake it: the portal
+        // hotkey listener, the tray thread, the bus service, the overlay, the
+        // floating windows, OCR, the colour picker, the PNG converter. What
+        // Linux lacked was a way to tell the main window was on screen; Slint
+        // knows, and `tick` records it.
         #[cfg(target_os = "windows")]
+        let main_shown = crate::tray::is_main_window_shown();
+        #[cfg(not(target_os = "windows"))]
+        let main_shown = self.main_visible;
         {
-            crate::tray::is_main_window_shown()
+            main_shown
                 || crate::mouse_trigger::snip_in_progress()
                 || self.color_picker.is_active()
                 // Secondary windows that run async work or animations of
@@ -827,6 +842,9 @@ impl AppState {
                 // now, nothing wakes it when the deadline passes and the snip
                 // never starts.
                 || self.pending_freeze_arm.is_some()
+                // The opt-in single-surface snip host syncs its input region
+                // every tick.
+                || self.floating.needs_ticks()
         }
     }
 }

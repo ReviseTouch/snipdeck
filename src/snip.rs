@@ -224,6 +224,10 @@ pub fn convert_legacy_pngs(snips: &[Snip]) -> Option<crossbeam_channel::Receiver
                 }
             }
             log::info!("converted {done} snips from PNG to lossless WebP");
+            // Once more after the channel closes, so the UI notices it is done
+            // (and refreshes) even if the pump went to sleep after the last one.
+            drop(tx);
+            crate::pump::wake();
         })
         .ok()?;
     Some(rx)

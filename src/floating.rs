@@ -609,6 +609,19 @@ impl FloatingManager {
             surface.sync();
         }
     }
+
+    /// Does the host need [`FloatingManager::sync`] every tick? Only the
+    /// single-surface host does; real windows wake the pump themselves.
+    pub fn needs_ticks(&self) -> bool {
+        #[cfg(target_os = "linux")]
+        {
+            self.surface.is_some()
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            false
+        }
+    }
 }
 
 pub struct DrainResult {
