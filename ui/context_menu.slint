@@ -182,8 +182,18 @@ export component ContextMenuWindow inherits Window {
     in property <length> outer-w: root.menu-w;
     in property <length> outer-h: root.menu-h;
 
-    width: outer-w;
-    height: outer-h;
+    // Windows pins the window to the menu. Wayland must let the compositor
+    // size it: GNOME maximises a screen-sized window into the work area, and
+    // pinned to the screen's size the surface ran under the top bar and off
+    // the bottom, taking the foot of a menu opened near it along. Unpinned,
+    // it takes what it is given and `sync_to_window` follows.
+    in property <bool> pinned: true;
+    preferred-width: outer-w;
+    preferred-height: outer-h;
+    min-width: root.pinned ? outer-w : 0px;
+    min-height: root.pinned ? outer-h : 0px;
+    max-width: root.pinned ? outer-w : 100000px;
+    max-height: root.pinned ? outer-h : 100000px;
 
     // Where the pointer is, in surface-local coordinates.
     //

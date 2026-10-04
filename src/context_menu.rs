@@ -198,6 +198,8 @@ impl ContextMenuManager {
     /// window serves any snip — only the target id and position change per open.
     fn make_window(&self) -> Result<ContextMenuWindow, slint::PlatformError> {
         let w = ContextMenuWindow::new()?;
+        #[cfg(not(target_os = "windows"))]
+        w.set_pinned(false);
         let shared_pick = self.shared.clone();
         let target_for_pick = self.target.clone();
         let weak_for_pick = w.as_weak();

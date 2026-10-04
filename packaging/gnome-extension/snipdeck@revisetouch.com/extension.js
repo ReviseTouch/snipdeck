@@ -66,6 +66,20 @@ const WM_CLASS = 'snipdeck';
 const SNIP_TITLE = 'SnipdeckFloating';
 
 /**
+ * Windows that open ON a snip, and so have to sit above the snips too.
+ *
+ * Raising the snips alone put them in a layer of their own, and these stayed
+ * in the ordinary one below it: a snip's right-click menu opened underneath
+ * any other snip it overlapped, half its items out of reach. Raised, not
+ * placed and not stuck — each one is shown where it is needed and goes away.
+ */
+const ABOVE_TITLES = new Set([
+    'SnipdeckContextMenu',
+    'SnipdeckColorResult',
+    'SnipdeckTranslate',
+]);
+
+/**
  * Word in the title asking for this snip to be left in the window lists.
  *
  * The app's "show floating snips in the taskbar" setting, carried across. On
@@ -793,7 +807,18 @@ export default class SnipdeckExtension extends Extension {
      * Returns true once handled, so callers can stop waiting.
      */
     _adopt(window) {
-        if (!window || !this._isOurs(window))
+        if (!window)
+            return false;
+
+        // Before `_isOurs`, which a Wayland window without a snip's title
+        // never passes.
+        if (ABOVE_TITLES.has(window.get_title() ?? '')) {
+            this._raise(window);
+            this._applyWhenPlaced(window);
+            return true;
+        }
+
+        if (!this._isOurs(window))
             return false;
 
         const title = window.get_title();
@@ -819,6 +844,55 @@ export default class SnipdeckExtension extends Extension {
         this._applyWhenPlaced(window);
 
         return true;
+    }
+
+    /**
+     * Into the snips' layer, and to the top of it.
+     *
+     * The menu covers the screen (see `context_menu.rs`), and GNOME maximises
+     * a window that size on its first map. Mutter keeps a maximised window in
+     * the normal layer whatever its "above" state says, so `make_above` was
+     * accepted and did nothing. Measured: the menu reported above=true,
+     * maximized=true, layer NORMAL, under the snips in TOP. So the maximise is
+     * undone and the window given the same work-area rectangle by hand — the
+     * menu finds the pointer in its own surface and sizes itself to what it
+     * gets, so the panel still opens at the cursor and stays on screen.
+     */
+    _raise(window) {
+        if (this._isMaximized(window)) {
+            this._unmaximize(window);
+            const area = window.get_work_area_current_monitor();
+            window.move_resize_frame(true, area.x, area.y, area.width, area.height);
+        }
+        // Off and on: Mutter recomputes the layer only when the state changes,
+        // and this window was already marked above while it was maximised.
+        window.unmake_above();
+        window.make_above();
+        window.raise();
+    }
+
+    /** GNOME 49 replaced the per-direction flags with a yes/no. */
+    _isMaximized(window) {
+        try {
+            if (typeof window.is_maximized === 'function')
+                return window.is_maximized();
+            return window.get_maximized() !== 0;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    _unmaximize(window) {
+        try {
+            window.unmaximize();
+        } catch (_) {
+            // GNOME 45–48: the directions are an argument.
+            try {
+                window.unmaximize(Meta.MaximizeFlags.BOTH);
+            } catch (e) {
+                log(`snipdeck: could not unmaximize: ${e.message}`);
+            }
+        }
     }
 
     /** Above, on every workspace, and where it was captured. */
@@ -866,6 +940,8 @@ export default class SnipdeckExtension extends Extension {
                 this._apply(window, title);
                 // A Super+Alt snip's outline has been waiting for exactly this.
                 this._gesture?.snipShown();
+            } else if (ABOVE_TITLES.has(title ?? '')) {
+                this._raise(window);
             }
         });
     }
