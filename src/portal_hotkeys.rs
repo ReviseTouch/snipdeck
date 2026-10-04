@@ -327,6 +327,14 @@ mod tests {
     }
 
     #[test]
+    fn translates_the_default_ctrl_alt_shift_letter() {
+        assert_eq!(
+            to_portal_trigger("CtrlAltShift+A").as_deref(),
+            Some("CTRL+ALT+SHIFT+a")
+        );
+    }
+
+    #[test]
     fn translates_win_alt_letter() {
         assert_eq!(to_portal_trigger("WinAlt+H").as_deref(), Some("LOGO+ALT+h"));
     }

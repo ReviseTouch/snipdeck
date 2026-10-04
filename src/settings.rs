@@ -125,11 +125,15 @@ impl Default for Settings {
             include_border_on_clipboard: false,
             freeze_screen_during_snip: default_freeze(),
             live_overlay_default_migrated: default_live_overlay_migration(),
-            hotkey_snip: "CtrlShift+A".into(),
-            hotkey_snip_clip: "CtrlShift+C".into(),
-            hotkey_clip_only: "CtrlShift+X".into(),
+            // Ctrl+Alt+Shift, not Ctrl+Shift: Ctrl+Shift+C is copy in every
+            // terminal (GNOME Terminal, Ptyxis, Konsole, Windows Terminal) and
+            // Ctrl+Shift+A/G are taken in browsers, and a global hotkey takes
+            // the combination away from every application while Snipdeck runs.
+            hotkey_snip: "CtrlAltShift+A".into(),
+            hotkey_snip_clip: "CtrlAltShift+C".into(),
+            hotkey_clip_only: "CtrlAltShift+X".into(),
             hotkey_toggle_visibility: "WinAlt+H".into(),
-            hotkey_gallery: "CtrlShift+G".into(),
+            hotkey_gallery: "CtrlAltShift+G".into(),
             floating_in_taskbar: default_floating_in_taskbar(),
             dark_theme: default_dark_theme(),
             translate_target: default_translate_target(),
@@ -179,6 +183,19 @@ impl Settings {
         // new combo (a user who chose a different value of their own is left be).
         if s.hotkey_toggle_visibility == "CtrlShift+H" {
             s.hotkey_toggle_visibility = "WinAlt+H".into();
+        }
+        // The capture and gallery hotkeys moved off Ctrl+Shift for the same
+        // reason (see `Default`): anyone still on the old defaults gets the new
+        // ones, and a combination someone chose themselves is left alone.
+        for (field, old, new) in [
+            (&mut s.hotkey_snip, "CtrlShift+A", "CtrlAltShift+A"),
+            (&mut s.hotkey_snip_clip, "CtrlShift+C", "CtrlAltShift+C"),
+            (&mut s.hotkey_clip_only, "CtrlShift+X", "CtrlAltShift+X"),
+            (&mut s.hotkey_gallery, "CtrlShift+G", "CtrlAltShift+G"),
+        ] {
+            if field == old {
+                *field = new.into();
+            }
         }
         s
     }
@@ -232,6 +249,16 @@ mod tests {
         let s: Settings = serde_json::from_str(r#"{"imgur_client_id": "abc"}"#).unwrap();
         assert_eq!(s.imgur_client_id, "abc");
         assert_eq!(s.hotkey_snip, Settings::default().hotkey_snip);
+    }
+
+    /// The old defaults took Ctrl+Shift+C — copy in every terminal — away
+    /// from every application.
+    #[test]
+    fn defaults_stay_off_terminal_and_browser_shortcuts() {
+        let s = Settings::default();
+        for hotkey in [&s.hotkey_snip, &s.hotkey_snip_clip, &s.hotkey_clip_only, &s.hotkey_gallery] {
+            assert!(hotkey.starts_with("CtrlAltShift+"), "{hotkey}");
+        }
     }
 
     #[test]

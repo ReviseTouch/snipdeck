@@ -95,12 +95,14 @@ Besides `Win` + drag, Snipdeck registers five configurable global hotkeys:
 | Hotkey | Action |
 | --- | --- |
 | `Win`+`Alt`+`H` | Show / hide all on-screen snips |
-| `Ctrl`+`Shift`+`A` | New snip |
-| `Ctrl`+`Shift`+`C` | New snip **and** copy to clipboard |
-| `Ctrl`+`Shift`+`X` | Clipboard only |
-| `Ctrl`+`Shift`+`G` | Open the gallery |
+| `Ctrl`+`Alt`+`Shift`+`A` | New snip |
+| `Ctrl`+`Alt`+`Shift`+`C` | New snip **and** copy to clipboard |
+| `Ctrl`+`Alt`+`Shift`+`X` | Clipboard only |
+| `Ctrl`+`Alt`+`Shift`+`G` | Open the gallery |
 
-Change them with the `hotkey_*` keys in `settings.json`.
+Change them with the `hotkey_*` keys in `settings.json`. On Wayland the
+desktop owns global shortcuts: these are only proposed on first launch, and you
+change them in your desktop's keyboard settings afterwards.
 
 ---
 
