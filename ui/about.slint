@@ -21,15 +21,19 @@ component LinkButton inherits Rectangle {
         ? (root.accent ? #0a6fe0 : #3a3a3d)
         : (root.accent ? (ta.has-hover ? #2a93ff : #0a84ff) : (ta.has-hover ? #303033 : #232326));
     animate background { duration: 80ms; }
-    Text {
-        text: root.label;
-        color: root.accent ? #ffffff : #e8e6e2;
-        font-size: 13px;
-        font-weight: 600;
-        horizontal-alignment: center;
-        vertical-alignment: center;
-        width: 100%;
-        height: 100%;
+    // In a layout, so the pill grows with its label: a fixed-width pill held
+    // "Visit ReviseTouch" in English and let longer translations overflow it.
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        Text {
+            text: root.label;
+            color: root.accent ? #ffffff : #e8e6e2;
+            font-size: 13px;
+            font-weight: 600;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
     }
     ta := TouchArea {
         clicked => { root.clicked(); }
