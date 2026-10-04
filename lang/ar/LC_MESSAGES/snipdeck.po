@@ -52,9 +52,6 @@ msgstr "مسح جميع اللقطات"
 msgid "Toggle light / dark theme"
 msgstr "تبديل المظهر الفاتح / الداكن"
 
-msgid "Settings"
-msgstr "الإعدادات"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "الحالة"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "ديسمبر"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "الشاشة"
 
 msgid "window"
 msgstr "نافذة"
@@ -356,12 +351,6 @@ msgstr "فشل فتح القائمة: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "فشل إعادة فتح النافذة العائمة: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "نافذة الإعدادات غير جاهزة بعد."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "لقطة زر التشغيل غير مربوطة في منفذ Slint بعد — اسحب باستخدام Win+LMouse."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "فشل النسخ إلى الحافظة: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — رفع"
 msgid "Upload failed:\r\n{err}"
 msgstr "فشل الرفع:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "لم يتم تكوين Imgur Client-ID — تعذّر الرفع.\r\n\r\n1) احصل على Client-ID مجاني:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) أضفه إلى هذا الملف:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) أعد تشغيل Snipdeck."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — مطلوب Imgur Client-ID"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "ستُرفع هذه الصورة إلى الإنترنت — \"Imgur\" (بشكل مجهول).\r\n\r\n• لن تظهر على الصفحة الرئيسية لـ Imgur / المعرض (مخفية، غير مُدرجة).\r\n• لكن أي شخص لديه الرابط الناتج يمكنه فتح الصورة.\r\n• الصورة غير مشفرة.\r\n• لا تقم برفع محتوى حساس كالمعرّفات أو كلمات المرور أو الرسائل الخاصة.\r\n\r\nعند النجاح يُنسخ الرابط إلى الحافظة.\r\n\r\nرفع؟"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "ستُرفع هذه الصورة إلى الإنترنت — \"catbox.moe\".\r\n\r\n• لن تظهر في أي معرض عام / بحث (غير مُدرجة).\r\n• لكن أي شخص لديه الرابط الناتج يمكنه فتح الصورة.\r\n• نظرًا لرفعها بشكل مجهول، لا يمكنك حذفها بنفسك لاحقًا.\r\n• الصورة غير مشفرة.\r\n• لا تقم برفع محتوى حساس كالمعرّفات أو كلمات المرور أو الرسائل الخاصة.\r\n\r\nعند النجاح يُنسخ الرابط إلى الحافظة.\r\n\r\nرفع؟"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — رفع إلى الإنترنت"
@@ -455,3 +435,193 @@ msgstr "ارسم"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "حجم الصورة المصغّرة — صغير / متوسط / كبير"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "أداة سريعة ومجانية ومفتوحة المصدر لالتقاط لقطات الشاشة على Windows و Linux."
+
+msgid "About Snipdeck"
+msgstr "حول Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "أضف لقطتين على الأقل لإنشاء كولاج."
+
+msgid "Asked once; your answer is remembered."
+msgstr "يُطرح السؤال مرة واحدة؛ وتُحفظ إجابتك."
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "التقط منطقة من الشاشة باستخدام Super + Alt + السحب."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "التقط منطقة من الشاشة بزر «جديد» أو باختصار لوحة المفاتيح."
+
+msgid "Collage"
+msgstr "كولاج"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "منتقي الألوان غير متاح: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "ادمج عدة لقطات في كولاج واحد"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "انسخ صورة اللقطة إلى الحافظة"
+
+msgid "Crop by dragging the edges inward"
+msgstr "قُصّ بسحب الحواف إلى الداخل"
+
+msgid "Delete all {} snips?"
+msgstr "حذف جميع اللقطات ({})؟"
+
+msgid "Delete the snip permanently"
+msgstr "حذف اللقطة نهائيًا"
+
+msgid "Delete {} unpinned snips?"
+msgstr "حذف اللقطات غير المثبتة ({})؟"
+
+msgid "Discard"
+msgstr "تجاهل"
+
+msgid "Discard your annotations?"
+msgstr "تجاهل التعليقات التوضيحية؟"
+
+msgid "Draw and mark up the snip"
+msgstr "ارسم وضع علامات على اللقطة"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "ستُحذف كل اللقطات، بما فيها المثبتة. تُحذف الصور من القرص ولا يمكن استعادتها."
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "سيُفقد كل ما رُسم منذ فتح المحرر."
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "فشل فتح محرر التعليقات التوضيحية: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "فشل فتح الكولاج: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "فشل فتح النافذة: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "فشل قراءة الصورة: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "فشل حفظ اللقطة: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "أنهِ التعليق التوضيحي المفتوح أو ألغِه قبل بدء تعليق آخر."
+
+msgid "Flip horizontally"
+msgstr "قلب أفقيًا"
+
+msgid "Flip vertically"
+msgstr "قلب عموديًا"
+
+msgid "Gap"
+msgstr "التباعد"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "إخفاء من الشاشة (تبقى في المعرض)"
+
+msgid "Hover an item to see what it does"
+msgstr "مرّر المؤشر فوق عنصر لمعرفة وظيفته"
+
+msgid "Keep editing"
+msgstr "متابعة التحرير"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "من صنع ReviseTouch — نطوّر أدوات للمطورين ومنتجات ذكاء اصطناعي."
+
+msgid "New email with the snip attached"
+msgstr "بريد إلكتروني جديد مع إرفاق اللقطة"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "تقرأ ميزة OCR + ترجمة النص في هذه اللقطة على جهازك، ثم ترسل هذا النص — وليس الصورة — إلى Google Translate (translate.googleapis.com). لا شيء آخر في Snipdeck يرسل أي شيء دون أن يسألك."
+
+msgid "Open in the system image editor"
+msgstr "فتح في محرر الصور الخاص بالنظام"
+
+msgid "Open the main Snipdeck window"
+msgstr "فتح نافذة Snipdeck الرئيسية"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "التقط لونًا من أي مكان على الشاشة — تتبع عدسة مكبّرة المؤشر، انقر لأخذ اللون"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "التقط لونًا من هذه اللقطة باستخدام العدسة المكبّرة"
+
+msgid "Pick color"
+msgstr "انتقاء لون"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "اختر صورًا من الشريط أدناه لإنشاء كولاج"
+
+msgid "Picked color"
+msgstr "اللون المنتقى"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "تبقى اللقطات المثبتة. تُحذف الصور من القرص ولا يمكن استعادتها."
+
+msgid "Read the text in the image and copy it"
+msgstr "تعرّف على النص في الصورة وانسخه"
+
+msgid "Read the text, then translate it"
+msgstr "تعرّف على النص ثم ترجمه"
+
+msgid "Resize with the corner handles"
+msgstr "غيّر الحجم بمقابض الزوايا"
+
+msgid "Rotate 180°"
+msgstr "تدوير 180°"
+
+msgid "Rotate 90° left"
+msgstr "تدوير 90° لليسار"
+
+msgid "Rotate 90° right"
+msgstr "تدوير 90° لليمين"
+
+msgid "Round"
+msgstr "الاستدارة"
+
+msgid "Run as administrator"
+msgstr "تشغيل كمسؤول"
+
+msgid "Send"
+msgstr "إرسال"
+
+msgid "Send the text to Google?"
+msgstr "إرسال النص إلى Google؟"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "تعذّرت قراءة الإعدادات وأُعيد تعيينها. تم الاحتفاظ بالملف القديم باسم {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "مشاركة عبر لوحة المشاركة في Windows"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "يتطلب الالتقاط وصولًا إلى المؤشر لا تمنحه هذه الجلسة."
+
+msgid "Support"
+msgstr "الدعم"
+
+msgid "Take a new snip"
+msgstr "التقط لقطة جديدة"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "التقط لقطة جديدة — أو اسحب منطقة باستخدام Super + Alt"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "يتطلب منتقي الألوان وصولًا إلى المؤشر لا تمنحه هذه الجلسة."
+
+msgid "Upload to an image host, copy the link"
+msgstr "ارفع إلى خدمة استضافة صور وانسخ الرابط"
+
+msgid "Version"
+msgstr "الإصدار"
+
+msgid "Visit ReviseTouch"
+msgstr "زيارة ReviseTouch"
+
+msgid "eyedropper"
+msgstr "قطّارة"

@@ -57,9 +57,6 @@ msgstr ""
 msgid "Toggle light / dark theme"
 msgstr ""
 
-msgid "Settings"
-msgstr ""
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr ""
@@ -324,8 +321,6 @@ msgid "Dec"
 msgstr ""
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr ""
 
 msgid "window"
 msgstr ""
@@ -360,12 +355,6 @@ msgid "Failed to open menu: {e}"
 msgstr ""
 
 msgid "Failed to reopen floating window: {e}"
-msgstr ""
-
-msgid "The settings window isn't ready yet."
-msgstr ""
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
 msgstr ""
 
 msgid "Failed to copy to clipboard: {e}"
@@ -417,16 +406,7 @@ msgstr ""
 msgid "Upload failed:\r\n{err}"
 msgstr ""
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr ""
-
 msgid "Snipdeck — Imgur Client-ID required"
-msgstr ""
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr ""
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
 msgstr ""
 
 msgid "Snipdeck — Upload to the internet"

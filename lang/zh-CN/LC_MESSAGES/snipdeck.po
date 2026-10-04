@@ -52,9 +52,6 @@ msgstr "清除所有截图"
 msgid "Toggle light / dark theme"
 msgstr "切换浅色/深色主题"
 
-msgid "Settings"
-msgstr "设置"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "状态"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "12月"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "显示器"
 
 msgid "window"
 msgstr "窗口"
@@ -356,12 +351,6 @@ msgstr "菜单打开失败：{e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "悬浮窗口重新打开失败：{e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "设置窗口尚未就绪。"
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "按钮触发截图在 Slint 版本中尚未接入 — 请使用 Win+LMouse 拖拽截图。"
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "复制到剪贴板失败：{e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — 上传"
 msgid "Upload failed:\r\n{err}"
 msgstr "上传失败：\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "未配置 Imgur Client-ID — 无法上传。\r\n\r\n1) 获取免费 Client-ID：\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) 将其添加到此文件：\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) 重启 Snipdeck。"
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — 需要 Imgur Client-ID"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "此图片将上传至互联网 — \"Imgur\"（匿名）。\r\n\r\n• 图片不会出现在 Imgur 首页/图库中（隐藏，未列出）。\r\n• 但任何拥有链接的人均可查看此图片。\r\n• 图片未经加密。\r\n• 请勿上传敏感内容，例如证件、密码或私信。\r\n\r\n上传成功后，链接将自动复制到剪贴板。\r\n\r\n确认上传？"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "此图片将上传至互联网 — \"catbox.moe\"。\r\n\r\n• 图片不会出现在任何公开图库/搜索结果中（未列出）。\r\n• 但任何拥有链接的人均可查看此图片。\r\n• 由于是匿名上传，您事后将无法自行删除。\r\n• 图片未经加密。\r\n• 请勿上传敏感内容，例如证件、密码或私信。\r\n\r\n上传成功后，链接将自动复制到剪贴板。\r\n\r\n确认上传？"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — 上传至互联网"
@@ -455,3 +435,193 @@ msgstr "绘制"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "缩略图大小 — 小 / 中 / 大"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "一款快速、免费、开源的 Windows 和 Linux 截图工具。"
+
+msgid "About Snipdeck"
+msgstr "关于 Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "至少添加两张截图才能制作拼图。"
+
+msgid "Asked once; your answer is remembered."
+msgstr "仅询问一次，您的选择会被记住。"
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "按住 Super + Alt 拖拽可截取屏幕区域。"
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "使用“新建”按钮或热键截取屏幕区域。"
+
+msgid "Collage"
+msgstr "拼图"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "取色器不可用：{e}"
+
+msgid "Combine several snips into one collage"
+msgstr "将多张截图合并为一张拼图"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "将截图图像复制到剪贴板"
+
+msgid "Crop by dragging the edges inward"
+msgstr "向内拖拽边缘进行裁剪"
+
+msgid "Delete all {} snips?"
+msgstr "删除全部 {} 张截图？"
+
+msgid "Delete the snip permanently"
+msgstr "永久删除截图"
+
+msgid "Delete {} unpinned snips?"
+msgstr "删除 {} 张未固定的截图？"
+
+msgid "Discard"
+msgstr "放弃"
+
+msgid "Discard your annotations?"
+msgstr "放弃标注？"
+
+msgid "Draw and mark up the snip"
+msgstr "在截图上绘制和标注"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "所有截图都将被删除，包括已固定的截图。图片将从磁盘删除且无法恢复。"
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "自编辑器打开以来绘制的所有内容都将丢失。"
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "标注编辑器打开失败：{e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "拼图打开失败：{e}"
+
+msgid "Failed to open window: {e}"
+msgstr "窗口打开失败：{e}"
+
+msgid "Failed to read image: {e}"
+msgstr "图片读取失败：{e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "截图保存失败：{e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "请先完成或取消当前的标注，再开始新的标注。"
+
+msgid "Flip horizontally"
+msgstr "水平翻转"
+
+msgid "Flip vertically"
+msgstr "垂直翻转"
+
+msgid "Gap"
+msgstr "间距"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "从屏幕隐藏（保留在图库中）"
+
+msgid "Hover an item to see what it does"
+msgstr "将鼠标悬停在项目上可查看其功能"
+
+msgid "Keep editing"
+msgstr "继续编辑"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "由 ReviseTouch 打造 — 我们开发开发者工具和 AI 产品。"
+
+msgid "New email with the snip attached"
+msgstr "附带截图的新邮件"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "“OCR + 翻译”会在您的电脑上识别此截图中的文字，然后将这些文字（而非图片）发送到 Google 翻译 (translate.googleapis.com)。Snipdeck 的其他功能都不会在未经询问的情况下发送任何内容。"
+
+msgid "Open in the system image editor"
+msgstr "在系统图片编辑器中打开"
+
+msgid "Open the main Snipdeck window"
+msgstr "打开 Snipdeck 主窗口"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "从屏幕任意位置取色 — 放大镜跟随光标，单击即可取色"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "用放大镜从此截图中取色"
+
+msgid "Pick color"
+msgstr "取色"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "从下方托盘中选择图片来制作拼图"
+
+msgid "Picked color"
+msgstr "取色结果"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "已固定的截图将保留。图片将从磁盘删除且无法恢复。"
+
+msgid "Read the text in the image and copy it"
+msgstr "识别图片中的文字并复制"
+
+msgid "Read the text, then translate it"
+msgstr "识别文字，然后翻译"
+
+msgid "Resize with the corner handles"
+msgstr "使用角部拖拽手柄调整大小"
+
+msgid "Rotate 180°"
+msgstr "旋转 180°"
+
+msgid "Rotate 90° left"
+msgstr "向左旋转 90°"
+
+msgid "Rotate 90° right"
+msgstr "向右旋转 90°"
+
+msgid "Round"
+msgstr "圆角"
+
+msgid "Run as administrator"
+msgstr "以管理员身份运行"
+
+msgid "Send"
+msgstr "发送"
+
+msgid "Send the text to Google?"
+msgstr "将文字发送到 Google？"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "无法读取设置，已重置。旧文件已保存为 {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "通过 Windows 共享面板分享"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "截图需要指针访问权限，但当前会话未授予。"
+
+msgid "Support"
+msgstr "赞助"
+
+msgid "Take a new snip"
+msgstr "截取新图"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "截取新图 — 或按住 Super + Alt 拖拽选区"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "取色器需要指针访问权限，但当前会话未授予。"
+
+msgid "Upload to an image host, copy the link"
+msgstr "上传到图床并复制链接"
+
+msgid "Version"
+msgstr "版本"
+
+msgid "Visit ReviseTouch"
+msgstr "访问 ReviseTouch"
+
+msgid "eyedropper"
+msgstr "吸管"

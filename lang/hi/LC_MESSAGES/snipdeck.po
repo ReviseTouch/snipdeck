@@ -52,9 +52,6 @@ msgstr "सभी स्निप हटाएँ"
 msgid "Toggle light / dark theme"
 msgstr "लाइट / डार्क थीम बदलें"
 
-msgid "Settings"
-msgstr "सेटिंग्स"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "स्थिति"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "दिस"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Monitor"
 
 msgid "window"
 msgstr "विंडो"
@@ -356,12 +351,6 @@ msgstr "मेनू खोलने में विफल: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "फ्लोटिंग विंडो पुनः खोलने में विफल: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "सेटिंग्स विंडो अभी तैयार नहीं है।"
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "बटन से स्निप अभी Slint पोर्ट में नहीं जुड़ा है — Win+LMouse से खींचें।"
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "क्लिपबोर्ड पर कॉपी करने में विफल: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — अपलोड"
 msgid "Upload failed:\r\n{err}"
 msgstr "अपलोड विफल:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "कोई Imgur Client-ID कॉन्फ़िगर नहीं है — अपलोड नहीं हो सकता।\r\n\r\n1) मुफ़्त Client-ID प्राप्त करें:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) इस फ़ाइल में जोड़ें:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Snipdeck पुनः चालू करें।"
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Imgur Client-ID आवश्यक है"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "यह छवि इंटरनेट पर — \"Imgur\" (गुमनाम) पर अपलोड होगी।\r\n\r\n• यह Imgur होम पेज / गैलरी पर दिखाई नहीं देगी (छुपी, असूचीबद्ध)।\r\n• लेकिन जिसके पास भी लिंक होगा वह छवि खोल सकेगा।\r\n• छवि एन्क्रिप्टेड नहीं है।\r\n• पहचान पत्र, पासवर्ड या निजी संदेश जैसी संवेदनशील सामग्री अपलोड न करें।\r\n\r\nसफल होने पर लिंक आपके क्लिपबोर्ड पर कॉपी हो जाएगा।\r\n\r\nअपलोड करें?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "यह छवि इंटरनेट पर — \"catbox.moe\" पर अपलोड होगी।\r\n\r\n• यह किसी सार्वजनिक गैलरी / खोज में दिखाई नहीं देगी (असूचीबद्ध)।\r\n• लेकिन जिसके पास भी लिंक होगा वह छवि खोल सकेगा।\r\n• गुमनाम रूप से अपलोड होने के कारण, आप इसे बाद में स्वयं हटा नहीं सकते।\r\n• छवि एन्क्रिप्टेड नहीं है।\r\n• पहचान पत्र, पासवर्ड या निजी संदेश जैसी संवेदनशील सामग्री अपलोड न करें।\r\n\r\nसफल होने पर लिंक आपके क्लिपबोर्ड पर कॉपी हो जाएगा।\r\n\r\nअपलोड करें?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — इंटरनेट पर अपलोड करें"
@@ -455,3 +435,193 @@ msgstr "बनाएँ"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "थंबनेल आकार — Small / Medium / Large"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "Windows और Linux के लिए एक तेज़, मुफ़्त, ओपन-सोर्स स्क्रीन स्निपिंग टूल।"
+
+msgid "About Snipdeck"
+msgstr "Snipdeck के बारे में"
+
+msgid "Add at least two snips to make a collage."
+msgstr "कोलाज बनाने के लिए कम से कम दो स्निप जोड़ें।"
+
+msgid "Asked once; your answer is remembered."
+msgstr "केवल एक बार पूछा जाता है; आपका उत्तर याद रखा जाता है।"
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Super + Alt + ड्रैग से स्क्रीन का क्षेत्र कैप्चर करें।"
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "‘नया’ बटन या किसी हॉटकी से स्क्रीन का क्षेत्र कैप्चर करें।"
+
+msgid "Collage"
+msgstr "कोलाज"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "रंग चयनकर्ता उपलब्ध नहीं: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "कई स्निप को एक कोलाज में जोड़ें"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "स्निप की छवि क्लिपबोर्ड पर कॉपी करें"
+
+msgid "Crop by dragging the edges inward"
+msgstr "किनारों को अंदर खींचकर क्रॉप करें"
+
+msgid "Delete all {} snips?"
+msgstr "सभी {} स्निप हटाएँ?"
+
+msgid "Delete the snip permanently"
+msgstr "स्निप को स्थायी रूप से हटाएँ"
+
+msgid "Delete {} unpinned snips?"
+msgstr "{} अनपिन किए स्निप हटाएँ?"
+
+msgid "Discard"
+msgstr "छोड़ें"
+
+msgid "Discard your annotations?"
+msgstr "अपने एनोटेशन छोड़ दें?"
+
+msgid "Draw and mark up the snip"
+msgstr "स्निप पर ड्रॉ करें और निशान लगाएँ"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "सभी स्निप हट जाएँगे, पिन किए हुए भी। छवियाँ डिस्क से हटा दी जाती हैं और वापस नहीं लाई जा सकतीं।"
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "संपादक खुलने के बाद से बनाया गया सब कुछ खो जाएगा।"
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "एनोटेशन संपादक खोलने में विफल: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "कोलाज खोलने में विफल: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "विंडो खोलने में विफल: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "छवि पढ़ने में विफल: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "स्निप सहेजने में विफल: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "दूसरा शुरू करने से पहले खुला एनोटेशन पूरा या रद्द करें।"
+
+msgid "Flip horizontally"
+msgstr "क्षैतिज रूप से पलटें"
+
+msgid "Flip vertically"
+msgstr "लंबवत रूप से पलटें"
+
+msgid "Gap"
+msgstr "अंतराल"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "स्क्रीन से छुपाएँ (गैलरी में बना रहता है)"
+
+msgid "Hover an item to see what it does"
+msgstr "कोई आइटम क्या करता है, यह देखने के लिए उस पर होवर करें"
+
+msgid "Keep editing"
+msgstr "संपादन जारी रखें"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "ReviseTouch द्वारा निर्मित — हम डेवलपर टूल और AI उत्पाद बनाते हैं।"
+
+msgid "New email with the snip attached"
+msgstr "स्निप संलग्न करके नया ईमेल"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + अनुवाद इस स्निप का टेक्स्ट आपके कंप्यूटर पर पढ़ता है, फिर वह टेक्स्ट — छवि नहीं — Google Translate (translate.googleapis.com) को भेजता है। Snipdeck में और कुछ भी आपसे पूछे बिना कुछ नहीं भेजता।"
+
+msgid "Open in the system image editor"
+msgstr "सिस्टम के छवि संपादक में खोलें"
+
+msgid "Open the main Snipdeck window"
+msgstr "Snipdeck की मुख्य विंडो खोलें"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "स्क्रीन पर कहीं से भी रंग चुनें — एक मैग्निफ़ायर कर्सर के साथ चलता है, रंग लेने के लिए क्लिक करें"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "मैग्निफ़ायर से इस स्निप का रंग चुनें"
+
+msgid "Pick color"
+msgstr "रंग चुनें"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "कोलाज बनाने के लिए नीचे की ट्रे से छवियाँ चुनें"
+
+msgid "Picked color"
+msgstr "चुना गया रंग"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "पिन किए स्निप बने रहेंगे। छवियाँ डिस्क से हटा दी जाती हैं और वापस नहीं लाई जा सकतीं।"
+
+msgid "Read the text in the image and copy it"
+msgstr "छवि का टेक्स्ट पढ़ें और कॉपी करें"
+
+msgid "Read the text, then translate it"
+msgstr "टेक्स्ट पढ़ें, फिर उसका अनुवाद करें"
+
+msgid "Resize with the corner handles"
+msgstr "कोने के हैंडल से आकार बदलें"
+
+msgid "Rotate 180°"
+msgstr "180° घुमाएँ"
+
+msgid "Rotate 90° left"
+msgstr "90° बाएँ घुमाएँ"
+
+msgid "Rotate 90° right"
+msgstr "90° दाएँ घुमाएँ"
+
+msgid "Round"
+msgstr "गोलाई"
+
+msgid "Run as administrator"
+msgstr "व्यवस्थापक के रूप में चलाएँ"
+
+msgid "Send"
+msgstr "भेजें"
+
+msgid "Send the text to Google?"
+msgstr "टेक्स्ट Google को भेजें?"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "सेटिंग्स पढ़ी नहीं जा सकीं और रीसेट कर दी गईं। पुरानी फ़ाइल {path} के रूप में रखी गई है"
+
+msgid "Share via the Windows share sheet"
+msgstr "Windows शेयर शीट से साझा करें"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "स्निप लेने के लिए पॉइंटर एक्सेस चाहिए, जो यह सत्र नहीं देता।"
+
+msgid "Support"
+msgstr "सहायता"
+
+msgid "Take a new snip"
+msgstr "नया स्निप लें"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "नया स्निप लें — या Super + Alt से क्षेत्र खींचें"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "रंग चयनकर्ता को पॉइंटर एक्सेस चाहिए, जो यह सत्र नहीं देता।"
+
+msgid "Upload to an image host, copy the link"
+msgstr "इमेज होस्ट पर अपलोड करें, लिंक कॉपी करें"
+
+msgid "Version"
+msgstr "संस्करण"
+
+msgid "Visit ReviseTouch"
+msgstr "ReviseTouch पर जाएँ"
+
+msgid "eyedropper"
+msgstr "आईड्रॉपर"

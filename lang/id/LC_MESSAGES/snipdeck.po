@@ -52,9 +52,6 @@ msgstr "Hapus semua snip"
 msgid "Toggle light / dark theme"
 msgstr "Beralih tema terang / gelap"
 
-msgid "Settings"
-msgstr "Pengaturan"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "Status"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "Des"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Monitor"
 
 msgid "window"
 msgstr "jendela"
@@ -356,12 +351,6 @@ msgstr "Gagal membuka menu: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "Gagal membuka kembali jendela mengambang: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "Jendela pengaturan belum siap."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "Snip yang dipicu tombol belum tersambung di port Slint — seret dengan Win+LMouse."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "Gagal menyalin ke papan klip: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — Unggah"
 msgid "Upload failed:\r\n{err}"
 msgstr "Unggahan gagal:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "Imgur Client-ID belum dikonfigurasi — tidak dapat mengunggah.\r\n\r\n1) Dapatkan Client-ID gratis:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Tambahkan ke file ini:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Mulai ulang Snipdeck."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Imgur Client-ID diperlukan"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Gambar ini akan diunggah ke INTERNET — \"Imgur\" (anonim).\r\n\r\n• Gambar TIDAK akan muncul di halaman utama / galeri Imgur (tersembunyi, tidak terdaftar).\r\n• Namun siapa pun yang memiliki tautan tersebut dapat membuka gambar.\r\n• Gambar tidak dienkripsi.\r\n• JANGAN mengunggah konten SENSITIF seperti ID, kata sandi, atau pesan pribadi.\r\n\r\nJika berhasil, tautan disalin ke papan klip Anda.\r\n\r\nUnggah?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Gambar ini akan diunggah ke INTERNET — \"catbox.moe\".\r\n\r\n• Gambar TIDAK akan muncul di galeri / pencarian publik mana pun (tidak terdaftar).\r\n• Namun siapa pun yang memiliki tautan tersebut dapat membuka gambar.\r\n• Karena diunggah secara anonim, ANDA TIDAK DAPAT MENGHAPUSNYA sendiri nanti.\r\n• Gambar tidak dienkripsi.\r\n• JANGAN mengunggah konten SENSITIF seperti ID, kata sandi, atau pesan pribadi.\r\n\r\nJika berhasil, tautan disalin ke papan klip Anda.\r\n\r\nUnggah?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — Unggah ke internet"
@@ -455,3 +435,193 @@ msgstr "gambar"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "Ukuran thumbnail — Kecil / Sedang / Besar"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "Alat snip layar yang cepat, gratis, dan sumber terbuka untuk Windows dan Linux."
+
+msgid "About Snipdeck"
+msgstr "Tentang Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "Tambahkan setidaknya dua snip untuk membuat kolase."
+
+msgid "Asked once; your answer is remembered."
+msgstr "Hanya ditanyakan sekali; jawaban Anda akan diingat."
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Tangkap wilayah dari layar dengan Super + Alt + seret."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "Tangkap wilayah dari layar dengan tombol Baru atau tombol pintas."
+
+msgid "Collage"
+msgstr "Kolase"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "Pemilih warna tidak tersedia: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "Gabungkan beberapa snip menjadi satu kolase"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "Salin gambar snip ke papan klip"
+
+msgid "Crop by dragging the edges inward"
+msgstr "Potong dengan menyeret tepi ke dalam"
+
+msgid "Delete all {} snips?"
+msgstr "Hapus semua {} snip?"
+
+msgid "Delete the snip permanently"
+msgstr "Hapus snip secara permanen"
+
+msgid "Delete {} unpinned snips?"
+msgstr "Hapus {} snip yang tidak disematkan?"
+
+msgid "Discard"
+msgstr "Buang"
+
+msgid "Discard your annotations?"
+msgstr "Buang anotasi Anda?"
+
+msgid "Draw and mark up the snip"
+msgstr "Gambar dan tandai snip"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "Semua snip akan dihapus, termasuk yang disematkan. Gambar dihapus dari disk dan tidak dapat dipulihkan."
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "Semua yang digambar sejak editor dibuka akan hilang."
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "Gagal membuka editor anotasi: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "Gagal membuka kolase: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "Gagal membuka jendela: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "Gagal membaca gambar: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "Gagal menyimpan snip: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "Selesaikan atau batalkan anotasi yang terbuka sebelum memulai yang lain."
+
+msgid "Flip horizontally"
+msgstr "Balik horizontal"
+
+msgid "Flip vertically"
+msgstr "Balik vertikal"
+
+msgid "Gap"
+msgstr "Jarak"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "Sembunyikan dari layar (tetap di galeri)"
+
+msgid "Hover an item to see what it does"
+msgstr "Arahkan kursor ke item untuk melihat fungsinya"
+
+msgid "Keep editing"
+msgstr "Lanjut mengedit"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "Dibuat oleh ReviseTouch — kami membangun alat pengembang & produk AI."
+
+msgid "New email with the snip attached"
+msgstr "Email baru dengan lampiran snip"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + Terjemahkan membaca teks dalam snip ini di komputer Anda, lalu mengirim teks tersebut — bukan gambarnya — ke Google Terjemahan (translate.googleapis.com). Tidak ada bagian lain dari Snipdeck yang mengirim apa pun tanpa bertanya."
+
+msgid "Open in the system image editor"
+msgstr "Buka di editor gambar sistem"
+
+msgid "Open the main Snipdeck window"
+msgstr "Buka jendela utama Snipdeck"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "Ambil warna dari mana saja di layar — kaca pembesar mengikuti kursor, klik untuk mengambil"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "Ambil warna dari snip ini dengan kaca pembesar"
+
+msgid "Pick color"
+msgstr "Ambil warna"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "Pilih gambar dari baki di bawah untuk membuat kolase"
+
+msgid "Picked color"
+msgstr "Warna terpilih"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "Snip yang disematkan tetap ada. Gambar dihapus dari disk dan tidak dapat dipulihkan."
+
+msgid "Read the text in the image and copy it"
+msgstr "Baca teks dalam gambar dan salin"
+
+msgid "Read the text, then translate it"
+msgstr "Baca teks, lalu terjemahkan"
+
+msgid "Resize with the corner handles"
+msgstr "Ubah ukuran dengan pegangan sudut"
+
+msgid "Rotate 180°"
+msgstr "Putar 180°"
+
+msgid "Rotate 90° left"
+msgstr "Putar 90° ke kiri"
+
+msgid "Rotate 90° right"
+msgstr "Putar 90° ke kanan"
+
+msgid "Round"
+msgstr "Lengkung"
+
+msgid "Run as administrator"
+msgstr "Jalankan sebagai administrator"
+
+msgid "Send"
+msgstr "Kirim"
+
+msgid "Send the text to Google?"
+msgstr "Kirim teks ke Google?"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "Pengaturan tidak dapat dibaca dan telah diatur ulang. File lama disimpan sebagai {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "Bagikan melalui panel berbagi Windows"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "Snip memerlukan akses penunjuk yang tidak diberikan oleh sesi ini."
+
+msgid "Support"
+msgstr "Dukung"
+
+msgid "Take a new snip"
+msgstr "Ambil snip baru"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "Ambil snip baru — atau seret wilayah dengan Super + Alt"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "Pemilih warna memerlukan akses penunjuk yang tidak diberikan oleh sesi ini."
+
+msgid "Upload to an image host, copy the link"
+msgstr "Unggah ke host gambar, salin tautan"
+
+msgid "Version"
+msgstr "Versi"
+
+msgid "Visit ReviseTouch"
+msgstr "Kunjungi ReviseTouch"
+
+msgid "eyedropper"
+msgstr "pipet"

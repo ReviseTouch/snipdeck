@@ -52,9 +52,6 @@ msgstr "Alle knipsels verwijderen"
 msgid "Toggle light / dark theme"
 msgstr "Licht / donker thema wisselen"
 
-msgid "Settings"
-msgstr "Instellingen"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "Status"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "Dec"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Monitor"
 
 msgid "window"
 msgstr "venster"
@@ -356,12 +351,6 @@ msgstr "Menu openen mislukt: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "Zwevend venster heropenen mislukt: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "Het instellingenvenster is nog niet gereed."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "Knopgestuurde knipsels zijn nog niet gekoppeld in de Slint-poort — sleep met Win+LMouse."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "Kopiëren naar klembord mislukt: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — Uploaden"
 msgid "Upload failed:\r\n{err}"
 msgstr "Uploaden mislukt:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "Geen Imgur Client-ID ingesteld — uploaden niet mogelijk.\r\n\r\n1) Haal een gratis Client-ID op:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Voeg het toe aan dit bestand:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Herstart Snipdeck."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Imgur Client-ID vereist"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Deze afbeelding wordt geüpload naar het INTERNET — \"Imgur\" (anoniem).\r\n\r\n• De afbeelding verschijnt NIET op de Imgur-startpagina / galerij (verborgen, niet vermeld).\r\n• Maar iedereen met de link kan de afbeelding openen.\r\n• De afbeelding is niet versleuteld.\r\n• Upload GEEN GEVOELIGE inhoud zoals ID's, wachtwoorden of privéberichten.\r\n\r\nBij succes wordt de link naar uw klembord gekopieerd.\r\n\r\nUploaden?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Deze afbeelding wordt geüpload naar het INTERNET — \"catbox.moe\".\r\n\r\n• De afbeelding verschijnt NIET in een openbare galerij / zoekopdracht (niet vermeld).\r\n• Maar iedereen met de link kan de afbeelding openen.\r\n• Omdat de upload anoniem is, KUNT U HEM LATER NIET ZELF VERWIJDEREN.\r\n• De afbeelding is niet versleuteld.\r\n• Upload GEEN GEVOELIGE inhoud zoals ID's, wachtwoorden of privéberichten.\r\n\r\nBij succes wordt de link naar uw klembord gekopieerd.\r\n\r\nUploaden?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — Uploaden naar internet"
@@ -455,3 +435,193 @@ msgstr "tekenen"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "Miniatuurgrootte — Klein / Middel / Groot"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "Een snelle, gratis en opensource tool voor schermknipsels op Windows en Linux."
+
+msgid "About Snipdeck"
+msgstr "Over Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "Voeg minstens twee knipsels toe om een collage te maken."
+
+msgid "Asked once; your answer is remembered."
+msgstr "Wordt maar één keer gevraagd; je antwoord wordt onthouden."
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Maak een selectie van het scherm met Super + Alt + slepen."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "Maak een selectie van het scherm met de knop Nieuw of een sneltoets."
+
+msgid "Collage"
+msgstr "Collage"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "Kleurkiezer niet beschikbaar: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "Meerdere knipsels combineren tot één collage"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "Knipselafbeelding naar het klembord kopiëren"
+
+msgid "Crop by dragging the edges inward"
+msgstr "Bijsnijden door de randen naar binnen te slepen"
+
+msgid "Delete all {} snips?"
+msgstr "Alle {} knipsels verwijderen?"
+
+msgid "Delete the snip permanently"
+msgstr "Knipsel definitief verwijderen"
+
+msgid "Delete {} unpinned snips?"
+msgstr "{} niet-vastgezette knipsels verwijderen?"
+
+msgid "Discard"
+msgstr "Verwerpen"
+
+msgid "Discard your annotations?"
+msgstr "Annotaties verwerpen?"
+
+msgid "Draw and mark up the snip"
+msgstr "Tekenen en markeren op het knipsel"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "Alle knipsels verdwijnen, ook vastgezette. De afbeeldingen worden van de schijf verwijderd en kunnen niet worden hersteld."
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "Alles wat sinds het openen van de editor is getekend, gaat verloren."
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "Annotatie-editor openen mislukt: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "Collage openen mislukt: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "Venster openen mislukt: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "Afbeelding lezen mislukt: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "Knipsel opslaan mislukt: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "Voltooi of annuleer de open annotatie voordat je een nieuwe begint."
+
+msgid "Flip horizontally"
+msgstr "Horizontaal spiegelen"
+
+msgid "Flip vertically"
+msgstr "Verticaal spiegelen"
+
+msgid "Gap"
+msgstr "Afstand"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "Van scherm verbergen (blijft in de galerij)"
+
+msgid "Hover an item to see what it does"
+msgstr "Beweeg over een item om te zien wat het doet"
+
+msgid "Keep editing"
+msgstr "Verder bewerken"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "Gemaakt door ReviseTouch — wij bouwen ontwikkelaarstools en AI-producten."
+
+msgid "New email with the snip attached"
+msgstr "Nieuwe e-mail met het knipsel als bijlage"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + Vertalen leest de tekst in dit knipsel op je computer en stuurt daarna die tekst — niet de afbeelding — naar Google Translate (translate.googleapis.com). Niets anders in Snipdeck verstuurt iets zonder het te vragen."
+
+msgid "Open in the system image editor"
+msgstr "Openen in de afbeeldingseditor van het systeem"
+
+msgid "Open the main Snipdeck window"
+msgstr "Het Snipdeck-hoofdvenster openen"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "Een kleur kiezen waar dan ook op het scherm — een vergrootglas volgt de cursor, klik om over te nemen"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "Een kleur uit dit knipsel kiezen met het vergrootglas"
+
+msgid "Pick color"
+msgstr "Kleur kiezen"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "Kies afbeeldingen uit de balk hieronder om een collage te maken"
+
+msgid "Picked color"
+msgstr "Gekozen kleur"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "Vastgezette knipsels blijven. De afbeeldingen worden van de schijf verwijderd en kunnen niet worden hersteld."
+
+msgid "Read the text in the image and copy it"
+msgstr "De tekst in de afbeelding herkennen en kopiëren"
+
+msgid "Read the text, then translate it"
+msgstr "De tekst herkennen en daarna vertalen"
+
+msgid "Resize with the corner handles"
+msgstr "Formaat wijzigen met de hoekhandvatten"
+
+msgid "Rotate 180°"
+msgstr "180° draaien"
+
+msgid "Rotate 90° left"
+msgstr "90° naar links draaien"
+
+msgid "Rotate 90° right"
+msgstr "90° naar rechts draaien"
+
+msgid "Round"
+msgstr "Afronding"
+
+msgid "Run as administrator"
+msgstr "Als administrator uitvoeren"
+
+msgid "Send"
+msgstr "Verzenden"
+
+msgid "Send the text to Google?"
+msgstr "Tekst naar Google sturen?"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "Instellingen konden niet worden gelezen en zijn teruggezet. Het oude bestand is bewaard als {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "Delen via het Windows-deelvenster"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "Knippen vereist aanwijzertoegang die deze sessie niet verleent."
+
+msgid "Support"
+msgstr "Steunen"
+
+msgid "Take a new snip"
+msgstr "Nieuw knipsel maken"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "Nieuw knipsel maken — of sleep een gebied met Super + Alt"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "De kleurkiezer vereist aanwijzertoegang die deze sessie niet verleent."
+
+msgid "Upload to an image host, copy the link"
+msgstr "Uploaden naar een afbeeldingshost, link kopiëren"
+
+msgid "Version"
+msgstr "Versie"
+
+msgid "Visit ReviseTouch"
+msgstr "ReviseTouch bezoeken"
+
+msgid "eyedropper"
+msgstr "pipet"

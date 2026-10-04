@@ -52,9 +52,6 @@ msgstr "すべてのスニップを消去"
 msgid "Toggle light / dark theme"
 msgstr "ライト／ダークテーマを切替"
 
-msgid "Settings"
-msgstr "設定"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "ステータス"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "12月"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "モニター"
 
 msgid "window"
 msgstr "ウィンドウ"
@@ -356,12 +351,6 @@ msgstr "メニューを開けませんでした: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "フローティングウィンドウを再び開けませんでした: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "設定ウィンドウはまだ準備できていません。"
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "ボタンによるスニップはまだ Slint ポートに実装されていません — Win+LMouse でドラッグしてください。"
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "クリップボードへのコピーに失敗しました: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — アップロード"
 msgid "Upload failed:\r\n{err}"
 msgstr "アップロードに失敗しました:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "Imgur Client-ID が設定されていません — アップロードできません。\r\n\r\n1) 無料の Client-ID を取得してください:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) 次のファイルに追加してください:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Snipdeck を再起動してください。"
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Imgur Client-ID が必要です"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "この画像はインターネット上の「Imgur」（匿名）にアップロードされます。\r\n\r\n• Imgur のホームページ／ギャラリーには表示されません（非公開、非掲載）。\r\n• ただし、生成されたリンクを持っている人は誰でも画像を開くことができます。\r\n• 画像は暗号化されていません。\r\n• ID、パスワード、プライベートメッセージなどの機密コンテンツはアップロードしないでください。\r\n\r\n成功するとリンクがクリップボードにコピーされます。\r\n\r\nアップロードしますか？"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "この画像はインターネット上の「catbox.moe」にアップロードされます。\r\n\r\n• 公開ギャラリー／検索には表示されません（非掲載）。\r\n• ただし、生成されたリンクを持っている人は誰でも画像を開くことができます。\r\n• 匿名でアップロードされるため、後でご自身で削除することはできません。\r\n• 画像は暗号化されていません。\r\n• ID、パスワード、プライベートメッセージなどの機密コンテンツはアップロードしないでください。\r\n\r\n成功するとリンクがクリップボードにコピーされます。\r\n\r\nアップロードしますか？"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — インターネットへアップロード"
@@ -455,3 +435,193 @@ msgstr "描く"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "サムネイルのサイズ — 小 / 中 / 大"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "Windows と Linux 向けの、高速・無料・オープンソースな画面スニップツール。"
+
+msgid "About Snipdeck"
+msgstr "Snipdeck について"
+
+msgid "Add at least two snips to make a collage."
+msgstr "コラージュを作成するには、スニップを2つ以上追加してください。"
+
+msgid "Asked once; your answer is remembered."
+msgstr "確認は一度だけです。回答は記憶されます。"
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Super＋Alt＋ドラッグで画面の範囲をキャプチャします。"
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "「新規」ボタンまたはホットキーで画面の範囲をキャプチャします。"
+
+msgid "Collage"
+msgstr "コラージュ"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "カラーピッカーを使用できません: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "複数のスニップを1つのコラージュにまとめる"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "スニップ画像をクリップボードにコピー"
+
+msgid "Crop by dragging the edges inward"
+msgstr "端を内側にドラッグして切り抜き"
+
+msgid "Delete all {} snips?"
+msgstr "{} 件のスニップをすべて削除しますか？"
+
+msgid "Delete the snip permanently"
+msgstr "スニップを完全に削除"
+
+msgid "Delete {} unpinned snips?"
+msgstr "固定されていない {} 件のスニップを削除しますか？"
+
+msgid "Discard"
+msgstr "破棄"
+
+msgid "Discard your annotations?"
+msgstr "注釈を破棄しますか？"
+
+msgid "Draw and mark up the snip"
+msgstr "スニップに描画して注釈を付ける"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "固定済みのものも含め、すべてのスニップが削除されます。画像はディスクから削除され、復元できません。"
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "エディターを開いてから描いた内容はすべて失われます。"
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "注釈エディターを開けませんでした: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "コラージュを開けませんでした: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "ウィンドウを開けませんでした: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "画像の読み込みに失敗しました: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "スニップの保存に失敗しました: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "別の注釈を始める前に、開いている注釈を完了するかキャンセルしてください。"
+
+msgid "Flip horizontally"
+msgstr "左右反転"
+
+msgid "Flip vertically"
+msgstr "上下反転"
+
+msgid "Gap"
+msgstr "間隔"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "画面から非表示（ギャラリーには残ります）"
+
+msgid "Hover an item to see what it does"
+msgstr "項目にカーソルを合わせると説明が表示されます"
+
+msgid "Keep editing"
+msgstr "編集を続ける"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "ReviseTouch 製 — 開発者ツールと AI 製品を開発しています。"
+
+msgid "New email with the snip attached"
+msgstr "スニップを添付した新規メール"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "「OCR＋翻訳」は、このスニップ内のテキストをお使いのコンピューター上で読み取り、そのテキスト（画像ではありません）を Google 翻訳 (translate.googleapis.com) に送信します。Snipdeck のその他の機能が、確認なしに何かを送信することはありません。"
+
+msgid "Open in the system image editor"
+msgstr "システムの画像エディターで開く"
+
+msgid "Open the main Snipdeck window"
+msgstr "Snipdeck のメインウィンドウを開く"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "画面上のどこからでも色を取得 — 拡大鏡がカーソルに追従し、クリックで取得"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "拡大鏡でこのスニップから色を取得"
+
+msgid "Pick color"
+msgstr "色を取得"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "下のトレイから画像を選んでコラージュを作成"
+
+msgid "Picked color"
+msgstr "取得した色"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "固定済みのスニップは残ります。画像はディスクから削除され、復元できません。"
+
+msgid "Read the text in the image and copy it"
+msgstr "画像内のテキストを読み取ってコピー"
+
+msgid "Read the text, then translate it"
+msgstr "テキストを読み取って翻訳"
+
+msgid "Resize with the corner handles"
+msgstr "角のハンドルでサイズ変更"
+
+msgid "Rotate 180°"
+msgstr "180° 回転"
+
+msgid "Rotate 90° left"
+msgstr "左に 90° 回転"
+
+msgid "Rotate 90° right"
+msgstr "右に 90° 回転"
+
+msgid "Round"
+msgstr "角丸"
+
+msgid "Run as administrator"
+msgstr "管理者として実行"
+
+msgid "Send"
+msgstr "送信"
+
+msgid "Send the text to Google?"
+msgstr "テキストを Google に送信しますか？"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "設定を読み込めなかったため、リセットしました。古いファイルは {path} として保存されています"
+
+msgid "Share via the Windows share sheet"
+msgstr "Windows の共有機能で共有"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "スニップには、このセッションで許可されていないポインターへのアクセスが必要です。"
+
+msgid "Support"
+msgstr "支援"
+
+msgid "Take a new snip"
+msgstr "新しいスニップを撮影"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "新しいスニップを撮影 — または Super＋Alt で範囲をドラッグ"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "カラーピッカーには、このセッションで許可されていないポインターへのアクセスが必要です。"
+
+msgid "Upload to an image host, copy the link"
+msgstr "画像ホストにアップロードしてリンクをコピー"
+
+msgid "Version"
+msgstr "バージョン"
+
+msgid "Visit ReviseTouch"
+msgstr "ReviseTouch を訪問"
+
+msgid "eyedropper"
+msgstr "スポイト"

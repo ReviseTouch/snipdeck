@@ -52,9 +52,6 @@ msgstr "Xóa tất cả ảnh chụp"
 msgid "Toggle light / dark theme"
 msgstr "Chuyển giao diện sáng / tối"
 
-msgid "Settings"
-msgstr "Cài đặt"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "Trạng thái"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "Thg 12"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Màn hình"
 
 msgid "window"
 msgstr "cửa sổ"
@@ -356,12 +351,6 @@ msgstr "Không thể mở menu: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "Không thể mở lại cửa sổ nổi: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "Cửa sổ cài đặt chưa sẵn sàng."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "Chụp bằng nút chưa hoạt động trong bản Slint — hãy kéo bằng Win+LMouse."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "Không thể sao chép vào bộ nhớ tạm: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — Tải lên"
 msgid "Upload failed:\r\n{err}"
 msgstr "Tải lên thất bại:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "Chưa cấu hình Imgur Client-ID — không thể tải lên.\r\n\r\n1) Lấy Client-ID miễn phí:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Thêm vào tệp này:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Khởi động lại Snipdeck."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Yêu cầu Imgur Client-ID"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Ảnh này sẽ được tải lên INTERNET — \"Imgur\" (ẩn danh).\r\n\r\n• Ảnh sẽ KHÔNG xuất hiện trên trang chủ / thư viện Imgur (ẩn, không liệt kê).\r\n• Nhưng bất kỳ ai có liên kết đều có thể xem ảnh.\r\n• Ảnh không được mã hóa.\r\n• KHÔNG tải lên nội dung NHẠY CẢM như CMND, mật khẩu hoặc tin nhắn riêng tư.\r\n\r\nNếu thành công, liên kết sẽ được sao chép vào bộ nhớ tạm.\r\n\r\nTải lên?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Ảnh này sẽ được tải lên INTERNET — \"catbox.moe\".\r\n\r\n• Ảnh sẽ KHÔNG xuất hiện trong bất kỳ thư viện công khai / tìm kiếm nào (không liệt kê).\r\n• Nhưng bất kỳ ai có liên kết đều có thể xem ảnh.\r\n• Vì được tải lên ẩn danh, BẠN KHÔNG THỂ TỰ XÓA sau này.\r\n• Ảnh không được mã hóa.\r\n• KHÔNG tải lên nội dung NHẠY CẢM như CMND, mật khẩu hoặc tin nhắn riêng tư.\r\n\r\nNếu thành công, liên kết sẽ được sao chép vào bộ nhớ tạm.\r\n\r\nTải lên?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — Tải lên internet"
@@ -455,3 +435,193 @@ msgstr "vẽ"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "Kích thước ảnh thu nhỏ — Nhỏ / Vừa / Lớn"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "Công cụ chụp màn hình nhanh, miễn phí, mã nguồn mở cho Windows và Linux."
+
+msgid "About Snipdeck"
+msgstr "Giới thiệu Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "Hãy thêm ít nhất hai ảnh chụp để tạo ảnh ghép."
+
+msgid "Asked once; your answer is remembered."
+msgstr "Chỉ hỏi một lần; câu trả lời của bạn sẽ được ghi nhớ."
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Chụp một vùng màn hình bằng Super + Alt + kéo."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "Chụp một vùng màn hình bằng nút Mới hoặc phím tắt."
+
+msgid "Collage"
+msgstr "Ảnh ghép"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "Không thể dùng công cụ chọn màu: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "Ghép nhiều ảnh chụp thành một ảnh ghép"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "Sao chép ảnh chụp vào bộ nhớ tạm"
+
+msgid "Crop by dragging the edges inward"
+msgstr "Cắt xén bằng cách kéo các cạnh vào trong"
+
+msgid "Delete all {} snips?"
+msgstr "Xóa tất cả {} ảnh chụp?"
+
+msgid "Delete the snip permanently"
+msgstr "Xóa vĩnh viễn ảnh chụp"
+
+msgid "Delete {} unpinned snips?"
+msgstr "Xóa {} ảnh chụp chưa ghim?"
+
+msgid "Discard"
+msgstr "Loại bỏ"
+
+msgid "Discard your annotations?"
+msgstr "Loại bỏ chú thích của bạn?"
+
+msgid "Draw and mark up the snip"
+msgstr "Vẽ và đánh dấu trên ảnh chụp"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "Tất cả ảnh chụp sẽ bị xóa, kể cả ảnh đã ghim. Các ảnh bị xóa khỏi ổ đĩa và không thể khôi phục."
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "Mọi nội dung đã vẽ kể từ khi mở trình chỉnh sửa sẽ bị mất."
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "Không thể mở trình chỉnh sửa chú thích: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "Không thể mở ảnh ghép: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "Không thể mở cửa sổ: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "Không thể đọc ảnh: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "Không thể lưu ảnh chụp: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "Hãy hoàn tất hoặc hủy chú thích đang mở trước khi bắt đầu chú thích khác."
+
+msgid "Flip horizontally"
+msgstr "Lật ngang"
+
+msgid "Flip vertically"
+msgstr "Lật dọc"
+
+msgid "Gap"
+msgstr "Khoảng cách"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "Ẩn khỏi màn hình (vẫn giữ trong thư viện)"
+
+msgid "Hover an item to see what it does"
+msgstr "Di chuột lên một mục để xem chức năng của nó"
+
+msgid "Keep editing"
+msgstr "Tiếp tục sửa"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "Tạo bởi ReviseTouch — chúng tôi phát triển công cụ cho lập trình viên và sản phẩm AI."
+
+msgid "New email with the snip attached"
+msgstr "Email mới đính kèm ảnh chụp"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + Dịch đọc văn bản trong ảnh chụp này ngay trên máy tính của bạn, rồi gửi văn bản đó — không phải hình ảnh — tới Google Dịch (translate.googleapis.com). Không phần nào khác của Snipdeck gửi bất cứ thứ gì mà không hỏi trước."
+
+msgid "Open in the system image editor"
+msgstr "Mở bằng trình chỉnh sửa ảnh của hệ thống"
+
+msgid "Open the main Snipdeck window"
+msgstr "Mở cửa sổ chính của Snipdeck"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "Chọn màu từ bất kỳ đâu trên màn hình — kính lúp đi theo con trỏ, nhấp để lấy màu"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "Chọn màu từ ảnh chụp này bằng kính lúp"
+
+msgid "Pick color"
+msgstr "Chọn màu"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "Chọn ảnh từ khay bên dưới để tạo ảnh ghép"
+
+msgid "Picked color"
+msgstr "Màu đã chọn"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "Ảnh chụp đã ghim được giữ lại. Các ảnh bị xóa khỏi ổ đĩa và không thể khôi phục."
+
+msgid "Read the text in the image and copy it"
+msgstr "Nhận dạng văn bản trong ảnh và sao chép"
+
+msgid "Read the text, then translate it"
+msgstr "Nhận dạng văn bản, rồi dịch"
+
+msgid "Resize with the corner handles"
+msgstr "Thay đổi kích thước bằng tay cầm ở góc"
+
+msgid "Rotate 180°"
+msgstr "Xoay 180°"
+
+msgid "Rotate 90° left"
+msgstr "Xoay trái 90°"
+
+msgid "Rotate 90° right"
+msgstr "Xoay phải 90°"
+
+msgid "Round"
+msgstr "Bo góc"
+
+msgid "Run as administrator"
+msgstr "Chạy với quyền quản trị"
+
+msgid "Send"
+msgstr "Gửi"
+
+msgid "Send the text to Google?"
+msgstr "Gửi văn bản tới Google?"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "Không thể đọc cài đặt nên đã đặt lại. Tệp cũ được giữ lại thành {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "Chia sẻ qua bảng chia sẻ của Windows"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "Chụp màn hình cần quyền truy cập con trỏ mà phiên này không cấp."
+
+msgid "Support"
+msgstr "Ủng hộ"
+
+msgid "Take a new snip"
+msgstr "Chụp mới"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "Chụp mới — hoặc kéo một vùng bằng Super + Alt"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "Công cụ chọn màu cần quyền truy cập con trỏ mà phiên này không cấp."
+
+msgid "Upload to an image host, copy the link"
+msgstr "Tải lên dịch vụ lưu trữ ảnh, sao chép liên kết"
+
+msgid "Version"
+msgstr "Phiên bản"
+
+msgid "Visit ReviseTouch"
+msgstr "Truy cập ReviseTouch"
+
+msgid "eyedropper"
+msgstr "ống hút màu"

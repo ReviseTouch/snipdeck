@@ -52,9 +52,6 @@ msgstr "Tüm kesimleri temizle"
 msgid "Toggle light / dark theme"
 msgstr "Açık / koyu tema arasında geç"
 
-msgid "Settings"
-msgstr "Ayarlar"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "Durum"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "Ara"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Monitör"
 
 msgid "window"
 msgstr "pencere"
@@ -356,12 +351,6 @@ msgstr "Menü açılamadı: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "Kayan pencere yeniden açılamadı: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "Ayarlar penceresi henüz hazır değil."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "Düğmeyle tetiklenen kesim henüz Slint portuna bağlanmadı — Win+LMouse ile sürükleyin."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "Panoya kopyalanamadı: {e}"
@@ -415,17 +404,8 @@ msgstr "Snipdeck — Yükleme"
 msgid "Upload failed:\r\n{err}"
 msgstr "Yükleme başarısız:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "Imgur Client-ID yapılandırılmamış — yükleme yapılamıyor.\r\n\r\n1) Ücretsiz Client-ID edinin:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Şu dosyaya ekleyin:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Snipdeck'i yeniden başlatın."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Imgur Client-ID gerekli"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Bu görüntü İNTERNET'e yüklenecek — \"Imgur\" (anonim).\r\n\r\n• Imgur ana sayfasında / galerisinde GÖRÜNMEZ (gizli, listelenmemiş).\r\n• Ancak oluşturulan bağlantıya sahip olan herkes görüntüyü açabilir.\r\n• Görüntü şifrelenmemiştir.\r\n• Kimlik, şifre veya özel mesaj gibi HASSAS içerik yüklemeyin.\r\n\r\nBaşarılı olursa bağlantı panonuza kopyalanır.\r\n\r\nYüklensin mi?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Bu görüntü İNTERNET'e yüklenecek — \"catbox.moe\".\r\n\r\n• Hiçbir herkese açık galeri / aramada GÖRÜNMEZ (listelenmemiş).\r\n• Ancak oluşturulan bağlantıya sahip olan herkes görüntüyü açabilir.\r\n• Anonim olarak yüklendiğinden daha sonra KENDİNİZ SİLEMEZSİNİZ.\r\n• Görüntü şifrelenmemiştir.\r\n• Kimlik, şifre veya özel mesaj gibi HASSAS içerik yüklemeyin.\r\n\r\nBaşarılı olursa bağlantı panonuza kopyalanır.\r\n\r\nYüklensin mi?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — İnternet'e yükle"
@@ -484,6 +464,12 @@ msgstr "Yuvarlaklık"
 msgid "Failed to open collage: {e}"
 msgstr "Kolaj açılamadı: {e}"
 
+msgid "Failed to open annotation editor: {e}"
+msgstr "İşaretleme düzenleyicisi açılamadı: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "Snip kaydedilemedi: {e}"
+
 msgid "Failed to open window: {e}"
 msgstr "Pencere açılamadı: {e}"
 
@@ -494,8 +480,8 @@ msgstr "Görüntü okunamadı: {e}"
 msgid "About Snipdeck"
 msgstr "Snipdeck Hakkında"
 
-msgid "A fast, free, open-source screen-snipping deck for Windows."
-msgstr "Windows için hızlı, ücretsiz, açık kaynaklı bir ekran kırpma destesi."
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "Windows ve Linux için hızlı, ücretsiz, açık kaynaklı bir ekran kırpma destesi."
 
 msgid "Made by ReviseTouch — we build developer tools & AI products."
 msgstr "ReviseTouch tarafından yapıldı — geliştirici araçları ve yapay zekâ ürünleri geliştiriyoruz."

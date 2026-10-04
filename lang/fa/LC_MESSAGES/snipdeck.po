@@ -52,9 +52,6 @@ msgstr "پاک کردن همه تصاویر"
 msgid "Toggle light / dark theme"
 msgstr "تغییر پوسته روشن / تاریک"
 
-msgid "Settings"
-msgstr "تنظیمات"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "وضعیت"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "دسامـ"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "مانیتور"
 
 msgid "window"
 msgstr "پنجره"
@@ -356,12 +351,6 @@ msgstr "باز کردن منو ناموفق بود: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "بازگشایی پنجره شناور ناموفق بود: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "پنجره تنظیمات هنوز آماده نیست."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "عکس‌برداری از طریق دکمه هنوز در پورت Slint پیاده‌سازی نشده — با Win+LMouse بکشید."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "کپی در کلیپ‌بورد ناموفق بود: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — بارگذاری"
 msgid "Upload failed:\r\n{err}"
 msgstr "بارگذاری ناموفق بود:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "Client-ID مربوط به Imgur تنظیم نشده — بارگذاری ممکن نیست.\r\n\r\n۱) یک Client-ID رایگان دریافت کنید:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n۲) آن را به این فایل اضافه کنید:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n۳) Snipdeck را مجدداً راه‌اندازی کنید."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Client-ID مربوط به Imgur لازم است"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "این تصویر به اینترنت — \"Imgur\" (ناشناس) بارگذاری خواهد شد.\r\n\r\n• در صفحه اصلی / گالری Imgur ظاهر نخواهد شد (پنهان، فهرست‌نشده).\r\n• اما هر کسی که پیوند را داشته باشد می‌تواند تصویر را باز کند.\r\n• تصویر رمزگذاری نشده است.\r\n• محتوای حساس مانند شناسه‌ها، رمزهای عبور یا پیام‌های خصوصی را بارگذاری نکنید.\r\n\r\nدر صورت موفقیت، پیوند در کلیپ‌بورد کپی می‌شود.\r\n\r\nبارگذاری شود؟"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "این تصویر به اینترنت — \"catbox.moe\" بارگذاری خواهد شد.\r\n\r\n• در هیچ گالری عمومی / جستجویی ظاهر نخواهد شد (فهرست‌نشده).\r\n• اما هر کسی که پیوند را داشته باشد می‌تواند تصویر را باز کند.\r\n• چون به صورت ناشناس بارگذاری می‌شود، بعداً نمی‌توانید آن را خودتان حذف کنید.\r\n• تصویر رمزگذاری نشده است.\r\n• محتوای حساس مانند شناسه‌ها، رمزهای عبور یا پیام‌های خصوصی را بارگذاری نکنید.\r\n\r\nدر صورت موفقیت، پیوند در کلیپ‌بورد کپی می‌شود.\r\n\r\nبارگذاری شود؟"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — بارگذاری در اینترنت"
@@ -455,3 +435,193 @@ msgstr "بکشید"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "اندازه بندانگشتی — کوچک / متوسط / بزرگ"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "ابزاری سریع، رایگان و متن‌باز برای گرفتن تصویر از صفحه در Windows و Linux."
+
+msgid "About Snipdeck"
+msgstr "درباره Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "برای ساختن کلاژ دست‌کم دو تصویر اضافه کنید."
+
+msgid "Asked once; your answer is remembered."
+msgstr "فقط یک بار پرسیده می‌شود؛ پاسخ شما به خاطر سپرده می‌شود."
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "با Super + Alt + کشیدن، یک ناحیه از صفحه را ضبط کنید."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "با دکمه «جدید» یا یک کلید میانبر، یک ناحیه از صفحه را ضبط کنید."
+
+msgid "Collage"
+msgstr "کلاژ"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "انتخابگر رنگ در دسترس نیست: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "ترکیب چند تصویر در یک کلاژ"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "کپی تصویر در کلیپ‌بورد"
+
+msgid "Crop by dragging the edges inward"
+msgstr "برش با کشیدن لبه‌ها به داخل"
+
+msgid "Delete all {} snips?"
+msgstr "همه {} تصویر حذف شوند؟"
+
+msgid "Delete the snip permanently"
+msgstr "حذف دائمی تصویر"
+
+msgid "Delete {} unpinned snips?"
+msgstr "{} تصویر بدون پین حذف شوند؟"
+
+msgid "Discard"
+msgstr "دور ریختن"
+
+msgid "Discard your annotations?"
+msgstr "حاشیه‌نویسی‌ها دور ریخته شوند؟"
+
+msgid "Draw and mark up the snip"
+msgstr "کشیدن و علامت‌گذاری روی تصویر"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "همه تصاویر، از جمله پین‌شده‌ها، حذف می‌شوند. فایل‌های تصویر از دیسک پاک می‌شوند و قابل بازیابی نیستند."
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "هر چه از زمان باز شدن ویرایشگر کشیده شده، از بین می‌رود."
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "باز کردن ویرایشگر حاشیه‌نویسی ناموفق بود: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "باز کردن کلاژ ناموفق بود: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "باز کردن پنجره ناموفق بود: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "خواندن تصویر ناموفق بود: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "ذخیره تصویر ناموفق بود: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "پیش از شروع حاشیه‌نویسی دیگر، حاشیه‌نویسی باز را تمام یا لغو کنید."
+
+msgid "Flip horizontally"
+msgstr "قرینه افقی"
+
+msgid "Flip vertically"
+msgstr "قرینه عمودی"
+
+msgid "Gap"
+msgstr "فاصله"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "پنهان از صفحه (در گالری می‌ماند)"
+
+msgid "Hover an item to see what it does"
+msgstr "برای دیدن کار هر گزینه، نشانگر را روی آن ببرید"
+
+msgid "Keep editing"
+msgstr "ادامه ویرایش"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "ساخته ReviseTouch — ما ابزارهای توسعه‌دهندگان و محصولات هوش مصنوعی می‌سازیم."
+
+msgid "New email with the snip attached"
+msgstr "ایمیل جدید با پیوست تصویر"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + ترجمه متن این تصویر را روی رایانه شما می‌خواند، سپس همان متن — نه خود تصویر — را به Google Translate (translate.googleapis.com) می‌فرستد. هیچ بخش دیگری از Snipdeck بدون پرسیدن از شما چیزی ارسال نمی‌کند."
+
+msgid "Open in the system image editor"
+msgstr "باز کردن در ویرایشگر تصویر سیستم"
+
+msgid "Open the main Snipdeck window"
+msgstr "باز کردن پنجره اصلی Snipdeck"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "انتخاب رنگ از هر جای صفحه — ذره‌بین نشانگر را دنبال می‌کند، برای برداشتن کلیک کنید"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "انتخاب رنگ از این تصویر با ذره‌بین"
+
+msgid "Pick color"
+msgstr "انتخاب رنگ"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "برای ساختن کلاژ، تصاویر را از نوار پایین انتخاب کنید"
+
+msgid "Picked color"
+msgstr "رنگ انتخاب‌شده"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "تصاویر پین‌شده می‌مانند. فایل‌های تصویر از دیسک پاک می‌شوند و قابل بازیابی نیستند."
+
+msgid "Read the text in the image and copy it"
+msgstr "خواندن متن تصویر و کپی آن"
+
+msgid "Read the text, then translate it"
+msgstr "خواندن متن و سپس ترجمه آن"
+
+msgid "Resize with the corner handles"
+msgstr "تغییر اندازه با دستگیره‌های گوشه"
+
+msgid "Rotate 180°"
+msgstr "چرخش ۱۸۰°"
+
+msgid "Rotate 90° left"
+msgstr "چرخش ۹۰° به چپ"
+
+msgid "Rotate 90° right"
+msgstr "چرخش ۹۰° به راست"
+
+msgid "Round"
+msgstr "گردی"
+
+msgid "Run as administrator"
+msgstr "اجرا به‌عنوان مدیر"
+
+msgid "Send"
+msgstr "ارسال"
+
+msgid "Send the text to Google?"
+msgstr "متن به Google فرستاده شود؟"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "تنظیمات خوانده نشد و بازنشانی شد. فایل قبلی با نام {path} نگه داشته شد"
+
+msgid "Share via the Windows share sheet"
+msgstr "اشتراک‌گذاری با پنل اشتراک‌گذاری Windows"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "گرفتن تصویر به دسترسی نشانگر نیاز دارد که این نشست آن را نمی‌دهد."
+
+msgid "Support"
+msgstr "پشتیبانی"
+
+msgid "Take a new snip"
+msgstr "گرفتن تصویر جدید"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "گرفتن تصویر جدید — یا با Super + Alt یک ناحیه را بکشید"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "انتخابگر رنگ به دسترسی نشانگر نیاز دارد که این نشست آن را نمی‌دهد."
+
+msgid "Upload to an image host, copy the link"
+msgstr "بارگذاری در یک میزبان تصویر و کپی پیوند"
+
+msgid "Version"
+msgstr "نسخه"
+
+msgid "Visit ReviseTouch"
+msgstr "بازدید از ReviseTouch"
+
+msgid "eyedropper"
+msgstr "قطره‌چکان"

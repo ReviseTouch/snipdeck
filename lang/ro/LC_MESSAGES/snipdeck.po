@@ -52,9 +52,6 @@ msgstr "Șterge toate capturile"
 msgid "Toggle light / dark theme"
 msgstr "Comută tema luminoasă / întunecată"
 
-msgid "Settings"
-msgstr "Setări"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "Stare"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "Dec"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Monitor"
 
 msgid "window"
 msgstr "fereastră"
@@ -356,12 +351,6 @@ msgstr "Deschiderea meniului a eșuat: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "Redeschiderea ferestrei flotante a eșuat: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "Fereastra de setări nu este încă pregătită."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "Captura declanșată prin buton nu este încă implementată în portul Slint — trage cu Win+LMouse."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "Copierea în clipboard a eșuat: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — Încărcare"
 msgid "Upload failed:\r\n{err}"
 msgstr "Încărcarea a eșuat:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "Niciun Imgur Client-ID configurat — încărcarea nu este posibilă.\r\n\r\n1) Obține un Client-ID gratuit:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Adaugă-l în acest fișier:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Repornește Snipdeck."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Imgur Client-ID necesar"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Această imagine va fi încărcată pe INTERNET — \"Imgur\" (anonim).\r\n\r\n• NU va apărea pe pagina principală / galeria Imgur (ascunsă, nelistată).\r\n• Dar oricine deține link-ul rezultat poate deschide imaginea.\r\n• Imaginea nu este criptată.\r\n• NU încărca conținut SENSIBIL, cum ar fi ID-uri, parole sau mesaje private.\r\n\r\nÎn caz de succes, link-ul este copiat în clipboard.\r\n\r\nÎncarcă?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Această imagine va fi încărcată pe INTERNET — \"catbox.moe\".\r\n\r\n• NU va apărea în nicio galerie / căutare publică (nelistată).\r\n• Dar oricine deține link-ul rezultat poate deschide imaginea.\r\n• Deoarece este încărcată anonim, NU O POȚI ȘTERGE singur mai târziu.\r\n• Imaginea nu este criptată.\r\n• NU încărca conținut SENSIBIL, cum ar fi ID-uri, parole sau mesaje private.\r\n\r\nÎn caz de succes, link-ul este copiat în clipboard.\r\n\r\nÎncarcă?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — Încărcare pe internet"
@@ -455,3 +435,193 @@ msgstr "desenează"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "Dimensiune miniatură — Mic / Mediu / Mare"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "O aplicație rapidă, gratuită și open-source pentru capturi de ecran, pe Windows și Linux."
+
+msgid "About Snipdeck"
+msgstr "Despre Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "Adaugă cel puțin două capturi pentru a face un colaj."
+
+msgid "Asked once; your answer is remembered."
+msgstr "Întrebăm o singură dată; răspunsul tău este reținut."
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Captează o regiune de pe ecran cu Super + Alt + tragere."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "Captează o regiune de pe ecran cu butonul „Nou” sau cu o tastă rapidă."
+
+msgid "Collage"
+msgstr "Colaj"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "Selectorul de culoare nu este disponibil: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "Combină mai multe capturi într-un singur colaj"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "Copiază imaginea capturii în clipboard"
+
+msgid "Crop by dragging the edges inward"
+msgstr "Decupează trăgând marginile spre interior"
+
+msgid "Delete all {} snips?"
+msgstr "Ștergi toate capturile ({})?"
+
+msgid "Delete the snip permanently"
+msgstr "Șterge definitiv captura"
+
+msgid "Delete {} unpinned snips?"
+msgstr "Ștergi capturile neprinse ({})?"
+
+msgid "Discard"
+msgstr "Renunță"
+
+msgid "Discard your annotations?"
+msgstr "Renunți la adnotări?"
+
+msgid "Draw and mark up the snip"
+msgstr "Desenează și adnotează captura"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "Toate capturile dispar, inclusiv cele prinse. Imaginile sunt șterse de pe disc și nu pot fi restaurate."
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "Tot ce ai desenat de la deschiderea editorului se va pierde."
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "Deschiderea editorului de adnotare a eșuat: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "Deschiderea colajului a eșuat: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "Deschiderea ferestrei a eșuat: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "Citirea imaginii a eșuat: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "Salvarea capturii a eșuat: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "Termină sau anulează adnotarea deschisă înainte de a începe alta."
+
+msgid "Flip horizontally"
+msgstr "Oglindește orizontal"
+
+msgid "Flip vertically"
+msgstr "Oglindește vertical"
+
+msgid "Gap"
+msgstr "Spațiere"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "Ascunde de pe ecran (rămâne în galerie)"
+
+msgid "Hover an item to see what it does"
+msgstr "Treci cu mouse-ul peste un element pentru a vedea ce face"
+
+msgid "Keep editing"
+msgstr "Continuă editarea"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "Creat de ReviseTouch — construim instrumente pentru dezvoltatori și produse AI."
+
+msgid "New email with the snip attached"
+msgstr "Email nou cu captura atașată"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + Traducere citește textul din această captură pe computerul tău, apoi trimite acel text — nu imaginea — către Google Translate (translate.googleapis.com). Nimic altceva din Snipdeck nu trimite nimic fără să te întrebe."
+
+msgid "Open in the system image editor"
+msgstr "Deschide în editorul de imagini al sistemului"
+
+msgid "Open the main Snipdeck window"
+msgstr "Deschide fereastra principală Snipdeck"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "Alege o culoare de oriunde de pe ecran — o lupă urmează cursorul, dă clic pentru a o prelua"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "Alege o culoare din această captură cu lupa"
+
+msgid "Pick color"
+msgstr "Alege culoarea"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "Alege imagini din bara de mai jos pentru a crea un colaj"
+
+msgid "Picked color"
+msgstr "Culoare aleasă"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "Capturile prinse rămân. Imaginile sunt șterse de pe disc și nu pot fi restaurate."
+
+msgid "Read the text in the image and copy it"
+msgstr "Recunoaște textul din imagine și copiază-l"
+
+msgid "Read the text, then translate it"
+msgstr "Recunoaște textul, apoi tradu-l"
+
+msgid "Resize with the corner handles"
+msgstr "Redimensionează cu punctele de prindere din colțuri"
+
+msgid "Rotate 180°"
+msgstr "Rotește cu 180°"
+
+msgid "Rotate 90° left"
+msgstr "Rotește cu 90° la stânga"
+
+msgid "Rotate 90° right"
+msgstr "Rotește cu 90° la dreapta"
+
+msgid "Round"
+msgstr "Rotunjire"
+
+msgid "Run as administrator"
+msgstr "Rulează ca administrator"
+
+msgid "Send"
+msgstr "Trimite"
+
+msgid "Send the text to Google?"
+msgstr "Trimiți textul către Google?"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "Setările nu au putut fi citite și au fost resetate. Fișierul vechi este păstrat ca {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "Partajează prin panoul de partajare Windows"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "Captura necesită acces la cursor, pe care această sesiune nu îl acordă."
+
+msgid "Support"
+msgstr "Asistență"
+
+msgid "Take a new snip"
+msgstr "Captură nouă"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "Captură nouă — sau trage o regiune cu Super + Alt"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "Selectorul de culoare necesită acces la cursor, pe care această sesiune nu îl acordă."
+
+msgid "Upload to an image host, copy the link"
+msgstr "Încarcă pe un serviciu de găzduire a imaginilor și copiază linkul"
+
+msgid "Version"
+msgstr "Versiune"
+
+msgid "Visit ReviseTouch"
+msgstr "Vizitează ReviseTouch"
+
+msgid "eyedropper"
+msgstr "pipetă"

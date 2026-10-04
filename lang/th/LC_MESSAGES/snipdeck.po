@@ -52,9 +52,6 @@ msgstr "ล้างภาพทั้งหมด"
 msgid "Toggle light / dark theme"
 msgstr "สลับธีมสว่าง / มืด"
 
-msgid "Settings"
-msgstr "การตั้งค่า"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "สถานะ"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "ธ.ค."
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Monitor"
 
 msgid "window"
 msgstr "หน้าต่าง"
@@ -356,12 +351,6 @@ msgstr "เปิดเมนูไม่สำเร็จ: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "เปิดหน้าต่างลอยตัวซ้ำไม่สำเร็จ: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "หน้าต่างการตั้งค่ายังไม่พร้อม"
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "การจับภาพด้วยปุ่มยังไม่รองรับในพอร์ต Slint — ลากด้วย Win+LMouse"
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "คัดลอกไปยังคลิปบอร์ดไม่สำเร็จ: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — อัปโหลด"
 msgid "Upload failed:\r\n{err}"
 msgstr "อัปโหลดล้มเหลว:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "ยังไม่ได้กำหนด Imgur Client-ID — ไม่สามารถอัปโหลดได้\r\n\r\n1) รับ Client-ID ฟรี:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) เพิ่มลงในไฟล์นี้:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) รีสตาร์ท Snipdeck"
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — ต้องการ Imgur Client-ID"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "รูปภาพนี้จะถูกอัปโหลดไปยัง INTERNET — \"Imgur\" (ไม่ระบุตัวตน)\r\n\r\n• จะ ไม่ ปรากฏบนหน้าแรก / แกลเลอรีของ Imgur (ซ่อน ไม่แสดงในรายการ)\r\n• แต่ผู้ที่มีลิงก์สามารถเปิดรูปภาพได้\r\n• รูปภาพไม่ได้เข้ารหัส\r\n• ห้าม อัปโหลดเนื้อหา ที่สำคัญ เช่น บัตรประจำตัว รหัสผ่าน หรือข้อความส่วนตัว\r\n\r\nเมื่อสำเร็จ ลิงก์จะถูกคัดลอกไปยังคลิปบอร์ด\r\n\r\nอัปโหลด?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "รูปภาพนี้จะถูกอัปโหลดไปยัง INTERNET — \"catbox.moe\"\r\n\r\n• จะ ไม่ ปรากฏในแกลเลอรีสาธารณะ / การค้นหา (ไม่แสดงในรายการ)\r\n• แต่ผู้ที่มีลิงก์สามารถเปิดรูปภาพได้\r\n• เนื่องจากอัปโหลดแบบไม่ระบุตัวตน คุณ ไม่สามารถลบ ได้ในภายหลัง\r\n• รูปภาพไม่ได้เข้ารหัส\r\n• ห้าม อัปโหลดเนื้อหา ที่สำคัญ เช่น บัตรประจำตัว รหัสผ่าน หรือข้อความส่วนตัว\r\n\r\nเมื่อสำเร็จ ลิงก์จะถูกคัดลอกไปยังคลิปบอร์ด\r\n\r\nอัปโหลด?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — อัปโหลดไปยังอินเทอร์เน็ต"
@@ -455,3 +435,193 @@ msgstr "วาด"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "ขนาดภาพย่อ — เล็ก / กลาง / ใหญ่"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "เครื่องมือจับภาพหน้าจอที่รวดเร็ว ฟรี และโอเพนซอร์ส สำหรับ Windows และ Linux"
+
+msgid "About Snipdeck"
+msgstr "เกี่ยวกับ Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "เพิ่มภาพอย่างน้อยสองภาพเพื่อสร้างคอลลาจ"
+
+msgid "Asked once; your answer is remembered."
+msgstr "ถามเพียงครั้งเดียว ระบบจะจดจำคำตอบของคุณ"
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "จับภาพพื้นที่บนหน้าจอด้วย Super + Alt + ลาก"
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "จับภาพพื้นที่บนหน้าจอด้วยปุ่ม “ใหม่” หรือปุ่มลัด"
+
+msgid "Collage"
+msgstr "คอลลาจ"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "ใช้ตัวเลือกสีไม่ได้: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "รวมหลายภาพเป็นคอลลาจเดียว"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "คัดลอกภาพไปยังคลิปบอร์ด"
+
+msgid "Crop by dragging the edges inward"
+msgstr "ตัดรูปโดยลากขอบเข้าด้านใน"
+
+msgid "Delete all {} snips?"
+msgstr "ลบภาพทั้งหมด {} ภาพหรือไม่?"
+
+msgid "Delete the snip permanently"
+msgstr "ลบภาพอย่างถาวร"
+
+msgid "Delete {} unpinned snips?"
+msgstr "ลบภาพที่ไม่ได้ปักหมุด {} ภาพหรือไม่?"
+
+msgid "Discard"
+msgstr "ละทิ้ง"
+
+msgid "Discard your annotations?"
+msgstr "ละทิ้งคำอธิบายที่ใส่ไว้หรือไม่?"
+
+msgid "Draw and mark up the snip"
+msgstr "วาดและทำเครื่องหมายบนภาพ"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "ภาพทั้งหมดจะถูกลบ รวมถึงภาพที่ปักหมุดไว้ รูปภาพจะถูกลบออกจากดิสก์และไม่สามารถกู้คืนได้"
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "ทุกสิ่งที่วาดตั้งแต่เปิดตัวแก้ไขจะหายไป"
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "เปิดตัวแก้ไขคำอธิบายไม่สำเร็จ: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "เปิดคอลลาจไม่สำเร็จ: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "เปิดหน้าต่างไม่สำเร็จ: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "อ่านรูปภาพไม่สำเร็จ: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "บันทึกภาพไม่สำเร็จ: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "โปรดทำคำอธิบายที่เปิดอยู่ให้เสร็จหรือยกเลิกก่อนเริ่มอันใหม่"
+
+msgid "Flip horizontally"
+msgstr "พลิกแนวนอน"
+
+msgid "Flip vertically"
+msgstr "พลิกแนวตั้ง"
+
+msgid "Gap"
+msgstr "ระยะห่าง"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "ซ่อนจากหน้าจอ (ยังอยู่ในแกลเลอรี)"
+
+msgid "Hover an item to see what it does"
+msgstr "วางเมาส์เหนือรายการเพื่อดูว่าใช้ทำอะไร"
+
+msgid "Keep editing"
+msgstr "แก้ไขต่อ"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "สร้างโดย ReviseTouch — เราสร้างเครื่องมือสำหรับนักพัฒนาและผลิตภัณฑ์ AI"
+
+msgid "New email with the snip attached"
+msgstr "อีเมลใหม่พร้อมแนบภาพ"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + แปลภาษา จะอ่านข้อความในภาพนี้บนคอมพิวเตอร์ของคุณ แล้วส่งข้อความนั้น — ไม่ใช่รูปภาพ — ไปยัง Google Translate (translate.googleapis.com) ส่วนอื่นๆ ของ Snipdeck จะไม่ส่งสิ่งใดออกไปโดยไม่ถามก่อน"
+
+msgid "Open in the system image editor"
+msgstr "เปิดในโปรแกรมแก้ไขรูปภาพของระบบ"
+
+msgid "Open the main Snipdeck window"
+msgstr "เปิดหน้าต่างหลักของ Snipdeck"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "เลือกสีจากที่ใดก็ได้บนหน้าจอ — แว่นขยายจะตามเคอร์เซอร์ คลิกเพื่อดึงสี"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "เลือกสีจากภาพนี้ด้วยแว่นขยาย"
+
+msgid "Pick color"
+msgstr "เลือกสี"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "เลือกรูปภาพจากถาดด้านล่างเพื่อสร้างคอลลาจ"
+
+msgid "Picked color"
+msgstr "สีที่เลือก"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "ภาพที่ปักหมุดไว้จะยังคงอยู่ รูปภาพจะถูกลบออกจากดิสก์และไม่สามารถกู้คืนได้"
+
+msgid "Read the text in the image and copy it"
+msgstr "อ่านข้อความในรูปภาพแล้วคัดลอก"
+
+msgid "Read the text, then translate it"
+msgstr "อ่านข้อความ แล้วแปลภาษา"
+
+msgid "Resize with the corner handles"
+msgstr "ปรับขนาดด้วยจุดจับที่มุม"
+
+msgid "Rotate 180°"
+msgstr "หมุน 180°"
+
+msgid "Rotate 90° left"
+msgstr "หมุนซ้าย 90°"
+
+msgid "Rotate 90° right"
+msgstr "หมุนขวา 90°"
+
+msgid "Round"
+msgstr "มุมโค้ง"
+
+msgid "Run as administrator"
+msgstr "เรียกใช้ในฐานะผู้ดูแลระบบ"
+
+msgid "Send"
+msgstr "ส่ง"
+
+msgid "Send the text to Google?"
+msgstr "ส่งข้อความไปยัง Google หรือไม่?"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "อ่านการตั้งค่าไม่ได้ จึงรีเซ็ตแล้ว ไฟล์เดิมถูกเก็บไว้เป็น {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "แชร์ผ่านหน้าต่างแชร์ของ Windows"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "การจับภาพต้องใช้สิทธิ์เข้าถึงตัวชี้ ซึ่งเซสชันนี้ไม่ได้อนุญาต"
+
+msgid "Support"
+msgstr "สนับสนุน"
+
+msgid "Take a new snip"
+msgstr "จับภาพใหม่"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "จับภาพใหม่ — หรือลากเลือกพื้นที่ด้วย Super + Alt"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "ตัวเลือกสีต้องใช้สิทธิ์เข้าถึงตัวชี้ ซึ่งเซสชันนี้ไม่ได้อนุญาต"
+
+msgid "Upload to an image host, copy the link"
+msgstr "อัปโหลดไปยังโฮสต์รูปภาพ แล้วคัดลอกลิงก์"
+
+msgid "Version"
+msgstr "เวอร์ชัน"
+
+msgid "Visit ReviseTouch"
+msgstr "เยี่ยมชม ReviseTouch"
+
+msgid "eyedropper"
+msgstr "หลอดดูดสี"

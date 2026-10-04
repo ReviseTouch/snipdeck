@@ -52,9 +52,6 @@ msgstr "Limpiar todos los recortes"
 msgid "Toggle light / dark theme"
 msgstr "Cambiar tema claro / oscuro"
 
-msgid "Settings"
-msgstr "Configuración"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "Estado"
@@ -319,8 +316,6 @@ msgid "Dec"
 msgstr "Dic"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Monitor"
 
 msgid "window"
 msgstr "ventana"
@@ -356,12 +351,6 @@ msgstr "Error al abrir el menú: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "Error al reabrir la ventana flotante: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "La ventana de configuración aún no está lista."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "El recorte por botón aún no está implementado en el puerto Slint — arrastra con Win+LMouse."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "Error al copiar al portapapeles: {e}"
@@ -409,17 +398,8 @@ msgstr "Snipdeck — Subir"
 msgid "Upload failed:\r\n{err}"
 msgstr "Error al subir:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "No hay Imgur Client-ID configurado — no se puede subir.\r\n\r\n1) Obtén un Client-ID gratuito:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Agrégalo a este archivo:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Reinicia Snipdeck."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — Se requiere Imgur Client-ID"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Esta imagen se subirá a INTERNET — \"Imgur\" (anónimo).\r\n\r\n• NO aparecerá en la página principal / galería de Imgur (oculta, sin listar).\r\n• Pero cualquiera que tenga el enlace resultante podrá abrir la imagen.\r\n• La imagen no está cifrada.\r\n• NO subas contenido SENSIBLE como DNIs, contraseñas o mensajes privados.\r\n\r\nSi la subida tiene éxito, el enlace se copiará al portapapeles.\r\n\r\n¿Subir?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Esta imagen se subirá a INTERNET — \"catbox.moe\".\r\n\r\n• NO aparecerá en ninguna galería pública / búsqueda (sin listar).\r\n• Pero cualquiera que tenga el enlace resultante podrá abrir la imagen.\r\n• Al subirse de forma anónima, NO PODRÁS ELIMINARLA tú mismo más tarde.\r\n• La imagen no está cifrada.\r\n• NO subas contenido SENSIBLE como DNIs, contraseñas o mensajes privados.\r\n\r\nSi la subida tiene éxito, el enlace se copiará al portapapeles.\r\n\r\n¿Subir?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — Subir a internet"
@@ -455,3 +435,193 @@ msgstr "dibujar"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "Tamaño de miniatura — Pequeño / Mediano / Grande"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "Una herramienta de recortes de pantalla rápida, gratuita y de código abierto para Windows y Linux."
+
+msgid "About Snipdeck"
+msgstr "Acerca de Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "Añade al menos dos recortes para crear un collage."
+
+msgid "Asked once; your answer is remembered."
+msgstr "Se pregunta una sola vez; tu respuesta se recuerda."
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Captura una región de la pantalla con Super + Alt + arrastrar."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "Captura una región de la pantalla con el botón Nuevo o un atajo de teclado."
+
+msgid "Collage"
+msgstr "Collage"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "Selector de color no disponible: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "Combinar varios recortes en un collage"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "Copiar la imagen del recorte al portapapeles"
+
+msgid "Crop by dragging the edges inward"
+msgstr "Recortar arrastrando los bordes hacia adentro"
+
+msgid "Delete all {} snips?"
+msgstr "¿Eliminar todos los {} recortes?"
+
+msgid "Delete the snip permanently"
+msgstr "Eliminar el recorte de forma permanente"
+
+msgid "Delete {} unpinned snips?"
+msgstr "¿Eliminar {} recortes no fijados?"
+
+msgid "Discard"
+msgstr "Descartar"
+
+msgid "Discard your annotations?"
+msgstr "¿Descartar tus anotaciones?"
+
+msgid "Draw and mark up the snip"
+msgstr "Dibujar y marcar sobre el recorte"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "Se eliminan todos los recortes, incluidos los fijados. Las imágenes se borran del disco y no se pueden recuperar."
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "Se perderá todo lo dibujado desde que se abrió el editor."
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "Error al abrir el editor de anotaciones: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "Error al abrir el collage: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "Error al abrir la ventana: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "Error al leer la imagen: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "Error al guardar el recorte: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "Termina o cancela la anotación abierta antes de empezar otra."
+
+msgid "Flip horizontally"
+msgstr "Voltear horizontalmente"
+
+msgid "Flip vertically"
+msgstr "Voltear verticalmente"
+
+msgid "Gap"
+msgstr "Espacio"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "Ocultar de la pantalla (permanece en la galería)"
+
+msgid "Hover an item to see what it does"
+msgstr "Pasa el cursor sobre un elemento para ver qué hace"
+
+msgid "Keep editing"
+msgstr "Seguir editando"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "Hecho por ReviseTouch — creamos herramientas para desarrolladores y productos de IA."
+
+msgid "New email with the snip attached"
+msgstr "Nuevo correo con el recorte adjunto"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + Traducir lee el texto de este recorte en tu equipo y luego envía ese texto — no la imagen — a Google Traductor (translate.googleapis.com). Ninguna otra parte de Snipdeck envía nada sin preguntar."
+
+msgid "Open in the system image editor"
+msgstr "Abrir en el editor de imágenes del sistema"
+
+msgid "Open the main Snipdeck window"
+msgstr "Abrir la ventana principal de Snipdeck"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "Elegir un color de cualquier parte de la pantalla — una lupa sigue al cursor, haz clic para tomarlo"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "Elegir un color de este recorte con la lupa"
+
+msgid "Pick color"
+msgstr "Elegir color"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "Elige imágenes de la bandeja inferior para crear un collage"
+
+msgid "Picked color"
+msgstr "Color elegido"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "Los recortes fijados se conservan. Las imágenes se borran del disco y no se pueden recuperar."
+
+msgid "Read the text in the image and copy it"
+msgstr "Reconocer el texto de la imagen y copiarlo"
+
+msgid "Read the text, then translate it"
+msgstr "Reconocer el texto y luego traducirlo"
+
+msgid "Resize with the corner handles"
+msgstr "Redimensionar con los controladores de las esquinas"
+
+msgid "Rotate 180°"
+msgstr "Girar 180°"
+
+msgid "Rotate 90° left"
+msgstr "Girar 90° a la izquierda"
+
+msgid "Rotate 90° right"
+msgstr "Girar 90° a la derecha"
+
+msgid "Round"
+msgstr "Redondeo"
+
+msgid "Run as administrator"
+msgstr "Ejecutar como administrador"
+
+msgid "Send"
+msgstr "Enviar"
+
+msgid "Send the text to Google?"
+msgstr "¿Enviar el texto a Google?"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "No se pudo leer la configuración y se restableció. El archivo anterior se conserva como {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "Compartir con el panel de compartir de Windows"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "Hacer recortes requiere acceso al puntero, que esta sesión no concede."
+
+msgid "Support"
+msgstr "Apoyar"
+
+msgid "Take a new snip"
+msgstr "Hacer un nuevo recorte"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "Hacer un nuevo recorte — o arrastra una región con Super + Alt"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "El selector de color requiere acceso al puntero, que esta sesión no concede."
+
+msgid "Upload to an image host, copy the link"
+msgstr "Subir a un alojamiento de imágenes y copiar el enlace"
+
+msgid "Version"
+msgstr "Versión"
+
+msgid "Visit ReviseTouch"
+msgstr "Visitar ReviseTouch"
+
+msgid "eyedropper"
+msgstr "cuentagotas"

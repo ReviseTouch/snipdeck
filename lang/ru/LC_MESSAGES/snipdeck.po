@@ -57,9 +57,6 @@ msgstr "Удалить все снимки"
 msgid "Toggle light / dark theme"
 msgstr "Переключить светлую / тёмную тему"
 
-msgid "Settings"
-msgstr "Настройки"
-
 #. ── Filter labels ──
 msgid "Status"
 msgstr "Статус"
@@ -324,8 +321,6 @@ msgid "Dec"
 msgstr "Дек"
 
 #. ── Card source line ──
-msgid "Monitor"
-msgstr "Монитор"
 
 msgid "window"
 msgstr "окно"
@@ -361,12 +356,6 @@ msgstr "Не удалось открыть меню: {e}"
 
 msgid "Failed to reopen floating window: {e}"
 msgstr "Не удалось повторно открыть плавающее окно: {e}"
-
-msgid "The settings window isn't ready yet."
-msgstr "Окно настроек ещё не готово."
-
-msgid "Button-triggered snip isn't wired up in the Slint port yet — drag with Win+LMouse."
-msgstr "Снимок по кнопке в порте Slint ещё не реализован — выделите область с Win+LMouse."
 
 msgid "Failed to copy to clipboard: {e}"
 msgstr "Не удалось скопировать в буфер обмена: {e}"
@@ -414,17 +403,8 @@ msgstr "Snipdeck — Загрузка"
 msgid "Upload failed:\r\n{err}"
 msgstr "Загрузка не удалась:\r\n{err}"
 
-msgid "No Imgur Client-ID configured — cannot upload.\r\n\r\n1) Get a free Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Add it to this file:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Restart Snipdeck."
-msgstr "Imgur Client-ID не настроен — загрузка невозможна.\r\n\r\n1) Получите бесплатный Client-ID:\r\n   imgur.com → Settings → Applications → Register\r\n   (\"OAuth 2 authorization without a callback URL\")\r\n\r\n2) Добавьте его в этот файл:\r\n   {path}\r\n   \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n3) Перезапустите Snipdeck."
-
 msgid "Snipdeck — Imgur Client-ID required"
 msgstr "Snipdeck — требуется Imgur Client-ID"
-
-msgid "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n• It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Это изображение будет загружено в ИНТЕРНЕТ — «Imgur» (анонимно).\r\n\r\n• Оно НЕ появится на главной странице / в галерее Imgur (скрыто, без публикации).\r\n• Но любой, у кого есть ссылка, сможет открыть изображение.\r\n• Изображение не зашифровано.\r\n• НЕ загружайте КОНФИДЕНЦИАЛЬНОЕ содержимое: удостоверения, пароли, личные сообщения.\r\n\r\nПри успехе ссылка будет скопирована в буфер обмена.\r\n\r\nЗагрузить?"
-
-msgid "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n• It will NOT appear in any public gallery / search (unlisted).\r\n• But anyone who has the resulting link can open the image.\r\n• Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n• The image is not encrypted.\r\n• Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\nOn success the link is copied to your clipboard.\r\n\r\nUpload?"
-msgstr "Это изображение будет загружено в ИНТЕРНЕТ — «catbox.moe».\r\n\r\n• Оно НЕ появится ни в какой публичной галерее / поиске (без публикации).\r\n• Но любой, у кого есть ссылка, сможет открыть изображение.\r\n• Поскольку загрузка анонимная, ВЫ НЕ СМОЖЕТЕ удалить его самостоятельно.\r\n• Изображение не зашифровано.\r\n• НЕ загружайте КОНФИДЕНЦИАЛЬНОЕ содержимое: удостоверения, пароли, личные сообщения.\r\n\r\nПри успехе ссылка будет скопирована в буфер обмена.\r\n\r\nЗагрузить?"
 
 msgid "Snipdeck — Upload to the internet"
 msgstr "Snipdeck — Загрузка в интернет"
@@ -460,3 +440,193 @@ msgstr "рисовать"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "Размер миниатюр — Маленький / Средний / Большой"
+
+#. ── Added October 2026 ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr "Быстрый, бесплатный инструмент с открытым исходным кодом для снимков экрана в Windows и Linux."
+
+msgid "About Snipdeck"
+msgstr "О Snipdeck"
+
+msgid "Add at least two snips to make a collage."
+msgstr "Чтобы создать коллаж, добавьте не менее двух снимков."
+
+msgid "Asked once; your answer is remembered."
+msgstr "Спрашиваем один раз — ваш ответ запоминается."
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Выделите область экрана с Super + Alt + перетаскивание."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "Выделите область экрана кнопкой «Новый» или горячей клавишей."
+
+msgid "Collage"
+msgstr "Коллаж"
+
+msgid "Colour picker unavailable: {e}"
+msgstr "Выбор цвета недоступен: {e}"
+
+msgid "Combine several snips into one collage"
+msgstr "Объединить несколько снимков в один коллаж"
+
+msgid "Copy the snip image to the clipboard"
+msgstr "Скопировать изображение снимка в буфер обмена"
+
+msgid "Crop by dragging the edges inward"
+msgstr "Обрезать, перетаскивая края внутрь"
+
+msgid "Delete all {} snips?"
+msgstr "Удалить все снимки ({})?"
+
+msgid "Delete the snip permanently"
+msgstr "Удалить снимок навсегда"
+
+msgid "Delete {} unpinned snips?"
+msgstr "Удалить незакреплённые снимки ({})?"
+
+msgid "Discard"
+msgstr "Отбросить"
+
+msgid "Discard your annotations?"
+msgstr "Отбросить аннотации?"
+
+msgid "Draw and mark up the snip"
+msgstr "Рисовать и делать пометки на снимке"
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr "Будут удалены все снимки, включая закреплённые. Изображения удаляются с диска без возможности восстановления."
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "Всё, что нарисовано с момента открытия редактора, будет потеряно."
+
+msgid "Failed to open annotation editor: {e}"
+msgstr "Не удалось открыть редактор аннотаций: {e}"
+
+msgid "Failed to open collage: {e}"
+msgstr "Не удалось открыть коллаж: {e}"
+
+msgid "Failed to open window: {e}"
+msgstr "Не удалось открыть окно: {e}"
+
+msgid "Failed to read image: {e}"
+msgstr "Не удалось прочитать изображение: {e}"
+
+msgid "Failed to save snip: {e}"
+msgstr "Не удалось сохранить снимок: {e}"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "Завершите или отмените открытую аннотацию, прежде чем начинать новую."
+
+msgid "Flip horizontally"
+msgstr "Отразить по горизонтали"
+
+msgid "Flip vertically"
+msgstr "Отразить по вертикали"
+
+msgid "Gap"
+msgstr "Отступ"
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr "Убрать с экрана (останется в галерее)"
+
+msgid "Hover an item to see what it does"
+msgstr "Наведите на пункт, чтобы узнать, что он делает"
+
+msgid "Keep editing"
+msgstr "Продолжить правку"
+
+msgid "Made by ReviseTouch — we build developer tools & AI products."
+msgstr "Создано ReviseTouch — мы делаем инструменты для разработчиков и ИИ-продукты."
+
+msgid "New email with the snip attached"
+msgstr "Новое письмо со снимком во вложении"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + Перевод распознаёт текст на этом снимке прямо на вашем компьютере, а затем отправляет этот текст — не изображение — в Google Translate (translate.googleapis.com). Больше ничто в Snipdeck ничего не отправляет, не спросив вас."
+
+msgid "Open in the system image editor"
+msgstr "Открыть в системном редакторе изображений"
+
+msgid "Open the main Snipdeck window"
+msgstr "Открыть главное окно Snipdeck"
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr "Выбрать цвет в любом месте экрана — за курсором следует лупа, щёлкните, чтобы взять цвет"
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr "Выбрать цвет на этом снимке с помощью лупы"
+
+msgid "Pick color"
+msgstr "Выбрать цвет"
+
+msgid "Pick images from the tray below to build a collage"
+msgstr "Выберите изображения на панели ниже, чтобы собрать коллаж"
+
+msgid "Picked color"
+msgstr "Выбранный цвет"
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr "Закреплённые снимки останутся. Изображения удаляются с диска без возможности восстановления."
+
+msgid "Read the text in the image and copy it"
+msgstr "Распознать текст на изображении и скопировать его"
+
+msgid "Read the text, then translate it"
+msgstr "Распознать текст и перевести его"
+
+msgid "Resize with the corner handles"
+msgstr "Изменить размер с помощью угловых маркеров"
+
+msgid "Rotate 180°"
+msgstr "Повернуть на 180°"
+
+msgid "Rotate 90° left"
+msgstr "Повернуть на 90° влево"
+
+msgid "Rotate 90° right"
+msgstr "Повернуть на 90° вправо"
+
+msgid "Round"
+msgstr "Скругление"
+
+msgid "Run as administrator"
+msgstr "Запустить от имени администратора"
+
+msgid "Send"
+msgstr "Отправить"
+
+msgid "Send the text to Google?"
+msgstr "Отправить текст в Google?"
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "Не удалось прочитать настройки, они сброшены. Старый файл сохранён как {path}"
+
+msgid "Share via the Windows share sheet"
+msgstr "Поделиться через панель «Поделиться» Windows"
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr "Для снимка нужен доступ к указателю, который этот сеанс не предоставляет."
+
+msgid "Support"
+msgstr "Поддержка"
+
+msgid "Take a new snip"
+msgstr "Сделать новый снимок"
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "Сделать новый снимок — или выделите область с Super + Alt"
+
+msgid "The colour picker needs pointer access this session does not grant."
+msgstr "Для выбора цвета нужен доступ к указателю, который этот сеанс не предоставляет."
+
+msgid "Upload to an image host, copy the link"
+msgstr "Загрузить на фотохостинг и скопировать ссылку"
+
+msgid "Version"
+msgstr "Версия"
+
+msgid "Visit ReviseTouch"
+msgstr "Посетить ReviseTouch"
+
+msgid "eyedropper"
+msgstr "пипетка"
