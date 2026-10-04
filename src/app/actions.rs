@@ -14,14 +14,14 @@ impl AppState {
                 if let Some(s) = self.gallery.get_mut(id) {
                     s.floating = false;
                 }
-                let _ = self.gallery.save();
+                let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
             ContextAction::Delete => {
                 self.floating.close(id);
                 self.gallery.remove(id);
                 self.thumb_cache.remove(&id);
-                let _ = self.gallery.save();
+                let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
             ContextAction::Copy => {
@@ -185,7 +185,7 @@ impl AppState {
             }
             None => return,
         }
-        let _ = self.gallery.save();
+        let _ = self.save_gallery();
         self.thumb_cache.remove(&id);
         if self.floating.is_shown(id) {
             self.floating.close(id);
@@ -246,7 +246,7 @@ impl AppState {
             return;
         }
         self.gallery.push_new(snip);
-        let _ = self.gallery.save();
+        let _ = self.save_gallery();
         self.last_snip_ids = self.gallery.snips.iter().map(|s| s.id).collect();
         self.refresh_gallery(window);
     }
@@ -340,7 +340,7 @@ impl AppState {
         if let Some(s) = self.gallery.get_mut(id) {
             s.floating = true;
         }
-        let _ = self.gallery.save();
+        let _ = self.save_gallery();
         self.refresh_gallery(window);
     }
 
@@ -449,7 +449,7 @@ impl AppState {
             s.area.w = ow;
             s.area.h = oh;
         }
-        let _ = self.gallery.save();
+        let _ = self.save_gallery();
         // Force the gallery card + any floating window to pick up the new
         // pixels (the cached decoded thumbnail is now stale).
         self.thumb_cache.remove(&id);
@@ -505,7 +505,7 @@ impl AppState {
             s.area.h = ch;
             s.remember_position(new_pos);
         }
-        let _ = self.gallery.save();
+        let _ = self.save_gallery();
         self.thumb_cache.remove(&id);
         self.floating.close(id);
         if let Some(s) = self.gallery.get(id).cloned() {
@@ -545,7 +545,7 @@ impl AppState {
             s.area.h = new_h;
             s.remember_position((wx, wy));
         }
-        let _ = self.gallery.save();
+        let _ = self.save_gallery();
         self.refresh_gallery(window);
     }
 

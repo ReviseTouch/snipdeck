@@ -159,12 +159,17 @@ pub struct AppState {
     /// windows reuse it so they end up the exact captured pixel size.
     scale_factor: f32,
     /// `Some(first-dirty-time)` while floating-window churn (drag/resize
-    /// position updates) awaits a gallery save. Saving on EVERY tick of a
-    /// drag ran a full SQLite upsert (all snips + their FTS rows) 125×/s
-    /// on the main thread, which starved the drag events themselves. We
-    /// mark dirty instead and save once the burst quiets down, with a
-    /// periodic safety flush during long interactions.
+    /// position updates) — or a failed save — awaits a gallery save. Saving
+    /// on EVERY tick of a drag committed a SQLite transaction 125×/s on the
+    /// main thread, which starved the drag events themselves. We mark dirty
+    /// instead and save once the burst quiets down, with a periodic safety
+    /// flush during long interactions.
     gallery_dirty: Option<std::time::Instant>,
+    /// When a failed gallery save is next retried, and how long that wait
+    /// was. A failed save — the database locked past `busy_timeout`, the disk
+    /// full — used to be retried on the very next tick, every tick, each
+    /// attempt holding the UI thread for up to the five-second busy timeout.
+    gallery_retry: Option<(std::time::Instant, std::time::Duration)>,
 }
 
 mod input;
@@ -258,6 +263,7 @@ impl AppState {
             pending_open: Vec::new(),
             scale_factor: 1.0,
             gallery_dirty: None,
+            gallery_retry: None,
         }
     }
 
@@ -477,7 +483,7 @@ impl AppState {
                 .into_iter()
                 .flat_map(|c| self.gallery.apply_conversion(c))
                 .collect();
-            match self.gallery.save() {
+            match self.save_gallery() {
                 Ok(()) => stale.iter().for_each(|p| crate::image_files::remove(p)),
                 Err(e) => log::warn!("recording converted snips failed, keeping the PNGs: {e}"),
             }
@@ -750,23 +756,21 @@ impl AppState {
 
         // Debounced gallery persistence for floating-window churn. A drag
         // produces position updates on every tick; saving synchronously each
-        // time ran the full snips+FTS upsert 125×/s on the main thread and
-        // made the drag itself stutter. Instead: mark dirty, save once the
+        // time committed a transaction 125×/s on the main thread and made the
+        // drag itself stutter. Instead: mark dirty, save once the
         // burst goes quiet (first tick with no drain), and flush every 2 s
         // during long interactions so a crash can't lose much.
         if had_drain && self.gallery_dirty.is_none() {
             self.gallery_dirty = Some(std::time::Instant::now());
         }
         if let Some(since) = self.gallery_dirty {
-            if !had_drain || since.elapsed() >= std::time::Duration::from_secs(2) {
-                // Only clear the dirty flag on success — a failed save (e.g. a
-                // transient SQLITE_BUSY the busy_timeout couldn't outwait) must
-                // leave it set so the next tick retries, or the floating-window
-                // position/pin churn this flush was meant to persist is lost.
-                match self.gallery.save() {
-                    Ok(()) => self.gallery_dirty = None,
-                    Err(e) => log::warn!("debounced gallery save failed, will retry: {e}"),
-                }
+            let retry_due = self
+                .gallery_retry
+                .is_none_or(|(at, _)| std::time::Instant::now() >= at);
+            if retry_due && (!had_drain || since.elapsed() >= std::time::Duration::from_secs(2)) {
+                // A failure stays dirty and is retried later; see
+                // `save_gallery`.
+                let _ = self.save_gallery();
             }
         }
 
@@ -803,7 +807,9 @@ impl AppState {
             || had_region_snips
             || had_drain
             || opened_any
-            || self.gallery_dirty.is_some();
+            // Not while a failed save waits out its back-off: a timer wakes
+            // the pump for the retry.
+            || (self.gallery_dirty.is_some() && self.gallery_retry.is_none());
         did_work || self.wants_awake()
     }
 
@@ -812,6 +818,31 @@ impl AppState {
     /// windows about to open, or simply the main window on screen. Async
     /// OCR/translate results and floating-window interactions don't appear
     /// here — their producers/callbacks call [`crate::pump::wake`] instead.
+    /// Save the gallery. On failure it stays dirty and is retried, waiting
+    /// twice as long each time — 1 s, 2 s, 4 s, up to 30 s — and the error is
+    /// returned for a caller that wants to show it. Any later save, retried or
+    /// not, writes everything still pending: `GalleryState::save` writes what
+    /// differs from the database, not what the caller just changed.
+    pub(crate) fn save_gallery(&mut self) -> anyhow::Result<()> {
+        match self.gallery.save() {
+            Ok(()) => {
+                self.gallery_dirty = None;
+                self.gallery_retry = None;
+                Ok(())
+            }
+            Err(e) => {
+                let wait = self.gallery_retry.map_or(std::time::Duration::from_secs(1), |(_, w)| {
+                    (w * 2).min(std::time::Duration::from_secs(30))
+                });
+                log::warn!("gallery save failed, retrying in {wait:?}: {e:#}");
+                self.gallery_dirty.get_or_insert_with(std::time::Instant::now);
+                self.gallery_retry = Some((std::time::Instant::now() + wait, wait));
+                slint::Timer::single_shot(wait, crate::pump::wake);
+                Err(e)
+            }
+        }
+    }
+
     fn wants_awake(&self) -> bool {
         // Off Windows this used to answer `true` unconditionally, on the theory
         // that only Windows' global hooks woke the pump — so a tray-idle

@@ -73,7 +73,7 @@ impl AppState {
                     // same set (and they still restore on next launch).
                     self.floating.close_all();
                 }
-                let _ = self.gallery.save();
+                let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
             Action::ClearUnpinned => {
@@ -89,14 +89,14 @@ impl AppState {
                     self.gallery.remove(id);
                     self.thumb_cache.remove(&id);
                 }
-                let _ = self.gallery.save();
+                let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
             Action::ClearAll => {
                 self.floating.close_all();
                 self.gallery.clear_all();
                 self.thumb_cache.clear();
-                let _ = self.gallery.save();
+                let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
             Action::ToggleAutostart => match crate::autostart::toggle() {
@@ -138,14 +138,14 @@ impl AppState {
                     false
                 };
                 self.floating.refresh_pin(id, new_state);
-                let _ = self.gallery.save();
+                let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
             Action::Delete(id) => {
                 self.floating.close(id);
                 self.gallery.remove(id);
                 self.thumb_cache.remove(&id);
-                let _ = self.gallery.save();
+                let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
             Action::SnipClicked(id) => {
@@ -159,7 +159,7 @@ impl AppState {
                     if let Some(s) = self.gallery.get_mut(id) {
                         s.floating = self.floating.is_shown(id);
                     }
-                    let _ = self.gallery.save();
+                    let _ = self.save_gallery();
                     self.refresh_gallery(window);
                 }
             }
@@ -691,7 +691,7 @@ impl AppState {
                             // fails to commit the PNG is orphaned and the snip
                             // vanishes on next launch — tell the user rather than
                             // lose it silently.
-                            if let Err(e) = self.gallery.save() {
+                            if let Err(e) = self.save_gallery() {
                                 self.last_error =
                                     Some(t1("Failed to save snip: {e}", "{e}", &e.to_string()));
                             }
