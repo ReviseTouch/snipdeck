@@ -281,9 +281,8 @@ else — region capture, the freeze overlay, global shortcuts, OCR, dragging, th
 context menu — works.
 
 KDE and the wlroots compositors (sway, Hyprland, river, COSMIC) expose
-`wlr-layer-shell`, which grants exactly those three; GNOME/Mutter has declined
-to implement it. `window_env::HostStrategy` names the three ways snips can be
-hosted and picks between them.
+`wlr-layer-shell`, which grants exactly those three; Snipdeck does not use it
+yet. GNOME/Mutter has declined to implement it.
 
 **On GNOME, a shell extension closes the gap.** What a client may not do, code
 running inside GNOME Shell may. `install.sh` therefore also installs

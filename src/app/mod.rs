@@ -551,7 +551,6 @@ impl AppState {
         self.overlay.sync_to_window();
         #[cfg(target_os = "linux")]
         self.context_menu.sync_to_window();
-        self.floating.sync();
 
         // Colour picker: while active, refresh the magnifier loupe every tick
         // (sample the desktop around the cursor, reposition the loupe).
@@ -908,9 +907,6 @@ impl AppState {
                 // now, nothing wakes it when the deadline passes and the snip
                 // never starts.
                 || self.pending_freeze_arm.is_some()
-                // The opt-in single-surface snip host syncs its input region
-                // every tick.
-                || self.floating.needs_ticks()
         }
     }
 }

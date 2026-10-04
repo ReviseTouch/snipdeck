@@ -42,33 +42,27 @@ client started with the former unset inside a Wayland session talks X11 through
 XWayland and has full window control, while `XDG_SESSION_TYPE` still says
 "wayland" and would produce exactly the wrong answer.
 
-### 2. `HostStrategy` — how snips reach the screen
+### 2. How snips reach the screen
 
-Three architectures, chosen by capability, not by OS:
+One OS window per snip, everywhere. That is the original design and it needs
+positioning, stacking and position queries — which Windows, X11 and XWayland
+grant. On Wayland a plain toplevel gets none of them, so a snip opens where the
+compositor puts it and can be dragged (`interactive_move`) but not pinned or
+kept on top.
 
-- **`WindowPerSnip`** — one OS window per snip. The original design; needs
-  positioning, stacking and position queries. Windows, X11, XWayland.
-- **`LayerShell`** — a `wlr-layer-shell` overlay surface: anchored placement, a
-  stacking layer above normal windows, no taskbar entry. KWin and the wlroots
-  family (sway, Hyprland, river, COSMIC). *Not implemented yet.*
-- **`SingleSurface`** — every snip drawn inside one screen-sized surface, with
-  `wl_surface.set_input_region` keeping the desktop behind it clickable. For
-  compositors that refuse window control and offer no layer-shell: GNOME/Mutter.
-  *Implemented, opt-in via `SNIPDECK_SNIP_HOST=surface`, not yet fit to default.*
-
-`LayerShell` is preferred over `SingleSurface` wherever it exists, because it
-grants the capability rather than working around its absence.
+Two other routes exist on paper. A `wlr-layer-shell` overlay surface (KWin and
+the wlroots family: sway, Hyprland, river, COSMIC) would grant placement and
+stacking properly; it is not implemented. Drawing every snip inside one
+screen-sized surface, with `wl_surface.set_input_region` letting clicks through
+elsewhere, was tried as an opt-in host and removed: on GNOME — the compositor
+it was for — the host surface is an ordinary window that drops behind the
+focused app and takes every snip with it.
 
 ### 2a. The GNOME Shell extension — asking from the inside
 
-GNOME is the one case where none of the three is satisfying. It has no
-`wlr-layer-shell`, and `SingleSurface` cannot fix the part that matters most:
-its host surface is itself an ordinary window, so on Mutter it drops behind the
-focused app and takes every snip with it. Drawing snips correctly is worth
-little if the whole surface cannot stay on top.
-
-What *can* stay on top is code running inside the shell. So the default on GNOME
-stays `WindowPerSnip` — one real window per snip — and
+GNOME has no `wlr-layer-shell`, and a hosting surface cannot stay on top
+there. What *can* stay on top is code running inside the shell. So on GNOME
+each snip stays one real window, and
 `packaging/gnome-extension/snipdeck@revisetouch.com` supplies the three things
 the client is not allowed to do for itself:
 
@@ -274,5 +268,6 @@ what the distribution actually ships.
 1. Extend `window_env::detect` with its capabilities. If it can position and
    stack windows, `WindowPerSnip` works and there is nothing else to design.
 2. Fill in the backend modules for capture, OCR, tray, shortcuts, sharing.
-3. Only if window control is missing: pick or add a `HostStrategy`, and expect
-   that to be the bulk of the work — it was on Wayland.
+3. Only if window control is missing: find how the compositor lets snips be
+   placed and kept on top — a layer shell, a shell extension — and expect that
+   to be the bulk of the work. It was on Wayland.

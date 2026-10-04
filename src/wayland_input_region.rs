@@ -1,13 +1,11 @@
 //! Per-region input transparency for Wayland surfaces.
 //!
-//! The problem this solves: on Wayland a client cannot place, stack or even
-//! locate its own windows, so a snipping tool cannot pin snips where they were
-//! captured or keep them above other apps. The way out is to stop asking the
-//! compositor for those things and host every snip inside ONE screen-sized
-//! surface of our own — inside it, position and z-order are just drawing.
+//! The problem this solves: on Wayland a client cannot place its own window, so
+//! the context menu covers the screen with one transparent surface and draws
+//! its panel at the pointer inside it (see `context_menu`).
 //!
-//! That trades one problem for another: a surface covering the screen swallows
-//! every click, leaving the desktop underneath unusable. `wl_surface.set_input_region`
+//! A surface covering the screen swallows every click, leaving the desktop
+//! underneath unusable. `wl_surface.set_input_region`
 //! is the answer, and the reason panels and desktop widgets work at all: the
 //! surface declares exactly which rectangles accept input, and pointer events
 //! outside them go to whatever is below as if the surface were not there.
