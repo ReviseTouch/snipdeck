@@ -154,6 +154,9 @@ export component ContextMenuWindow inherits Window {
     in property <bool> show-app-item: true;
     // Which OCR engine reads the text, shown beside "OCR + Clipboard".
     in property <string> ocr-engine: "Win OCR";
+    // The system share sheet exists only on Windows; elsewhere the button
+    // could only fail, so it is not shown.
+    in property <bool> system-share: true;
     // Description of the item the mouse is currently over, shown in the bottom
     // strip so every action — especially the icon-only Share/Transform buttons —
     // says what it does on hover.
@@ -312,7 +315,7 @@ export component ContextMenuWindow inherits Window {
                 padding-right: 6px;
                 spacing: 2px;
                 // Windows share sheet (Mail/WhatsApp/Telegram… all appear there).
-                TransformBtn {
+                if root.system-share: TransformBtn {
                     icon: "share";
                     tip: @tr("Share via the Windows share sheet");
                     hovered(t) => { root.current-tip = t; }
