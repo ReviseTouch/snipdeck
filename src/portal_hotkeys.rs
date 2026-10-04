@@ -70,13 +70,17 @@ pub fn spawn(settings: &Settings) -> anyhow::Result<Receiver<HotkeyAction>> {
         (
             ID_SNIP_CLIP,
             HotkeyAction::SnipToClipboard,
-            "Snip straight to the clipboard",
+            "Take a snip and copy it to the clipboard",
             &settings.hotkey_snip_clip,
         ),
         (
             ID_CLIP_ONLY,
             HotkeyAction::ClipboardOnly,
-            "Copy the clipboard into the deck",
+            // What the desktop lists beside the key in its shortcut settings.
+            // It said "Copy the clipboard into the deck" — the opposite of
+            // what the key does, which is snip to the clipboard and keep
+            // nothing.
+            "Snip to the clipboard only, keeping nothing",
             &settings.hotkey_clip_only,
         ),
         (
