@@ -54,21 +54,45 @@ mod unix {
     use anyhow::{Context, Result};
     use std::path::PathBuf;
     use std::process::Command;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::Duration;
+
+    /// How long a shared copy is kept for the program it was handed to.
+    const KEEP: Duration = Duration::from_secs(60 * 60);
 
     /// The spawned helper reads the file asynchronously — often after we
-    /// return — so the PNG is deliberately left in the temp dir for the OS
-    /// to reap rather than deleted here. Named per process + snip size so
-    /// two shares in flight can't clobber each other's file.
+    /// return — so it cannot be deleted here. It goes in the user's private
+    /// temp dir (`paths::private_temp_dir`), not world-readable /tmp, under a
+    /// name unique per share — the old name, process id plus snip size, made
+    /// two same-sized shares overwrite each other — and copies older than an
+    /// hour are swept on each share; the runtime dir itself is cleared at logout.
     fn temp_png(img: &image::RgbaImage) -> Result<PathBuf> {
-        let path = std::env::temp_dir().join(format!(
-            "snipdeck-share-{}-{}x{}.png",
+        static SEQ: AtomicU64 = AtomicU64::new(0);
+        let dir = crate::paths::private_temp_dir().context("no private temp directory")?;
+        sweep(&dir);
+        let path = dir.join(format!(
+            "snipdeck-share-{}-{}.png",
             std::process::id(),
-            img.width(),
-            img.height()
+            SEQ.fetch_add(1, Ordering::Relaxed)
         ));
         img.save_with_format(&path, image::ImageFormat::Png)
             .with_context(|| format!("writing {} to share", path.display()))?;
         Ok(path)
+    }
+
+    fn sweep(dir: &std::path::Path) {
+        let Ok(entries) = std::fs::read_dir(dir) else { return };
+        for entry in entries.flatten() {
+            let stale = entry
+                .metadata()
+                .and_then(|m| m.modified())
+                .ok()
+                .and_then(|t| t.elapsed().ok())
+                .is_some_and(|age| age > KEEP);
+            if stale && entry.file_name().to_string_lossy().starts_with("snipdeck-share-") {
+                let _ = std::fs::remove_file(entry.path());
+            }
+        }
     }
 
     pub fn spawn_with(program: &str, args: &[&str], img: &image::RgbaImage) -> Result<()> {

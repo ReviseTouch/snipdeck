@@ -77,6 +77,42 @@ pub fn settings_file() -> PathBuf {
     config_dir().join("settings.json")
 }
 
+/// A directory for short-lived copies of snips handed to other programs —
+/// a share, an e-mail attachment — that only this user can read.
+///
+/// Not the shared temp directory: on Linux /tmp is world-writable, files land
+/// there 0644 by default, and another local user can create a predictable name
+/// first. `$XDG_RUNTIME_DIR` is the user's own tmpfs, mode 0700 and cleared at
+/// logout; the directory inside it is created 0700 too. Falls back to the
+/// system temp dir only where no runtime dir exists.
+#[cfg(unix)]
+pub fn private_temp_dir() -> std::io::Result<PathBuf> {
+    use std::os::unix::fs::DirBuilderExt;
+    let base = std::env::var_os("XDG_RUNTIME_DIR")
+        .map(PathBuf::from)
+        .filter(|p| p.is_dir())
+        .unwrap_or_else(std::env::temp_dir);
+    // SAFETY: getuid has no preconditions and cannot fail.
+    let dir = base.join(format!("snipdeck-{}", unsafe { libc::getuid() }));
+    match std::fs::DirBuilder::new().mode(0o700).create(&dir) {
+        Ok(()) => {}
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+        Err(e) => return Err(e),
+    }
+    // In the fallback case someone else may have created the name first; use
+    // it only if it is ours and private.
+    use std::os::unix::fs::MetadataExt;
+    let meta = std::fs::symlink_metadata(&dir)?;
+    // SAFETY: as above.
+    if !meta.is_dir() || meta.uid() != unsafe { libc::getuid() } || meta.mode() & 0o077 != 0 {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::PermissionDenied,
+            format!("{} is not a private directory", dir.display()),
+        ));
+    }
+    Ok(dir)
+}
+
 pub fn ensure_dirs() -> std::io::Result<()> {
     // `data_dir()` and `config_dir()` carry out the legacy migration on their
     // first call, so by the time this returns a path there is nothing left to

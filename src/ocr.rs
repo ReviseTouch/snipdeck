@@ -181,7 +181,6 @@ pub fn extract_text(_image: &image::RgbaImage) -> anyhow::Result<String> {
 pub fn extract_text(image: &image::RgbaImage) -> anyhow::Result<String> {
     use anyhow::Context;
     use std::process::Command;
-    use std::sync::atomic::{AtomicU64, Ordering};
 
     // Which language packs are installed? Prefer Turkish+English when
     // present; otherwise let tesseract use its default (eng).
@@ -199,30 +198,31 @@ pub fn extract_text(image: &image::RgbaImage) -> anyhow::Result<String> {
         }
     }
 
-    // tesseract reads files, not pipes (portably) — hand it a temp PNG.
-    //
-    // Named per call, not per process. `spawn_ocr_index` runs one detached
-    // thread per snip, so a name keyed only on the pid is the same name for
-    // all of them: take two snips in quick succession and the second thread
-    // overwrites the PNG the first is about to hand tesseract, which indexes
-    // one snip's text against the other's id — or deletes it mid-read and the
-    // OCR just fails.
-    static SEQ: AtomicU64 = AtomicU64::new(0);
-    let tmp = std::env::temp_dir().join(format!(
-        "snipdeck-ocr-{}-{}.png",
-        std::process::id(),
-        SEQ.fetch_add(1, Ordering::Relaxed)
-    ));
+    // The image goes in on stdin, never through a file. A temp PNG in /tmp was
+    // readable by every local user (0644) for as long as tesseract ran — the
+    // full snip, on the "clipboard only" path too. `stdin` as the input name
+    // has been tesseract's way to read a pipe since 4.0.
+    let mut png = Vec::new();
     image
-        .save_with_format(&tmp, image::ImageFormat::Png)
-        .context("writing temp PNG for tesseract")?;
+        .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+        .context("encoding the snip for tesseract")?;
     let mut cmd = Command::new("tesseract");
-    cmd.arg(&tmp).arg("stdout");
+    cmd.arg("stdin").arg("stdout");
     if !wanted.is_empty() {
         cmd.arg("-l").arg(wanted.join("+"));
     }
-    let out = cmd.output().context("running tesseract")?;
-    let _ = std::fs::remove_file(&tmp);
+    let mut child = cmd
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .context("running tesseract")?;
+    // Feed it from a thread: tesseract may start writing before it has read
+    // everything, and a full stdout pipe against a full stdin pipe deadlocks.
+    let mut stdin = child.stdin.take().context("tesseract stdin")?;
+    let feeder = std::thread::spawn(move || std::io::Write::write_all(&mut stdin, &png));
+    let out = child.wait_with_output().context("running tesseract")?;
+    let _ = feeder.join();
 
     if !out.status.success() {
         anyhow::bail!(
