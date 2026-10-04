@@ -46,7 +46,11 @@ use std::path::PathBuf;
 
 use crate::paths;
 
+/// Every field falls back to its default when absent, so a settings file from
+/// an older build, or a hand-written one holding a single key, loads instead
+/// of failing whole. Unknown keys — from a newer build — are ignored.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Settings {
     pub save_dir: PathBuf,
     pub default_format: String, // "png" | "jpg" | "bmp"
@@ -142,8 +146,15 @@ impl Settings {
     pub fn load() -> Self {
         let path = paths::settings_file();
         let mut s: Self = match std::fs::read(&path) {
-            Ok(bytes) => serde_json::from_slice(&bytes).unwrap_or_default(),
-            Err(_) => Self::default(),
+            Ok(bytes) => match serde_json::from_slice(&bytes) {
+                Ok(s) => s,
+                Err(e) => set_aside(&path, &e),
+            },
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Self::default(),
+            Err(e) => {
+                log::warn!("settings could not be read ({e}); using defaults for this session");
+                Self::default()
+            }
         };
         // Migrate older builds that wrote a very dark selection tint.
         if s.selection_tint[3] > 100 {
@@ -172,13 +183,60 @@ impl Settings {
         s
     }
 
+    /// Atomic, like every other file Snipdeck rewrites: a crash mid-write
+    /// leaves the previous settings, not a truncated file that resets them all.
     pub fn save(&self) -> anyhow::Result<()> {
-        let path = paths::settings_file();
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
         let bytes = serde_json::to_vec_pretty(self)?;
-        std::fs::write(&path, bytes)?;
-        Ok(())
+        crate::atomic_file::replace(&paths::settings_file(), |w| {
+            std::io::Write::write_all(w, &bytes)?;
+            Ok(())
+        })
+    }
+}
+
+/// Why the settings file was not used, if it was not — for the banner.
+static LOAD_PROBLEM: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
+/// Set by [`Settings::load`] when it had to fall back to defaults because the
+/// file did not parse. Shown once, as a banner.
+pub fn load_problem() -> Option<&'static str> {
+    LOAD_PROBLEM.get().map(String::as_str)
+}
+
+/// The file exists but does not parse — a typo from a hand edit (the upload
+/// help asks for one), or a crash from before saves were atomic. Loading the
+/// defaults is fine; the first save writing them over the user's file is not,
+/// so the file is moved to `settings.json.bak` first, and the user is told.
+fn set_aside(path: &std::path::Path, err: &serde_json::Error) -> Settings {
+    let backup = path.with_extension("json.bak");
+    let kept = std::fs::rename(path, &backup).is_ok();
+    log::warn!(
+        "settings file does not parse ({err}); using defaults{}",
+        if kept { format!(", the old file is kept as {}", backup.display()) } else { String::new() }
+    );
+    if kept {
+        let _ = LOAD_PROBLEM.set(backup.display().to_string());
+    }
+    Settings::default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The upload help tells people to add `imgur_client_id` by hand. A file
+    /// holding only that key used to fail to parse as a whole — 13 fields were
+    /// required — and silently reset everything else.
+    #[test]
+    fn a_partial_file_keeps_its_key_and_defaults_the_rest() {
+        let s: Settings = serde_json::from_str(r#"{"imgur_client_id": "abc"}"#).unwrap();
+        assert_eq!(s.imgur_client_id, "abc");
+        assert_eq!(s.hotkey_snip, Settings::default().hotkey_snip);
+    }
+
+    #[test]
+    fn unknown_keys_from_a_newer_build_are_ignored() {
+        let s: Settings = serde_json::from_str(r#"{"dark_theme": false, "added_in_v9": 1}"#).unwrap();
+        assert!(!s.dark_theme);
     }
 }

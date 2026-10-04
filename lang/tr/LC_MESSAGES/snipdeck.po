@@ -595,3 +595,6 @@ msgstr "Sabitlenmişler dahil bütün snip'ler gider. Görüntüler diskten sili
 
 msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
 msgstr "Sabitlenmiş snip'ler kalır. Görüntüler diskten silinir ve geri getirilemez."
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr "Ayarlar okunamadı ve sıfırlandı. Eski dosya {path} olarak saklandı"

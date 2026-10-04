@@ -225,7 +225,13 @@ impl AppState {
             pending_freeze_arm: None,
             color_pick_hid_main: false,
             color_pick_started_at: None,
-            last_error: None,
+            last_error: crate::settings::load_problem().map(|backup| {
+                t1(
+                    "Settings could not be read and were reset. The old file is kept as {path}",
+                    "{path}",
+                    backup,
+                )
+            }),
             hotkey_error,
             thumb_cache: std::collections::HashMap::new(),
             thumb_order: std::collections::VecDeque::new(),
