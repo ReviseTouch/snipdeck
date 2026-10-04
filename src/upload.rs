@@ -61,12 +61,22 @@ mod imp {
         }
         // Informed consent: spell out the destination + privacy implications and
         // require an explicit OK before any bytes leave the machine. Cancel aborts.
-        if !confirm_upload(use_imgur) {
+        //
+        // The prompt blocks until answered. On Windows MessageBoxW keeps the UI
+        // thread's messages flowing while it waits, so asking there is harmless.
+        // rfd's dialog on Linux does not, and anyone reading the consent text for
+        // more than a few seconds got GNOME's "Snipdeck is not responding" over
+        // it — so there it is asked on the worker thread instead.
+        let ask_on_worker = cfg!(not(target_os = "windows"));
+        if !ask_on_worker && !confirm_upload(use_imgur) {
             return Ok(());
         }
         let img = img.clone();
         let client_id = client_id.to_string();
         std::thread::spawn(move || {
+            if ask_on_worker && !confirm_upload(use_imgur) {
+                return;
+            }
             let result = if use_imgur {
                 imgur_upload(&img, &client_id)
             } else {

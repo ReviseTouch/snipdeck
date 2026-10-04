@@ -559,26 +559,53 @@ impl AppState {
             snip.area.h,
             self.settings.default_format
         );
-        let dialog = rfd::FileDialog::new()
-            .set_directory(&self.settings.save_dir)
-            .set_file_name(default_name)
-            .add_filter(
-                "Image",
-                &["png", "jpg", "jpeg", "bmp", "gif", "tif", "tiff"],
-            )
-            .save_file();
-        if let Some(mut path) = dialog {
-            // A name typed without an extension gets the default format rather
-            // than an "unsupported image type" error.
+        let filter: &[&str] = &["png", "jpg", "jpeg", "bmp", "gif", "tif", "tiff", "webp"];
+        let default_format = self.settings.default_format.clone();
+        // A name typed without an extension gets the default format rather
+        // than an "unsupported image type" error.
+        let finish = move |mut path: std::path::PathBuf| -> anyhow::Result<()> {
             if path.extension().is_none() {
-                path.set_extension(&self.settings.default_format);
+                path.set_extension(&default_format);
             }
-            let result = snip
-                .load_image()
-                .and_then(|img| crate::image_files::export(&path, &img));
-            if let Err(e) = result {
-                self.last_error = Some(t1("Failed to save: {e}", "{e}", &format!("{e:#}")));
+            crate::image_files::export(&path, &snip.load_image()?)
+        };
+
+        // Windows: the native dialog runs a modal loop that keeps every window
+        // of this thread responsive, so it can run right here.
+        #[cfg(target_os = "windows")]
+        {
+            let dialog = rfd::FileDialog::new()
+                .set_directory(&self.settings.save_dir)
+                .set_file_name(default_name)
+                .add_filter("Image", filter)
+                .save_file();
+            if let Some(path) = dialog {
+                if let Err(e) = finish(path) {
+                    self.last_error = Some(t1("Failed to save: {e}", "{e}", &format!("{e:#}")));
+                }
             }
+        }
+        // Elsewhere the dialog lives in another process (the desktop portal)
+        // and rfd waits for it by blocking the calling thread. On the UI thread
+        // that froze every Snipdeck window while the user browsed, and after a
+        // few seconds GNOME offered to force-quit the app. It runs on a worker
+        // instead; a failure comes back as a banner through `background_errors`.
+        #[cfg(not(target_os = "windows"))]
+        {
+            let dialog = rfd::AsyncFileDialog::new()
+                .set_directory(&self.settings.save_dir)
+                .set_file_name(default_name)
+                .add_filter("Image", filter);
+            let errors = self.background_errors.0.clone();
+            std::thread::spawn(move || {
+                let Some(picked) = pollster::block_on(dialog.save_file()) else {
+                    return;
+                };
+                if let Err(e) = finish(picked.path().to_path_buf()) {
+                    let _ = errors.send(t1("Failed to save: {e}", "{e}", &format!("{e:#}")));
+                    crate::pump::wake();
+                }
+            });
         }
     }
 }

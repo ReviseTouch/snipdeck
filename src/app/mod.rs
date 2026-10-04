@@ -126,6 +126,9 @@ pub struct AppState {
     color_pick_started_at: Option<std::time::Instant>,
     last_error: Option<String>,
     hotkey_error: Option<String>,
+    /// Failures from work that finished off the UI thread (a save dialog on a
+    /// worker), drained into `last_error` by `tick`.
+    background_errors: (crossbeam_channel::Sender<String>, crossbeam_channel::Receiver<String>),
 
     // Decoded-thumbnail cache, bounded (LRU-ish) so total memory stays flat
     // no matter how many snips accumulate; visible cards fetch from here.
@@ -238,6 +241,7 @@ impl AppState {
                 )
             }),
             hotkey_error,
+            background_errors: crossbeam_channel::unbounded(),
             thumb_cache: std::collections::HashMap::new(),
             thumb_order: std::collections::VecDeque::new(),
             gallery_cards: Vec::new(),
@@ -435,6 +439,11 @@ impl AppState {
         let had_events = !events.is_empty();
         for ev in events {
             self.handle_mouse_event(ev);
+        }
+
+        // 2b. Failures from work that finished on a worker thread.
+        if let Some(e) = self.background_errors.1.try_iter().last() {
+            self.last_error = Some(e);
         }
 
         // 3a. Snips converted from PNG to WebP in the background. The new
