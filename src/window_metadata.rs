@@ -45,9 +45,27 @@ pub fn selection_confidence(window: ScreenRect, selection: ScreenRect) -> f32 {
     (0.30 + selection_inside_window * 0.55 + window_covered * 0.45).min(1.0)
 }
 
+/// The window under a point, from xcap's window list — the fallback where no
+/// native lookup answered. Better no name than a wrong one: a snip's window
+/// details are searchable and shown, and a wrong title files the snip under
+/// the wrong thing.
+///
+/// - On Windows the list is in z-order, topmost first, so the first window
+///   under the point is the one on top — once Snipdeck's own windows (the
+///   overlay above all) are left out, which is exactly when this fallback
+///   runs: the native lookup declines our own windows.
+/// - On X11 it is `_NET_CLIENT_LIST`, in the order windows were mapped, not
+///   stacked; with more than one window under the point there is no telling
+///   which is on top, and the first was simply the oldest.
+/// - On Wayland it holds only XWayland windows, and the window actually
+///   under the point may not be in it at all.
 fn capture_with_xcap(x: i32, y: i32) -> Option<WindowInfo> {
-    let windows = xcap::Window::all().ok()?;
-    windows
+    #[cfg(target_os = "linux")]
+    if crate::window_env::caps().backend == crate::window_env::Backend::Wayland {
+        return None;
+    }
+    let mut hits = xcap::Window::all()
+        .ok()?
         .into_iter()
         .filter(|window| !window.is_minimized())
         .filter(|window| window.width() > 0 && window.height() > 0)
@@ -60,9 +78,20 @@ fn capture_with_xcap(x: i32, y: i32) -> Option<WindowInfo> {
                 x,
                 y,
             )
-        })
-        .next()
-        .map(window_from_xcap)
+        });
+    #[cfg(target_os = "windows")]
+    {
+        hits.find(|window| window.process_id() != std::process::id())
+            .map(window_from_xcap)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let only = hits.next()?;
+        if hits.next().is_some() {
+            return None;
+        }
+        Some(window_from_xcap(only))
+    }
 }
 
 fn window_from_xcap(window: xcap::Window) -> WindowInfo {
