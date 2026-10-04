@@ -65,6 +65,9 @@ pub struct AppState {
 
     hotkey_service: Option<HotkeyService>,
     pub mouse_trigger: MouseTriggerService,
+    /// Snips from before WebP storage, being converted in the background; see
+    /// `snip::convert_legacy_pngs`. `None` once there is nothing to convert.
+    conversions: Option<crossbeam_channel::Receiver<crate::snip::Converted>>,
     /// Super+Alt+drag snips the GNOME extension selected and captured. `None`
     /// off GNOME, or when the session bus would not have us.
     #[cfg(target_os = "linux")]
@@ -165,6 +168,7 @@ impl AppState {
     pub fn new(window: &MainWindow) -> Self {
         let settings = Settings::load();
         let gallery = GalleryState::load();
+        let conversions = crate::snip::convert_legacy_pngs(&gallery.snips);
         crate::window_tamer::set_floating_in_taskbar(settings.floating_in_taskbar);
 
         let (hotkey_service, hotkey_error) = match HotkeyService::start(&settings) {
@@ -206,6 +210,7 @@ impl AppState {
             filters: GalleryFilters::default(),
             hotkey_service,
             mouse_trigger,
+            conversions,
             #[cfg(target_os = "linux")]
             region_snips: crate::gnome_bridge::start(),
             overlay,
@@ -421,6 +426,33 @@ impl AppState {
         let had_events = !events.is_empty();
         for ev in events {
             self.handle_mouse_event(ev);
+        }
+
+        // 3a. Snips converted from PNG to WebP in the background. The new
+        // names are saved first; the old files go only once that worked.
+        let converted: Vec<_> = self
+            .conversions
+            .as_ref()
+            .map(|rx| rx.try_iter().collect())
+            .unwrap_or_default();
+        // When the converter is done, refresh once so the storage figure in the
+        // status bar shows the smaller files — not once per converted snip.
+        let conversion_finished = self.conversions.as_ref().is_some_and(|rx| {
+            matches!(rx.try_recv(), Err(crossbeam_channel::TryRecvError::Disconnected))
+        });
+        if conversion_finished {
+            self.conversions = None;
+            self.refresh_gallery(window);
+        }
+        if !converted.is_empty() {
+            let stale: Vec<_> = converted
+                .into_iter()
+                .flat_map(|c| self.gallery.apply_conversion(c))
+                .collect();
+            match self.gallery.save() {
+                Ok(()) => stale.iter().for_each(|p| crate::image_files::remove(p)),
+                Err(e) => log::warn!("recording converted snips failed, keeping the PNGs: {e}"),
+            }
         }
 
         // 3b. Super+Alt+drag snips from the GNOME extension.

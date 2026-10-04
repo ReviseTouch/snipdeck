@@ -593,7 +593,7 @@ impl AppState {
                             }
                             let mut snip = make_snip(region);
                             snip.monitor_label = Some(monitor_label);
-                            if let Err(e) = snip.save_image_png(&image) {
+                            if let Err(e) = snip.save_image(&image) {
                                 self.overlay.hide();
                                 self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
                                 // The floating window can't open without the

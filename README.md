@@ -336,6 +336,7 @@ threads and hand results back over channels, drained once per tick.
 | `src/share.rs`, `src/upload.rs` | Share sheet / MAPI mail / editor / image-host upload |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Tray icon, launch-at-login, single-instance guard |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Gallery persistence (SQLite + FTS), settings, paths |
+| `src/image_files.rs`, `src/atomic_file.rs` | Snip images on disk: lossless WebP, atomic writes |
 | `src/i18n.rs`, `lang/` | Runtime i18n + bundled gettext `.po` catalogs (23 languages) |
 
 </details>

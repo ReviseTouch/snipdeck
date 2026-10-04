@@ -82,34 +82,34 @@ impl Snip {
         paths::thumbs_dir().join(file)
     }
 
-    pub fn save_image_png(&mut self, image: &image::RgbaImage) -> anyhow::Result<()> {
-        if self.image_file.is_empty() {
-            self.image_file = format!("{}.png", self.id);
-        }
-        if self.thumb_file.is_none() {
-            self.thumb_file = Some(default_thumb_file(self.id));
-        }
+    /// Write the snip's image and thumbnail.
+    ///
+    /// The file name follows the format the image is stored in
+    /// (`image_files::file_name`) — lossless WebP, or PNG for one too large for
+    /// it. The snip's file names only change once both new files are on disk,
+    /// so a failed write leaves it pointing at its old, intact image rather
+    /// than at a file that was never written; the old files, if the names
+    /// changed, are removed after. Callers persist the gallery afterwards,
+    /// which records the new names.
+    pub fn save_image(&mut self, image: &image::RgbaImage) -> anyhow::Result<()> {
+        let image_file = crate::image_files::file_name(&self.id.to_string(), image);
+        let thumb_file = default_thumb_file(self.id);
+        let image_path = paths::images_dir().join(&image_file);
+        let thumb_path = paths::thumbs_dir().join(&thumb_file);
+        crate::image_files::write(&image_path, image)
+            .with_context(|| format!("saving snip image to {}", image_path.display()))?;
+        crate::image_files::write(&thumb_path, &thumbnail_from(image, THUMB_MAX_DIM))
+            .with_context(|| format!("saving snip thumbnail to {}", thumb_path.display()))?;
 
-        let path = self.image_path();
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).ok();
+        let old_image = (!self.image_file.is_empty()).then(|| self.image_path());
+        let old_thumb = self.thumb_path();
+        self.image_file = image_file;
+        self.thumb_file = Some(thumb_file);
+        for (old, new) in [(old_image, &image_path), (Some(old_thumb), &thumb_path)] {
+            if let Some(old) = old.filter(|old| old != new) {
+                crate::image_files::remove(&old);
+            }
         }
-        crate::image_files::write_png(&path, image)
-            .with_context(|| format!("saving snip image to {}", path.display()))?;
-
-        self.save_thumbnail_png(image)
-            .with_context(|| format!("saving snip thumbnail for {}", self.id))?;
-        Ok(())
-    }
-
-    pub fn save_thumbnail_png(&self, image: &image::RgbaImage) -> anyhow::Result<()> {
-        let thumb = thumbnail_from(image, THUMB_MAX_DIM);
-        let path = self.thumb_path();
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).ok();
-        }
-        crate::image_files::write_png(&path, &thumb)
-            .with_context(|| format!("saving snip thumbnail to {}", path.display()))?;
         Ok(())
     }
 
@@ -135,13 +135,29 @@ impl Snip {
         }
         let full = self.load_image()?;
         let thumb = thumbnail_from(&full, THUMB_MAX_DIM);
-        crate::image_files::write_png(&self.thumb_path(), &thumb)?;
+        crate::image_files::write(&self.thumb_path(), &thumb)?;
         Ok(thumb)
     }
 
+    /// Remove the snip's files — under every name it may have on disk, not
+    /// just the recorded one: a background conversion from PNG may be writing
+    /// the WebP sibling right now, and removing it bumps its generation so that
+    /// write is discarded instead of left behind.
     pub fn delete_files(&self) {
-        crate::image_files::remove(&self.image_path());
-        crate::image_files::remove(&self.thumb_path());
+        let id = self.id;
+        let mut paths = vec![
+            self.image_path(),
+            self.thumb_path(),
+            paths::images_dir().join(format!("{id}.webp")),
+            paths::images_dir().join(format!("{id}.png")),
+            paths::thumbs_dir().join(format!("{id}.thumb.webp")),
+            paths::thumbs_dir().join(format!("{id}.thumb.png")),
+        ];
+        paths.sort();
+        paths.dedup();
+        for path in paths {
+            crate::image_files::remove(&path);
+        }
     }
 }
 
@@ -151,7 +167,8 @@ pub fn make_snip(area: ScreenRect) -> Snip {
         id,
         created_at: Utc::now(),
         area,
-        image_file: format!("{id}.png"),
+        // Placeholder until `save_image` writes the file and records its name.
+        image_file: format!("{id}.webp"),
         thumb_file: Some(default_thumb_file(id)),
         label: None,
         pinned: false,
@@ -159,6 +176,84 @@ pub fn make_snip(area: ScreenRect) -> Snip {
         floating: false,
         last_position: None,
     }
+}
+
+/// A snip moved from PNG to lossless WebP in the background, ready to be
+/// recorded by [`GalleryState::apply_conversion`].
+pub struct Converted {
+    id: Uuid,
+    /// The PNG the conversion read; the snip must still point at it.
+    from: String,
+    image_file: String,
+    /// `None` when the thumbnail lost a race and kept its old file.
+    thumb_file: Option<String>,
+}
+
+/// Convert snips still stored as PNG — written before snips were stored as
+/// WebP — on a background thread, one after another. Each finished snip comes
+/// back on the receiver. `None` when there is nothing to convert.
+///
+/// Losslessly: the WebP decodes to exactly the PNG's pixels. Every write goes
+/// through `image_files::write_webp_if_unchanged`, so an edit or a delete that
+/// lands while a snip is being converted always wins over the conversion.
+pub fn convert_legacy_pngs(snips: &[Snip]) -> Option<crossbeam_channel::Receiver<Converted>> {
+    let todo: Vec<(Uuid, String)> = snips
+        .iter()
+        .filter(|s| s.image_file.to_ascii_lowercase().ends_with(".png"))
+        .map(|s| (s.id, s.image_file.clone()))
+        .collect();
+    if todo.is_empty() {
+        return None;
+    }
+    let (tx, rx) = crossbeam_channel::unbounded();
+    std::thread::Builder::new()
+        .name("webp-convert".into())
+        .spawn(move || {
+            let mut done = 0;
+            for (id, from) in todo {
+                match convert_one(id, &from) {
+                    Ok(Some(converted)) => {
+                        done += 1;
+                        if tx.send(converted).is_err() {
+                            return;
+                        }
+                        crate::pump::wake();
+                    }
+                    Ok(None) => {}
+                    Err(err) => log::debug!("converting snip {id} to WebP skipped: {err:#}"),
+                }
+            }
+            log::info!("converted {done} snips from PNG to lossless WebP");
+        })
+        .ok()?;
+    Some(rx)
+}
+
+fn convert_one(id: Uuid, from: &str) -> anyhow::Result<Option<Converted>> {
+    let image_file = format!("{id}.webp");
+    let thumb_file = default_thumb_file(id);
+    let image_path = paths::images_dir().join(&image_file);
+    let thumb_path = paths::thumbs_dir().join(&thumb_file);
+    // Read before decoding: anything that touches these paths from here on
+    // makes the conversion stand down.
+    let image_generation = crate::image_files::generation(&image_path);
+    let thumb_generation = crate::image_files::generation(&thumb_path);
+    let image = image::open(paths::images_dir().join(from))?.to_rgba8();
+    if crate::image_files::file_name(&id.to_string(), &image) != image_file {
+        return Ok(None); // too large for WebP; it stays a PNG
+    }
+    if !crate::image_files::write_webp_if_unchanged(&image_path, &image, image_generation)? {
+        return Ok(None);
+    }
+    let thumb = thumbnail_from(&image, THUMB_MAX_DIM);
+    let thumb_written =
+        crate::image_files::write_webp_if_unchanged(&thumb_path, &thumb, thumb_generation)?;
+    Ok(Some(Converted {
+        id,
+        from: from.to_string(),
+        image_file,
+        thumb_file: thumb_written.then_some(thumb_file),
+    }))
 }
 
 /// Top-level persisted state for the gallery.
@@ -245,6 +340,30 @@ impl GalleryState {
             Err(err) => log::warn!("clearing snip db failed, keeping the files: {err}"),
         }
         self.snips.clear();
+    }
+
+    /// Point a converted snip at its WebP files. Returns the old files, to be
+    /// removed only once the gallery has been saved with the new names — the
+    /// other order, a crash in between left the database pointing at a PNG
+    /// that no longer existed. Returns nothing when the snip was deleted or
+    /// edited since: an edit already moved it, and removed the PNG itself.
+    pub fn apply_conversion(&mut self, converted: Converted) -> Vec<PathBuf> {
+        let Some(snip) = self.get_mut(converted.id) else {
+            return Vec::new();
+        };
+        if snip.image_file != converted.from {
+            return Vec::new();
+        }
+        let mut stale = vec![snip.image_path()];
+        snip.image_file = converted.image_file;
+        if let Some(thumb_file) = converted.thumb_file {
+            let old_thumb = snip.thumb_path();
+            snip.thumb_file = Some(thumb_file);
+            if old_thumb != snip.thumb_path() {
+                stale.push(old_thumb);
+            }
+        }
+        stale
     }
 
     pub fn get(&self, id: Uuid) -> Option<&Snip> {
@@ -378,7 +497,7 @@ fn search_fold(input: &str) -> String {
 }
 
 fn default_thumb_file(id: Uuid) -> String {
-    format!("{id}.thumb.png")
+    format!("{id}.thumb.webp")
 }
 
 fn thumbnail_from(image: &image::RgbaImage, max_dim: u32) -> image::RgbaImage {

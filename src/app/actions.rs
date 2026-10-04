@@ -179,7 +179,7 @@ impl AppState {
         // snip) is left untouched — only the pixels are rewritten.
         match self.gallery.get_mut(id) {
             Some(s) => {
-                if let Err(e) = s.save_image_png(&image) {
+                if let Err(e) = s.save_image(&image) {
                     self.last_error =
                         Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
                     return;
@@ -243,7 +243,7 @@ impl AppState {
         }
         let mut snip = make_snip(ScreenRect::new(0, 0, w, h));
         snip.monitor_label = Some(t("Collage"));
-        if let Err(e) = snip.save_image_png(&image) {
+        if let Err(e) = snip.save_image(&image) {
             self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
             return;
         }
@@ -444,7 +444,7 @@ impl AppState {
         let out = op(&img);
         let (ow, oh) = (out.width(), out.height());
         if let Some(s) = self.gallery.get_mut(id) {
-            if let Err(e) = s.save_image_png(&out) {
+            if let Err(e) = s.save_image(&out) {
                 self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
                 return;
             }
@@ -499,7 +499,7 @@ impl AppState {
         let ch = ch.min(ih - cy).max(1);
         let cropped = image::imageops::crop_imm(&img, cx, cy, cw, ch).to_image();
         if let Some(s) = self.gallery.get_mut(id) {
-            if let Err(e) = s.save_image_png(&cropped) {
+            if let Err(e) = s.save_image(&cropped) {
                 self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
                 return;
             }

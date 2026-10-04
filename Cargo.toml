@@ -37,7 +37,14 @@ raw-window-handle = "0.6"
 xcap = "0.0.14"
 arboard = { version = "3", features = ["image-data"] }
 global-hotkey = "0.5"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "gif", "tiff"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "gif", "tiff", "webp"] }
+# Snips are stored as lossless WebP (see src/image_files.rs). The `image` crate
+# decodes it, but its own encoder reaches only half the size libwebp does:
+# measured on a real gallery of 126 screenshots, the PNGs were 10.7 MB, image's
+# lossless WebP 5.4 MB, libwebp's 2.9 MB — pixel for pixel identical. libwebp is
+# BSD-licensed C, built from the vendored source; default features off so it
+# does not pull a second copy of `image` in.
+webp = { version = "0.3", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 rusqlite = { version = "0.32", features = ["bundled", "functions"] }
