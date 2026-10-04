@@ -26,18 +26,9 @@ msgstr "Только буфер"
 msgid "Close"
 msgstr "Закрыть"
 
-msgid "Reset"
-msgstr "Сбросить"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "Новый снимок — выделите область с Win + левая кнопка"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "Сделать снимок и скопировать в буфер обмена"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "Только скопировать в буфер (без сохранения в галерею)"
 
 msgid "Hide on-screen snips"
 msgstr "Скрыть снимки с экрана"
@@ -45,17 +36,11 @@ msgstr "Скрыть снимки с экрана"
 msgid "Show snips on screen"
 msgstr "Показать снимки на экране"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "Показать / скрыть плавающие снимки на панели задач"
-
 msgid "Clear unpinned snips"
 msgstr "Удалить незакреплённые снимки"
 
 msgid "Clear all snips"
 msgstr "Удалить все снимки"
-
-msgid "Toggle light / dark theme"
-msgstr "Переключить светлую / тёмную тему"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -74,23 +59,6 @@ msgid "Sort"
 msgstr "Сортировка"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "Фильтр по статусу — Все → Закреплённые → Незакреплённые → На экране → Скрытые"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "Фильтр по содержимому — Есть/Нет OCR · Есть/Нет окна · С меткой"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "Фильтр по размеру — Маленький / Средний / Большой / Широкий / Высокий / Квадратный"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "Фильтр по дате — Сегодня / 24 часа / 7 дней / 30 дней"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "Сортировать по — Новые / Старые / Закреплённые / Размер / Ширина / Высота / Монитор"
-
-msgid "Reset all filters and search"
-msgstr "Сбросить все фильтры и поиск"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -120,9 +88,6 @@ msgstr "Есть окно"
 
 msgid "No window"
 msgstr "Нет окна"
-
-msgid "Tagged"
-msgstr "С меткой"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -211,9 +176,6 @@ msgstr "На экране {}"
 
 msgid "Filtered {}"
 msgstr "Отфильтровано {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F поиск"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -321,15 +283,6 @@ msgid "Dec"
 msgstr "Дек"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "окно"
-
-msgid "OCR text indexed"
-msgstr "OCR текст проиндексирован"
-
-msgid "Window info indexed"
-msgstr "Данные окна проиндексированы"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -630,3 +583,20 @@ msgstr "Посетить ReviseTouch"
 
 msgid "eyedropper"
 msgstr "пипетка"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "Фильтр"
+
+msgid "Clear filters"
+msgstr "Сбросить фильтры"
+
+msgid "More"
+msgstr "Ещё"
+
+msgid "Dark theme"
+msgstr "Тёмная тема"
+
+msgid "Floating snips in the taskbar"
+msgstr "Плавающие снимки на панели задач"

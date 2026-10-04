@@ -21,18 +21,9 @@ msgstr "نسخ فقط"
 msgid "Close"
 msgstr "إغلاق"
 
-msgid "Reset"
-msgstr "إعادة تعيين"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "التقط لقطة جديدة — اسحب منطقة بالضغط على Win + النقر الأيسر"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "التقط لقطة وانسخها إلى الحافظة"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "نسخ إلى الحافظة فقط (دون الحفظ في المعرض)"
 
 msgid "Hide on-screen snips"
 msgstr "إخفاء اللقطات على الشاشة"
@@ -40,17 +31,11 @@ msgstr "إخفاء اللقطات على الشاشة"
 msgid "Show snips on screen"
 msgstr "إظهار اللقطات على الشاشة"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "إظهار / إخفاء اللقطات العائمة في شريط المهام"
-
 msgid "Clear unpinned snips"
 msgstr "مسح اللقطات غير المثبتة"
 
 msgid "Clear all snips"
 msgstr "مسح جميع اللقطات"
-
-msgid "Toggle light / dark theme"
-msgstr "تبديل المظهر الفاتح / الداكن"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "الترتيب"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "تصفية حسب الحالة — الكل → مثبت → غير مثبت → على الشاشة → مخفي"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "تصفية حسب المحتوى — يحتوي/لا يحتوي على OCR · يحتوي/لا يحتوي على نافذة · مُوسوم"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "تصفية حسب الحجم — صغير / متوسط / كبير / عريض / طويل / مربع"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "تصفية حسب التاريخ — اليوم / 24 ساعة / 7 أيام / 30 يومًا"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "الترتيب حسب — الأحدث / الأقدم / مثبت / الحجم / العرض / الارتفاع / الشاشة"
-
-msgid "Reset all filters and search"
-msgstr "إعادة تعيين كل المرشحات والبحث"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "يحتوي على نافذة"
 
 msgid "No window"
 msgstr "بدون نافذة"
-
-msgid "Tagged"
-msgstr "مُوسوم"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "على الشاشة {}"
 
 msgid "Filtered {}"
 msgstr "مُصفى {}"
-
-msgid "Ctrl+F search"
-msgstr "بحث Ctrl+F"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "ديسمبر"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "نافذة"
-
-msgid "OCR text indexed"
-msgstr "تم فهرسة نص OCR"
-
-msgid "Window info indexed"
-msgstr "تم فهرسة معلومات النافذة"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "زيارة ReviseTouch"
 
 msgid "eyedropper"
 msgstr "قطّارة"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "تصفية"
+
+msgid "Clear filters"
+msgstr "مسح المرشحات"
+
+msgid "More"
+msgstr "المزيد"
+
+msgid "Dark theme"
+msgstr "المظهر الداكن"
+
+msgid "Floating snips in the taskbar"
+msgstr "اللقطات العائمة في شريط المهام"

@@ -21,18 +21,9 @@ msgstr "Chỉ sao"
 msgid "Close"
 msgstr "Đóng"
 
-msgid "Reset"
-msgstr "Đặt lại"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "Chụp mới — kéo vùng bằng Win + nhấp trái"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "Chụp màn hình và sao chép vào bộ nhớ tạm"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "Chỉ sao chép vào bộ nhớ tạm (không lưu vào thư viện)"
 
 msgid "Hide on-screen snips"
 msgstr "Ẩn ảnh chụp trên màn hình"
@@ -40,17 +31,11 @@ msgstr "Ẩn ảnh chụp trên màn hình"
 msgid "Show snips on screen"
 msgstr "Hiện ảnh chụp trên màn hình"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "Hiện / ẩn ảnh chụp nổi trên thanh tác vụ"
-
 msgid "Clear unpinned snips"
 msgstr "Xóa ảnh chụp chưa ghim"
 
 msgid "Clear all snips"
 msgstr "Xóa tất cả ảnh chụp"
-
-msgid "Toggle light / dark theme"
-msgstr "Chuyển giao diện sáng / tối"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "Sắp xếp"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "Lọc theo trạng thái — Tất cả → Đã ghim → Chưa ghim → Trên màn hình → Ẩn"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "Lọc theo nội dung — Có/Không OCR · Có/Không cửa sổ · Đã gắn thẻ"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "Lọc theo kích thước — Nhỏ / Vừa / Lớn / Rộng / Cao / Vuông"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "Lọc theo ngày — Hôm nay / 24 giờ / 7 ngày / 30 ngày"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "Sắp xếp theo — Mới nhất / Cũ nhất / Đã ghim / Kích thước / Chiều rộng / Chiều cao / Màn hình"
-
-msgid "Reset all filters and search"
-msgstr "Đặt lại tất cả bộ lọc và tìm kiếm"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "Có cửa sổ"
 
 msgid "No window"
 msgstr "Không cửa sổ"
-
-msgid "Tagged"
-msgstr "Đã gắn thẻ"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "Trên màn hình {}"
 
 msgid "Filtered {}"
 msgstr "Đã lọc {}"
-
-msgid "Ctrl+F search"
-msgstr "Tìm kiếm Ctrl+F"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "Thg 12"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "cửa sổ"
-
-msgid "OCR text indexed"
-msgstr "Văn bản OCR đã lập chỉ mục"
-
-msgid "Window info indexed"
-msgstr "Thông tin cửa sổ đã lập chỉ mục"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "Truy cập ReviseTouch"
 
 msgid "eyedropper"
 msgstr "ống hút màu"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "Lọc"
+
+msgid "Clear filters"
+msgstr "Xóa bộ lọc"
+
+msgid "More"
+msgstr "Thêm"
+
+msgid "Dark theme"
+msgstr "Giao diện tối"
+
+msgid "Floating snips in the taskbar"
+msgstr "Ảnh chụp nổi trên thanh tác vụ"

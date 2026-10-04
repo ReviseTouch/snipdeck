@@ -21,18 +21,9 @@ msgstr "فقط کپی"
 msgid "Close"
 msgstr "بستن"
 
-msgid "Reset"
-msgstr "بازنشانی"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "گرفتن تصویر جدید — ناحیه‌ای را با Win + کلیک چپ بکشید"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "گرفتن تصویر و کپی آن در کلیپ‌بورد"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "فقط کپی در کلیپ‌بورد (بدون ذخیره در گالری)"
 
 msgid "Hide on-screen snips"
 msgstr "پنهان کردن تصاویر روی صفحه"
@@ -40,17 +31,11 @@ msgstr "پنهان کردن تصاویر روی صفحه"
 msgid "Show snips on screen"
 msgstr "نمایش تصاویر روی صفحه"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "نمایش / پنهان کردن تصاویر شناور در نوار وظیفه"
-
 msgid "Clear unpinned snips"
 msgstr "پاک کردن تصاویر بدون پین"
 
 msgid "Clear all snips"
 msgstr "پاک کردن همه تصاویر"
-
-msgid "Toggle light / dark theme"
-msgstr "تغییر پوسته روشن / تاریک"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "مرتب‌سازی"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "فیلتر بر اساس وضعیت — همه → پین‌شده → بدون پین → روی صفحه → پنهان"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "فیلتر بر اساس محتوا — دارای/بدون OCR · دارای/بدون پنجره · برچسب‌دار"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "فیلتر بر اساس اندازه — کوچک / متوسط / بزرگ / عریض / بلند / مربع"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "فیلتر بر اساس تاریخ — امروز / ۲۴ ساعت / ۷ روز / ۳۰ روز"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "مرتب‌سازی بر اساس — جدیدترین / قدیمی‌ترین / پین‌شده / اندازه / عرض / ارتفاع / مانیتور"
-
-msgid "Reset all filters and search"
-msgstr "بازنشانی همه فیلترها و جستجو"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "دارای پنجره"
 
 msgid "No window"
 msgstr "بدون پنجره"
-
-msgid "Tagged"
-msgstr "برچسب‌دار"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "روی صفحه {}"
 
 msgid "Filtered {}"
 msgstr "فیلترشده {}"
-
-msgid "Ctrl+F search"
-msgstr "جستجو Ctrl+F"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "دسامـ"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "پنجره"
-
-msgid "OCR text indexed"
-msgstr "متن OCR فهرست‌بندی شد"
-
-msgid "Window info indexed"
-msgstr "اطلاعات پنجره فهرست‌بندی شد"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "بازدید از ReviseTouch"
 
 msgid "eyedropper"
 msgstr "قطره‌چکان"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "فیلتر"
+
+msgid "Clear filters"
+msgstr "پاک کردن فیلترها"
+
+msgid "More"
+msgstr "بیشتر"
+
+msgid "Dark theme"
+msgstr "پوسته تاریک"
+
+msgid "Floating snips in the taskbar"
+msgstr "تصاویر شناور در نوار وظیفه"

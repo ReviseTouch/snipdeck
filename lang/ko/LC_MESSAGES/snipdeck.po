@@ -21,18 +21,9 @@ msgstr "복사만"
 msgid "Close"
 msgstr "닫기"
 
-msgid "Reset"
-msgstr "초기화"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "새 캡처 — Win + 마우스 왼쪽 버튼으로 영역을 드래그하세요"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "캡처하여 클립보드에 복사"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "클립보드에만 복사 (갤러리에 저장하지 않음)"
 
 msgid "Hide on-screen snips"
 msgstr "화면의 캡처 숨기기"
@@ -40,17 +31,11 @@ msgstr "화면의 캡처 숨기기"
 msgid "Show snips on screen"
 msgstr "화면에 캡처 표시"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "작업 표시줄에서 플로팅 캡처 표시 / 숨기기"
-
 msgid "Clear unpinned snips"
 msgstr "고정되지 않은 캡처 지우기"
 
 msgid "Clear all snips"
 msgstr "모든 캡처 지우기"
-
-msgid "Toggle light / dark theme"
-msgstr "밝은 / 어두운 테마 전환"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "정렬"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "상태별 필터 — 전체 → 고정됨 → 고정 안 됨 → 화면에 표시 → 숨김"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "내용별 필터 — OCR 있음/없음 · 창 있음/없음 · 태그됨"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "크기별 필터 — 소 / 중 / 대 / 넓음 / 높음 / 정사각형"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "날짜별 필터 — 오늘 / 24시간 / 7일 / 30일"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "정렬 기준 — 최신순 / 오래된순 / 고정됨 / 크기 / 너비 / 높이 / 모니터"
-
-msgid "Reset all filters and search"
-msgstr "모든 필터 및 검색 초기화"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "창 있음"
 
 msgid "No window"
 msgstr "창 없음"
-
-msgid "Tagged"
-msgstr "태그됨"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "화면에 표시 {}"
 
 msgid "Filtered {}"
 msgstr "필터됨 {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F 검색"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "12월"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "창"
-
-msgid "OCR text indexed"
-msgstr "OCR 텍스트 색인됨"
-
-msgid "Window info indexed"
-msgstr "창 정보 색인됨"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "ReviseTouch 방문"
 
 msgid "eyedropper"
 msgstr "스포이트"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "필터"
+
+msgid "Clear filters"
+msgstr "필터 지우기"
+
+msgid "More"
+msgstr "더 보기"
+
+msgid "Dark theme"
+msgstr "어두운 테마"
+
+msgid "Floating snips in the taskbar"
+msgstr "작업 표시줄에 플로팅 캡처 표시"

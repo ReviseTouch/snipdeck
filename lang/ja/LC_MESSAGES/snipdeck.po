@@ -21,18 +21,9 @@ msgstr "クリップのみ"
 msgid "Close"
 msgstr "閉じる"
 
-msgid "Reset"
-msgstr "リセット"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "新しいスニップを撮影 — Win＋左クリックで範囲をドラッグ"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "スニップを撮影してクリップボードにコピー"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "クリップボードにのみコピー（ギャラリーに保存しない）"
 
 msgid "Hide on-screen snips"
 msgstr "画面上のスニップを非表示"
@@ -40,17 +31,11 @@ msgstr "画面上のスニップを非表示"
 msgid "Show snips on screen"
 msgstr "スニップを画面に表示"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "タスクバーのフローティングスニップを表示／非表示"
-
 msgid "Clear unpinned snips"
 msgstr "固定されていないスニップを消去"
 
 msgid "Clear all snips"
 msgstr "すべてのスニップを消去"
-
-msgid "Toggle light / dark theme"
-msgstr "ライト／ダークテーマを切替"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "並替"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "ステータスで絞込 — すべて → 固定済 → 未固定 → 画面上 → 非表示"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "コンテンツで絞込 — OCRあり／なし · ウィンドウあり／なし · タグ付き"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "サイズで絞込 — 小 / 中 / 大 / 横長 / 縦長 / 正方形"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "日付で絞込 — 今日 / 24時間 / 7日間 / 30日間"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "並替基準 — 新しい順 / 古い順 / 固定済 / サイズ / 幅 / 高さ / モニター"
-
-msgid "Reset all filters and search"
-msgstr "すべてのフィルターと検索をリセット"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "ウィンドウあり"
 
 msgid "No window"
 msgstr "ウィンドウなし"
-
-msgid "Tagged"
-msgstr "タグ付き"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "画面上 {}"
 
 msgid "Filtered {}"
 msgstr "絞込 {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F 検索"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "12月"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "ウィンドウ"
-
-msgid "OCR text indexed"
-msgstr "OCRテキストがインデックスされました"
-
-msgid "Window info indexed"
-msgstr "ウィンドウ情報がインデックスされました"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "ReviseTouch を訪問"
 
 msgid "eyedropper"
 msgstr "スポイト"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "フィルター"
+
+msgid "Clear filters"
+msgstr "フィルターをクリア"
+
+msgid "More"
+msgstr "その他"
+
+msgid "Dark theme"
+msgstr "ダークテーマ"
+
+msgid "Floating snips in the taskbar"
+msgstr "タスクバーにフローティングスニップを表示"

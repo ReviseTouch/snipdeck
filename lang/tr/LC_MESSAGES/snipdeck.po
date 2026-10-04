@@ -13,44 +13,29 @@ msgid "New"
 msgstr "Yeni"
 
 msgid "Snip + Clip"
-msgstr "Kesi + Kopyala"
+msgstr "Snip ve kopyala"
 
 msgid "Clip only"
-msgstr "Yalnız Kopyala"
+msgstr "Yalnız panoya"
 
 msgid "Close"
 msgstr "Kapat"
 
-msgid "Reset"
-msgstr "Sıfırla"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
-msgstr "Yeni kesim al — Win + sol tıkla ile bölge sürükle"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "Kesim al ve panoya kopyala"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "Yalnızca panoya kopyala (galeriye kaydetmeden)"
+msgstr "Yeni snip al — Win + sol tıkla bölge sürükle"
 
 msgid "Hide on-screen snips"
-msgstr "Ekrandaki kesimleri gizle"
+msgstr "Ekrandaki snip'leri gizle"
 
 msgid "Show snips on screen"
-msgstr "Kesimleri ekranda göster"
-
-msgid "Show / hide floating snips in the taskbar"
-msgstr "Görev çubuğundaki kayan kesimleri göster / gizle"
+msgstr "Snip'leri ekranda göster"
 
 msgid "Clear unpinned snips"
-msgstr "Sabitlenmemiş kesimleri temizle"
+msgstr "Sabitlenmemiş snip'leri temizle"
 
 msgid "Clear all snips"
-msgstr "Tüm kesimleri temizle"
-
-msgid "Toggle light / dark theme"
-msgstr "Açık / koyu tema arasında geç"
+msgstr "Tüm snip'leri temizle"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "Sırala"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "Duruma göre filtrele — Tümü → Sabitli → Sabitsiz → Ekranda → Gizli"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "İçeriğe göre filtrele — OCR var/yok · Pencere var/yok · Etiketli"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "Boyuta göre filtrele — Küçük / Orta / Büyük / Geniş / Uzun / Kare"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "Tarihe göre filtrele — Bugün / 24 saat / 7 gün / 30 gün"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "Sıralama ölçütü — En yeni / En eski / Sabitli / Boyut / Genişlik / Yükseklik / Monitör"
-
-msgid "Reset all filters and search"
-msgstr "Tüm filtreleri ve aramayı sıfırla"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "Pencere var"
 
 msgid "No window"
 msgstr "Pencere yok"
-
-msgid "Tagged"
-msgstr "Etiketli"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -179,7 +144,7 @@ msgstr "metin / OCR / pencere / monitör / yol"
 
 #. ── Empty gallery state ──
 msgid "No snips collected yet"
-msgstr "Henüz kesim yok"
+msgstr "Henüz snip yok"
 
 msgid "Capture a region from the screen with Win + left mouse."
 msgstr "Win + sol fare ile ekrandan bir bölge yakala."
@@ -206,9 +171,6 @@ msgstr "Ekranda {}"
 
 msgid "Filtered {}"
 msgstr "Filtrelendi {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F ara"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -317,24 +279,15 @@ msgstr "Ara"
 
 #. ── Card source line ──
 
-msgid "window"
-msgstr "pencere"
-
-msgid "OCR text indexed"
-msgstr "OCR metni dizine eklendi"
-
-msgid "Window info indexed"
-msgstr "Pencere bilgisi dizine eklendi"
-
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
 msgstr "Snipdeck'i Göster"
 
 msgid "New Snip"
-msgstr "Yeni Kesim"
+msgstr "Yeni snip"
 
 msgid "Launch at Login"
-msgstr "Oturum Açınca Başlat"
+msgstr "Oturum açılınca başlat"
 
 msgid "Exit"
 msgstr "Çıkış"
@@ -359,7 +312,7 @@ msgid "The colour picker needs pointer access this session does not grant."
 msgstr "Renk seçici, bu oturumun vermediği bir işaretçi erişimi gerektiriyor."
 
 msgid "Snipping needs pointer access this session does not grant."
-msgstr "Ekran alıntısı, bu oturumun vermediği bir işaretçi erişimi gerektiriyor."
+msgstr "Snip almak, bu oturumun vermediği bir işaretçi erişimi gerektiriyor."
 
 msgid "Failed to copy text to clipboard: {e}"
 msgstr "Metin panoya kopyalanamadı: {e}"
@@ -415,7 +368,7 @@ msgid "The image has been copied to the clipboard.\r\nPaste it into the open ema
 msgstr "Görüntü panoya kopyalandı.\r\nAçık e-postaya Ctrl+V ile yapıştırın."
 
 msgid "The email opened, but the image could not be copied to the clipboard.\r\nCopy the snip again and paste it with Ctrl+V."
-msgstr "E-posta açıldı ancak görüntü panoya kopyalanamadı.\r\nKesimi tekrar kopyalayın ve Ctrl+V ile yapıştırın."
+msgstr "E-posta açıldı ancak görüntü panoya kopyalanamadı.\r\nSnip'i tekrar kopyalayın ve Ctrl+V ile yapıştırın."
 
 msgid "Snipdeck — Attach to email"
 msgstr "Snipdeck — E-postaya ekle"
@@ -609,10 +562,10 @@ msgstr "Renk seçici kullanılamıyor: {e}"
 
 #. ── Capture hints off Windows ──
 msgid "Take a new snip — or drag a region with Super + Alt"
-msgstr "Yeni kesim al — ya da Super + Alt ile bölge sürükle"
+msgstr "Yeni snip al — ya da Super + Alt ile bölge sürükle"
 
 msgid "Take a new snip"
-msgstr "Yeni kesim al"
+msgstr "Yeni snip al"
 
 msgid "Capture a region from the screen with Super + Alt + drag."
 msgstr "Super + Alt + sürükle ile ekrandan bir bölge yakala."
@@ -625,10 +578,26 @@ msgid "Send the text to Google?"
 msgstr "Metin Google'a gönderilsin mi?"
 
 msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
-msgstr "OCR + Çevir, bu kesimdeki metni bilgisayarınızda okur, sonra o metni — görüntüyü değil — Google Translate'e (translate.googleapis.com) gönderir. Snipdeck'te başka hiçbir şey sormadan bir şey göndermez."
+msgstr "OCR + Çevir, bu snip'teki metni bilgisayarınızda okur, sonra o metni — görüntüyü değil — Google Translate'e (translate.googleapis.com) gönderir. Snipdeck'te başka hiçbir şey sormadan bir şey göndermez."
 
 msgid "Asked once; your answer is remembered."
 msgstr "Bir kez sorulur; cevabınız hatırlanır."
 
 msgid "Send"
 msgstr "Gönder"
+
+#. ── Toolbar redesign, October 2026 ──
+msgid "Filter"
+msgstr "Filtrele"
+
+msgid "Clear filters"
+msgstr "Filtreleri temizle"
+
+msgid "More"
+msgstr "Diğer"
+
+msgid "Dark theme"
+msgstr "Koyu tema"
+
+msgid "Floating snips in the taskbar"
+msgstr "Yüzen snip'ler görev çubuğunda"

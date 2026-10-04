@@ -21,18 +21,9 @@ msgstr "Doar copiere"
 msgid "Close"
 msgstr "Închide"
 
-msgid "Reset"
-msgstr "Resetare"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "Captură nouă — trage o regiune cu Win + clic stânga"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "Captează și copiază în clipboard"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "Copiază în clipboard (fără a salva în galerie)"
 
 msgid "Hide on-screen snips"
 msgstr "Ascunde capturile de pe ecran"
@@ -40,17 +31,11 @@ msgstr "Ascunde capturile de pe ecran"
 msgid "Show snips on screen"
 msgstr "Afișează capturile pe ecran"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "Afișează / ascunde capturile flotante din bara de activități"
-
 msgid "Clear unpinned snips"
 msgstr "Șterge capturile neprinse"
 
 msgid "Clear all snips"
 msgstr "Șterge toate capturile"
-
-msgid "Toggle light / dark theme"
-msgstr "Comută tema luminoasă / întunecată"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "Sortare"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "Filtrare după stare — Toate → Prinse → Neprinse → Pe ecran → Ascunse"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "Filtrare după conținut — Cu/Fără OCR · Cu/Fără fereastră · Etichetat"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "Filtrare după dimensiune — Mic / Mediu / Mare / Lat / Înalt / Pătrat"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "Filtrare după dată — Azi / 24 ore / 7 zile / 30 zile"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "Sortare după — Cele mai noi / Cele mai vechi / Prinse / Dimensiune / Lățime / Înălțime / Monitor"
-
-msgid "Reset all filters and search"
-msgstr "Resetează toate filtrele și căutarea"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "Cu fereastră"
 
 msgid "No window"
 msgstr "Fără fereastră"
-
-msgid "Tagged"
-msgstr "Etichetat"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "Pe ecran {}"
 
 msgid "Filtered {}"
 msgstr "Filtrate {}"
-
-msgid "Ctrl+F search"
-msgstr "Căutare Ctrl+F"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "Dec"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "fereastră"
-
-msgid "OCR text indexed"
-msgstr "Text OCR indexat"
-
-msgid "Window info indexed"
-msgstr "Informații fereastră indexate"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "Vizitează ReviseTouch"
 
 msgid "eyedropper"
 msgstr "pipetă"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "Filtrează"
+
+msgid "Clear filters"
+msgstr "Șterge filtrele"
+
+msgid "More"
+msgstr "Mai mult"
+
+msgid "Dark theme"
+msgstr "Temă întunecată"
+
+msgid "Floating snips in the taskbar"
+msgstr "Capturi flotante în bara de activități"

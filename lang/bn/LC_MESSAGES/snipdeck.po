@@ -21,18 +21,9 @@ msgstr "শুধু ক্লিপ"
 msgid "Close"
 msgstr "বন্ধ"
 
-msgid "Reset"
-msgstr "রিসেট"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "নতুন স্নিপ নিন — Win + বাম ক্লিক দিয়ে একটি এলাকা টেনে নির্বাচন করুন"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "একটি স্নিপ নিন এবং ক্লিপবোর্ডে কপি করুন"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "শুধুমাত্র ক্লিপবোর্ডে কপি করুন (গ্যালারিতে সংরক্ষণ ছাড়াই)"
 
 msgid "Hide on-screen snips"
 msgstr "স্ক্রিনের স্নিপগুলো লুকান"
@@ -40,17 +31,11 @@ msgstr "স্ক্রিনের স্নিপগুলো লুকান"
 msgid "Show snips on screen"
 msgstr "স্ক্রিনে স্নিপগুলো দেখান"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "টাস্কবারে ভাসমান স্নিপগুলো দেখান / লুকান"
-
 msgid "Clear unpinned snips"
 msgstr "আনপিন করা স্নিপগুলো মুছুন"
 
 msgid "Clear all snips"
 msgstr "সব স্নিপ মুছুন"
-
-msgid "Toggle light / dark theme"
-msgstr "হালকা / গাঢ় থিম পরিবর্তন করুন"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "সাজান"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "অবস্থা অনুযায়ী ফিল্টার করুন — সব → পিন করা → আনপিন করা → স্ক্রিনে → লুকানো"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "বিষয়বস্তু অনুযায়ী ফিল্টার করুন — OCR আছে/নেই · উইন্ডো আছে/নেই · ট্যাগ করা"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "আকার অনুযায়ী ফিল্টার করুন — ছোট / মাঝারি / বড় / চওড়া / লম্বা / বর্গাকার"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "তারিখ অনুযায়ী ফিল্টার করুন — আজ / ২৪ ঘণ্টা / ৭ দিন / ৩০ দিন"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "এভাবে সাজান — নতুন / পুরনো / পিন করা / আকার / প্রস্থ / উচ্চতা / মনিটর"
-
-msgid "Reset all filters and search"
-msgstr "সব ফিল্টার ও অনুসন্ধান রিসেট করুন"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "উইন্ডো আছে"
 
 msgid "No window"
 msgstr "উইন্ডো নেই"
-
-msgid "Tagged"
-msgstr "ট্যাগ করা"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "স্ক্রিনে {}"
 
 msgid "Filtered {}"
 msgstr "ফিল্টার করা {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F অনুসন্ধান"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "ডিস"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "উইন্ডো"
-
-msgid "OCR text indexed"
-msgstr "OCR টেক্সট সূচীবদ্ধ"
-
-msgid "Window info indexed"
-msgstr "উইন্ডো তথ্য সূচীবদ্ধ"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "ReviseTouch দেখুন"
 
 msgid "eyedropper"
 msgstr "আইড্রপার"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "ফিল্টার"
+
+msgid "Clear filters"
+msgstr "ফিল্টার মুছুন"
+
+msgid "More"
+msgstr "আরও"
+
+msgid "Dark theme"
+msgstr "গাঢ় থিম"
+
+msgid "Floating snips in the taskbar"
+msgstr "টাস্কবারে ভাসমান স্নিপ"

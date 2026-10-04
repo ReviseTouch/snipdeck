@@ -21,18 +21,9 @@ msgstr "صرف کلپ"
 msgid "Close"
 msgstr "بند کریں"
 
-msgid "Reset"
-msgstr "دوبارہ ترتیب"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "نیا اسنپ لیں — Win + بائیں کلک سے علاقہ کھینچیں"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "اسنپ لیں اور کلپ بورڈ پر کاپی کریں"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "صرف کلپ بورڈ پر کاپی کریں (گیلری میں محفوظ کیے بغیر)"
 
 msgid "Hide on-screen snips"
 msgstr "اسکرین پر موجود اسنپس چھپائیں"
@@ -40,17 +31,11 @@ msgstr "اسکرین پر موجود اسنپس چھپائیں"
 msgid "Show snips on screen"
 msgstr "اسنپس اسکرین پر دکھائیں"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "ٹاسک بار میں تیرتے اسنپس دکھائیں / چھپائیں"
-
 msgid "Clear unpinned snips"
 msgstr "غیر پن کیے اسنپس صاف کریں"
 
 msgid "Clear all snips"
 msgstr "تمام اسنپس صاف کریں"
-
-msgid "Toggle light / dark theme"
-msgstr "روشن / تاریک تھیم تبدیل کریں"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "ترتیب"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "حالت کے مطابق فلٹر کریں — سب → پن کیے → غیر پن → اسکرین پر → پوشیدہ"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "مواد کے مطابق فلٹر کریں — OCR ہے/نہیں · ونڈو ہے/نہیں · ٹیگ شدہ"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "سائز کے مطابق فلٹر کریں — چھوٹا / درمیانہ / بڑا / چوڑا / لمبا / مربع"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "تاریخ کے مطابق فلٹر کریں — آج / 24 گھنٹے / 7 دن / 30 دن"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "ترتیب دیں — نیا ترین / پرانا ترین / پن کیے / سائز / چوڑائی / اونچائی / مانیٹر"
-
-msgid "Reset all filters and search"
-msgstr "تمام فلٹر اور تلاش دوبارہ ترتیب دیں"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "ونڈو موجود"
 
 msgid "No window"
 msgstr "ونڈو نہیں"
-
-msgid "Tagged"
-msgstr "ٹیگ شدہ"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "اسکرین پر {}"
 
 msgid "Filtered {}"
 msgstr "فلٹر شدہ {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F تلاش"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "دسم"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "ونڈو"
-
-msgid "OCR text indexed"
-msgstr "OCR متن ترتیب شدہ"
-
-msgid "Window info indexed"
-msgstr "ونڈو معلومات ترتیب شدہ"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "ReviseTouch دیکھیں"
 
 msgid "eyedropper"
 msgstr "آئی ڈراپر"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "فلٹر"
+
+msgid "Clear filters"
+msgstr "فلٹر صاف کریں"
+
+msgid "More"
+msgstr "مزید"
+
+msgid "Dark theme"
+msgstr "تاریک تھیم"
+
+msgid "Floating snips in the taskbar"
+msgstr "ٹاسک بار میں تیرتے اسنپس"

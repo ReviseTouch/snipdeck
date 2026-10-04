@@ -26,18 +26,9 @@ msgstr "Nur Kopie"
 msgid "Close"
 msgstr "Schließen"
 
-msgid "Reset"
-msgstr "Zurücksetzen"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "Neuen Ausschnitt erstellen — Bereich mit Win + linker Maustaste ziehen"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "Ausschnitt erstellen und in die Zwischenablage kopieren"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "Nur in die Zwischenablage kopieren (ohne in der Galerie zu speichern)"
 
 msgid "Hide on-screen snips"
 msgstr "Bildschirm-Ausschnitte ausblenden"
@@ -45,17 +36,11 @@ msgstr "Bildschirm-Ausschnitte ausblenden"
 msgid "Show snips on screen"
 msgstr "Ausschnitte auf dem Bildschirm anzeigen"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "Schwebende Ausschnitte in der Taskleiste anzeigen / ausblenden"
-
 msgid "Clear unpinned snips"
 msgstr "Nicht angeheftete Ausschnitte löschen"
 
 msgid "Clear all snips"
 msgstr "Alle Ausschnitte löschen"
-
-msgid "Toggle light / dark theme"
-msgstr "Helles / dunkles Design umschalten"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -74,23 +59,6 @@ msgid "Sort"
 msgstr "Sortierung"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "Nach Status filtern — Alle → Angeheftet → Nicht angeheftet → Auf Bildschirm → Ausgeblendet"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "Nach Inhalt filtern — Mit/Ohne OCR · Mit/Ohne Fenster · Markiert"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "Nach Größe filtern — Klein / Mittel / Groß / Breit / Hoch / Quadratisch"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "Nach Datum filtern — Heute / 24 Stunden / 7 Tage / 30 Tage"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "Sortieren nach — Neueste / Älteste / Angeheftet / Größe / Breite / Höhe / Monitor"
-
-msgid "Reset all filters and search"
-msgstr "Alle Filter und Suche zurücksetzen"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -120,9 +88,6 @@ msgstr "Mit Fenster"
 
 msgid "No window"
 msgstr "Ohne Fenster"
-
-msgid "Tagged"
-msgstr "Markiert"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -211,9 +176,6 @@ msgstr "Auf Bildschirm {}"
 
 msgid "Filtered {}"
 msgstr "Gefiltert {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F Suche"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -321,15 +283,6 @@ msgid "Dec"
 msgstr "Dez"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "Fenster"
-
-msgid "OCR text indexed"
-msgstr "OCR-Text indiziert"
-
-msgid "Window info indexed"
-msgstr "Fensterinfo indiziert"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -630,3 +583,20 @@ msgstr "ReviseTouch besuchen"
 
 msgid "eyedropper"
 msgstr "Pipette"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "Filtern"
+
+msgid "Clear filters"
+msgstr "Filter zurücksetzen"
+
+msgid "More"
+msgstr "Mehr"
+
+msgid "Dark theme"
+msgstr "Dunkles Design"
+
+msgid "Floating snips in the taskbar"
+msgstr "Schwebende Ausschnitte in der Taskleiste"

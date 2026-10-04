@@ -21,18 +21,9 @@ msgstr "คัดลอกอย่างเดียว"
 msgid "Close"
 msgstr "ปิด"
 
-msgid "Reset"
-msgstr "รีเซ็ต"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "จับภาพใหม่ — ลากเลือกพื้นที่ด้วย Win + คลิกซ้าย"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "จับภาพและคัดลอกไปยังคลิปบอร์ด"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "คัดลอกไปยังคลิปบอร์ดเท่านั้น (โดยไม่บันทึกในแกลเลอรี)"
 
 msgid "Hide on-screen snips"
 msgstr "ซ่อนภาพที่แสดงบนหน้าจอ"
@@ -40,17 +31,11 @@ msgstr "ซ่อนภาพที่แสดงบนหน้าจอ"
 msgid "Show snips on screen"
 msgstr "แสดงภาพบนหน้าจอ"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "แสดง / ซ่อนภาพลอยตัวในแถบงาน"
-
 msgid "Clear unpinned snips"
 msgstr "ล้างภาพที่ไม่ได้ปักหมุด"
 
 msgid "Clear all snips"
 msgstr "ล้างภาพทั้งหมด"
-
-msgid "Toggle light / dark theme"
-msgstr "สลับธีมสว่าง / มืด"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "เรียง"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "กรองตามสถานะ — ทั้งหมด → ปักหมุด → ไม่ปักหมุด → บนหน้าจอ → ซ่อน"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "กรองตามเนื้อหา — มี/ไม่มี OCR · มี/ไม่มีหน้าต่าง · ติดแท็ก"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "กรองตามขนาด — เล็ก / กลาง / ใหญ่ / กว้าง / สูง / สี่เหลี่ยมจัตุรัส"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "กรองตามวันที่ — วันนี้ / 24 ชั่วโมง / 7 วัน / 30 วัน"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "เรียงตาม — ใหม่สุด / เก่าสุด / ปักหมุด / ขนาด / ความกว้าง / ความสูง / Monitor"
-
-msgid "Reset all filters and search"
-msgstr "รีเซ็ตตัวกรองและการค้นหาทั้งหมด"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "มีหน้าต่าง"
 
 msgid "No window"
 msgstr "ไม่มีหน้าต่าง"
-
-msgid "Tagged"
-msgstr "ติดแท็ก"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "บนหน้าจอ {}"
 
 msgid "Filtered {}"
 msgstr "กรองแล้ว {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F ค้นหา"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "ธ.ค."
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "หน้าต่าง"
-
-msgid "OCR text indexed"
-msgstr "จัดทำดัชนีข้อความ OCR แล้ว"
-
-msgid "Window info indexed"
-msgstr "จัดทำดัชนีข้อมูลหน้าต่างแล้ว"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "เยี่ยมชม ReviseTouch"
 
 msgid "eyedropper"
 msgstr "หลอดดูดสี"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "ตัวกรอง"
+
+msgid "Clear filters"
+msgstr "ล้างตัวกรอง"
+
+msgid "More"
+msgstr "เพิ่มเติม"
+
+msgid "Dark theme"
+msgstr "ธีมมืด"
+
+msgid "Floating snips in the taskbar"
+msgstr "ภาพลอยตัวในแถบงาน"

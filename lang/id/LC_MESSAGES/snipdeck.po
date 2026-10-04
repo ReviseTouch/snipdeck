@@ -21,18 +21,9 @@ msgstr "Salin saja"
 msgid "Close"
 msgstr "Tutup"
 
-msgid "Reset"
-msgstr "Atur Ulang"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "Ambil snip baru — seret wilayah dengan Win + klik kiri"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "Ambil snip dan salin ke papan klip"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "Salin ke papan klip saja (tanpa menyimpan ke galeri)"
 
 msgid "Hide on-screen snips"
 msgstr "Sembunyikan snip di layar"
@@ -40,17 +31,11 @@ msgstr "Sembunyikan snip di layar"
 msgid "Show snips on screen"
 msgstr "Tampilkan snip di layar"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "Tampilkan / sembunyikan snip mengambang di bilah tugas"
-
 msgid "Clear unpinned snips"
 msgstr "Hapus snip yang tidak disematkan"
 
 msgid "Clear all snips"
 msgstr "Hapus semua snip"
-
-msgid "Toggle light / dark theme"
-msgstr "Beralih tema terang / gelap"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "Urutkan"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "Filter berdasarkan status — Semua → Disematkan → Tidak disematkan → Di layar → Tersembunyi"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "Filter berdasarkan konten — Ada/Tanpa OCR · Ada/Tanpa jendela · Bertanda"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "Filter berdasarkan ukuran — Kecil / Sedang / Besar / Lebar / Tinggi / Persegi"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "Filter berdasarkan tanggal — Hari ini / 24 jam / 7 hari / 30 hari"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "Urutkan berdasarkan — Terbaru / Terlama / Disematkan / Ukuran / Lebar / Tinggi / Monitor"
-
-msgid "Reset all filters and search"
-msgstr "Atur ulang semua filter dan pencarian"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "Ada jendela"
 
 msgid "No window"
 msgstr "Tanpa jendela"
-
-msgid "Tagged"
-msgstr "Bertanda"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "Di layar {}"
 
 msgid "Filtered {}"
 msgstr "Difilter {}"
-
-msgid "Ctrl+F search"
-msgstr "Pencarian Ctrl+F"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "Des"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "jendela"
-
-msgid "OCR text indexed"
-msgstr "Teks OCR diindeks"
-
-msgid "Window info indexed"
-msgstr "Info jendela diindeks"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "Kunjungi ReviseTouch"
 
 msgid "eyedropper"
 msgstr "pipet"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Clear filters"
+msgstr "Hapus filter"
+
+msgid "More"
+msgstr "Lainnya"
+
+msgid "Dark theme"
+msgstr "Tema gelap"
+
+msgid "Floating snips in the taskbar"
+msgstr "Snip mengambang di bilah tugas"

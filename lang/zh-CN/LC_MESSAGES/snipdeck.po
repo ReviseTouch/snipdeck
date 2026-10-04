@@ -21,18 +21,9 @@ msgstr "仅复制"
 msgid "Close"
 msgstr "关闭"
 
-msgid "Reset"
-msgstr "重置"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "截取新图 — 按住 Win + 左键拖拽选区"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "截图并复制到剪贴板"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "仅复制到剪贴板（不保存到图库）"
 
 msgid "Hide on-screen snips"
 msgstr "隐藏屏幕上的截图"
@@ -40,17 +31,11 @@ msgstr "隐藏屏幕上的截图"
 msgid "Show snips on screen"
 msgstr "在屏幕上显示截图"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "在任务栏显示/隐藏悬浮截图"
-
 msgid "Clear unpinned snips"
 msgstr "清除未固定的截图"
 
 msgid "Clear all snips"
 msgstr "清除所有截图"
-
-msgid "Toggle light / dark theme"
-msgstr "切换浅色/深色主题"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "排序"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "按状态筛选 — 全部 → 已固定 → 未固定 → 屏幕上 → 已隐藏"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "按内容筛选 — 有/无 OCR · 有/无窗口 · 已标记"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "按尺寸筛选 — 小 / 中 / 大 / 宽 / 高 / 正方形"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "按日期筛选 — 今天 / 24小时 / 7天 / 30天"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "排序方式 — 最新 / 最旧 / 已固定 / 尺寸 / 宽度 / 高度 / 显示器"
-
-msgid "Reset all filters and search"
-msgstr "重置所有筛选条件和搜索"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "有窗口"
 
 msgid "No window"
 msgstr "无窗口"
-
-msgid "Tagged"
-msgstr "已标记"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "屏幕上 {}"
 
 msgid "Filtered {}"
 msgstr "已筛选 {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F 搜索"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "12月"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "窗口"
-
-msgid "OCR text indexed"
-msgstr "OCR 文字已建立索引"
-
-msgid "Window info indexed"
-msgstr "窗口信息已建立索引"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "访问 ReviseTouch"
 
 msgid "eyedropper"
 msgstr "吸管"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "筛选"
+
+msgid "Clear filters"
+msgstr "清除筛选"
+
+msgid "More"
+msgstr "更多"
+
+msgid "Dark theme"
+msgstr "深色主题"
+
+msgid "Floating snips in the taskbar"
+msgstr "在任务栏显示悬浮截图"

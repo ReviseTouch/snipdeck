@@ -26,17 +26,8 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-msgid "Reset"
-msgstr ""
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
-msgstr ""
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr ""
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
 msgstr ""
 
 msgid "Hide on-screen snips"
@@ -45,16 +36,10 @@ msgstr ""
 msgid "Show snips on screen"
 msgstr ""
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr ""
-
 msgid "Clear unpinned snips"
 msgstr ""
 
 msgid "Clear all snips"
-msgstr ""
-
-msgid "Toggle light / dark theme"
 msgstr ""
 
 #. ── Filter labels ──
@@ -74,23 +59,6 @@ msgid "Sort"
 msgstr ""
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr ""
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr ""
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr ""
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr ""
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr ""
-
-msgid "Reset all filters and search"
-msgstr ""
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -119,9 +87,6 @@ msgid "Has window"
 msgstr ""
 
 msgid "No window"
-msgstr ""
-
-msgid "Tagged"
 msgstr ""
 
 #. ── Filter values (Size) ──
@@ -210,9 +175,6 @@ msgid "On screen {}"
 msgstr ""
 
 msgid "Filtered {}"
-msgstr ""
-
-msgid "Ctrl+F search"
 msgstr ""
 
 #. ── Floating-snip right-click menu ──
@@ -321,15 +283,6 @@ msgid "Dec"
 msgstr ""
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr ""
-
-msgid "OCR text indexed"
-msgstr ""
-
-msgid "Window info indexed"
-msgstr ""
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -483,4 +436,21 @@ msgid "Support"
 msgstr ""
 
 msgid "Thumbnail size — Small / Medium / Large"
+msgstr ""
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr ""
+
+msgid "Clear filters"
+msgstr ""
+
+msgid "More"
+msgstr ""
+
+msgid "Dark theme"
+msgstr ""
+
+msgid "Floating snips in the taskbar"
 msgstr ""

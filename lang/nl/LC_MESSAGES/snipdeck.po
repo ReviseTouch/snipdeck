@@ -21,18 +21,9 @@ msgstr "Alleen kopiëren"
 msgid "Close"
 msgstr "Sluiten"
 
-msgid "Reset"
-msgstr "Resetten"
-
 #. ── Toolbar / control tooltips ──
 msgid "Take a new snip — drag a region with Win + left click"
 msgstr "Maak een nieuwe knipsel — sleep een gebied met Win + linkermuisknop"
-
-msgid "Take a snip and copy it to the clipboard"
-msgstr "Maak een knipsel en kopieer het naar het klembord"
-
-msgid "Copy to the clipboard only (without saving to the gallery)"
-msgstr "Alleen naar klembord kopiëren (zonder opslaan in de galerij)"
 
 msgid "Hide on-screen snips"
 msgstr "Knipsels op scherm verbergen"
@@ -40,17 +31,11 @@ msgstr "Knipsels op scherm verbergen"
 msgid "Show snips on screen"
 msgstr "Knipsels op scherm tonen"
 
-msgid "Show / hide floating snips in the taskbar"
-msgstr "Zwevende knipsels tonen / verbergen in de taakbalk"
-
 msgid "Clear unpinned snips"
 msgstr "Niet-vastgezette knipsels verwijderen"
 
 msgid "Clear all snips"
 msgstr "Alle knipsels verwijderen"
-
-msgid "Toggle light / dark theme"
-msgstr "Licht / donker thema wisselen"
 
 #. ── Filter labels ──
 msgid "Status"
@@ -69,23 +54,6 @@ msgid "Sort"
 msgstr "Sorteren"
 
 #. ── Filter tooltips (keep the → · / arrows and separators) ──
-msgid "Filter by status — All → Pinned → Unpinned → On screen → Hidden"
-msgstr "Filteren op status — Alles → Vastgezet → Niet vastgezet → Op scherm → Verborgen"
-
-msgid "Filter by content — Has/No OCR · Has/No window · Tagged"
-msgstr "Filteren op inhoud — Heeft/Geen OCR · Heeft/Geen venster · Gelabeld"
-
-msgid "Filter by size — Small / Medium / Large / Wide / Tall / Square"
-msgstr "Filteren op grootte — Klein / Middel / Groot / Breed / Hoog / Vierkant"
-
-msgid "Filter by date — Today / 24 hours / 7 days / 30 days"
-msgstr "Filteren op datum — Vandaag / 24 uur / 7 dagen / 30 dagen"
-
-msgid "Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor"
-msgstr "Sorteren op — Nieuwste / Oudste / Vastgezet / Grootte / Breedte / Hoogte / Monitor"
-
-msgid "Reset all filters and search"
-msgstr "Alle filters en zoekterm resetten"
 
 #. ── Filter values (Status) ──
 msgid "Pinned"
@@ -115,9 +83,6 @@ msgstr "Heeft venster"
 
 msgid "No window"
 msgstr "Geen venster"
-
-msgid "Tagged"
-msgstr "Gelabeld"
 
 #. ── Filter values (Size) ──
 msgid "Small"
@@ -206,9 +171,6 @@ msgstr "Op scherm {}"
 
 msgid "Filtered {}"
 msgstr "Gefilterd {}"
-
-msgid "Ctrl+F search"
-msgstr "Ctrl+F zoeken"
 
 #. ── Floating-snip right-click menu ──
 msgid "Copy"
@@ -316,15 +278,6 @@ msgid "Dec"
 msgstr "Dec"
 
 #. ── Card source line ──
-
-msgid "window"
-msgstr "venster"
-
-msgid "OCR text indexed"
-msgstr "OCR-tekst geïndexeerd"
-
-msgid "Window info indexed"
-msgstr "Vensterinformatie geïndexeerd"
 
 #. ── System-tray menu ──
 msgid "Show Snipdeck"
@@ -625,3 +578,20 @@ msgstr "ReviseTouch bezoeken"
 
 msgid "eyedropper"
 msgstr "pipet"
+
+#. ── Toolbar redesign, October 2026 ──
+
+msgid "Filter"
+msgstr "Filteren"
+
+msgid "Clear filters"
+msgstr "Filters wissen"
+
+msgid "More"
+msgstr "Meer"
+
+msgid "Dark theme"
+msgstr "Donker thema"
+
+msgid "Floating snips in the taskbar"
+msgstr "Zwevende knipsels in de taakbalk"
