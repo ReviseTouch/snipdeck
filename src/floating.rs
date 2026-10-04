@@ -270,7 +270,9 @@ impl FloatingManager {
                 }
                 // The compositor owns the drag from here; no motion events reach
                 // us, so mark the snip moved now rather than on the first delta.
-                if shared_drag.borrow_mut().moved_snips.insert(snip_id) {
+                // Not in crop mode: there the handles are the crop, and hiding
+                // them left the snip stuck cropping with no way to finish.
+                if shared_drag.borrow_mut().moved_snips.insert(snip_id) && !c.get_cropping() {
                     c.set_show_handles(false);
                 }
             });
@@ -292,8 +294,9 @@ impl FloatingManager {
                 c.window().set_position(PhysicalPosition::new(nx, ny));
                 let mut sh = shared.borrow_mut();
                 sh.pending_pos_writes.insert(snip_id, (nx, ny));
-                // First drag → the snip has been moved, hide handles.
-                if sh.moved_snips.insert(snip_id) {
+                // First drag → the snip has been moved, hide the re-capture
+                // handles — except in crop mode, where they are the crop.
+                if sh.moved_snips.insert(snip_id) && !c.get_cropping() {
                     c.set_show_handles(false);
                 }
             }
@@ -344,6 +347,13 @@ impl FloatingManager {
             };
             let pos = c.window().position();
             let (l, t) = (c.get_clip_x(), c.get_clip_y());
+            // The crop is drawn relative to where the full image would sit.
+            // Re-derived from where the window is now, so a snip moved since
+            // crop mode began crops in place instead of jumping back.
+            if c.get_cropping() {
+                c.set_crop_anchor_x(pos.x - l);
+                c.set_crop_anchor_y(pos.y - t);
+            }
             gesture_start.set(Some(ResizeStart {
                 side,
                 pos: (pos.x, pos.y),
