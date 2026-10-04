@@ -116,7 +116,7 @@ component ToolbarButton inherits Rectangle {
     }
 
     ta := TouchArea {
-        clicked => { root.clicked(); }
+        clicked => { Tips.text = ""; root.clicked(); }
         changed has-hover => {
             if (self.has-hover && root.tooltip != "") {
                 Tips.text = root.tooltip;
@@ -159,7 +159,7 @@ component IconButton inherits Rectangle {
     }
 
     ta := TouchArea {
-        clicked => { root.clicked(); }
+        clicked => { Tips.text = ""; root.clicked(); }
         changed has-hover => {
             if (self.has-hover && root.tooltip != "") {
                 Tips.text = root.tooltip;
@@ -219,7 +219,7 @@ component FilterPill inherits Rectangle {
     }
 
     ta := TouchArea {
-        clicked => { root.clicked(); }
+        clicked => { Tips.text = ""; root.clicked(); }
         changed has-hover => {
             if (self.has-hover && root.tooltip != "") {
                 Tips.text = root.tooltip;
@@ -258,7 +258,7 @@ component SizeToggle inherits Rectangle {
                 : (cell-ta.pressed ? (root.dark ? #2e2e2e : #e6e5df) : (cell-ta.has-hover ? (root.dark ? #232323 : #f1f0ea) : transparent));
             animate background { duration: 80ms; }
             cell-ta := TouchArea {
-                clicked => { root.changed(i); }
+                clicked => { Tips.text = ""; root.changed(i); }
                 changed has-hover => {
                     if (self.has-hover && root.tooltip != "") {
                         Tips.text = root.tooltip;
@@ -421,6 +421,13 @@ component CardAction inherits Rectangle {
 }
 
 export component MainWindow inherits Window {
+    // Drop a showing tooltip. For a window hidden from code — a hotkey snip
+    // taken while the pointer rested on a button — where no hover change ever
+    // arrives, and the tip would greet the user when the window came back.
+    public function clear-tip() {
+        Tips.text = "";
+    }
+
     title: "Snipdeck";
     preferred-width: 1100px;
     preferred-height: 700px;

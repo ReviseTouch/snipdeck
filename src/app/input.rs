@@ -289,6 +289,7 @@ impl AppState {
         // taken while Snipdeck sat in the tray used to throw the gallery up over
         // whatever the user was doing.
         self.restore_main_after_snip = window.window().is_visible();
+        window.invoke_clear_tip();
         let _ = window.hide();
         // Clear any stale banner so a previous error doesn't linger over the
         // armed snip.
@@ -377,6 +378,7 @@ impl AppState {
             // included, which used to skip it and could leave the loupe up.
             self.color_picker.begin();
             if let Some(window) = hide {
+                window.invoke_clear_tip();
                 let _ = window.hide();
                 self.color_pick_hid_main = true;
             }
