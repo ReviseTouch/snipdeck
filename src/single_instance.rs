@@ -159,8 +159,14 @@ fn acquire_inner(wait_for_handoff: bool) -> bool {
                 let _ = CloseHandle(handle);
                 std::thread::sleep(std::time::Duration::from_millis(50));
             }
-            // Handoff didn't complete in time — fall through and take the lock
-            // best-effort so the user still gets their elevated instance.
+            // The predecessor still holds the lock after the whole budget.
+            // Run anyway, without it: this instance exists because the user
+            // asked for an elevated one, and the medium one is on its way
+            // out. Falling through to the check below — as this used to,
+            // under a comment promising the opposite — saw the lock held,
+            // took this for a duplicate and quit, leaving no Snipdeck at all.
+            log::warn!("elevated takeover: the previous instance did not let go in time; running anyway");
+            return true;
         }
 
         let created = CreateMutexW(None, FALSE, name);
@@ -173,9 +179,9 @@ fn acquire_inner(wait_for_handoff: bool) -> bool {
         // A bare creation failure is treated as a guard malfunction and we
         // fail open (the user is never locked out). The one exception is
         // ERROR_ACCESS_DENIED: that means the named mutex already exists at a
-        // HIGHER integrity level than us — e.g. an elevated Snipdeck launched
-        // by the "run as administrator at login" task — which a medium
-        // process cannot open. That is "already running", not a malfunction,
+        // HIGHER integrity level than us — an elevated Snipdeck, started from
+        // the tray's "Run as administrator" — which a medium process cannot
+        // open. That is "already running", not a malfunction,
         // so fall through to the raise-and-bail path instead of spawning a
         // second instance that would fight over the hooks and hotkey.
         if created.is_err() && last_err != ERROR_ACCESS_DENIED {
