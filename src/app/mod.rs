@@ -717,6 +717,10 @@ impl AppState {
             self.settings.translate_favs = favs;
             let _ = self.settings.save();
         }
+        if self.translate_popup.take_consent_persist() {
+            self.settings.translate_consented = true;
+            let _ = self.settings.save();
+        }
 
         // Blink the editor's size-preview indicator while a slider is dragged.
         self.annotate.pulse_tick();

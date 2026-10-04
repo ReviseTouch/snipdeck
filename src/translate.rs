@@ -20,8 +20,17 @@ pub struct Translation {
     pub source_lang: String,
 }
 
+/// The longest piece sent in one request, in characters. The endpoint refuses
+/// very large bodies; screenshots of a full page of text exceed this easily.
+const CHUNK_CHARS: usize = 4000;
+
 /// Translate `text` into `target` (an endpoint language code, e.g. "tr").
 /// Source language is auto-detected (`sl=auto`).
+///
+/// The text travels in a POST body, not the URL. In the query string it was
+/// logged by any TLS-inspecting proxy along the way, and a page of non-ASCII
+/// text — 3–6 bytes per character once percent-encoded — overran the URL limit
+/// and failed as "network?". Long text goes in pieces cut at line breaks.
 pub fn translate(text: &str, target: &str) -> Result<Translation> {
     let trimmed = text.trim();
     if trimmed.is_empty() {
@@ -34,8 +43,27 @@ pub fn translate(text: &str, target: &str) -> Result<Translation> {
         .timeout(std::time::Duration::from_secs(12))
         .build();
 
+    let mut out = String::new();
+    let mut source_lang = String::new();
+    for chunk in chunks(trimmed, CHUNK_CHARS) {
+        let piece = translate_chunk(&agent, chunk, target)?;
+        if source_lang.is_empty() {
+            source_lang = piece.source_lang;
+        }
+        out.push_str(&piece.text);
+    }
+    if out.trim().is_empty() {
+        return Err(anyhow!("translation returned empty"));
+    }
+    Ok(Translation {
+        text: out,
+        source_lang,
+    })
+}
+
+fn translate_chunk(agent: &ureq::Agent, text: &str, target: &str) -> Result<Translation> {
     let resp = agent
-        .get("https://translate.googleapis.com/translate_a/single")
+        .post("https://translate.googleapis.com/translate_a/single")
         // A browser-like UA reduces the chance of an automated-traffic block.
         .set(
             "User-Agent",
@@ -45,8 +73,7 @@ pub fn translate(text: &str, target: &str) -> Result<Translation> {
         .query("sl", "auto")
         .query("tl", target)
         .query("dt", "t")
-        .query("q", trimmed)
-        .call()
+        .send_form(&[("q", text)])
         .context("translation request failed (network?)")?;
 
     // Response shape (dt=t):
@@ -64,20 +91,60 @@ pub fn translate(text: &str, target: &str) -> Result<Translation> {
             out.push_str(s);
         }
     }
-    if out.trim().is_empty() {
-        return Err(anyhow!("translation returned empty"));
-    }
-
     let source_lang = body
         .get(2)
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-
     Ok(Translation {
         text: out,
         source_lang,
     })
+}
+
+/// Split `text` into pieces of at most `max` characters, cutting after a line
+/// break where one falls inside the limit, so sentences and lines stay whole.
+/// A single line longer than `max` is cut at a character boundary.
+fn chunks(text: &str, max: usize) -> Vec<&str> {
+    let mut out = Vec::new();
+    let mut rest = text;
+    while rest.chars().count() > max {
+        let limit = rest.char_indices().nth(max).map_or(rest.len(), |(i, _)| i);
+        let cut = rest[..limit].rfind('\n').map_or(limit, |i| i + 1);
+        out.push(&rest[..cut]);
+        rest = &rest[cut..];
+    }
+    if !rest.is_empty() {
+        out.push(rest);
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::chunks;
+
+    #[test]
+    fn short_text_is_one_piece() {
+        assert_eq!(chunks("merhaba dünya", 4000), vec!["merhaba dünya"]);
+    }
+
+    #[test]
+    fn long_text_is_cut_at_line_breaks_and_loses_nothing() {
+        let text = "satır bir\nikinci satır\nüç\n".repeat(400);
+        let pieces = chunks(&text, 100);
+        assert!(pieces.iter().all(|p| p.chars().count() <= 100));
+        assert!(pieces.iter().all(|p| p.ends_with('\n')), "cut after a line break");
+        assert_eq!(pieces.concat(), text);
+    }
+
+    #[test]
+    fn one_overlong_line_is_cut_on_a_char_boundary() {
+        let text = "ğ".repeat(250);
+        let pieces = chunks(&text, 100);
+        assert_eq!(pieces.len(), 3);
+        assert_eq!(pieces.concat(), text);
+    }
 }
 
 /// Ordered, selectable target languages (proper-case codes as Google's `tl`

@@ -92,6 +92,9 @@ pub struct Settings {
     /// order is the pill order. Never empty (the popup keeps at least one).
     #[serde(default = "default_translate_favs")]
     pub translate_favs: Vec<String>,
+    /// The user has agreed, once, that "OCR + Translate" sends the recognised
+    /// text to Google Translate. Until then the popup asks before sending.
+    pub translate_consented: bool,
     /// Which host the "Upload" action uploads to: "catbox" (default, no key /
     /// no login), "imgur" (needs `imgur_client_id`), or "0x0". Anything
     /// unknown falls back to catbox.
@@ -138,6 +141,7 @@ impl Default for Settings {
             dark_theme: default_dark_theme(),
             translate_target: default_translate_target(),
             translate_favs: default_translate_favs(),
+            translate_consented: false,
             upload_service: default_upload_service(),
             imgur_client_id: default_imgur_client_id(),
             language: default_language(),

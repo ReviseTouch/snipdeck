@@ -630,3 +630,16 @@ msgstr "Super + Alt + sürükle ile ekrandan bir bölge yakala."
 
 msgid "Capture a region from the screen with the New button or a hotkey."
 msgstr "Yeni düğmesi ya da bir kısayolla ekrandan bir bölge yakala."
+
+#. ── Translate: first-use consent ──
+msgid "Send the text to Google?"
+msgstr "Metin Google'a gönderilsin mi?"
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr "OCR + Çevir, bu kesimdeki metni bilgisayarınızda okur, sonra o metni — görüntüyü değil — Google Translate'e (translate.googleapis.com) gönderir. Snipdeck'te başka hiçbir şey sormadan bir şey göndermez."
+
+msgid "Asked once; your answer is remembered."
+msgstr "Bir kez sorulur; cevabınız hatırlanır."
+
+msgid "Send"
+msgstr "Gönder"

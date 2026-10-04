@@ -44,6 +44,11 @@ struct Shared {
     /// Set when the favourites change (star toggle); drained by the app to
     /// persist into Settings.
     pending_favs: Option<Vec<String>>,
+    /// The snip waiting for the user's consent before anything is sent.
+    awaiting_consent: Option<image::RgbaImage>,
+    /// Set when the user agrees to send text to Google; drained by the app to
+    /// persist, so the question is asked once.
+    pending_consent: bool,
 }
 
 pub struct TranslatePopup {
@@ -70,6 +75,8 @@ impl TranslatePopup {
                 pending_persist: None,
                 favs: Vec::new(),
                 pending_favs: None,
+                awaiting_consent: None,
+                pending_consent: false,
             })),
             last_size: None,
         }
@@ -100,6 +107,7 @@ impl TranslatePopup {
         favs: &[String],
         anchor: (i32, i32, i32, i32),
         scale: f32,
+        consented: bool,
     ) -> Result<(), slint::PlatformError> {
         // Carry the user's last window size over to the new popup so a resize
         // sticks across re-opens within the session.
@@ -121,6 +129,7 @@ impl TranslatePopup {
             sh.pending_persist = None;
             sh.favs = favs.to_vec();
             sh.pending_favs = None;
+            sh.awaiting_consent = None;
         }
 
         let w = TranslatePopupWindow::new()?;
@@ -225,6 +234,31 @@ impl TranslatePopup {
             }
         });
 
+        // The answer to "send this text to Google?". No closes the popup with
+        // nothing sent; yes is remembered, and OCR + translation start.
+        let shared_consent = self.shared.clone();
+        let tx_consent = self.tx.clone();
+        let weak_consent = w.as_weak();
+        w.on_consent(move |agreed| {
+            let Some(c) = weak_consent.upgrade() else { return };
+            c.set_consent_needed(false);
+            let mut sh = shared_consent.borrow_mut();
+            let image = sh.awaiting_consent.take();
+            if !agreed {
+                sh.current = None;
+                drop(sh);
+                let _ = c.hide();
+                return;
+            }
+            sh.pending_consent = true;
+            let (Some(image), Some(id)) = (image, sh.current) else { return };
+            let target = sh.target.clone();
+            drop(sh);
+            c.set_loading(true);
+            spawn_ocr_translate(tx_consent.clone(), id, image, target);
+            crate::pump::wake();
+        });
+
         // Title-bar drag → move the OS window (same pointer-delta trick the
         // floating snips use; the title re-anchors so the delta self-zeroes).
         // Clamp to the monitor so it can never be dragged partly off-screen
@@ -253,7 +287,19 @@ impl TranslatePopup {
         w.show()?;
         self.window = Some(w);
 
-        spawn_ocr_translate(self.tx.clone(), id, image, target.to_string());
+        // Nothing leaves the machine until the user has agreed to it once:
+        // "OCR + Translate" sends the recognised text to Google, and unlike
+        // Upload it used to do so without a word. Until then the popup shows
+        // what will be sent where, and waits.
+        if consented {
+            spawn_ocr_translate(self.tx.clone(), id, image, target.to_string());
+        } else {
+            self.shared.borrow_mut().awaiting_consent = Some(image);
+            if let Some(w) = &self.window {
+                w.set_loading(false);
+                w.set_consent_needed(true);
+            }
+        }
         Ok(())
     }
 
@@ -320,6 +366,12 @@ impl TranslatePopup {
     /// app can persist it into Settings. Cleared after read.
     pub fn take_fav_persist(&mut self) -> Option<Vec<String>> {
         self.shared.borrow_mut().pending_favs.take()
+    }
+
+    /// True once, after the user agreed to send text to Google, so the app can
+    /// persist the consent.
+    pub fn take_consent_persist(&mut self) -> bool {
+        std::mem::take(&mut self.shared.borrow_mut().pending_consent)
     }
 }
 

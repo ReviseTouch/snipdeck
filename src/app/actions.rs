@@ -110,6 +110,7 @@ impl AppState {
                                 &favs,
                                 anchor,
                                 self.scale_factor,
+                                self.settings.translate_consented,
                             ) {
                                 self.last_error = Some(t1("Failed to open translation window: {e}", "{e}", &e.to_string()));
                             }
