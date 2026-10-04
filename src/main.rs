@@ -147,6 +147,11 @@ fn main() -> Result<(), slint::PlatformError> {
     //      serviced until a real winit window event arrives. The default
     //      selector would pick the same backend, but the external API stays
     //      inaccessible unless we set the platform ourselves.
+    //
+    // Cargo.toml compiles the software renderer in for Windows only. Asked for
+    // a renderer it was built without, Slint falls back to the default one
+    // with nothing louder than a line on stderr — which is how Windows ran on
+    // femtovg for two months, once femtovg became the build's only renderer.
     #[cfg(target_os = "windows")]
     {
         match i_slint_backend_winit::Backend::new_with_renderer_by_name(Some("software")) {

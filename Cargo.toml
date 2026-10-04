@@ -16,23 +16,17 @@ name = "snipdeck"
 path = "src/main.rs"
 
 [dependencies]
-# femtovg (GPU), NOT the software renderer, and the reason is Wayland-specific:
-# Slint's software path renders through softbuffer, whose Wayland backend
-# allocates `wl_shm::Format::Xrgb8888` — the X means the alpha byte is dropped.
-# A transparent window is therefore impossible there, and the snip overlay and
-# context menu both came out as solid black rectangles over the desktop. A GPU
-# renderer gets an alpha-capable surface and they composite correctly.
-#
-# Windows and X11 were unaffected by the bug; the switch is global because Slint
-# picks its renderer per build, not per window.
-slint = { version = "1.8", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-femtovg", "raw-window-handle-06"] }
+# The renderer is chosen per platform, in the target sections below:
+# software on Windows, femtovg (GPU) everywhere else. Slint compiles in only
+# the renderers asked for, so each target asks for its own.
+slint = { version = "1.8", default-features = false, features = ["std", "compat-1-2", "backend-winit", "raw-window-handle-06"] }
 # Direct handle on the winit backend so we can hook real winit window events
 # (Focused/Resized/Occluded) and force a fresh frame on restore — a timer-driven
 # request_redraw isn't serviced until a genuine window event arrives, so the
 # window otherwise wakes blank. Also gives `WinitWindowAccessor`, which is how
 # `floating.rs` reaches `drag_window()` for compositor-driven moves on Wayland.
 # Features unify with slint's.
-i-slint-backend-winit = { version = "1.16", features = ["renderer-femtovg"] }
+i-slint-backend-winit = "1.16"
 raw-window-handle = "0.6"
 xcap = "0.0.14"
 arboard = { version = "3", features = ["image-data"] }
@@ -74,6 +68,16 @@ tiny-skia = "0.11"
 parley = "0.8"
 skrifa = "0.40"
 
+# femtovg (GPU), NOT the software renderer, and the reason is Wayland-specific:
+# Slint's software path renders through softbuffer, whose Wayland backend
+# allocates `wl_shm::Format::Xrgb8888` — the X means the alpha byte is dropped.
+# A transparent window is therefore impossible there, and the snip overlay and
+# context menu both came out as solid black rectangles over the desktop. A GPU
+# renderer gets an alpha-capable surface and they composite correctly.
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+slint = { version = "1.8", default-features = false, features = ["renderer-femtovg"] }
+i-slint-backend-winit = { version = "1.16", features = ["renderer-femtovg"] }
+
 # The global pointer hook behind Win+drag, used on Windows (as the fallback to
 # the native hook) and macOS. Not on Linux: there it reads /dev/input, which
 # only an `input`-group user can, and harmed more than it helped where it
@@ -82,6 +86,16 @@ skrifa = "0.40"
 rdev = { version = "0.5", features = ["unstable_grab"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
+# Software on Windows, which `main` installs by name: the transparent snip
+# overlay composites the same on every monitor through DWM's standard path,
+# where OpenGL transparency depends on the adapter (it came up opaque on the
+# primary monitor and transparent on a secondary); it needs no GPU driver,
+# so it starts in VMs and Remote Desktop sessions that offer only Windows'
+# OpenGL 1.1; and no GL context means less memory. When femtovg was made
+# global for Wayland, Windows kept asking for "software", Slint fell back to
+# femtovg without a word, and all three were quietly lost.
+slint = { version = "1.8", default-features = false, features = ["renderer-software"] }
+i-slint-backend-winit = { version = "1.16", features = ["renderer-software"] }
 windows = { version = "0.58", features = [
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",
