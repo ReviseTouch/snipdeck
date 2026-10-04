@@ -844,11 +844,6 @@ impl AppState {
         did_work || self.wants_awake()
     }
 
-    /// Conditions under which the pump must keep ticking even with no fresh
-    /// input: a snip/eyedropper in progress, a frozen frame armed, floating
-    /// windows about to open, or simply the main window on screen. Async
-    /// OCR/translate results and floating-window interactions don't appear
-    /// here — their producers/callbacks call [`crate::pump::wake`] instead.
     /// Save the gallery. On failure it stays dirty and is retried, waiting
     /// twice as long each time — 1 s, 2 s, 4 s, up to 30 s — and the error is
     /// returned for a caller that wants to show it. Any later save, retried or
@@ -874,6 +869,11 @@ impl AppState {
         }
     }
 
+    /// Conditions under which the pump must keep ticking even with no fresh
+    /// input: a snip/eyedropper in progress, a frozen frame armed, floating
+    /// windows about to open, or simply the main window on screen. Async
+    /// OCR/translate results and floating-window interactions don't appear
+    /// here — their producers/callbacks call [`crate::pump::wake`] instead.
     fn wants_awake(&self) -> bool {
         // Off Windows this used to answer `true` unconditionally, on the theory
         // that only Windows' global hooks woke the pump — so a tray-idle
