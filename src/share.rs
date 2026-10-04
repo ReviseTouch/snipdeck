@@ -124,7 +124,7 @@ mod win {
     use windows::Win32::System::Mapi::{MapiFileDescW, MapiMessageW, MAPI_LOGON_UI};
     use windows::Win32::UI::Shell::{IDataTransferManagerInterop, ShellExecuteW};
     use windows::Win32::UI::WindowsAndMessaging::{
-        FindWindowW, MessageBoxW, SetForegroundWindow, MB_ICONINFORMATION, MB_OK,
+        MessageBoxW, SetForegroundWindow, MB_ICONINFORMATION, MB_OK,
         MB_SETFOREGROUND, MB_TOPMOST, SW_SHOWNORMAL,
     };
 
@@ -301,16 +301,12 @@ mod win {
     /// on a borderless, always-on-top tool window (the floating snip). The
     /// caller makes the main window visible first. Falls back to a floating snip.
     fn anchor_hwnd() -> HWND {
-        unsafe {
-            if let Ok(h) = FindWindowW(PCWSTR::null(), w!("Snipdeck")) {
-                if !h.0.is_null() {
-                    log::info!("share: anchoring on main window");
-                    return h;
-                }
-            }
-            log::info!("share: no main window, falling back to floating snip");
-            FindWindowW(PCWSTR::null(), w!("SnipdeckFloating")).unwrap_or_default()
+        if let Some(h) = crate::window_tamer::find_own_window("Snipdeck") {
+            log::info!("share: anchoring on main window");
+            return h;
         }
+        log::info!("share: no main window, falling back to floating snip");
+        crate::window_tamer::find_own_window("SnipdeckFloating").unwrap_or_default()
     }
 
     fn encode_png(img: &image::RgbaImage) -> Result<Vec<u8>> {

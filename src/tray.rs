@@ -126,12 +126,11 @@ pub fn start() -> TrayService {
 /// command handler). Matches the raise logic in `single_instance`.
 #[cfg(target_os = "windows")]
 pub fn focus_main_window() {
-    use windows::core::{w, PCWSTR};
     use windows::Win32::UI::WindowsAndMessaging::{
-        FindWindowW, IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE,
+        IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE,
     };
     unsafe {
-        if let Ok(hwnd) = FindWindowW(PCWSTR::null(), w!("Snipdeck")) {
+        if let Some(hwnd) = crate::window_tamer::find_own_window("Snipdeck") {
             if IsIconic(hwnd).as_bool() {
                 let _ = ShowWindow(hwnd, SW_RESTORE);
             }
@@ -149,14 +148,11 @@ pub fn focus_main_window() {}
 /// minimize) so it can kick a repaint.
 #[cfg(target_os = "windows")]
 pub fn is_main_window_shown() -> bool {
-    use windows::core::{w, PCWSTR};
-    use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, IsIconic, IsWindowVisible};
+    use windows::Win32::UI::WindowsAndMessaging::{IsIconic, IsWindowVisible};
     unsafe {
-        match FindWindowW(PCWSTR::null(), w!("Snipdeck")) {
-            Ok(hwnd) if !hwnd.0.is_null() => {
-                IsWindowVisible(hwnd).as_bool() && !IsIconic(hwnd).as_bool()
-            }
-            _ => false,
+        match crate::window_tamer::find_own_window("Snipdeck") {
+            Some(hwnd) => IsWindowVisible(hwnd).as_bool() && !IsIconic(hwnd).as_bool(),
+            None => false,
         }
     }
 }
@@ -377,7 +373,7 @@ mod win {
     };
     use windows::Win32::UI::WindowsAndMessaging::{
         AppendMenuW, ChangeWindowMessageFilterEx, CreatePopupMenu, CreateWindowExW,
-        DefWindowProcW, DestroyMenu, DispatchMessageW, FindWindowW, GetCursorPos, GetMessageW,
+        DefWindowProcW, DestroyMenu, DispatchMessageW, GetCursorPos, GetMessageW,
         LoadIconW, PostMessageW, RegisterClassW, RegisterWindowMessageW, SendMessageW,
         SetForegroundWindow, TrackPopupMenu, TranslateMessage, MSGFLT_ALLOW,
         HICON, ICON_BIG, ICON_SMALL, IDI_APPLICATION, MF_CHECKED, MF_SEPARATOR, MF_STRING,
@@ -390,12 +386,9 @@ mod win {
     /// apply it natively once the window exists. Returns true once the window
     /// has been found (so the caller can stop retrying).
     pub unsafe fn set_window_icon() -> bool {
-        let Ok(hwnd) = FindWindowW(PCWSTR::null(), w!("Snipdeck")) else {
+        let Some(hwnd) = crate::window_tamer::find_own_window("Snipdeck") else {
             return false;
         };
-        if hwnd.0.is_null() {
-            return false;
-        }
         let hinst = GetModuleHandleW(None).unwrap_or_default();
         let icon = load_app_icon(HINSTANCE(hinst.0));
         if !icon.0.is_null() {

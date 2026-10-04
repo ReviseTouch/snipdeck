@@ -117,13 +117,13 @@ pub fn acquire_after_handoff() -> bool {
 
 #[cfg(target_os = "windows")]
 fn acquire_inner(wait_for_handoff: bool) -> bool {
-    use windows::core::{w, PCWSTR};
+    use windows::core::w;
     use windows::Win32::Foundation::{
         CloseHandle, GetLastError, ERROR_ACCESS_DENIED, ERROR_ALREADY_EXISTS, FALSE,
     };
     use windows::Win32::System::Threading::CreateMutexW;
     use windows::Win32::UI::WindowsAndMessaging::{
-        FindWindowW, IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE,
+        IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE,
     };
 
     // Session-local namespace ("Local\\") → one instance per logon session,
@@ -191,7 +191,7 @@ fn acquire_inner(wait_for_handoff: bool) -> bool {
         if already_running {
             // Another instance holds the lock. Surface its window so the
             // user sees the app they just tried to launch, then quit.
-            if let Ok(hwnd) = FindWindowW(PCWSTR::null(), w!("Snipdeck")) {
+            if let Some(hwnd) = crate::window_tamer::find_instance_window("Snipdeck") {
                 if IsIconic(hwnd).as_bool() {
                     let _ = ShowWindow(hwnd, SW_RESTORE);
                 }

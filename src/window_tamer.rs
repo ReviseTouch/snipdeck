@@ -60,6 +60,25 @@ pub fn set_floating_in_taskbar(in_taskbar: bool) {
     imp::set_floating_in_taskbar(in_taskbar);
 }
 
+/// The top-level window titled exactly `title` that this process owns.
+///
+/// `FindWindowW(NULL, "Snipdeck")` matched on the title alone, and a title is
+/// anyone's to take — an Explorer window open on a folder named Snipdeck, a
+/// browser tab, a document. Whichever came first in z-order was raised by the
+/// tray's Show, judged for the main window's visibility, given Snipdeck's icon,
+/// and made the anchor of the share flyout.
+#[cfg(target_os = "windows")]
+pub fn find_own_window(title: &str) -> Option<windows::Win32::Foundation::HWND> {
+    imp::find_window(title, false)
+}
+
+/// The same, owned by any process running this executable: how a second
+/// launch finds the first instance's window to raise.
+#[cfg(target_os = "windows")]
+pub fn find_instance_window(title: &str) -> Option<windows::Win32::Foundation::HWND> {
+    imp::find_window(title, true)
+}
+
 /// Apply the Alt+Tab/taskbar policy directly to a Slint window.
 ///
 /// This is called from the floating-window creation path, before `show()`
@@ -586,6 +605,75 @@ mod imp {
             &cloak as *const _ as *const _,
             std::mem::size_of::<BOOL>() as u32,
         );
+    }
+
+    struct WindowQuery {
+        title: String,
+        /// Accept other processes running the same executable, not just this
+        /// one.
+        any_instance: bool,
+        own_pid: u32,
+        exe_name: Option<String>,
+        found: Option<HWND>,
+    }
+
+    pub fn find_window(title: &str, any_instance: bool) -> Option<HWND> {
+        let mut query = WindowQuery {
+            title: title.to_owned(),
+            any_instance,
+            own_pid: unsafe { GetCurrentProcessId() },
+            exe_name: std::env::current_exe().ok().as_deref().and_then(file_name_lower),
+            found: None,
+        };
+        unsafe {
+            // Stopping early makes EnumWindows report an error; the answer is
+            // in `found` either way.
+            let _ = EnumWindows(
+                Some(find_window_cb),
+                LPARAM(&mut query as *mut WindowQuery as isize),
+            );
+        }
+        query.found
+    }
+
+    unsafe extern "system" fn find_window_cb(hwnd: HWND, lparam: LPARAM) -> BOOL {
+        let query = &mut *(lparam.0 as *mut WindowQuery);
+        let mut pid: u32 = 0;
+        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+        let ours = pid == query.own_pid
+            || (query.any_instance
+                && query.exe_name.is_some()
+                && process_exe_name(pid) == query.exe_name);
+        if ours && window_title(hwnd) == query.title {
+            query.found = Some(hwnd);
+            return FALSE;
+        }
+        TRUE
+    }
+
+    /// Lower-cased file name of the executable behind a process.
+    unsafe fn process_exe_name(pid: u32) -> Option<String> {
+        use windows::Win32::System::Threading::{
+            OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32,
+            PROCESS_QUERY_LIMITED_INFORMATION,
+        };
+        let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+        let mut buf = [0u16; 1024];
+        let mut len = buf.len() as u32;
+        let queried = QueryFullProcessImageNameW(
+            process,
+            PROCESS_NAME_WIN32,
+            windows::core::PWSTR(buf.as_mut_ptr()),
+            &mut len,
+        );
+        let _ = CloseHandle(process);
+        queried.ok()?;
+        let path = std::path::PathBuf::from(String::from_utf16_lossy(&buf[..len as usize]));
+        file_name_lower(&path)
+    }
+
+    fn file_name_lower(path: &std::path::Path) -> Option<String> {
+        Some(path.file_name()?.to_string_lossy().to_lowercase())
     }
 
     unsafe fn window_title(hwnd: HWND) -> String {
