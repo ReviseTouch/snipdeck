@@ -408,7 +408,13 @@ impl AppState {
     }
 
     pub(crate) fn handle_mouse_event(&mut self, event: MouseTriggerEvent) {
-        log::info!("mouse event: {:?}, active={}", event, self.active.is_some());
+        // Every drag step arrives here, ~125 a second with coordinates. At info
+        // they filled the journal — where a desktop-launched app's stderr goes —
+        // with a trace of the pointer; moves are trace, the rest debug.
+        match event {
+            MouseTriggerEvent::Move { .. } => log::trace!("mouse event: {event:?}"),
+            _ => log::debug!("mouse event: {:?}, active={}", event, self.active.is_some()),
+        }
         match event {
             MouseTriggerEvent::StartSnip { x, y, mods } => {
                 if self.active.is_some() {
@@ -466,8 +472,11 @@ impl AppState {
                     .take()
                     .unwrap_or_else(|| routing_for_modifiers(mods));
                 let source_window = crate::window_metadata::capture_at_point(x, y);
+                // Debug, not info: a window title is often the very thing being
+                // snipped — a document name, a chat, an e-mail subject — and the
+                // clipboard-only routing promises to keep nothing.
                 if let Some(window) = &source_window {
-                    log::info!(
+                    log::debug!(
                         "source window: title={:?} app={:?} pid={:?} bounds={:?}",
                         window.title,
                         window.app_name,
