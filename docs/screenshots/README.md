@@ -5,10 +5,10 @@ references them and they will render automatically:
 
 | File | What to show |
 | --- | --- |
-| `gallery.png` | The main gallery workspace (toolbar + search/filter strip + grid) |
-| `floating.png` | A few floating snips pinned on the desktop |
-| `annotate.png` | The annotation editor (pills + colour wheel + a marked-up snip) |
-| `translate.png` | The OCR + Translate popup |
+| `gallery.png` | The main gallery workspace (toolbar, card grid, status bar) |
+| `floating.png` | A few floating snips on the desktop, one with its right-click menu open |
+| `annotate.png` | The annotation editor (tool pills + a marked-up snip) |
+| `collage.png` | The collage editor (a few snips laid out, the tray below) |
 
 Tips:
 - Capture at a normal window size (not maximized) so the UI reads clearly.

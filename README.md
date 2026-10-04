@@ -33,7 +33,7 @@ all from a native Rust app with a software-rendered [Slint](https://slint.dev) U
 <!--
   Drop your screenshots into docs/screenshots/ with these exact names and they
   will show up here automatically:
-    gallery.png · floating.png · annotate.png · translate.png
+    gallery.png · floating.png · annotate.png · collage.png
 -->
 
 <div align="center">
@@ -41,8 +41,8 @@ all from a native Rust app with a software-rendered [Slint](https://slint.dev) U
 | The gallery workspace | Floating snips on the desktop |
 | :---: | :---: |
 | <img src="docs/screenshots/gallery.png" alt="Gallery" width="420" /> | <img src="docs/screenshots/floating.png" alt="Floating snips" width="420" /> |
-| **The annotation editor** | **OCR + translate** |
-| <img src="docs/screenshots/annotate.png" alt="Annotation editor" width="420" /> | <img src="docs/screenshots/translate.png" alt="OCR translate" width="420" /> |
+| **The annotation editor** | **The collage editor** |
+| <img src="docs/screenshots/annotate.png" alt="Annotation editor" width="420" /> | <img src="docs/screenshots/collage.png" alt="Collage editor" width="420" /> |
 
 </div>
 
@@ -58,15 +58,18 @@ all from a native Rust app with a software-rendered [Slint](https://slint.dev) U
   drag, resize, pin, crop, rotate/flip, and dismiss.
 - ✏️ **Built-in annotation editor.** Pen, highlighter, shapes, arrows, and text with a full HSV
   colour wheel, adjustable size + opacity, zoom, and undo/redo ([details](#️-annotation-editor)).
+- 🧩 **Collage.** Lay several snips out as one image — grid, justified rows or masonry, with gap,
+  rounded corners and background — saved back to the gallery as a new snip.
 - 🔍 **Built-in OCR.** Every snip is OCR-indexed in the background with the OS engine
   (`Windows.Media.Ocr`) — no model download, no network, fully local.
 - 🌐 **OCR + translate.** Read a snip's text in another language inline (30+ targets, with
   favourites you can star).
 - 🗂️ **Powerful gallery.** Full-text search over OCR text, window metadata, monitor and path;
-  filter by status / content / size / date; a virtualized grid that stays smooth at thousands of snips.
+  filter by status / content / size / date; a virtualized grid that stays smooth at thousands of snips
+  ([tour](#️-the-gallery)).
 - 📤 **Share & upload.** Windows share sheet, a new email (Simple MAPI), the system image editor,
   or an image host — uploads are **opt-in with an explicit consent dialog**.
-- 🌍 **23 languages**, auto-detected from your OS and switchable from the toolbar.
+- 🌍 **23 languages**, auto-detected from your OS and switchable from the toolbar's `⋯` menu.
 - 🌗 **Light / dark themes**, a system-tray home, and **registry-free** launch-at-login.
 
 ---
@@ -138,6 +141,23 @@ Right-click a floating snip **or** a gallery thumbnail:
 
 ---
 
+## 🗂️ The gallery
+
+One toolbar row; everything else is a click away.
+
+- **New** takes a snip. Its arrow holds **Snip + Clip** and **Clip only**, each with its hotkey.
+- **Collage** and **Pick color** sit beside it, and the search box takes the rest of the row —
+  `Ctrl`+`F` to focus it, `Esc` to clear it.
+- **Filter** opens status, content, size and date in one panel. Active filters show as chips
+  under the toolbar, each removable on its own or all at once with **Clear filters**.
+- **`⋯`** holds what changes rarely: floating snips in the taskbar, dark theme, launch at
+  login, language, clearing the gallery, and About.
+- The status bar counts what is shown and holds **Sort** and the **S / M / L** card size.
+
+Hover a card for its quick actions; right-click it for [everything else](#️-right-click-actions).
+
+---
+
 ## 📦 Install
 
 ### Download
@@ -197,7 +217,7 @@ dist/snipdeck/install.sh
 ## 🌍 Languages
 
 Snipdeck is fully localized. On first launch it picks your language from the OS locale;
-override it any time from the **globe menu** in the toolbar.
+override it any time from **`⋯` → Language** in the toolbar.
 
 > English · Spanish · Simplified Chinese · Hindi · Arabic · Portuguese · Russian · Japanese ·
 > German · French · Korean · Italian · Turkish · Indonesian · Vietnamese · Polish · Ukrainian ·
