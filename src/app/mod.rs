@@ -505,7 +505,15 @@ impl AppState {
                     self.restore_main_after_snip = false;
                     self.pending_show_main = true;
                 }
+                // The whole arm goes, not just its timestamp. Left behind,
+                // `armed_routing` made every Super+Alt snip from the GNOME
+                // extension look like "another snip in progress" and dropped
+                // it, and `SNIP_ARMED` turned the next ordinary click into a
+                // snip — while clearing `armed_snip_at` had disabled the
+                // watchdog below that would otherwise have caught both.
                 self.armed_snip_at = None;
+                self.armed_routing = None;
+                crate::mouse_trigger::consume_armed();
             }
         }
 
@@ -687,8 +695,9 @@ impl AppState {
             }
         }
 
-        // Refresh gallery model if mouse-hook produced a new snip.
-        if had_events && self.gallery.snips.len() != self.last_snip_ids.len() {
+        // Refresh the gallery model when a snip was added — by the mouse hook,
+        // the overlay, or the GNOME extension.
+        if (had_events || had_region_snips) && self.gallery.snips.len() != self.last_snip_ids.len() {
             self.last_snip_ids = self.gallery.snips.iter().map(|s| s.id).collect();
             self.refresh_gallery(window);
         }
