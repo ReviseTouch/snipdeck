@@ -44,7 +44,8 @@ mod imp {
         D3D11_SDK_VERSION, D3D11_TEXTURE2D_DESC, D3D11_USAGE_STAGING,
     };
     use windows::Win32::Graphics::Dxgi::Common::{
-        DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_R16G16B16A16_FLOAT,
+        DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_MODE_ROTATION_ROTATE180,
+        DXGI_MODE_ROTATION_ROTATE270, DXGI_MODE_ROTATION_ROTATE90,
     };
     use windows::Win32::Graphics::Dxgi::{
         CreateDXGIFactory1, IDXGIAdapter1, IDXGIFactory1, IDXGIOutput1, IDXGIOutputDuplication,
@@ -221,8 +222,20 @@ mod imp {
         context.Unmap(&staging, 0);
         let _ = dup.ReleaseFrame();
 
-        RgbaImage::from_raw(width as u32, height as u32, buf)
-            .ok_or_else(|| anyhow!("RgbaImage::from_raw failed"))
+        let frame = RgbaImage::from_raw(width as u32, height as u32, buf)
+            .ok_or_else(|| anyhow!("RgbaImage::from_raw failed"))?;
+        // The duplicated frame comes in the panel's native orientation, not
+        // the desktop's: on a monitor turned to portrait it is still landscape,
+        // and fitting it to the portrait monitor squashed it sideways. Turn it
+        // the way the desktop is turned — for ROTATE90 the frame's top row is
+        // the desktop's right-hand column, a quarter turn clockwise (the
+        // Desktop Duplication sample maps it the same way).
+        Ok(match dup.GetDesc().Rotation {
+            DXGI_MODE_ROTATION_ROTATE90 => image::imageops::rotate90(&frame),
+            DXGI_MODE_ROTATION_ROTATE180 => image::imageops::rotate180(&frame),
+            DXGI_MODE_ROTATION_ROTATE270 => image::imageops::rotate270(&frame),
+            _ => frame,
+        })
     }
 
     /// IEEE-754 binary16 (half) -> f32. Used to read scRGB FP16 HDR frames.
