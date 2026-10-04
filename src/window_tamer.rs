@@ -34,12 +34,7 @@ pub fn foreground_token() -> isize {
 pub fn set_floating_in_taskbar(_in_taskbar: bool) {}
 
 #[cfg(not(target_os = "windows"))]
-pub fn configure_floating_window(
-    _window: &slint::Window,
-    _owner_window: Option<&slint::Window>,
-    _in_taskbar: bool,
-) {
-}
+pub fn configure_floating_window(_window: &slint::Window, _in_taskbar: bool) {}
 
 #[cfg(target_os = "windows")]
 pub fn start() {
@@ -103,12 +98,8 @@ pub fn find_instance_window(title: &str) -> Option<windows::Win32::Foundation::H
 /// when Slint has already created a native HWND, and immediately after
 /// `show()` as a fallback for backends that create the HWND lazily.
 #[cfg(target_os = "windows")]
-pub fn configure_floating_window(
-    window: &slint::Window,
-    owner_window: Option<&slint::Window>,
-    in_taskbar: bool,
-) {
-    imp::configure_floating_window(window, owner_window, in_taskbar);
+pub fn configure_floating_window(window: &slint::Window, in_taskbar: bool) {
+    imp::configure_floating_window(window, in_taskbar);
 }
 
 #[cfg(target_os = "windows")]
@@ -127,10 +118,10 @@ mod imp {
         DispatchMessageW, EnumWindows, GetClassNameW, GetForegroundWindow, GetMessageW, GetWindow,
         GetWindowLongPtrW, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
         IsWindowVisible, KillTimer, PostThreadMessageW, SetTimer,
-        SetWindowDisplayAffinity, SetWindowLongPtrW, SetWindowPos, ShowWindow, TranslateMessage,
+        SetWindowLongPtrW, SetWindowPos, ShowWindow, TranslateMessage,
         EVENT_OBJECT_CREATE, EVENT_SYSTEM_FOREGROUND, GWL_EXSTYLE, GWL_HWNDPARENT, GWL_STYLE, GW_OWNER, HWND_TOPMOST, MSG,
         SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER,
-        SWP_NOSIZE, SWP_NOZORDER, SW_HIDE, SW_SHOWNA, WDA_EXCLUDEFROMCAPTURE,
+        SWP_NOSIZE, SWP_NOZORDER, SW_HIDE, SW_SHOWNA,
         WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS, WM_APP, WM_TIMER, WS_CAPTION,
         WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
     };
@@ -256,33 +247,16 @@ mod imp {
         }
     }
 
-    pub fn configure_floating_window(
-        window: &slint::Window,
-        owner_window: Option<&slint::Window>,
-        in_taskbar: bool,
-    ) {
+    pub fn configure_floating_window(window: &slint::Window, in_taskbar: bool) {
         let Some(hwnd) = hwnd_from_slint(window) else {
             log::debug!("configure_floating_window: floating HWND not available yet");
             return;
         };
-        let owner_hwnd = owner_window
-            .and_then(hwnd_from_slint)
-            .map(|hwnd| hwnd.0 as isize)
-            .or_else(|| {
-                let cached = MAIN_HWND.load(std::sync::atomic::Ordering::Relaxed);
-                (cached != 0).then_some(cached)
-            })
-            .unwrap_or_default();
-
         unsafe {
-            // exclude_from_capture = false: floating snips must remain
-            // capturable so the user can take a new snip *over* an existing
-            // floating snip (WDA_EXCLUDEFROMCAPTURE made them invisible to the
-            // DXGI capture, so over-snips grabbed the content behind instead).
             // Bounce allowed: this creation-path call happens before/right
             // after show, and floating windows are the ones whose taskbar
             // button must track the setting.
-            configure_floating_hwnd(hwnd, owner_hwnd, in_taskbar, false, true);
+            configure_floating_hwnd(hwnd, in_taskbar, true);
         }
     }
 
@@ -295,13 +269,7 @@ mod imp {
         }
     }
 
-    unsafe fn configure_floating_hwnd(
-        hwnd: HWND,
-        _owner_hwnd: isize,
-        in_taskbar: bool,
-        exclude_from_capture: bool,
-        allow_visibility_bounce: bool,
-    ) {
+    unsafe fn configure_floating_hwnd(hwnd: HWND, in_taskbar: bool, allow_visibility_bounce: bool) {
         let mut changed_shell_visibility = false;
 
         // These auxiliary windows (overlay, floating snips, context menu)
@@ -386,9 +354,6 @@ mod imp {
             );
         }
 
-        if exclude_from_capture {
-            let _ = SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
-        }
     }
 
     unsafe extern "system" fn foreground_cb(
@@ -542,7 +507,7 @@ mod imp {
                 // Bounce only floating snips: the sweep can reach a window
                 // AFTER it became visible, and bouncing e.g. the fullscreen
                 // overlay there flashes a black rectangle mid-snip.
-                configure_floating_hwnd(hwnd, main_hwnd, in_taskbar, false, is_floating_window);
+                configure_floating_hwnd(hwnd, in_taskbar, is_floating_window);
             }
         }
 

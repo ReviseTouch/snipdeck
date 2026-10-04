@@ -213,7 +213,7 @@ impl AppState {
                 let sf = self.scale_factor;
                 let _ = self
                     .floating
-                    .open(&s, &self.settings, sf, Some(window.window()));
+                    .open(&s, &self.settings, sf);
             }
         }
         self.refresh_gallery(window);
@@ -353,7 +353,7 @@ impl AppState {
         let sf = self.scale_factor;
         if let Err(e) = self
             .floating
-            .open(&snip, &self.settings, sf, Some(window.window()))
+            .open(&snip, &self.settings, sf)
         {
             self.last_error =
                 Some(t1("Failed to open floating window: {e}", "{e}", &e.to_string()));
@@ -481,7 +481,7 @@ impl AppState {
                 let sf = self.scale_factor;
                 let _ = self
                     .floating
-                    .open(&s, &self.settings, sf, Some(window.window()));
+                    .open(&s, &self.settings, sf);
             }
         }
         self.refresh_gallery(window);
@@ -534,7 +534,7 @@ impl AppState {
             let sf = self.scale_factor;
             let _ = self
                 .floating
-                .open(&s, &self.settings, sf, Some(window.window()));
+                .open(&s, &self.settings, sf);
         }
         self.refresh_gallery(window);
     }

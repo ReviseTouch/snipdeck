@@ -648,7 +648,7 @@ impl AppState {
             if let Some(snip) = self.gallery.get(id).cloned() {
                 if let Err(e) = self
                     .floating
-                    .open(&snip, &self.settings, sf, Some(window.window()))
+                    .open(&snip, &self.settings, sf)
                 {
                     self.last_error =
                         Some(t1("Failed to open floating window: {e}", "{e}", &e.to_string()));

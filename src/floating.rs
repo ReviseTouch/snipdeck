@@ -86,7 +86,6 @@ impl FloatingManager {
         snip: &Snip,
         settings: &Settings,
         scale_factor: f32,
-        owner_window: Option<&slint::Window>,
     ) -> Result<(), slint::PlatformError> {
 
         if self.windows.contains_key(&snip.id) {
@@ -189,11 +188,7 @@ impl FloatingManager {
         }
         win.window()
             .set_position(PhysicalPosition::new(pos.0, pos.1));
-        crate::window_tamer::configure_floating_window(
-            win.window(),
-            owner_window,
-            settings.floating_in_taskbar,
-        );
+        crate::window_tamer::configure_floating_window(win.window(), settings.floating_in_taskbar);
 
         // Wire callbacks.
         let snip_id = snip.id;
@@ -378,11 +373,7 @@ impl FloatingManager {
         // happens in window_tamer's OBJECT_CREATE hook, which fires while the
         // window is still hidden. Kept as a harmless fallback for backends
         // where the handle does resolve.
-        crate::window_tamer::configure_floating_window(
-            win.window(),
-            owner_window,
-            settings.floating_in_taskbar,
-        );
+        crate::window_tamer::configure_floating_window(win.window(), settings.floating_in_taskbar);
 
         self.windows.insert(
             snip.id,
@@ -439,12 +430,11 @@ impl FloatingManager {
         snip: &Snip,
         settings: &Settings,
         scale_factor: f32,
-        owner_window: Option<&slint::Window>,
     ) {
         if self.windows.contains_key(&snip.id) {
             self.close(snip.id);
         } else {
-            let _ = self.open(snip, settings, scale_factor, owner_window);
+            let _ = self.open(snip, settings, scale_factor);
         }
     }
 

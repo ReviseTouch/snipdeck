@@ -43,7 +43,7 @@ impl AppState {
                 for s in to_reopen {
                     if let Err(e) =
                         self.floating
-                            .open(&s, &self.settings, sf, Some(window.window()))
+                            .open(&s, &self.settings, sf)
                     {
                         self.last_error =
                             Some(t1("Failed to reopen floating window: {e}", "{e}", &e.to_string()));
@@ -65,7 +65,7 @@ impl AppState {
                     for s in to_open {
                         let _ = self
                             .floating
-                            .open(&s, &self.settings, sf, Some(window.window()));
+                            .open(&s, &self.settings, sf);
                     }
                 } else {
                     // Temporary group hide: close the windows but KEEP each
@@ -154,7 +154,6 @@ impl AppState {
                         &snip,
                         &self.settings,
                         self.scale_factor,
-                        Some(window.window()),
                     );
                     if let Some(s) = self.gallery.get_mut(id) {
                         s.floating = self.floating.is_shown(id);
