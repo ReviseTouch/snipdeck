@@ -8,6 +8,26 @@ impl AppState {
         action: ContextAction,
         window: &MainWindow,
     ) {
+        // Rotating, flipping or cropping a snip that is open in the editor
+        // lasted only until the editor saved: it writes back the pixels it was
+        // opened with, and the transform was gone. The editor is brought back
+        // instead, to be finished or cancelled first.
+        let rewrites_pixels = matches!(
+            action,
+            ContextAction::RotateLeft
+                | ContextAction::RotateRight
+                | ContextAction::Rotate180
+                | ContextAction::FlipHorizontal
+                | ContextAction::FlipVertical
+                | ContextAction::Crop
+        );
+        if rewrites_pixels && self.annotate.editing() == Some(id) {
+            self.annotate.raise();
+            self.last_error = Some(t(
+                "Finish or cancel the open annotation before starting another.",
+            ));
+            return;
+        }
         match action {
             ContextAction::Close => {
                 self.floating.close(id);

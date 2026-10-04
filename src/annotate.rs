@@ -153,6 +153,15 @@ impl Annotator {
             .is_some_and(|w| has_unsaved(&self.shared.borrow(), w))
     }
 
+    /// The snip the open editor is working on, if one is open.
+    pub fn editing(&self) -> Option<Uuid> {
+        if self.is_open() {
+            self.shared.borrow().id
+        } else {
+            None
+        }
+    }
+
     /// Bring the open editor back to the front.
     pub fn raise(&self) {
         if let Some(w) = &self.window {
