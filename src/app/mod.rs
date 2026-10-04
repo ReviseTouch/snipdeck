@@ -68,10 +68,10 @@ pub struct AppState {
     /// Snips from before WebP storage, being converted in the background; see
     /// `snip::convert_legacy_pngs`. `None` once there is nothing to convert.
     conversions: Option<crossbeam_channel::Receiver<crate::snip::Converted>>,
-    /// Super+Alt+drag snips the GNOME extension selected and captured. `None`
-    /// off GNOME, or when the session bus would not have us.
+    /// What arrives over the session bus: Super+Alt+drag snips from the GNOME
+    /// extension, and a second launch asking for the window.
     #[cfg(target_os = "linux")]
-    region_snips: Option<crossbeam_channel::Receiver<crate::gnome_bridge::RegionSnip>>,
+    bus_events: crossbeam_channel::Receiver<crate::bus_service::BusEvent>,
     pub overlay: SlintOverlayManager,
     pub floating: FloatingManager,
     pub context_menu: ContextMenuManager,
@@ -212,7 +212,7 @@ impl AppState {
             mouse_trigger,
             conversions,
             #[cfg(target_os = "linux")]
-            region_snips: crate::gnome_bridge::start(),
+            bus_events: crate::bus_service::start(),
             overlay,
             floating: FloatingManager::new(),
             context_menu: ContextMenuManager::new(),
@@ -464,19 +464,25 @@ impl AppState {
             }
         }
 
-        // 3b. Super+Alt+drag snips from the GNOME extension.
+        // 3b. The session bus: Super+Alt+drag snips from the GNOME extension,
+        // and a second launch asking for the window.
         #[cfg(target_os = "linux")]
         let had_region_snips = {
-            let snips: Vec<_> = self
-                .region_snips
-                .as_ref()
-                .map(|rx| rx.try_iter().collect())
-                .unwrap_or_default();
-            let any = !snips.is_empty();
-            for snip in snips {
-                self.handle_region_snip(snip);
+            let events: Vec<_> = self.bus_events.try_iter().collect();
+            let mut any_snip = false;
+            for event in events {
+                match event {
+                    crate::bus_service::BusEvent::RegionSnip(snip) => {
+                        any_snip = true;
+                        self.handle_region_snip(snip);
+                    }
+                    crate::bus_service::BusEvent::Show => {
+                        let _ = window.show();
+                        crate::tray::focus_main_window();
+                    }
+                }
             }
-            any
+            any_snip
         };
         #[cfg(not(target_os = "linux"))]
         let had_region_snips = false;

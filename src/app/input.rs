@@ -367,7 +367,7 @@ impl AppState {
     /// does the rest — routing, clipboard, gallery, OCR, the floating snip
     /// pinned where it was taken.
     #[cfg(target_os = "linux")]
-    pub(crate) fn handle_region_snip(&mut self, snip: crate::gnome_bridge::RegionSnip) {
+    pub(crate) fn handle_region_snip(&mut self, snip: crate::bus_service::RegionSnip) {
         // Another snip is under way. Its Release would find this one in
         // `active`, or this one would take the restore flag that brings the
         // main window back — refuse rather than mix the two.

@@ -80,7 +80,7 @@ const LISTED = 'listed';
  * Snipdeck's name on the session bus, owned for exactly as long as the app
  * runs. That makes it the "is Snipdeck there" signal as well as the address:
  * Super+Alt is only claimed while it has an owner, so with the app closed the
- * chord is a window move again. The other end is src/gnome_bridge.rs.
+ * chord is a window move again. The other end is src/bus_service.rs.
  */
 const BUS_NAME = 'com.revisetouch.Snipdeck';
 const OBJECT_PATH = '/com/revisetouch/Snipdeck';

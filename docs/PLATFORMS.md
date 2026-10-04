@@ -175,7 +175,7 @@ keeps plain Super+drag a window move — and does the capture as well:
    path GNOME's screenshot UI uses: no portal, no "sharing your screen"
    indicator, no shutter. One monitor per snip, as on Windows.
 4. **It hands over a finished region.** Over D-Bus, to `com.revisetouch.Snipdeck`
-   (`gnome_bridge`): the PNG, its top-left corner in the app's physical pixels
+   (`bus_service`): the PNG, its top-left corner in the app's physical pixels
    (logical × that monitor's scale — what `_toLogical` undoes) and Ctrl/Shift.
    The app runs it through the ordinary Release path, so routing, clipboard,
    gallery, OCR and the floating snip behave exactly as for any other capture.

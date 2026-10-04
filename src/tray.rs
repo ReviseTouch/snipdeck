@@ -54,7 +54,36 @@ pub fn can_hide_to_tray() -> bool {
 
 #[cfg(target_os = "linux")]
 pub fn can_hide_to_tray() -> bool {
-    TRAY_ACTIVE.load(std::sync::atomic::Ordering::Relaxed)
+    TRAY_ACTIVE.load(std::sync::atomic::Ordering::Relaxed) && status_notifier_host_present()
+}
+
+/// Is anything on the panel able to show the icon right now?
+///
+/// Building the icon proves nothing: libayatana-appindicator registers it
+/// whether or not a StatusNotifierHost exists to draw it, so on stock GNOME
+/// without the AppIndicator extension the tray was "live" and invisible, and
+/// the window's X hid the app with no way back. The watcher is asked each time
+/// the window closes, not once: the extension that provides it can load after
+/// Snipdeck has started.
+#[cfg(target_os = "linux")]
+fn status_notifier_host_present() -> bool {
+    let answer = pollster::block_on(async {
+        let conn = zbus::Connection::session().await.ok()?;
+        let watcher = zbus::Proxy::new(
+            &conn,
+            "org.kde.StatusNotifierWatcher",
+            "/StatusNotifierWatcher",
+            "org.kde.StatusNotifierWatcher",
+        )
+        .await
+        .ok()?;
+        watcher.get_property::<bool>("IsStatusNotifierHostRegistered").await.ok()
+    });
+    let present = answer.unwrap_or(false);
+    if !present {
+        log::info!("no StatusNotifierHost on the panel; the window's X quits instead of hiding");
+    }
+    present
 }
 
 #[cfg(not(any(target_os = "windows", target_os = "linux")))]

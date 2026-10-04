@@ -12,10 +12,10 @@ mod context_menu;
 mod dxgi_capture;
 mod elevate;
 mod floating;
-/// Super+Alt+drag snips from the GNOME Shell extension. Linux-only: it is the
-/// extension's channel in, and GNOME is the only place the extension runs.
+/// Snipdeck on the session bus: Super+Alt+drag snips from the GNOME Shell
+/// extension, and a second launch raising the first. Linux-only.
 #[cfg(target_os = "linux")]
-mod gnome_bridge;
+mod bus_service;
 mod hotkeys;
 mod i18n;
 mod image_files;
@@ -226,6 +226,13 @@ fn main() -> Result<(), slint::PlatformError> {
     };
     if !acquired {
         log::info!("Another Snipdeck instance is already running; exiting.");
+        // Launching it again is how people look for a window they cannot find
+        // — hidden, with no tray to bring it back. Ask the running one to show
+        // it rather than exiting without a word.
+        #[cfg(target_os = "linux")]
+        if bus_service::show_running_instance() {
+            log::info!("asked the running instance to show its window");
+        }
         return Ok(());
     }
 
