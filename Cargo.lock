@@ -5518,7 +5518,6 @@ dependencies = [
 name = "snipdeck"
 version = "0.2.0"
 dependencies = [
- "ab_glyph",
  "anyhow",
  "arboard",
  "ashpd 0.13.13",
@@ -5535,6 +5534,7 @@ dependencies = [
  "libc",
  "log",
  "parking_lot",
+ "parley",
  "pipewire",
  "pollster",
  "raw-window-handle",
@@ -5543,6 +5543,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "skrifa",
  "slint",
  "slint-build",
  "sys-locale",

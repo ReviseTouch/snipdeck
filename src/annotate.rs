@@ -10,14 +10,13 @@
 //!   1. `open(id, image, scale)` shows the editor for a snip.
 //!   2. Toolbar callbacks set tool/colour/width; canvas callbacks build shapes.
 //!   3. On Save, `flatten` bakes the shapes onto the image at full resolution
-//!      (tiny-skia for vectors, ab_glyph for text) and stashes the result.
+//!      (tiny-skia for vectors, parley + skrifa for text) and stashes the result.
 //!   4. `take_result()` (drained each app tick) hands the new image to the app,
 //!      which rewrites the snip exactly like a crop.
 
 use slint::{Brush, Color, ComponentHandle, Image, ModelRc, SharedPixelBuffer, SharedString, VecModel};
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::OnceLock;
 use uuid::Uuid;
 
 use crate::{AnnoShape, AnnotateWindow};
@@ -913,6 +912,7 @@ fn flatten(base: &image::RgbaImage, shapes: &[Shape]) -> image::RgbaImage {
 
     for shape in shapes {
         if shape.kind == Kind::Text {
+            draw_text(&mut pm, shape);
             continue;
         }
         let mut paint = tiny_skia::Paint::default();
@@ -980,84 +980,139 @@ fn flatten(base: &image::RgbaImage, shapes: &[Shape]) -> image::RgbaImage {
         }
     }
 
-    // Text is baked last, straight-alpha, onto the un-premultiplied result.
-    for shape in shapes {
-        if shape.kind == Kind::Text {
-            draw_text(&mut out, shape);
-        }
-    }
     out
 }
 
-fn blend_px(dst: &mut image::Rgba<u8>, color: [u8; 4], coverage: f32) {
-    let a = (coverage * color[3] as f32 / 255.0).clamp(0.0, 1.0);
-    if a <= 0.0 {
-        return;
-    }
-    let inv = 1.0 - a;
-    for c in 0..3 {
-        dst.0[c] = (color[c] as f32 * a + dst.0[c] as f32 * inv).round() as u8;
-    }
-    dst.0[3] = 255;
-}
+// ---- Text --------------------------------------------------------------
 
-fn draw_text(img: &mut image::RgbaImage, shape: &Shape) {
-    use ab_glyph::{Font, ScaleFont};
-    let Some(font) = load_font() else {
+/// Draw a text shape into the pixmap, the way the editor shows it.
+///
+/// The preview is a Slint `Text`, laid out by parley over fontique: the
+/// system's sans-serif and its fallbacks, bold, `text_size` as the em size.
+/// The same parley does the layout here, so the saved image gets the face,
+/// weight, size and glyph positions the user placed — and with it fallback for
+/// scripts the main face lacks, shaping for the ones that need it (Arabic,
+/// Devanagari…) and bidi. Glyph outlines come from skrifa and are filled by
+/// tiny-skia along with the rest of the shapes. Colour glyphs (emoji) have no
+/// outline and are left out.
+fn draw_text(pm: &mut tiny_skia::Pixmap, shape: &Shape) {
+    use skrifa::instance::{LocationRef, NormalizedCoord, Size};
+    use skrifa::outline::DrawSettings;
+    use skrifa::MetadataProvider;
+
+    if shape.text.trim().is_empty() {
         return;
-    };
+    }
     let (ax, ay) = shape.pts.first().copied().unwrap_or((0.0, 0.0));
-    let scale = ab_glyph::PxScale::from(shape.text_size.max(6.0));
-    let scaled = font.as_scaled(scale);
-    let baseline = ay + scaled.ascent();
-    let (iw, ih) = (img.width() as i32, img.height() as i32);
-    let mut caret = ax;
-    let mut prev: Option<ab_glyph::GlyphId> = None;
-    for ch in shape.text.chars() {
-        if ch == '\n' || ch == '\r' {
-            continue;
-        }
-        let gid = font.glyph_id(ch);
-        if let Some(p) = prev {
-            caret += scaled.kern(p, gid);
-        }
-        let glyph = gid.with_scale_and_position(scale, ab_glyph::point(caret, baseline));
-        if let Some(outlined) = font.outline_glyph(glyph) {
-            let bounds = outlined.px_bounds();
-            outlined.draw(|gx, gy, cov| {
-                let x = bounds.min.x as i32 + gx as i32;
-                let y = bounds.min.y as i32 + gy as i32;
-                if x >= 0 && y >= 0 && x < iw && y < ih {
-                    blend_px(img.get_pixel_mut(x as u32, y as u32), shape.color, cov);
-                }
-            });
-        }
-        caret += scaled.h_advance(gid);
-        prev = Some(gid);
-    }
-}
+    let [r, g, b, a] = shape.color;
+    let mut paint = tiny_skia::Paint::default();
+    paint.anti_alias = true;
+    paint.set_color_rgba8(r, g, b, a);
 
-/// Lazily load a system UI font for baking text (Windows). Cached for reuse.
-fn load_font() -> Option<&'static ab_glyph::FontVec> {
-    static FONT: OnceLock<Option<ab_glyph::FontVec>> = OnceLock::new();
-    FONT.get_or_init(|| {
-        let candidates = [
-            r"C:\Windows\Fonts\segoeui.ttf",
-            r"C:\Windows\Fonts\arial.ttf",
-            r"C:\Windows\Fonts\tahoma.ttf",
-            r"C:\Windows\Fonts\verdana.ttf",
-        ];
-        for path in candidates {
-            if let Ok(bytes) = std::fs::read(path) {
-                if let Ok(font) = ab_glyph::FontVec::try_from_vec(bytes) {
-                    return Some(font);
+    TEXT_LAYOUT.with(|cx| {
+        let (fonts, layouts) = &mut *cx.borrow_mut();
+        let mut builder = layouts.ranged_builder(fonts, &shape.text, 1.0, true);
+        builder.push_default(parley::FontFamily::List(std::borrow::Cow::Borrowed(&[
+            parley::FontFamilyName::Generic(parley::GenericFamily::SansSerif),
+            parley::FontFamilyName::Generic(parley::GenericFamily::SystemUi),
+        ])));
+        builder.push_default(parley::StyleProperty::FontSize(shape.text_size.max(1.0)));
+        builder.push_default(parley::StyleProperty::FontWeight(parley::FontWeight::BOLD));
+        let mut layout: parley::Layout<()> = builder.build(&shape.text);
+        layout.break_all_lines(None);
+
+        for line in layout.lines() {
+            for item in line.items() {
+                let parley::PositionedLayoutItem::GlyphRun(glyphs) = item else {
+                    continue;
+                };
+                let run = glyphs.run();
+                let font_data = run.font();
+                let Ok(font) =
+                    skrifa::FontRef::from_index(font_data.data.as_ref(), font_data.index)
+                else {
+                    continue;
+                };
+                let outlines = font.outline_glyphs();
+                let coords: Vec<NormalizedCoord> = run
+                    .normalized_coords()
+                    .iter()
+                    .map(|c| NormalizedCoord::from_bits(*c))
+                    .collect();
+                let size = Size::new(run.font_size());
+                // A face with no bold of its own gets one drawn thicker, as
+                // the renderer does on screen.
+                let embolden = run.synthesis().embolden().then(|| tiny_skia::Stroke {
+                    width: run.font_size() / 24.0,
+                    line_join: tiny_skia::LineJoin::Round,
+                    ..Default::default()
+                });
+                for glyph in glyphs.positioned_glyphs() {
+                    let Some(outline) = outlines.get(skrifa::GlyphId::new(glyph.id)) else {
+                        continue;
+                    };
+                    let mut pen = GlyphPen {
+                        path: tiny_skia::PathBuilder::new(),
+                        x: ax + glyph.x,
+                        y: ay + glyph.y,
+                    };
+                    let settings = DrawSettings::unhinted(size, LocationRef::new(&coords));
+                    if outline.draw(settings, &mut pen).is_err() {
+                        continue;
+                    }
+                    let Some(path) = pen.path.finish() else {
+                        continue;
+                    };
+                    let identity = tiny_skia::Transform::identity();
+                    pm.fill_path(&path, &paint, tiny_skia::FillRule::Winding, identity, None);
+                    if let Some(stroke) = &embolden {
+                        pm.stroke_path(&path, &paint, stroke, identity, None);
+                    }
                 }
             }
         }
-        log::warn!("annotate: no system font found for text baking");
-        None
-    })
-    .as_ref()
+    });
+}
+
+thread_local! {
+    /// The font index takes a moment to build (fontconfig on Linux,
+    /// DirectWrite on Windows), so it is built on the first save with text and
+    /// kept for the next.
+    static TEXT_LAYOUT: RefCell<(parley::FontContext, parley::LayoutContext<()>)> =
+        RefCell::new((parley::FontContext::new(), parley::LayoutContext::new()));
+}
+
+/// Turns a glyph outline (font units scaled to px, y up, origin on the
+/// baseline) into a tiny-skia path placed at the glyph's spot in the image.
+struct GlyphPen {
+    path: tiny_skia::PathBuilder,
+    x: f32,
+    y: f32,
+}
+
+impl skrifa::outline::OutlinePen for GlyphPen {
+    fn move_to(&mut self, x: f32, y: f32) {
+        self.path.move_to(self.x + x, self.y - y);
+    }
+    fn line_to(&mut self, x: f32, y: f32) {
+        self.path.line_to(self.x + x, self.y - y);
+    }
+    fn quad_to(&mut self, cx0: f32, cy0: f32, x: f32, y: f32) {
+        self.path.quad_to(self.x + cx0, self.y - cy0, self.x + x, self.y - y);
+    }
+    fn curve_to(&mut self, cx0: f32, cy0: f32, cx1: f32, cy1: f32, x: f32, y: f32) {
+        self.path.cubic_to(
+            self.x + cx0,
+            self.y - cy0,
+            self.x + cx1,
+            self.y - cy1,
+            self.x + x,
+            self.y - y,
+        );
+    }
+    fn close(&mut self) {
+        self.path.close();
+    }
 }
 
 // ---- Window placement ------------------------------------------------------
@@ -1093,4 +1148,54 @@ fn centre_window(wp: i32, hp: i32) -> Option<(i32, i32)> {
 #[cfg(not(target_os = "windows"))]
 fn centre_window(_wp: i32, _hp: i32) -> Option<(i32, i32)> {
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn text(text: &str, at: (f32, f32), size: f32) -> Shape {
+        Shape {
+            kind: Kind::Text,
+            pts: vec![at],
+            color: [255, 0, 0, 255],
+            stroke: 0.0,
+            text: text.into(),
+            text_size: size,
+        }
+    }
+
+    /// Bounding box of the pixels that are no longer white.
+    fn inked(img: &image::RgbaImage) -> Option<(u32, u32, u32, u32)> {
+        let mut bbox: Option<(u32, u32, u32, u32)> = None;
+        for (x, y, px) in img.enumerate_pixels() {
+            if px.0 != [255, 255, 255, 255] {
+                let b = bbox.get_or_insert((x, y, x, y));
+                *b = (b.0.min(x), b.1.min(y), b.2.max(x), b.3.max(y));
+            }
+        }
+        bbox
+    }
+
+    #[test]
+    fn text_is_baked_where_it_was_placed() {
+        let base = image::RgbaImage::from_pixel(400, 200, image::Rgba([255, 255, 255, 255]));
+        let out = flatten(&base, &[text("Snipdeck", (50.0, 40.0), 40.0)]);
+        let (l, t, r, b) = inked(&out).expect("text left no mark — no system font?");
+        // The text box starts at the anchor and is one line tall (Noto Sans's
+        // line is 1.36 em): the glyphs sit inside it, not above or left of the
+        // point placed.
+        assert!(l >= 50 && l < 60, "left edge {l}");
+        assert!(t >= 40 && t < 60, "top edge {t}");
+        assert!(b < 40 + 60, "bottom edge {b}");
+        // Eight bold letters at 40 px run well past 100 px.
+        assert!(r - l > 100, "width {}", r - l);
+    }
+
+    #[test]
+    fn blank_text_leaves_the_image_alone() {
+        let base = image::RgbaImage::from_pixel(64, 64, image::Rgba([255, 255, 255, 255]));
+        let out = flatten(&base, &[text("   ", (10.0, 10.0), 20.0)]);
+        assert!(inked(&out).is_none());
+    }
 }

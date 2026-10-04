@@ -67,9 +67,12 @@ ureq = { version = "2", features = ["json"] }
 # joins and fills that match the live Slint `Path` preview pixel-for-pixel. No
 # system/GPU deps.
 tiny-skia = "0.11"
-# Pure-Rust font rasteriser, used only to bake annotation text into the image
-# on save (the live preview uses Slint's own text). No system deps.
-ab_glyph = "0.2"
+# Bake annotation text into the image on save with the text stack Slint itself
+# draws the live preview with: parley lays it out (system fonts via fontique,
+# fallback, shaping, bidi), skrifa reads the glyph outlines, tiny-skia fills
+# them. Keep the versions on the ones slint pulls in, so nothing builds twice.
+parley = "0.8"
+skrifa = "0.40"
 
 # The global pointer hook behind Win+drag, used on Windows (as the fallback to
 # the native hook) and macOS. Not on Linux: there it reads /dev/input, which
