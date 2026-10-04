@@ -1,13 +1,9 @@
 use anyhow::Context;
 use chrono::{DateTime, Utc};
-use image::ImageEncoder;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::BufWriter;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::OnceLock;
 use uuid::Uuid;
 
@@ -98,7 +94,7 @@ impl Snip {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).ok();
         }
-        write_png_best_effort(&path, image)
+        crate::image_files::write_png(&path, image)
             .with_context(|| format!("saving snip image to {}", path.display()))?;
 
         self.save_thumbnail_png(image)
@@ -112,7 +108,7 @@ impl Snip {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).ok();
         }
-        write_png_best_effort(&path, &thumb)
+        crate::image_files::write_png(&path, &thumb)
             .with_context(|| format!("saving snip thumbnail to {}", path.display()))?;
         Ok(())
     }
@@ -139,13 +135,13 @@ impl Snip {
         }
         let full = self.load_image()?;
         let thumb = thumbnail_from(&full, THUMB_MAX_DIM);
-        write_png_best_effort(&self.thumb_path(), &thumb)?;
+        crate::image_files::write_png(&self.thumb_path(), &thumb)?;
         Ok(thumb)
     }
 
     pub fn delete_files(&self) {
-        let _ = std::fs::remove_file(self.image_path());
-        let _ = std::fs::remove_file(self.thumb_path());
+        crate::image_files::remove(&self.image_path());
+        crate::image_files::remove(&self.thumb_path());
     }
 }
 
@@ -393,115 +389,6 @@ fn thumbnail_from(image: &image::RgbaImage, max_dim: u32) -> image::RgbaImage {
     let tw = ((w as f32) * ratio).round().max(1.0) as u32;
     let th = ((h as f32) * ratio).round().max(1.0) as u32;
     image::imageops::resize(image, tw, th, image::imageops::FilterType::Triangle)
-}
-
-fn write_png_best_effort(path: &Path, image: &image::RgbaImage) -> anyhow::Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let file = File::create(path)?;
-    let writer = BufWriter::new(file);
-    let encoder = image::codecs::png::PngEncoder::new_with_quality(
-        writer,
-        image::codecs::png::CompressionType::Fast,
-        image::codecs::png::FilterType::Adaptive,
-    );
-    encoder.write_image(
-        image.as_raw(),
-        image.width(),
-        image.height(),
-        image::ColorType::Rgba8.into(),
-    )?;
-    queue_pngquant(path.to_path_buf());
-    Ok(())
-}
-
-fn queue_pngquant(path: PathBuf) {
-    std::thread::spawn(move || {
-        if let Err(err) = pngquant_best_effort(&path) {
-            log::debug!("pngquant compression skipped for {}: {err}", path.display());
-        }
-    });
-}
-
-fn pngquant_best_effort(path: &Path) -> anyhow::Result<()> {
-    let Some(pngquant) = pngquant_command() else {
-        return Ok(());
-    };
-    let file_name = path
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("snip.png");
-    let tmp = path.with_file_name(format!("{file_name}.pngquant.tmp.png"));
-    let mut cmd = Command::new(pngquant);
-    hide_console_window(&mut cmd);
-    let status = cmd
-        .arg("--force")
-        .arg("--skip-if-larger")
-        .arg("--strip")
-        .arg("--speed")
-        .arg("1")
-        .arg("--quality")
-        .arg("0-100")
-        .arg("--output")
-        .arg(&tmp)
-        .arg(path)
-        .status()
-        .with_context(|| "running pngquant")?;
-
-    if !status.success() || !tmp.exists() {
-        let _ = std::fs::remove_file(&tmp);
-        return Ok(());
-    }
-
-    let original_len = std::fs::metadata(path)?.len();
-    let quant_len = std::fs::metadata(&tmp)?.len();
-    if quant_len < original_len {
-        // Rename, not copy. This runs on a detached thread while the rest of
-        // the app is already reading the file — the floating window opens a
-        // tick later and decodes it — and a copy truncates the destination
-        // before refilling it. A reader that lands in that window gets a
-        // partial PNG and shows nothing; a crash or power loss in that window
-        // leaves the snip's only copy permanently short, with the database row
-        // still pointing at it. `tmp` is a sibling of `path`, so this is a
-        // same-filesystem rename: the reader sees either file, never half of
-        // one.
-        std::fs::rename(&tmp, path)?;
-    } else {
-        let _ = std::fs::remove_file(&tmp);
-    }
-    Ok(())
-}
-
-#[cfg(target_os = "windows")]
-fn hide_console_window(cmd: &mut Command) {
-    use std::os::windows::process::CommandExt;
-
-    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-    cmd.creation_flags(CREATE_NO_WINDOW);
-}
-
-#[cfg(not(target_os = "windows"))]
-fn hide_console_window(_cmd: &mut Command) {}
-
-fn pngquant_command() -> Option<&'static PathBuf> {
-    static PNGQUANT: OnceLock<Option<PathBuf>> = OnceLock::new();
-    PNGQUANT
-        .get_or_init(|| {
-            let candidates = [
-                PathBuf::from("pngquant"),
-                PathBuf::from(r"C:\msys64\mingw64\bin\pngquant.exe"),
-            ];
-            candidates.into_iter().find(|candidate| {
-                let mut cmd = Command::new(candidate);
-                hide_console_window(&mut cmd);
-                cmd.arg("--version")
-                    .output()
-                    .map(|out| out.status.success())
-                    .unwrap_or(false)
-            })
-        })
-        .as_ref()
 }
 
 fn open_db() -> anyhow::Result<Connection> {

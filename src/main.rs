@@ -2,6 +2,7 @@
 
 mod annotate;
 mod app;
+mod atomic_file;
 mod autostart;
 mod capture;
 mod clipboard;
@@ -17,6 +18,7 @@ mod floating;
 mod gnome_bridge;
 mod hotkeys;
 mod i18n;
+mod image_files;
 mod loupe;
 mod mouse_trigger;
 mod native_mouse_trigger;
@@ -240,6 +242,10 @@ fn main() -> Result<(), slint::PlatformError> {
     window_tamer::start();
 
     let _ = paths::ensure_dirs();
+    // Temporaries a crash left half-written. Safe only now: the single-instance
+    // guard above means no other Snipdeck can be mid-write in these folders.
+    atomic_file::sweep(&paths::images_dir());
+    atomic_file::sweep(&paths::thumbs_dir());
 
     // Resolve the UI language from settings + OS locale and apply it to the
     // Rust-side catalog now (used by any early `i18n::t()` strings).
