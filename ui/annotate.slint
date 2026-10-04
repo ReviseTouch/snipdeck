@@ -146,21 +146,27 @@ component Slider inherits Rectangle {
 component TextButton inherits Rectangle {
     in property <string> label;
     in property <bool> accent;
+    // Filled red: the confirming button of an irreversible action.
+    in property <bool> danger;
     callback clicked();
-    min-width: 82px;
+    // Wide enough for the label in every language, never narrower than 82px —
+    // "Keep editing" in Turkish clipped at a fixed width.
+    min-width: max(82px, label-text.preferred-width + 30px);
     background: transparent;
     Rectangle {
         width: 100%;
         height: 34px;
         y: (parent.height - self.height) / 2;
         border-radius: 17px;
-        background: ta.pressed
-            ? (root.accent ? #0a6fe0 : #48484a)
-            : (root.accent ? (ta.has-hover ? #2a93ff : #0a84ff) : (ta.has-hover ? #38383a : transparent));
+        background: root.danger
+            ? (ta.pressed ? #9e2b2b : (ta.has-hover ? #c93c3c : #b33434))
+            : ta.pressed
+                ? (root.accent ? #0a6fe0 : #48484a)
+                : (root.accent ? (ta.has-hover ? #2a93ff : #0a84ff) : (ta.has-hover ? #38383a : transparent));
         animate background { duration: 80ms; }
-        Text {
+        label-text := Text {
             text: root.label;
-            color: root.accent ? #ffffff : #e8e6e2;
+            color: root.accent || root.danger ? #ffffff : #e8e6e2;
             font-size: 14px;
             font-weight: 600;
             horizontal-alignment: center;
@@ -670,7 +676,7 @@ export component AnnotateWindow inherits Window {
         Rectangle {
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
-            width: 360px;
+            width: 400px;
             height: 136px;
             border-radius: 14px;
             background: #1e1e20;
@@ -705,6 +711,7 @@ export component AnnotateWindow inherits Window {
                     TextButton { label: @tr("Keep editing"); clicked => { root.confirm-discard = false; } }
                     TextButton {
                         label: @tr("Discard");
+                        danger: true;
                         clicked => {
                             root.confirm-discard = false;
                             root.cancel();
