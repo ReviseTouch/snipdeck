@@ -1005,8 +1005,10 @@ fn draw_text(pm: &mut tiny_skia::Pixmap, shape: &Shape) {
     }
     let (ax, ay) = shape.pts.first().copied().unwrap_or((0.0, 0.0));
     let [r, g, b, a] = shape.color;
-    let mut paint = tiny_skia::Paint::default();
-    paint.anti_alias = true;
+    let mut paint = tiny_skia::Paint {
+        anti_alias: true,
+        ..Default::default()
+    };
     paint.set_color_rgba8(r, g, b, a);
 
     TEXT_LAYOUT.with(|cx| {
@@ -1185,8 +1187,8 @@ mod tests {
         // The text box starts at the anchor and is one line tall (Noto Sans's
         // line is 1.36 em): the glyphs sit inside it, not above or left of the
         // point placed.
-        assert!(l >= 50 && l < 60, "left edge {l}");
-        assert!(t >= 40 && t < 60, "top edge {t}");
+        assert!((50..60).contains(&l), "left edge {l}");
+        assert!((40..60).contains(&t), "top edge {t}");
         assert!(b < 40 + 60, "bottom edge {b}");
         // Eight bold letters at 40 px run well past 100 px.
         assert!(r - l > 100, "width {}", r - l);

@@ -120,33 +120,6 @@ fn chunks(text: &str, max: usize) -> Vec<&str> {
     out
 }
 
-#[cfg(test)]
-mod tests {
-    use super::chunks;
-
-    #[test]
-    fn short_text_is_one_piece() {
-        assert_eq!(chunks("merhaba dünya", 4000), vec!["merhaba dünya"]);
-    }
-
-    #[test]
-    fn long_text_is_cut_at_line_breaks_and_loses_nothing() {
-        let text = "satır bir\nikinci satır\nüç\n".repeat(400);
-        let pieces = chunks(&text, 100);
-        assert!(pieces.iter().all(|p| p.chars().count() <= 100));
-        assert!(pieces.iter().all(|p| p.ends_with('\n')), "cut after a line break");
-        assert_eq!(pieces.concat(), text);
-    }
-
-    #[test]
-    fn one_overlong_line_is_cut_on_a_char_boundary() {
-        let text = "ğ".repeat(250);
-        let pieces = chunks(&text, 100);
-        assert_eq!(pieces.len(), 3);
-        assert_eq!(pieces.concat(), text);
-    }
-}
-
 /// Ordered, selectable target languages (proper-case codes as Google's `tl`
 /// param expects, English labels). Drives the popup's "More" dropdown and the
 /// favourite-pill labels. Distinct from `LANGS` below, which is the (lower-case,
@@ -243,3 +216,30 @@ pub const LANGS: &[(&str, &str)] = &[
     ("cs", "Czech"),
     ("hu", "Hungarian"),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::chunks;
+
+    #[test]
+    fn short_text_is_one_piece() {
+        assert_eq!(chunks("merhaba dünya", 4000), vec!["merhaba dünya"]);
+    }
+
+    #[test]
+    fn long_text_is_cut_at_line_breaks_and_loses_nothing() {
+        let text = "satır bir\nikinci satır\nüç\n".repeat(400);
+        let pieces = chunks(&text, 100);
+        assert!(pieces.iter().all(|p| p.chars().count() <= 100));
+        assert!(pieces.iter().all(|p| p.ends_with('\n')), "cut after a line break");
+        assert_eq!(pieces.concat(), text);
+    }
+
+    #[test]
+    fn one_overlong_line_is_cut_on_a_char_boundary() {
+        let text = "ğ".repeat(250);
+        let pieces = chunks(&text, 100);
+        assert_eq!(pieces.len(), 3);
+        assert_eq!(pieces.concat(), text);
+    }
+}
