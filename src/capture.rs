@@ -325,24 +325,77 @@ pub fn crop(captured: &CapturedScreen, region: ScreenRect) -> anyhow::Result<Rgb
     // last row. Rejecting the whole region for that lost the user's snip with
     // no visible reason — the drag simply produced nothing. Clamping costs a
     // sliver nobody selected on purpose.
-    let lx = (region.x - captured.area.x).max(0) as u32;
-    let ly = (region.y - captured.area.y).max(0) as u32;
-    if lx >= iw || ly >= ih {
-        return Err(anyhow!("region starts outside the captured screen"));
-    }
-    let w = region.w.min(iw - lx);
-    let h = region.h.min(ih - ly);
-    if w == 0 || h == 0 {
+    //
+    // The clamp is an intersection: a region that starts left of or above the
+    // capture loses that overhang from its size too. Clamping only the start
+    // kept the full width and height from there, which added a strip of pixels
+    // past the far edge that the selection never covered.
+    let area = captured.area;
+    let left = i64::from(region.x).max(i64::from(area.x));
+    let top = i64::from(region.y).max(i64::from(area.y));
+    let right = (i64::from(region.x) + i64::from(region.w)).min(i64::from(area.x) + i64::from(iw));
+    let bottom =
+        (i64::from(region.y) + i64::from(region.h)).min(i64::from(area.y) + i64::from(ih));
+    if right <= left || bottom <= top {
         return Err(anyhow!("region does not overlap the captured screen"));
     }
+    let (lx, ly) = ((left - i64::from(area.x)) as u32, (top - i64::from(area.y)) as u32);
+    let (w, h) = ((right - left) as u32, (bottom - top) as u32);
     if w != region.w || h != region.h {
         log::debug!(
-            "region {}x{} at ({lx},{ly}) clamped to {w}x{h} inside {iw}x{ih}",
+            "region {}x{} at ({},{}) clamped to {w}x{h} at ({lx},{ly}) inside {iw}x{ih}",
             region.w,
-            region.h
+            region.h,
+            region.x,
+            region.y
         );
     }
 
     let view = captured.image.view(lx, ly, w, h);
     Ok(view.to_image())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A 100×80 capture of the monitor at (1000, 0), each pixel's red and
+    /// green holding its own image coordinates.
+    fn screen() -> CapturedScreen {
+        CapturedScreen {
+            area: ScreenRect::new(1000, 0, 100, 80),
+            image: RgbaImage::from_fn(100, 80, |x, y| image::Rgba([x as u8, y as u8, 0, 255])),
+            monitor_label: String::new(),
+        }
+    }
+
+    #[test]
+    fn region_inside_is_cut_exactly() {
+        let img = crop(&screen(), ScreenRect::new(1010, 20, 30, 10)).unwrap();
+        assert_eq!(img.dimensions(), (30, 10));
+        assert_eq!(img.get_pixel(0, 0).0[..2], [10, 20]);
+    }
+
+    #[test]
+    fn overhang_before_the_capture_shrinks_the_region() {
+        // Starts 5 px left of and 3 px above the monitor: only the 25×7 that
+        // overlaps it was selected.
+        let img = crop(&screen(), ScreenRect::new(995, -3, 30, 10)).unwrap();
+        assert_eq!(img.dimensions(), (25, 7));
+        assert_eq!(img.get_pixel(0, 0).0[..2], [0, 0]);
+    }
+
+    #[test]
+    fn overhang_past_the_capture_is_cut_off() {
+        let img = crop(&screen(), ScreenRect::new(1090, 75, 30, 10)).unwrap();
+        assert_eq!(img.dimensions(), (10, 5));
+        assert_eq!(img.get_pixel(0, 0).0[..2], [90, 75]);
+    }
+
+    #[test]
+    fn region_off_the_capture_is_an_error() {
+        assert!(crop(&screen(), ScreenRect::new(900, 0, 50, 50)).is_err());
+        assert!(crop(&screen(), ScreenRect::new(1100, 0, 50, 50)).is_err());
+        assert!(crop(&screen(), ScreenRect::new(1000, 80, 50, 50)).is_err());
+    }
 }
