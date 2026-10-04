@@ -363,6 +363,14 @@ impl ContextMenuManager {
             w.window()
                 .set_position(PhysicalPosition::new(x, y));
             if let Some((sw, sh)) = crate::screen::primary_logical_size() {
+                // The component's own size follows `outer-w`/`outer-h`, so those
+                // have to say screen-sized too. Setting only the window size
+                // raced the component's binding: whichever layout ran last won,
+                // and when it was the binding the surface shrank back to the
+                // panel's size — a menu-sized window the compositor centred,
+                // nowhere near the pointer.
+                w.set_outer_w(sw as f32);
+                w.set_outer_h(sh as f32);
                 w.window()
                     .set_size(slint::LogicalSize::new(sw as f32, sh as f32));
             }

@@ -164,11 +164,17 @@ impl AppState {
                 }
             }
             Action::SnipContextMenu(id) => {
-                if let Some((x, y)) = cursor_screen_pos() {
-                    if let Err(e) = self.context_menu.show_for(id, x, y, false) {
-                        self.last_error =
-                            Some(t1("Failed to open menu: {e}", "{e}", &e.to_string()));
-                    }
+                // Windows places the menu at the cursor. Elsewhere the menu
+                // covers the screen and anchors itself where the pointer reports
+                // in (`ContextMenuManager::sync_to_window`), so it needs no
+                // position — and Wayland has none to give. Requiring one meant a
+                // right-click on a gallery card did nothing at all on Linux, and
+                // annotate, crop, rotate, share and delete were out of reach for
+                // every snip not floating on screen.
+                let (x, y) = cursor_screen_pos().unwrap_or((0, 0));
+                if let Err(e) = self.context_menu.show_for(id, x, y, false) {
+                    self.last_error =
+                        Some(t1("Failed to open menu: {e}", "{e}", &e.to_string()));
                 }
             }
             Action::SearchChanged(s) => {
