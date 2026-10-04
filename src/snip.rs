@@ -2,8 +2,9 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 use uuid::Uuid;
 
@@ -12,7 +13,7 @@ use crate::window_metadata::WindowInfo;
 
 const THUMB_MAX_DIM: u32 = 256;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct ScreenRect {
     pub x: i32,
     pub y: i32,
@@ -26,7 +27,7 @@ impl ScreenRect {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Snip {
     pub id: Uuid,
     pub created_at: DateTime<Utc>,
@@ -260,53 +261,76 @@ fn convert_one(id: Uuid, from: &str) -> anyhow::Result<Option<Converted>> {
     }))
 }
 
-/// Top-level persisted state for the gallery.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+/// The gallery: every snip, in memory, kept in step with the database.
+#[derive(Debug, Clone, Default)]
 pub struct GalleryState {
     /// Newest first.
     pub snips: Vec<Snip>,
+    /// Each snip as the database last stored it, so `save` can tell what
+    /// changed — however the caller changed it.
+    persisted: HashMap<Uuid, Snip>,
 }
 
 impl GalleryState {
+    /// Read the gallery. If the database cannot be read the gallery starts
+    /// empty, which costs nothing stored: `save` writes only snips that are
+    /// new or changed and deletes nothing, so the stored ones come back on the
+    /// next launch that can read them.
     pub fn load() -> Self {
         match Self::load_from_db() {
             Ok(state) => state,
             Err(err) => {
-                log::warn!("SQLite gallery load failed, falling back to legacy JSON: {err}");
-                Self::load_legacy_json(&paths::state_file()).unwrap_or_default()
+                log::error!("the gallery could not be read: {err:#}");
+                Self::default()
             }
         }
     }
 
-    fn load_legacy_json(path: &Path) -> anyhow::Result<Self> {
-        let bytes = std::fs::read(path)?;
-        let state: GalleryState = serde_json::from_slice(&bytes)?;
-        Ok(state)
-    }
-
     fn load_from_db() -> anyhow::Result<Self> {
-        let conn = open_db()?;
-        migrate_legacy_json_if_needed(&conn)?;
-        purge_orphans(&conn);
-        let mut stmt = conn.prepare(
-            "SELECT id, created_at, x, y, w, h, image_file, thumb_file, label, pinned,
-                    monitor_label, floating, last_x, last_y
-             FROM snips
-             ORDER BY pinned DESC, created_at DESC",
-        )?;
-        let rows = stmt.query_map([], snip_from_row)?;
-        let mut snips = Vec::new();
-        for row in rows {
-            snips.push(row?);
-        }
-        Ok(Self { snips })
+        with_db(|conn| {
+            purge_orphans(conn);
+            let mut stmt = conn.prepare(
+                "SELECT id, created_at, x, y, w, h, image_file, thumb_file, label, pinned,
+                        monitor_label, floating, last_x, last_y
+                 FROM snips
+                 ORDER BY pinned DESC, created_at DESC",
+            )?;
+            let snips = stmt
+                .query_map([], snip_from_row)?
+                .collect::<rusqlite::Result<Vec<_>>>()?;
+            let persisted = snips.iter().map(|s| (s.id, s.clone())).collect();
+            Ok(Self { snips, persisted })
+        })
     }
 
-    pub fn save(&self) -> anyhow::Result<()> {
-        let mut conn = open_db()?;
-        let tx = conn.transaction()?;
-        upsert_snips(&tx, &self.snips)?;
-        tx.commit()?;
+    /// Write the snips that are new or changed since the last save, and
+    /// nothing else; with nothing changed the database is not touched.
+    ///
+    /// It used to rewrite every snip and its search row on every call — and
+    /// nearly every action calls it. With each search row's delete scanning the
+    /// whole index, that was quadratic in the gallery's size, on the UI thread:
+    /// a few hundred snips and a click spent most of its time in SQLite.
+    /// Comparing against what was last stored is a pass over memory.
+    pub fn save(&mut self) -> anyhow::Result<()> {
+        let persisted = &self.persisted;
+        let changed: Vec<Snip> = self
+            .snips
+            .iter()
+            .filter(|s| persisted.get(&s.id) != Some(*s))
+            .cloned()
+            .collect();
+        if changed.is_empty() {
+            return Ok(());
+        }
+        with_db(|conn| {
+            let tx = conn.transaction()?;
+            upsert_snips(&tx, &changed)?;
+            tx.commit()?;
+            Ok(())
+        })?;
+        for snip in changed {
+            self.persisted.insert(snip.id, snip);
+        }
         Ok(())
     }
 
@@ -327,7 +351,10 @@ impl GalleryState {
         let pos = self.snips.iter().position(|s| s.id == id)?;
         let snip = self.snips.remove(pos);
         match delete_snip_from_db(id) {
-            Ok(()) => snip.delete_files(),
+            Ok(()) => {
+                self.persisted.remove(&id);
+                snip.delete_files();
+            }
             Err(err) => log::warn!("deleting snip from db failed, keeping its files: {err}"),
         }
         Some(snip)
@@ -337,6 +364,7 @@ impl GalleryState {
     pub fn clear_all(&mut self) {
         match clear_db_snips() {
             Ok(()) => {
+                self.persisted.clear();
                 for snip in &self.snips {
                     snip.delete_files();
                 }
@@ -383,16 +411,17 @@ impl GalleryState {
         if trimmed.is_empty() {
             return Ok(self.snips.clone());
         }
-        let conn = open_db()?;
-        if let Some(match_query) = fts_match_query(trimmed) {
-            match search_fts(&conn, &match_query) {
-                Ok(snips) => return Ok(snips),
-                Err(err) => {
-                    log::debug!("SQLite FTS search failed, falling back to LIKE: {err}");
+        with_db(|conn| {
+            if let Some(match_query) = fts_match_query(trimmed) {
+                match search_fts(conn, &match_query) {
+                    Ok(snips) => return Ok(snips),
+                    Err(err) => {
+                        log::debug!("SQLite FTS search failed, falling back to LIKE: {err}");
+                    }
                 }
             }
-        }
-        search_like(&conn, trimmed)
+            search_like(conn, trimmed)
+        })
     }
 }
 
@@ -402,7 +431,7 @@ fn search_fts(conn: &Connection, match_query: &str) -> anyhow::Result<Vec<Snip>>
                 s.id, s.created_at, s.x, s.y, s.w, s.h, s.image_file, s.thumb_file,
                 s.label, s.pinned, s.monitor_label, s.floating, s.last_x, s.last_y
          FROM snip_fts
-         JOIN snips s ON s.id = snip_fts.snip_id
+         JOIN snips s ON s.rowid = snip_fts.rowid
          WHERE snip_fts MATCH ?1
          ORDER BY s.pinned DESC, s.created_at DESC",
     )?;
@@ -515,6 +544,27 @@ fn thumbnail_from(image: &image::RgbaImage, max_dim: u32) -> image::RgbaImage {
     image::imageops::resize(image, tw, th, image::imageops::FilterType::Triangle)
 }
 
+thread_local! {
+    // This thread's connection, opened on first use and kept. Opening one ran
+    // the whole schema script and the search-index checks again, and the UI
+    // thread opened one per keystroke in the search box and per save. Worker
+    // threads (OCR, window details) get their own, closed when they end.
+    static DB: RefCell<Option<Connection>> = const { RefCell::new(None) };
+}
+
+/// Run `f` on this thread's connection. `f` must not call back into
+/// `with_db`: the connection is borrowed for the duration.
+fn with_db<T>(f: impl FnOnce(&mut Connection) -> anyhow::Result<T>) -> anyhow::Result<T> {
+    DB.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        let conn = match slot.as_mut() {
+            Some(conn) => conn,
+            None => slot.insert(open_db()?),
+        };
+        f(conn)
+    })
+}
+
 fn open_db() -> anyhow::Result<Connection> {
     paths::ensure_dirs()?;
     let conn = Connection::open(paths::db_file())?;
@@ -532,8 +582,15 @@ fn open_db() -> anyhow::Result<Connection> {
     // deleted its snip wrote the OCR text back for a snip that no longer
     // existed, and nothing ever removed it.
     conn.pragma_update(None, "foreign_keys", true)?;
+    conn.pragma_update(None, "synchronous", "NORMAL")?;
     register_search_functions(&conn)?;
-    init_db(&conn)?;
+    // The schema once per process: every statement in it is "if not exists",
+    // and running it for each connection only cost time.
+    static SCHEMA: OnceLock<()> = OnceLock::new();
+    if SCHEMA.get().is_none() {
+        init_db(&conn)?;
+        let _ = SCHEMA.set(());
+    }
     Ok(conn)
 }
 
@@ -558,7 +615,6 @@ fn init_db(conn: &Connection) -> anyhow::Result<()> {
     conn.execute_batch(
         "
         PRAGMA journal_mode = WAL;
-        PRAGMA synchronous = NORMAL;
         CREATE TABLE IF NOT EXISTS meta (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
@@ -621,18 +677,20 @@ fn init_db(conn: &Connection) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// The search index: one row per snip, its rowid the snip's rowid in
+/// `snips`, holding a folded copy of everything searchable.
+///
+/// It used to carry the snip's id in an UNINDEXED column instead, and finding
+/// a snip's row by that meant reading the whole index: every update and every
+/// delete of a search row was a full scan.
 fn init_fts(conn: &Connection) -> anyhow::Result<()> {
     if fts_needs_recreate(conn)? {
         conn.execute("DROP TABLE IF EXISTS snip_fts", [])?;
-        conn.execute(
-            "DELETE FROM meta WHERE key IN ('fts5_index_built_v1', 'fts5_index_built_v2', 'fts5_index_built_v3')",
-            [],
-        )?;
+        conn.execute("DELETE FROM meta WHERE key LIKE 'fts5_index_built_%'", [])?;
     }
     conn.execute_batch(
         "
         CREATE VIRTUAL TABLE IF NOT EXISTS snip_fts USING fts5(
-            snip_id UNINDEXED,
             label,
             monitor_label,
             dims,
@@ -647,9 +705,13 @@ fn init_fts(conn: &Connection) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// An index in an older layout: keyed by an id column, or without the window
+/// columns.
 fn fts_needs_recreate(conn: &Connection) -> anyhow::Result<bool> {
     let columns = table_columns(conn, "snip_fts")?;
-    Ok(!columns.is_empty() && !columns.iter().any(|col| col == "window_title"))
+    Ok(!columns.is_empty()
+        && (columns.iter().any(|col| col == "snip_id")
+            || !columns.iter().any(|col| col == "window_title")))
 }
 
 fn table_columns(conn: &Connection, table: &str) -> anyhow::Result<Vec<String>> {
@@ -663,11 +725,11 @@ fn table_columns(conn: &Connection, table: &str) -> anyhow::Result<Vec<String>> 
 }
 
 fn rebuild_fts_if_needed(conn: &Connection) -> anyhow::Result<()> {
-    // v3 re-indexes existing rows through `search_fold` (Turkish-aware
-    // folding). Bumping the key forces one rebuild on upgrade.
+    // Bumping the key forces one rebuild: v3 folded the text through
+    // `search_fold`, v4 keys the rows by the snips' rowid.
     let built: Option<String> = conn
         .query_row(
-            "SELECT value FROM meta WHERE key = 'fts5_index_built_v3'",
+            "SELECT value FROM meta WHERE key = 'fts5_index_built_v4'",
             [],
             |row| row.get(0),
         )
@@ -678,7 +740,7 @@ fn rebuild_fts_if_needed(conn: &Connection) -> anyhow::Result<()> {
 
     rebuild_fts(conn)?;
     conn.execute(
-        "INSERT OR REPLACE INTO meta(key, value) VALUES('fts5_index_built_v3', '1')",
+        "INSERT OR REPLACE INTO meta(key, value) VALUES('fts5_index_built_v4', '1')",
         [],
     )?;
     Ok(())
@@ -704,53 +766,6 @@ fn rebuild_fts(conn: &Connection) -> anyhow::Result<()> {
     for snip in snips {
         upsert_fts_for_snip(conn, &snip, None)?;
     }
-    Ok(())
-}
-
-fn migrate_legacy_json_if_needed(conn: &Connection) -> anyhow::Result<()> {
-    let migrated: Option<String> = conn
-        .query_row(
-            "SELECT value FROM meta WHERE key = 'legacy_json_migrated'",
-            [],
-            |row| row.get(0),
-        )
-        .optional()?;
-    if migrated.as_deref() == Some("1") {
-        return Ok(());
-    }
-
-    let count: i64 = conn.query_row("SELECT COUNT(*) FROM snips", [], |row| row.get(0))?;
-    if count == 0 {
-        let path = paths::state_file();
-        if path.exists() {
-            match GalleryState::load_legacy_json(&path) {
-                Ok(state) => {
-                    upsert_snips(conn, &state.snips)?;
-                    log::info!(
-                        "migrated {} legacy JSON snips into SQLite",
-                        state.snips.len()
-                    );
-                }
-                // Deliberately does NOT fall through to the marker below.
-                // `state.json` is still there and still the only copy of those
-                // snips; a read that failed once — half-written, locked, a
-                // transient IO error — is a reason to try again on the next
-                // launch, not to conclude the user has no legacy gallery.
-                // Marking it migrated here made a single bad read permanent:
-                // the snips stayed in the JSON and nothing ever looked at it
-                // again.
-                Err(err) => {
-                    log::warn!("legacy JSON migration failed, retrying next launch: {err}");
-                    return Ok(());
-                }
-            }
-        }
-    }
-
-    conn.execute(
-        "INSERT OR REPLACE INTO meta(key, value) VALUES('legacy_json_migrated', '1')",
-        [],
-    )?;
     Ok(())
 }
 
@@ -812,7 +827,7 @@ fn purge_orphans(conn: &Connection) {
     for sql in [
         "DELETE FROM snip_ocr WHERE snip_id NOT IN (SELECT id FROM snips)",
         "DELETE FROM snip_window WHERE snip_id NOT IN (SELECT id FROM snips)",
-        "DELETE FROM snip_fts WHERE snip_id NOT IN (SELECT id FROM snips)",
+        "DELETE FROM snip_fts WHERE rowid NOT IN (SELECT rowid FROM snips)",
     ] {
         match conn.execute(sql, []) {
             Ok(0) => {}
@@ -822,32 +837,30 @@ fn purge_orphans(conn: &Connection) {
     }
 }
 
+/// One transaction, so a failure leaves the snip whole rather than half
+/// gone. Its OCR text and window details go with it (ON DELETE CASCADE).
 fn delete_snip_from_db(id: Uuid) -> anyhow::Result<()> {
-    let conn = open_db()?;
-    let id_text = id.to_string();
-    let _ = conn.execute(
-        "DELETE FROM snip_fts WHERE snip_id = ?1",
-        [id_text.as_str()],
-    );
-    conn.execute(
-        "DELETE FROM snip_window WHERE snip_id = ?1",
-        [id_text.as_str()],
-    )?;
-    conn.execute(
-        "DELETE FROM snip_ocr WHERE snip_id = ?1",
-        [id_text.as_str()],
-    )?;
-    conn.execute("DELETE FROM snips WHERE id = ?1", [id_text.as_str()])?;
-    Ok(())
+    with_db(|conn| {
+        let tx = conn.transaction()?;
+        let id_text = id.to_string();
+        tx.execute(
+            "DELETE FROM snip_fts WHERE rowid = (SELECT rowid FROM snips WHERE id = ?1)",
+            [id_text.as_str()],
+        )?;
+        tx.execute("DELETE FROM snips WHERE id = ?1", [id_text.as_str()])?;
+        tx.commit()?;
+        Ok(())
+    })
 }
 
 fn clear_db_snips() -> anyhow::Result<()> {
-    let conn = open_db()?;
-    let _ = conn.execute("DELETE FROM snip_fts", []);
-    conn.execute("DELETE FROM snip_window", [])?;
-    conn.execute("DELETE FROM snip_ocr", [])?;
-    conn.execute("DELETE FROM snips", [])?;
-    Ok(())
+    with_db(|conn| {
+        let tx = conn.transaction()?;
+        tx.execute("DELETE FROM snip_fts", [])?;
+        tx.execute("DELETE FROM snips", [])?;
+        tx.commit()?;
+        Ok(())
+    })
 }
 
 fn snip_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Snip> {
@@ -945,12 +958,21 @@ fn upsert_fts_for_snip(
         ocr_owned.as_str()
     };
     let window = cached_window_fts_text_with_conn(conn, snip.id)?;
+    let Some(rowid) = conn
+        .query_row(
+            "SELECT rowid FROM snips WHERE id = ?1",
+            [snip.id.to_string()],
+            |row| row.get::<_, i64>(0),
+        )
+        .optional()?
+    else {
+        return Ok(());
+    };
     let dims = format!("{}x{}", snip.area.w, snip.area.h);
-    let id_text = snip.id.to_string();
     // Store a search-folded copy of every matchable column. `snip_fts` is
-    // a pure index (its `snip_id` is UNINDEXED and we JOIN back to `snips`
-    // for the displayed rows), so folding here never touches what the user
-    // sees — it just lets the query fold the same way. See `search_fold`.
+    // a pure index (searches JOIN back to `snips` by rowid for the displayed
+    // rows), so folding here never touches what the user sees — it just lets
+    // the query fold the same way. See `search_fold`.
     let label = snip.label.as_deref().map(search_fold);
     let monitor_label = snip.monitor_label.as_deref().map(search_fold);
     let ocr_text = search_fold(ocr_text);
@@ -958,20 +980,17 @@ fn upsert_fts_for_snip(
     let window_app = window.app_name.as_deref().map(search_fold);
     let window_process = window.process_name.as_deref().map(search_fold);
     let window_path = window.exe_path.as_deref().map(search_fold);
-    conn.execute(
-        "DELETE FROM snip_fts WHERE snip_id = ?1",
-        [id_text.as_str()],
-    )?;
+    conn.execute("DELETE FROM snip_fts WHERE rowid = ?1", [rowid])?;
     conn.execute(
         "
         INSERT INTO snip_fts(
-            snip_id, label, monitor_label, dims, ocr_text,
+            rowid, label, monitor_label, dims, ocr_text,
             window_title, window_app, window_process, window_path
         )
         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
         ",
         params![
-            id_text,
+            rowid,
             label,
             monitor_label,
             dims,
@@ -986,8 +1005,7 @@ fn upsert_fts_for_snip(
 }
 
 pub fn cached_ocr_text(id: Uuid) -> anyhow::Result<Option<String>> {
-    let conn = open_db()?;
-    cached_ocr_text_with_conn(&conn, id)
+    with_db(|conn| cached_ocr_text_with_conn(conn, id))
 }
 
 #[derive(Debug, Default)]
@@ -997,10 +1015,11 @@ pub struct SnipMetadataIndex {
 }
 
 pub fn metadata_index() -> anyhow::Result<SnipMetadataIndex> {
-    let conn = open_db()?;
-    Ok(SnipMetadataIndex {
-        ocr_ids: uuid_set(&conn, "SELECT snip_id FROM snip_ocr")?,
-        window_ids: uuid_set(&conn, "SELECT snip_id FROM snip_window")?,
+    with_db(|conn| {
+        Ok(SnipMetadataIndex {
+            ocr_ids: uuid_set(conn, "SELECT snip_id FROM snip_ocr")?,
+            window_ids: uuid_set(conn, "SELECT snip_id FROM snip_window")?,
+        })
     })
 }
 
@@ -1017,58 +1036,59 @@ fn uuid_set(conn: &Connection, sql: &str) -> anyhow::Result<HashSet<Uuid>> {
 }
 
 pub fn save_window_info(id: Uuid, info: &WindowInfo) -> anyhow::Result<()> {
-    let conn = open_db()?;
-    conn.execute(
-        "
-        INSERT INTO snip_window(
-            snip_id, platform, window_id, title, app_name, process_name, pid, exe_path,
-            x, y, w, h, confidence, updated_at
-        )
-        VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
-        ON CONFLICT(snip_id) DO UPDATE SET
-            platform=excluded.platform,
-            window_id=excluded.window_id,
-            title=excluded.title,
-            app_name=excluded.app_name,
-            process_name=excluded.process_name,
-            pid=excluded.pid,
-            exe_path=excluded.exe_path,
-            x=excluded.x,
-            y=excluded.y,
-            w=excluded.w,
-            h=excluded.h,
-            confidence=excluded.confidence,
-            updated_at=excluded.updated_at
-        ",
-        params![
-            id.to_string(),
-            info.platform.as_str(),
-            info.window_id.as_str(),
-            info.title.as_deref(),
-            info.app_name.as_deref(),
-            info.process_name.as_deref(),
-            info.pid.map(|pid| pid as i64),
-            info.exe_path.as_deref(),
-            info.bounds.x,
-            info.bounds.y,
-            info.bounds.w as i64,
-            info.bounds.h as i64,
-            info.confidence as f64,
-            Utc::now().to_rfc3339(),
-        ],
-    )?;
-    match load_snip_by_id(&conn, id) {
-        Ok(Some(snip)) => {
-            if let Err(err) = upsert_fts_for_snip(&conn, &snip, None) {
-                log::debug!("snip FTS window update skipped for {id}: {err}");
+    with_db(|conn| {
+        conn.execute(
+            "
+            INSERT INTO snip_window(
+                snip_id, platform, window_id, title, app_name, process_name, pid, exe_path,
+                x, y, w, h, confidence, updated_at
+            )
+            VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
+            ON CONFLICT(snip_id) DO UPDATE SET
+                platform=excluded.platform,
+                window_id=excluded.window_id,
+                title=excluded.title,
+                app_name=excluded.app_name,
+                process_name=excluded.process_name,
+                pid=excluded.pid,
+                exe_path=excluded.exe_path,
+                x=excluded.x,
+                y=excluded.y,
+                w=excluded.w,
+                h=excluded.h,
+                confidence=excluded.confidence,
+                updated_at=excluded.updated_at
+            ",
+            params![
+                id.to_string(),
+                info.platform.as_str(),
+                info.window_id.as_str(),
+                info.title.as_deref(),
+                info.app_name.as_deref(),
+                info.process_name.as_deref(),
+                info.pid.map(|pid| pid as i64),
+                info.exe_path.as_deref(),
+                info.bounds.x,
+                info.bounds.y,
+                info.bounds.w as i64,
+                info.bounds.h as i64,
+                info.confidence as f64,
+                Utc::now().to_rfc3339(),
+            ],
+        )?;
+        match load_snip_by_id(conn, id) {
+            Ok(Some(snip)) => {
+                if let Err(err) = upsert_fts_for_snip(conn, &snip, None) {
+                    log::debug!("snip FTS window update skipped for {id}: {err}");
+                }
+            }
+            Ok(None) => {}
+            Err(err) => {
+                log::debug!("snip lookup after window metadata save failed for {id}: {err}");
             }
         }
-        Ok(None) => {}
-        Err(err) => {
-            log::debug!("snip lookup after window metadata save failed for {id}: {err}");
-        }
-    }
-    Ok(())
+        Ok(())
+    })
 }
 
 /// Store a snip's OCR text — only while the snip still exists. OCR runs on a
@@ -1109,20 +1129,21 @@ pub fn save_ocr_text(
     language: Option<&str>,
     text: &str,
 ) -> anyhow::Result<()> {
-    let conn = open_db()?;
-    insert_ocr(&conn, id, engine, language, text)?;
-    match load_snip_by_id(&conn, id) {
-        Ok(Some(snip)) => {
-            if let Err(err) = upsert_fts_for_snip(&conn, &snip, Some(text)) {
-                log::debug!("snip FTS OCR update skipped for {id}: {err}");
+    with_db(|conn| {
+        insert_ocr(conn, id, engine, language, text)?;
+        match load_snip_by_id(conn, id) {
+            Ok(Some(snip)) => {
+                if let Err(err) = upsert_fts_for_snip(conn, &snip, Some(text)) {
+                    log::debug!("snip FTS OCR update skipped for {id}: {err}");
+                }
+            }
+            Ok(None) => {}
+            Err(err) => {
+                log::debug!("snip lookup after OCR save failed for {id}: {err}");
             }
         }
-        Ok(None) => {}
-        Err(err) => {
-            log::debug!("snip lookup after OCR save failed for {id}: {err}");
-        }
-    }
-    Ok(())
+        Ok(())
+    })
 }
 
 #[cfg(test)]
@@ -1135,6 +1156,93 @@ mod tests {
         register_search_functions(&conn).unwrap();
         init_db(&conn).unwrap();
         conn
+    }
+
+    /// Point this test thread's `with_db` at a fresh in-memory database, so
+    /// nothing here reaches the real gallery. An in-memory database belongs
+    /// to its one connection, so the checks below go through `with_db` too.
+    /// It also counts the rows written to `snips`.
+    fn use_memory_db() {
+        DB.with(|cell| *cell.borrow_mut() = Some(memory_db()));
+        with_db(|conn| {
+            conn.execute_batch(
+                "CREATE TABLE writes(n INTEGER NOT NULL);
+                 INSERT INTO writes VALUES (0);
+                 CREATE TRIGGER count_inserts AFTER INSERT ON snips
+                     BEGIN UPDATE writes SET n = n + 1; END;
+                 CREATE TRIGGER count_updates AFTER UPDATE ON snips
+                     BEGIN UPDATE writes SET n = n + 1; END;",
+            )?;
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    /// Rows written to `snips` so far, inserts and updates.
+    fn writes() -> i64 {
+        with_db(|conn| Ok(conn.query_row("SELECT n FROM writes", [], |r| r.get(0))?)).unwrap()
+    }
+
+    fn fts_rows() -> i64 {
+        with_db(|conn| Ok(conn.query_row("SELECT COUNT(*) FROM snip_fts", [], |r| r.get(0))?))
+            .unwrap()
+    }
+
+    #[test]
+    fn save_writes_only_what_changed() {
+        use_memory_db();
+        let mut gallery = GalleryState::default();
+        for _ in 0..3 {
+            gallery.push_new(make_snip(ScreenRect::new(0, 0, 10, 10)));
+        }
+        gallery.save().unwrap();
+        assert_eq!(writes(), 3);
+        assert_eq!(fts_rows(), 3);
+
+        // Nothing changed: nothing written.
+        gallery.save().unwrap();
+        assert_eq!(writes(), 3);
+
+        // One changed, however it was changed: one written.
+        let id = gallery.snips[1].id;
+        gallery.get_mut(id).unwrap().pinned = true;
+        gallery.save().unwrap();
+        assert_eq!(writes(), 4);
+        assert_eq!(fts_rows(), 3);
+    }
+
+    #[test]
+    fn search_finds_a_saved_snip_and_forgets_a_removed_one() {
+        use_memory_db();
+        let mut gallery = GalleryState::default();
+        let mut snip = make_snip(ScreenRect::new(0, 0, 10, 10));
+        snip.label = Some("Merhaba dünya".into());
+        let id = snip.id;
+        gallery.push_new(snip);
+        gallery.push_new(make_snip(ScreenRect::new(0, 0, 20, 20)));
+        gallery.save().unwrap();
+
+        let found = gallery.search("dunya").unwrap();
+        assert_eq!(found.iter().map(|s| s.id).collect::<Vec<_>>(), vec![id]);
+
+        gallery.remove(id);
+        assert!(gallery.search("dunya").unwrap().is_empty());
+        assert_eq!(fts_rows(), 1);
+    }
+
+    /// An index from before the rowid layout is dropped and rebuilt.
+    #[test]
+    fn an_id_keyed_search_index_is_rebuilt() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+             CREATE VIRTUAL TABLE snip_fts USING fts5(snip_id UNINDEXED, label, window_title);",
+        )
+        .unwrap();
+        init_fts(&conn).unwrap();
+        let columns = table_columns(&conn, "snip_fts").unwrap();
+        assert!(!columns.iter().any(|c| c == "snip_id"), "{columns:?}");
+        assert!(columns.iter().any(|c| c == "window_title"));
     }
 
     fn ocr_rows(conn: &Connection, id: Uuid) -> i64 {
