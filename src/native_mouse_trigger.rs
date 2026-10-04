@@ -3,6 +3,7 @@ use crossbeam_channel::Sender;
 use crate::mouse_trigger::MouseTriggerEvent;
 
 #[cfg(not(target_os = "windows"))]
+#[cfg_attr(target_os = "linux", allow(dead_code))] // Linux starts no hook at all
 pub fn spawn_listener(_tx: Sender<MouseTriggerEvent>) {}
 
 #[cfg(not(target_os = "windows"))]

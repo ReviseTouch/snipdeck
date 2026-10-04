@@ -494,6 +494,11 @@ impl AppState {
         if self.color_picker.is_active() {
             self.color_picker.update();
         }
+        // Linux: the portal's colour, once it answers.
+        #[cfg(target_os = "linux")]
+        if let Some(Err(e)) = self.color_picker.poll() {
+            self.last_error = Some(t1("Colour picker unavailable: {e}", "{e}", &e));
+        }
 
         // A toolbar-button snip (or the colour picker) hides the main window
         // during the drag; `handle_mouse_event` (no `MainWindow` in scope) flags

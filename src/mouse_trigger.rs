@@ -1,7 +1,10 @@
 use crossbeam_channel::{unbounded, Receiver, Sender};
+#[cfg(not(target_os = "linux"))]
 use parking_lot::Mutex;
+#[cfg(not(target_os = "linux"))]
 use rdev::{grab, Button, Event, EventType, Key};
 use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(not(target_os = "linux"))]
 use std::sync::Arc;
 
 /// One-shot arm flag. The tray's "Yeni Snip Al" command sets this so the
@@ -31,6 +34,7 @@ pub(crate) static FREEZE_ARMED: AtomicBool = AtomicBool::new(false);
 /// the user's release (thread-spawn latency), and F23 collided with the
 /// Copilot key chord (hardware Copilot = Win+Shift+F23 — exactly what our
 /// injection produced during a Win+Shift+drag snip on Copilot-era machines).
+#[cfg_attr(target_os = "linux", allow(dead_code))] // set by the hooks, which Linux has none of
 pub(crate) static DISGUISE_WINUP_ARMED: AtomicBool = AtomicBool::new(false);
 
 /// Colour-picker mode: when armed, the next left-click captures the pixel under
@@ -53,6 +57,7 @@ static POINTER_HOOK_FAILED: AtomicBool = AtomicBool::new(false);
 /// when it succeeds, so this can only ever report a failure that has already
 /// happened. In practice that is immediate — it fails on the first attempt to
 /// open the device — and long before a user reaches a toolbar button.
+#[cfg_attr(target_os = "linux", allow(dead_code))] // hook-driven; Linux picks through the portal
 pub fn pointer_hook_failed() -> bool {
     POINTER_HOOK_FAILED.load(Ordering::Relaxed)
 }
@@ -68,6 +73,7 @@ pub(crate) fn consume_armed() -> bool {
 }
 
 /// Enter colour-pick mode (called when the eyedropper tool starts).
+#[cfg_attr(target_os = "linux", allow(dead_code))] // hook-driven; Linux picks through the portal
 pub fn arm_color_pick() {
     COLOR_PICK_ARMED.store(true, Ordering::Relaxed);
 }
@@ -93,8 +99,10 @@ pub fn clear_freeze() {
 /// whichever hook backend is active (rdev or native) so the pump — which
 /// can't see the backend's private state — knows to keep ticking and stream
 /// the live selection rectangle even if the cursor momentarily stops moving.
+#[cfg_attr(target_os = "linux", allow(dead_code))] // set by the hooks, which Linux has none of
 static SNIP_ACTIVE: AtomicBool = AtomicBool::new(false);
 
+#[cfg_attr(target_os = "linux", allow(dead_code))] // set by the hooks, which Linux has none of
 pub(crate) fn set_snip_active(active: bool) {
     SNIP_ACTIVE.store(active, Ordering::Relaxed);
 }
@@ -124,6 +132,8 @@ pub enum MouseTriggerEvent {
     /// drag selects on that frozen snapshot.
     FreezeArm { x: i32, y: i32 },
     /// Colour-pick mode: the user clicked at this point to grab its pixel colour.
+    /// Hook-driven; on Linux the colour comes from the desktop portal instead.
+    #[cfg_attr(target_os = "linux", allow(dead_code))]
     ColorPick { x: i32, y: i32 },
     Move { x: i32, y: i32 },
     Release { x: i32, y: i32 },
@@ -142,6 +152,20 @@ impl MouseTriggerService {
     /// own schedule (Slint timer, native loop, etc).
     pub fn start_polling() -> Self {
         let (tx, rx) = unbounded::<MouseTriggerEvent>();
+        // No global pointer hook on Linux, by design. rdev's grab reads
+        // /dev/input directly, which works only for a user in the `input`
+        // group — i.e. one who has handed every process they run a system-wide
+        // keylogger — and where it did work it did harm: it swallowed the
+        // overlay's own clicks, made up coordinates from raw relative motion,
+        // and left Super stuck down after Super+Shift+Space. Capture runs
+        // through the overlay and the GNOME extension instead, and the colour
+        // picker through the desktop portal.
+        #[cfg(target_os = "linux")]
+        {
+            log::info!("mouse trigger: no global pointer hook on Linux");
+            POINTER_HOOK_FAILED.store(true, Ordering::Relaxed);
+        }
+        #[cfg(not(target_os = "linux"))]
         if native_backend_enabled() {
             log::info!("mouse trigger backend: native Windows hook");
             crate::native_mouse_trigger::spawn_listener(tx.clone());
@@ -179,6 +203,7 @@ fn native_backend_enabled() -> bool {
     }
 }
 
+#[cfg(not(target_os = "linux"))]
 #[derive(Default)]
 struct HookState {
     win_down: AtomicBool,
@@ -188,6 +213,7 @@ struct HookState {
     snip_active: AtomicBool,
 }
 
+#[cfg(not(target_os = "linux"))]
 fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
     std::thread::spawn(move || {
         let state = Arc::new(HookState::default());
@@ -410,6 +436,7 @@ fn spawn_listener(tx: Sender<MouseTriggerEvent>) {
     });
 }
 
+#[cfg(not(target_os = "linux"))]
 fn modifier_snapshot(state: &HookState) -> ModifierSet {
     ModifierSet {
         ctrl: modifier_down_now(&state.ctrl_down, &[0x11, 0xA2, 0xA3]),
@@ -418,14 +445,17 @@ fn modifier_snapshot(state: &HookState) -> ModifierSet {
     }
 }
 
+#[cfg(not(target_os = "linux"))]
 fn win_down_now(state: &HookState) -> bool {
     modifier_down_now(&state.win_down, &[0x5B, 0x5C])
 }
 
+#[cfg(not(target_os = "linux"))]
 fn shift_down_now(state: &HookState) -> bool {
     modifier_down_now(&state.shift_down, &[0x10, 0xA0, 0xA1])
 }
 
+#[cfg(not(target_os = "linux"))]
 fn modifier_down_now(flag: &AtomicBool, virtual_keys: &[u16]) -> bool {
     #[cfg(target_os = "windows")]
     {
@@ -453,6 +483,7 @@ fn modifier_down_now(flag: &AtomicBool, virtual_keys: &[u16]) -> bool {
     }
 }
 
+#[cfg(not(target_os = "linux"))]
 fn cursor_pos_or_last(last_pos: &Mutex<(i32, i32)>) -> (i32, i32) {
     let pos = current_cursor_pos().unwrap_or_else(|| *last_pos.lock());
     *last_pos.lock() = pos;
@@ -466,7 +497,7 @@ fn async_key_down(vk: u16) -> bool {
     unsafe { (GetAsyncKeyState(vk as i32) as u16 & 0x8000) != 0 }
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
 fn async_key_down(_vk: u16) -> bool {
     false
 }
@@ -484,7 +515,7 @@ fn current_cursor_pos() -> Option<(i32, i32)> {
     }
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
 fn current_cursor_pos() -> Option<(i32, i32)> {
     None
 }
@@ -545,7 +576,7 @@ fn inject_disguised_winup(left: bool) {
     );
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
 fn inject_disguised_winup(_left: bool) {}
 
 /// Called after a Win+LMouse snip finishes or cancels. Deliberately does NOT

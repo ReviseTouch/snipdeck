@@ -614,3 +614,6 @@ msgstr "At"
 
 msgid "Finish or cancel the open annotation before starting another."
 msgstr "Yenisine başlamadan önce açık olan notu bitirin ya da iptal edin."
+
+msgid "Colour picker unavailable: {e}"
+msgstr "Renk seçici kullanılamıyor: {e}"

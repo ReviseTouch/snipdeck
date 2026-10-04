@@ -23,31 +23,7 @@ impl AppState {
                 keep_float,
                 to_gallery,
             } => self.begin_region_snip(to_clip, keep_float, to_gallery, window),
-            Action::PickColor => {
-                // Both the pick and its Esc arrive as events from the pointer
-                // hook. With no hook there is no pick and no cancel — and this
-                // is the one tool that hides the main window before waiting, so
-                // "does nothing" would present as the app vanishing: the loupe
-                // cannot follow a cursor it cannot read, clicking does nothing,
-                // Esc does nothing, and on a desktop with no tray there is
-                // nothing left to click. Say so instead, with the window still
-                // on screen to say it in.
-                if crate::mouse_trigger::pointer_hook_failed() {
-                    self.last_error = Some(t(
-                        "The colour picker needs pointer access this session does not grant.",
-                    ));
-                    return;
-                }
-                // Start the eyedropper: hide our window so it's out of the way,
-                // arm the hook + show the magnifier loupe. The next click grabs
-                // the pixel (ColorPick event); Esc cancels. The main window comes
-                // back via `pending_show_main` once the pick finishes/cancels.
-                self.color_picker.begin();
-                let _ = window.hide();
-                self.color_pick_hid_main = true;
-                self.color_pick_started_at = Some(std::time::Instant::now());
-                self.last_error = None;
-            }
+            Action::PickColor => self.start_color_pick(Some(window)),
             Action::ToggleFloatingInTaskbar => {
                 self.settings.floating_in_taskbar = !self.settings.floating_in_taskbar;
                 let _ = self.settings.save();
@@ -306,6 +282,44 @@ impl AppState {
         {
             self.pending_freeze_arm =
                 Some((centre.0, centre.1, std::time::Instant::now() + FREEZE_AFTER_HIDE));
+        }
+    }
+
+    /// Start the colour picker — from the toolbar, which hides the main window
+    /// while picking (`hide`), or from a snip's menu, which leaves it be.
+    pub(crate) fn start_color_pick(&mut self, hide: Option<&MainWindow>) {
+        // Linux has no pointer hook and no way to read the screen under the
+        // cursor; the desktop portal does the picking (see `ColorPicker`).
+        #[cfg(target_os = "linux")]
+        {
+            let _ = hide;
+            self.color_picker.pick_via_portal();
+            self.last_error = None;
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            // Both the pick and its Esc arrive as events from the pointer hook.
+            // With no hook there is no pick and no cancel — and the toolbar path
+            // hides the main window before waiting, so "does nothing" would
+            // present as the app vanishing. Say so instead, with the window
+            // still on screen to say it in.
+            if crate::mouse_trigger::pointer_hook_failed() {
+                self.last_error = Some(t(
+                    "The colour picker needs pointer access this session does not grant.",
+                ));
+                return;
+            }
+            // The loupe follows the cursor; the next click grabs the pixel
+            // (ColorPick event), Esc cancels. The watchdog in `tick` ends a pick
+            // that never finishes — both entry points stamp it, the snip menu's
+            // included, which used to skip it and could leave the loupe up.
+            self.color_picker.begin();
+            if let Some(window) = hide {
+                let _ = window.hide();
+                self.color_pick_hid_main = true;
+            }
+            self.color_pick_started_at = Some(std::time::Instant::now());
+            self.last_error = None;
         }
     }
 

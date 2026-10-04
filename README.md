@@ -19,7 +19,7 @@ OCR-index them, and search hundreds of screenshots from one dense gallery —
 all from a native Rust app with a software-rendered [Slint](https://slint.dev) UI.
 
 ![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white)
-![linux](https://img.shields.io/badge/Linux-X11%20full%20%2F%20Wayland%20partial-yellow) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
+![linux](https://img.shields.io/badge/Linux-GNOME%20full%20%2F%20others%20partial-yellow) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
 ![built with](https://img.shields.io/badge/built%20with-Rust%20%2B%20Slint-orange?logo=rust&logoColor=white)
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -217,10 +217,15 @@ binary at build time (no runtime gettext dependency).
 ## 🗺️ Roadmap
 
 - [x] Windows 10 / 11
-- [x] **Linux / X11** — full behaviour
-- [~] **Linux / Wayland** — capture, global shortcuts, OCR and dragging work.
-      On GNOME the bundled shell extension also restores placement and
-      always-on-top; on other compositors those are still missing (see below)
+- [x] **Linux / GNOME** (Wayland) — with the bundled shell extension: capture
+      with `Super`+`Alt`+drag or the hotkeys, snips placed where captured and kept
+      on top, OCR, the colour picker
+- [~] **Linux / other desktops** — capture from the hotkeys and the toolbar,
+      OCR, the colour picker (through the desktop portal). There is no
+      modifier+drag gesture outside GNOME: it needs a global pointer hook, which
+      Linux grants only by reading `/dev/input` — a system-wide keylogger
+      Snipdeck will not ask you to enable. On Wayland, placement and
+      always-on-top are missing without the extension (see below)
 - [ ] **macOS** — on the way
 - [ ] In-app settings window
 - [ ] More annotation tools (blur / pixelate, numbered step badges, move/edit shapes)

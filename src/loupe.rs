@@ -20,6 +20,10 @@ pub struct ColorPicker {
     active: bool,
     /// Last sampled centre colour, used as a fallback if the final read fails.
     last: [u8; 3],
+    /// Linux: the desktop portal's answer, once it has one. `Ok(None)` is the
+    /// user dismissing the portal's picker.
+    #[cfg(target_os = "linux")]
+    portal: Option<crossbeam_channel::Receiver<Result<Option<[u8; 3]>, String>>>,
 }
 
 impl ColorPicker {
@@ -29,6 +33,69 @@ impl ColorPicker {
             result: None,
             active: false,
             last: [0, 0, 0],
+            #[cfg(target_os = "linux")]
+            portal: None,
+        }
+    }
+
+    /// Linux: ask the desktop portal for a colour.
+    ///
+    /// The loupe below follows the cursor and waits for a click from the global
+    /// pointer hook — none of which exists on Linux: Wayland tells no client
+    /// where the pointer is or lets it read the screen, and the hook needed
+    /// /dev/input. So this picker never worked there, and from the snip menu it
+    /// left an empty loupe on screen with nothing able to close it. The portal
+    /// shows the desktop's own picker (GNOME's is its screenshot UI) and hands
+    /// back the colour; [`ColorPicker::poll`] shows it when it arrives.
+    #[cfg(target_os = "linux")]
+    pub fn pick_via_portal(&mut self) {
+        if self.portal.is_some() {
+            return; // already asking
+        }
+        log::info!("color picker: asking the desktop portal");
+        let (tx, rx) = crossbeam_channel::bounded(1);
+        let spawned = std::thread::Builder::new()
+            .name("portal-color".into())
+            .spawn(move || {
+                let picked = pollster::block_on(async {
+                    ashpd::desktop::Color::pick().send().await?.response()
+                });
+                let to_u8 = |v: f64| (v.clamp(0.0, 1.0) * 255.0).round() as u8;
+                let result = match picked {
+                    Ok(c) => Ok(Some([to_u8(c.red()), to_u8(c.green()), to_u8(c.blue())])),
+                    Err(ashpd::Error::Response(ashpd::desktop::ResponseError::Cancelled)) => {
+                        Ok(None)
+                    }
+                    Err(e) => Err(e.to_string()),
+                };
+                log::info!("color picker: portal answered {result:?}");
+                let _ = tx.send(result);
+                crate::pump::wake();
+            });
+        if spawned.is_ok() {
+            self.portal = Some(rx);
+        }
+    }
+
+    /// Linux: show the portal's colour if it has answered. `Some(Err)` is a
+    /// failure worth telling the user about; a dismissed picker is not.
+    #[cfg(target_os = "linux")]
+    pub fn poll(&mut self) -> Option<Result<(), String>> {
+        let answer = self.portal.as_ref()?.try_recv().ok()?;
+        self.portal = None;
+        match answer {
+            Ok(Some(rgb)) => {
+                let (hex, rgbs) = (crate::color::hex(rgb), crate::color::rgb_str(rgb));
+                if let Err(e) = crate::clipboard::copy_text(&hex) {
+                    log::warn!("copy picked hex failed: {e}");
+                }
+                log::info!("color picked: {hex} {rgbs}");
+                // Wayland ignores the position; the compositor places it.
+                self.show_result(rgb, &hex, &rgbs, 0, 0);
+                Some(Ok(()))
+            }
+            Ok(None) => None,
+            Err(e) => Some(Err(e)),
         }
     }
 
@@ -37,6 +104,7 @@ impl ColorPicker {
     }
 
     /// Enter pick mode: show the loupe and arm the hook so the next click grabs.
+    #[cfg_attr(target_os = "linux", allow(dead_code))] // hook-driven; Linux picks through the portal
     pub fn begin(&mut self) {
         if self.loupe.is_none() {
             match LoupeWindow::new() {
