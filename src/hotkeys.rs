@@ -161,8 +161,9 @@ fn parse_hotkey(s: &str) -> anyhow::Result<HotKey> {
     Ok(HotKey::new(Some(mods), code))
 }
 
-/// Split a token like "CtrlShift" into ["Ctrl", "Shift"].
-fn split_modifiers(s: &str) -> Vec<String> {
+/// Split a token like "CtrlShift" into ["Ctrl", "Shift"]: the settings format
+/// packs modifiers without separators. Shared with the portal backend.
+pub(crate) fn split_modifiers(s: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut current = String::new();
     for ch in s.chars() {

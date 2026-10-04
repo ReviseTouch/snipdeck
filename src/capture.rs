@@ -150,15 +150,7 @@ fn capture_monitor(
     let y = m.y();
     let w = m.width();
     let h = m.height();
-    // xcap exposes a `name()` (e.g. "\\.\DISPLAY1") which is ugly for
-    // a UI; prefer a friendly "Monitor N" label and append the OS name
-    // only if it's something descriptive (e.g. "DELL U2422H").
-    let raw = m.name();
-    let friendly = if raw.starts_with("\\\\") || raw.is_empty() {
-        format!("{} {}", crate::i18n::t("Monitor"), idx + 1)
-    } else {
-        format!("{} {} · {}", crate::i18n::t("Monitor"), idx + 1, raw)
-    };
+    let friendly = monitor_label(&m, idx);
     // Prefer DXGI Desktop Duplication: GDI BitBlt (xcap's backend) returns
     // black for GPU-composited windows (Warp, hardware-accelerated browsers,
     // games). DXGI grabs the real composited frame. Fall back to GDI only if
@@ -290,6 +282,19 @@ fn is_blank_black(img: &RgbaImage) -> bool {
     true
 }
 
+/// "Monitor N", with the OS's name for it when that says something.
+///
+/// xcap's `name()` is often a device path (`\\.\DISPLAY1`), useless in a UI,
+/// and sometimes descriptive ("DELL U2422H"), which is worth keeping.
+fn monitor_label(m: &xcap::Monitor, idx: usize) -> String {
+    let raw = m.name();
+    if raw.starts_with("\\\\") || raw.is_empty() {
+        format!("{} {}", crate::i18n::t("Monitor"), idx + 1)
+    } else {
+        format!("{} {} · {}", crate::i18n::t("Monitor"), idx + 1, raw)
+    }
+}
+
 /// Lightweight lookup: which monitor's friendly label contains the given
 /// virtual-screen point? Doesn't capture pixels — used to refresh the
 /// `monitor_label` on a floating snip while the user drags it across
@@ -302,13 +307,7 @@ pub fn monitor_label_at(x: i32, y: i32) -> Option<String> {
         let mw = m.width() as i32;
         let mh = m.height() as i32;
         if x >= mx && x < mx + mw && y >= my && y < my + mh {
-            let raw = m.name();
-            let label = if raw.starts_with("\\\\") || raw.is_empty() {
-                format!("{} {}", crate::i18n::t("Monitor"), idx + 1)
-            } else {
-                format!("{} {} · {}", crate::i18n::t("Monitor"), idx + 1, raw)
-            };
-            Some(label)
+            Some(monitor_label(m, idx))
         } else {
             None
         }

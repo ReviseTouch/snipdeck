@@ -245,7 +245,7 @@ fn to_portal_trigger(s: &str) -> Option<String> {
 
     let mut out = Vec::new();
     for token in modifier_tokens {
-        for m in split_camel(token) {
+        for m in crate::hotkeys::split_modifiers(token) {
             let name = match m.to_ascii_lowercase().as_str() {
                 "ctrl" | "control" => "CTRL",
                 "shift" => "SHIFT",
@@ -261,23 +261,6 @@ fn to_portal_trigger(s: &str) -> Option<String> {
 
     out.push(portal_key_name(key)?);
     Some(out.join("+"))
-}
-
-/// "CtrlShift" → ["Ctrl", "Shift"]. Mirrors `hotkeys::split_modifiers` — the
-/// settings format packs modifiers without separators.
-fn split_camel(s: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let mut current = String::new();
-    for ch in s.chars() {
-        if ch.is_ascii_uppercase() && !current.is_empty() {
-            out.push(std::mem::take(&mut current));
-        }
-        current.push(ch);
-    }
-    if !current.is_empty() {
-        out.push(current);
-    }
-    out
 }
 
 /// Map a key token to its XKB keysym name. Kept deliberately narrow: an
