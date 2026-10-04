@@ -453,6 +453,12 @@ export component MainWindow inherits Window {
     in property <string> current-language: "en";
     in property <bool> autostart-enabled: false;
     property <bool> lang-open: false;
+    // Bulk-delete confirmation: 0 = closed, 1 = clear unpinned, 2 = clear all.
+    // Both toolbar actions delete files permanently, and the trash button sits
+    // right beside the theme toggle — one stray click used to empty the whole
+    // gallery, pinned snips included.
+    property <int> confirm-kind: 0;
+    property <int> confirm-count: root.confirm-kind == 2 ? root.gallery-total : root.gallery-total - root.pinned-count;
 
     // Card sizing for the gallery grid. `card-w` is the target card width per
     // size step; the thumbnail area scales with it while the text strip below
@@ -593,8 +599,8 @@ export component MainWindow inherits Window {
 
                 Rectangle { horizontal-stretch: 1; }
 
-                IconButton { icon: "pin-off"; dark: root.dark-theme; danger: true; tooltip: @tr("Clear unpinned snips"); clicked => { root.clear-unpinned(); } }
-                IconButton { icon: "trash"; dark: root.dark-theme; danger: true; tooltip: @tr("Clear all snips"); clicked => { root.clear-all(); } }
+                IconButton { icon: "pin-off"; dark: root.dark-theme; danger: true; tooltip: @tr("Clear unpinned snips"); clicked => { if (root.gallery-total - root.pinned-count > 0) { root.confirm-kind = 1; } } }
+                IconButton { icon: "trash"; dark: root.dark-theme; danger: true; tooltip: @tr("Clear all snips"); clicked => { if (root.gallery-total > 0) { root.confirm-kind = 2; } } }
                 IconButton { icon: root.dark-theme ? "sun" : "moon"; dark: root.dark-theme; tooltip: @tr("Toggle light / dark theme"); clicked => { root.toggle-theme(); } }
                 IconButton { icon: "globe"; dark: root.dark-theme; active: root.lang-open; tooltip: @tr("Language"); clicked => { root.lang-open = !root.lang-open; } }
                 IconButton { icon: "power"; dark: root.dark-theme; active: root.autostart-enabled; tooltip: @tr("Launch at Login"); clicked => { root.toggle-autostart(); } }
@@ -1241,6 +1247,92 @@ export component MainWindow inherits Window {
                             font-size: 10px;
                             font-family: "Consolas";
                             vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Bulk-delete confirmation. A backdrop click, Cancel or Esc backs out;
+    // only the explicit Delete button goes through.
+    if root.confirm-kind != 0 : Rectangle {
+        width: root.width;
+        height: root.height;
+        background: #00000088;
+        TouchArea {
+            width: 100%;
+            height: 100%;
+            clicked => { root.confirm-kind = 0; }
+        }
+        confirm-keys := FocusScope {
+            init => { self.focus(); }
+            key-pressed(event) => {
+                if (event.text == Key.Escape) {
+                    root.confirm-kind = 0;
+                    return accept;
+                }
+                reject
+            }
+        }
+        Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            width: 380px;
+            height: 158px;
+            background: root.dark-theme ? #1f1f1f : #ffffff;
+            border-radius: 10px;
+            border-width: 1px;
+            border-color: root.dark-theme ? #3a3a3a : #dcd9d1;
+            drop-shadow-blur: 18px;
+            drop-shadow-color: #00000088;
+            drop-shadow-offset-y: 6px;
+            // Swallow clicks on the card itself, so only the backdrop cancels.
+            TouchArea {
+                width: 100%;
+                height: 100%;
+            }
+            VerticalLayout {
+                padding: 18px;
+                spacing: 8px;
+                Text {
+                    text: root.confirm-kind == 2
+                        ? @tr("Delete all {} snips?", root.confirm-count)
+                        : @tr("Delete {} unpinned snips?", root.confirm-count);
+                    color: root.dark-theme ? #f0eeea : #1a1816;
+                    font-size: 15px;
+                    font-weight: 600;
+                }
+                Text {
+                    text: root.confirm-kind == 2
+                        ? @tr("Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored.")
+                        : @tr("Pinned snips stay. The images are deleted from disk and cannot be restored.");
+                    color: root.dark-theme ? #a8a49d : #5a554d;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                    vertical-stretch: 1;
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    alignment: end;
+                    ToolbarButton {
+                        label: @tr("Cancel");
+                        dark: root.dark-theme;
+                        width: 90px;
+                        clicked => { root.confirm-kind = 0; }
+                    }
+                    ToolbarButton {
+                        label: @tr("Delete");
+                        dark: root.dark-theme;
+                        danger: true;
+                        width: 90px;
+                        clicked => {
+                            if (root.confirm-kind == 2) {
+                                root.clear-all();
+                            } else {
+                                root.clear-unpinned();
+                            }
+                            root.confirm-kind = 0;
                         }
                     }
                 }
