@@ -52,17 +52,19 @@ component ToolbarButton inherits Rectangle {
     in property <bool> dark: true;
     in property <bool> primary: false;
     in property <bool> danger: false;
+    // Filled red: the confirming button of an irreversible action.
+    in property <bool> destructive: false;
     in property <bool> active: false;
     in property <string> tooltip: "";
     callback clicked();
 
-    property <color> fg: primary ? (dark ? #1a0e05 : #ffffff) : (danger && ta.has-hover ? (dark ? #f0a0a0 : #b83434) : (active ? (dark ? #ffb066 : #b85a14) : (dark ? #b8b6b1 : #3a3631)));
+    property <color> fg: destructive ? #ffffff : primary ? (dark ? #1a0e05 : #ffffff) : (danger && ta.has-hover ? (dark ? #f0a0a0 : #b83434) : (active ? (dark ? #ffb066 : #b85a14) : (dark ? #b8b6b1 : #3a3631)));
 
     height: 30px;
     border-radius: 6px;
     border-width: primary ? 1px : (active ? 1px : 0px);
     border-color: primary ? (dark ? #d96a1f : #b85a14) : (dark ? #4a3520 : #ecd3b0);
-    background: ta.pressed
+    background: destructive ? (ta.pressed ? #9e2b2b : (ta.has-hover ? #c93c3c : #b33434)) : ta.pressed
         ? (primary ? (dark ? #e5731f : #cc5f14)
             : (danger ? (dark ? #5a2222 : #f6cccc)
                 : (dark ? #3a3a3a : #dedcd4)))
@@ -1318,13 +1320,14 @@ export component MainWindow inherits Window {
                     ToolbarButton {
                         label: @tr("Cancel");
                         dark: root.dark-theme;
+                        active: true;
                         width: 90px;
                         clicked => { root.confirm-kind = 0; }
                     }
                     ToolbarButton {
                         label: @tr("Delete");
                         dark: root.dark-theme;
-                        danger: true;
+                        destructive: true;
                         width: 90px;
                         clicked => {
                             if (root.confirm-kind == 2) {
