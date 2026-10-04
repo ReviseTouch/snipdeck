@@ -136,6 +136,20 @@ impl FloatingManager {
             return Ok(());
         }
         let win = FloatingWindow::new()?;
+
+        // Initial position (physical screen coords).
+        let pos = snip
+            .last_position
+            .unwrap_or((snip.area.x - 3, snip.area.y - 3));
+
+        // Sized with the scale of the monitor the snip opens on, where that
+        // can be asked (Windows), not the main window's: see
+        // `screen::scale_at`.
+        let centre = (
+            pos.0 + (snip.area.w / 2) as i32,
+            pos.1 + (snip.area.h / 2) as i32,
+        );
+        let scale_factor = crate::screen::scale_at(centre.0, centre.1).unwrap_or(scale_factor);
         let sf = if scale_factor > 0.001 {
             scale_factor
         } else {
@@ -181,11 +195,6 @@ impl FloatingManager {
         if already_moved {
             self.shared.borrow_mut().moved_snips.insert(snip.id);
         }
-
-        // Initial position (physical screen coords).
-        let pos = snip
-            .last_position
-            .unwrap_or((snip.area.x - 3, snip.area.y - 3));
 
         // Publish the intended position in the title, where the GNOME extension
         // can read it. `set_position` below is silently ignored on Wayland, so

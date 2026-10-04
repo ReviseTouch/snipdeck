@@ -165,6 +165,10 @@ impl SlintOverlayManager {
         scale_factor: f32,
         frozen: Option<&image::RgbaImage>,
     ) -> Result<(), slint::PlatformError> {
+        // The monitor's own scale where it can be asked (Windows), not the
+        // main window's: see `screen::scale_at`.
+        let centre = (area.x + (area.w / 2) as i32, area.y + (area.h / 2) as i32);
+        let scale_factor = crate::screen::scale_at(centre.0, centre.1).unwrap_or(scale_factor);
         self.scale_factor = if scale_factor > 0.001 {
             scale_factor
         } else {

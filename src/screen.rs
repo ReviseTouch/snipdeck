@@ -56,6 +56,35 @@ pub fn monitor_index_at_logical(x: i32, y: i32) -> Option<usize> {
         .or(Some(0))
 }
 
+/// Scale factor of the monitor under a physical screen point, as Windows
+/// reports it to a per-monitor-aware process. `None` off Windows, and when
+/// the lookup fails.
+///
+/// The app's own scale factor is the main window's — that of the monitor the
+/// main window is on. A window opened on a monitor of another scale and sized
+/// with that number came out the ratio of the two too big or too small, once
+/// Windows moved it over and rescaled it: the snip overlay covering part of
+/// the screen or spilling off it, a floating snip no longer pixel for pixel.
+/// Elsewhere there is nothing to ask: the overlay is fullscreen and adopts
+/// whatever scale the compositor gives it (`SlintOverlayManager::sync_to_window`).
+#[cfg(target_os = "windows")]
+pub fn scale_at(x: i32, y: i32) -> Option<f32> {
+    use windows::Win32::Foundation::POINT;
+    use windows::Win32::Graphics::Gdi::{MonitorFromPoint, MONITOR_DEFAULTTONEAREST};
+    use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};
+    let (mut dpi_x, mut dpi_y) = (0u32, 0u32);
+    unsafe {
+        let monitor = MonitorFromPoint(POINT { x, y }, MONITOR_DEFAULTTONEAREST);
+        GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y).ok()?;
+    }
+    (dpi_x > 0).then(|| dpi_x as f32 / 96.0)
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn scale_at(_x: i32, _y: i32) -> Option<f32> {
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
