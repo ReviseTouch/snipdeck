@@ -188,6 +188,7 @@ impl GalleryState {
     fn load_from_db() -> anyhow::Result<Self> {
         let conn = open_db()?;
         migrate_legacy_json_if_needed(&conn)?;
+        purge_orphans(&conn);
         let mut stmt = conn.prepare(
             "SELECT id, created_at, x, y, w, h, image_file, thumb_file, label, pinned,
                     monitor_label, floating, last_x, last_y
@@ -402,6 +403,12 @@ fn open_db() -> anyhow::Result<Connection> {
     // committed (its PNG left orphaned on disk, the snip gone on next launch).
     // Wait up to 5 s for the lock instead of racing.
     conn.busy_timeout(std::time::Duration::from_secs(5))?;
+    // The schema declares snip_ocr and snip_window as REFERENCES snips(id) ON
+    // DELETE CASCADE, but SQLite enforces none of that unless asked, per
+    // connection. Without it a detached OCR thread finishing after the user
+    // deleted its snip wrote the OCR text back for a snip that no longer
+    // existed, and nothing ever removed it.
+    conn.pragma_update(None, "foreign_keys", true)?;
     register_search_functions(&conn)?;
     init_db(&conn)?;
     Ok(conn)
@@ -675,6 +682,23 @@ fn upsert_snips(conn: &Connection, snips: &[Snip]) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Rows left behind for snips that no longer exist — OCR text a late OCR
+/// thread wrote after a delete, from before foreign keys were enforced. Text
+/// from a snip the user deleted has no business staying on disk.
+fn purge_orphans(conn: &Connection) {
+    for sql in [
+        "DELETE FROM snip_ocr WHERE snip_id NOT IN (SELECT id FROM snips)",
+        "DELETE FROM snip_window WHERE snip_id NOT IN (SELECT id FROM snips)",
+        "DELETE FROM snip_fts WHERE snip_id NOT IN (SELECT id FROM snips)",
+    ] {
+        match conn.execute(sql, []) {
+            Ok(0) => {}
+            Ok(n) => log::info!("removed {n} rows left behind by deleted snips"),
+            Err(err) => log::debug!("orphan cleanup skipped: {err}"),
+        }
+    }
+}
+
 fn delete_snip_from_db(id: Uuid) -> anyhow::Result<()> {
     let conn = open_db()?;
     let id_text = id.to_string();
@@ -924,17 +948,22 @@ pub fn save_window_info(id: Uuid, info: &WindowInfo) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn save_ocr_text(
+/// Store a snip's OCR text — only while the snip still exists. OCR runs on a
+/// detached thread and can finish after the user deleted the snip; the text of
+/// a deleted snip must not be written back. Returns the rows written, 0 for a
+/// snip that is gone.
+fn insert_ocr(
+    conn: &Connection,
     id: Uuid,
     engine: &str,
     language: Option<&str>,
     text: &str,
-) -> anyhow::Result<()> {
-    let conn = open_db()?;
+) -> rusqlite::Result<usize> {
     conn.execute(
         "
         INSERT INTO snip_ocr(snip_id, engine, language, text, updated_at)
-        VALUES(?1, ?2, ?3, ?4, ?5)
+        SELECT ?1, ?2, ?3, ?4, ?5
+        WHERE EXISTS (SELECT 1 FROM snips WHERE id = ?1)
         ON CONFLICT(snip_id) DO UPDATE SET
             engine=excluded.engine,
             language=excluded.language,
@@ -948,7 +977,17 @@ pub fn save_ocr_text(
             text,
             Utc::now().to_rfc3339(),
         ],
-    )?;
+    )
+}
+
+pub fn save_ocr_text(
+    id: Uuid,
+    engine: &str,
+    language: Option<&str>,
+    text: &str,
+) -> anyhow::Result<()> {
+    let conn = open_db()?;
+    insert_ocr(&conn, id, engine, language, text)?;
     match load_snip_by_id(&conn, id) {
         Ok(Some(snip)) => {
             if let Err(err) = upsert_fts_for_snip(&conn, &snip, Some(text)) {
@@ -966,6 +1005,43 @@ pub fn save_ocr_text(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn memory_db() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", true).unwrap();
+        register_search_functions(&conn).unwrap();
+        init_db(&conn).unwrap();
+        conn
+    }
+
+    fn ocr_rows(conn: &Connection, id: Uuid) -> i64 {
+        conn.query_row(
+            "SELECT COUNT(*) FROM snip_ocr WHERE snip_id = ?1",
+            [id.to_string()],
+            |r| r.get(0),
+        )
+        .unwrap()
+    }
+
+    /// A late OCR thread for a snip the user already deleted writes nothing.
+    #[test]
+    fn ocr_for_a_deleted_snip_is_not_stored() {
+        let conn = memory_db();
+        let gone = Uuid::new_v4();
+        assert_eq!(insert_ocr(&conn, gone, "test", None, "secret").unwrap(), 0);
+        assert_eq!(ocr_rows(&conn, gone), 0);
+    }
+
+    /// With foreign keys enforced, deleting the snip takes its OCR text too.
+    #[test]
+    fn deleting_a_snip_cascades_to_its_ocr_text() {
+        let conn = memory_db();
+        let snip = make_snip(ScreenRect::new(0, 0, 10, 10));
+        upsert_snips(&conn, std::slice::from_ref(&snip)).unwrap();
+        assert_eq!(insert_ocr(&conn, snip.id, "test", None, "hello").unwrap(), 1);
+        conn.execute("DELETE FROM snips WHERE id = ?1", [snip.id.to_string()]).unwrap();
+        assert_eq!(ocr_rows(&conn, snip.id), 0);
+    }
 
     #[test]
     fn search_fold_bridges_dotless_and_dotted_i() {
