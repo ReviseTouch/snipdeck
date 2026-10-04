@@ -45,8 +45,8 @@ const MAX_RADIUS: f32 = 80.0;
 const WHEEL_DISP: f32 = 168.0;
 const WHEEL_TEX: u32 = 256;
 
-/// One image the editor can place. The thumbnail drives the tray + preview; the
-/// full-resolution source is loaded from `path` only on Save.
+/// One image the editor can place. The thumbnail drives the tray; the cell
+/// preview and the saved collage are decoded from `path`.
 pub struct CollageSource {
     pub id: Uuid,
     pub thumb: image::RgbaImage,
@@ -57,6 +57,11 @@ pub struct CollageSource {
 struct Source {
     id: Uuid,
     thumb: Image,
+    /// What a cell draws, decoded from `path` the first time this source is
+    /// placed (`ensure_previews`). Cells drew `thumb` once: 256 px stretched
+    /// over a cell that can span the whole canvas, which is over 1700
+    /// physical pixels at a 1.667 scale — every collage previewed as a blur.
+    preview: Option<Image>,
     aspect: f32, // width / height
     path: PathBuf,
 }
@@ -137,6 +142,7 @@ impl Collager {
             sources.push(Source {
                 id: s.id,
                 thumb: Image::from_rgba8(buf),
+                preview: None,
                 aspect,
                 path: s.path,
             });
@@ -391,6 +397,7 @@ fn refresh(sh: &Rc<RefCell<Shared>>, weak: &slint::Weak<CollageWindow>) {
     let Some(c) = weak.upgrade() else {
         return;
     };
+    ensure_previews(&mut sh.borrow_mut());
 
     // Pull everything we need, then drop the borrow before touching the UI.
     let (cells_model, tray_model, tray_w, cw, ch, count, kind, cols, gap, radius, bg, bg_mode, cur, brightness, sel_x, sel_y) = {
@@ -408,7 +415,7 @@ fn refresh(sh: &Rc<RefCell<Shared>>, weak: &slint::Weak<CollageWindow>) {
                 let src = &st.sources[st.selected[cr.idx]];
                 let max_r = (cr.w.min(cr.h) * pscale) / 2.0;
                 CollageCell {
-                    source: src.thumb.clone(),
+                    source: src.preview.clone().unwrap_or_else(|| src.thumb.clone()),
                     x: cr.x * pscale,
                     y: cr.y * pscale,
                     w: cr.w * pscale,
@@ -599,6 +606,42 @@ fn masonry_cells(aspects: &[f32], cols: u32, gap: f32, cw_total: f32) -> (Vec<Ce
     }
     let canvas_h = col_h.into_iter().fold(0.0_f32, f32::max);
     (out, canvas_h)
+}
+
+/// Decode a preview for every placed source that has none yet.
+///
+/// Sized for the largest cell there can be — one image filling the canvas —
+/// at the display's scale, so no cell is drawn from fewer pixels than it
+/// covers. Once per source: a source that fails to decode keeps its
+/// thumbnail rather than being retried on every refresh.
+fn ensure_previews(st: &mut Shared) {
+    let max = (AVAIL_W.max(AVAIL_H) * st.scale.max(1.0)).ceil() as u32;
+    let wanted: Vec<usize> = st
+        .selected
+        .iter()
+        .copied()
+        .filter(|&i| st.sources[i].preview.is_none())
+        .collect();
+    for i in wanted {
+        let src = &mut st.sources[i];
+        let preview = match image::open(&src.path) {
+            Ok(full) => {
+                let fitted = if full.width() > max || full.height() > max {
+                    full.thumbnail(max, max)
+                } else {
+                    full
+                };
+                let rgba = fitted.into_rgba8();
+                let (w, h) = rgba.dimensions();
+                Image::from_rgba8(SharedPixelBuffer::clone_from_slice(rgba.as_raw(), w, h))
+            }
+            Err(e) => {
+                log::warn!("collage: no preview for {} ({e}); using its thumbnail", src.id);
+                src.thumb.clone()
+            }
+        };
+        src.preview = Some(preview);
+    }
 }
 
 // ---- Final composite -------------------------------------------------------
