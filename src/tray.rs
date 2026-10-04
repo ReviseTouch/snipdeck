@@ -25,6 +25,8 @@ pub enum TrayCommand {
     /// Flip launch-at-login.
     ToggleAutostart,
     /// Relaunch Snipdeck elevated via one UAC prompt (one-shot, no persistence).
+    /// Windows only: no other tray offers it.
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     RunAsAdmin,
     /// Quit the whole app.
     Exit,
@@ -173,8 +175,6 @@ pub fn trim_working_set() {
     }
 }
 
-#[cfg(not(target_os = "windows"))]
-pub fn trim_working_set() {}
 
 /// Remove the tray icon from outside the tray thread. Used on the
 /// "restart elevated" path, where the process exits via `quit_event_loop`

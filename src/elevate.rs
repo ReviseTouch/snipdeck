@@ -14,7 +14,9 @@
 //! and have Snipdeck import the result from the clipboard, which needs no
 //! elevation at all.)
 
-/// Is THIS process currently running elevated (high integrity)?
+/// Is THIS process currently running elevated (high integrity)? Asked only
+/// by the Windows tray, the one place that offers elevation.
+#[cfg(target_os = "windows")]
 pub fn is_elevated() -> bool {
     imp::is_elevated()
 }
@@ -96,9 +98,6 @@ mod imp {
 
 #[cfg(not(target_os = "windows"))]
 mod imp {
-    pub fn is_elevated() -> bool {
-        false
-    }
     pub fn relaunch_as_admin() -> anyhow::Result<bool> {
         Ok(false)
     }

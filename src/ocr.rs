@@ -198,6 +198,12 @@ pub fn extract_text(image: &image::RgbaImage) -> anyhow::Result<String> {
         }
     }
 
+    // A snip of one line of interface text is often 20 px tall, and tesseract
+    // reads text that small poorly; the Windows path above scales such images
+    // up before OCR, and this one now does too.
+    let working = upscale_if_tiny(image);
+    let image = working.as_ref().unwrap_or(image);
+
     // The image goes in on stdin, never through a file. A temp PNG in /tmp was
     // readable by every local user (0644) for as long as tesseract ran — the
     // full snip, on the "clipboard only" path too. `stdin` as the input name

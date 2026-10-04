@@ -92,6 +92,7 @@ pub fn disarm_color_pick() {
 
 /// Take-and-clear the colour-pick arm (the click that picks the pixel, or an
 /// Esc that cancels the mode). Shared with the native backend.
+#[cfg_attr(target_os = "linux", allow(dead_code))] // hook-driven; Linux picks through the portal
 pub(crate) fn consume_color_pick() -> bool {
     COLOR_PICK_ARMED.swap(false, Ordering::Relaxed)
 }

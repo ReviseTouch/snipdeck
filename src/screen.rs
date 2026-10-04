@@ -26,6 +26,7 @@
 ///
 /// Enumerating monitors does not capture anything, so this is cheap enough to
 /// call whenever a surface is opened.
+#[cfg_attr(target_os = "windows", allow(dead_code))] // the menu covers the screen only off Windows
 pub fn primary_logical_size() -> Option<(u32, u32)> {
     let monitors = xcap::Monitor::all().ok()?;
     let m = monitors
@@ -33,27 +34,6 @@ pub fn primary_logical_size() -> Option<(u32, u32)> {
         .find(|m| m.is_primary())
         .or_else(|| monitors.first())?;
     Some((m.width(), m.height()))
-}
-
-/// Index of the monitor containing a point given in xcap's LOGICAL space.
-///
-/// Callers holding a physical screen coordinate — anything that came from a
-/// pointer event via the overlay — must divide by the scale factor first.
-/// Returns the primary monitor when the point matches none, which is the
-/// sensible answer for a cursor that is briefly outside every monitor rect
-/// (between two of them, or mid-hotplug).
-pub fn monitor_index_at_logical(x: i32, y: i32) -> Option<usize> {
-    let monitors = xcap::Monitor::all().ok()?;
-    if monitors.is_empty() {
-        return None;
-    }
-    let hit = monitors.iter().position(|m| {
-        let (mx, my) = (m.x(), m.y());
-        let (mw, mh) = (m.width() as i32, m.height() as i32);
-        x >= mx && x < mx + mw && y >= my && y < my + mh
-    });
-    hit.or_else(|| monitors.iter().position(|m| m.is_primary()))
-        .or(Some(0))
 }
 
 /// Scale factor of the monitor under a physical screen point, as Windows
