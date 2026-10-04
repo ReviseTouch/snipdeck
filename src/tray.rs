@@ -367,6 +367,7 @@ fn send(cmd: TrayCommand) {
 #[cfg(target_os = "windows")]
 mod win {
     use super::{send, TrayCommand};
+    use std::sync::atomic::{AtomicU32, Ordering};
     use windows::core::{w, HSTRING, PCWSTR};
     use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, POINT, WPARAM};
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
@@ -375,9 +376,10 @@ mod win {
         NOTIFYICONDATAW,
     };
     use windows::Win32::UI::WindowsAndMessaging::{
-        AppendMenuW, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyMenu,
-        DispatchMessageW, FindWindowW, GetCursorPos, GetMessageW, LoadIconW, PostMessageW,
-        RegisterClassW, SendMessageW, SetForegroundWindow, TrackPopupMenu, TranslateMessage,
+        AppendMenuW, ChangeWindowMessageFilterEx, CreatePopupMenu, CreateWindowExW,
+        DefWindowProcW, DestroyMenu, DispatchMessageW, FindWindowW, GetCursorPos, GetMessageW,
+        LoadIconW, PostMessageW, RegisterClassW, RegisterWindowMessageW, SendMessageW,
+        SetForegroundWindow, TrackPopupMenu, TranslateMessage, MSGFLT_ALLOW,
         HICON, ICON_BIG, ICON_SMALL, IDI_APPLICATION, MF_CHECKED, MF_SEPARATOR, MF_STRING,
         MF_UNCHECKED, MSG, TPM_RETURNCMD, TPM_RIGHTBUTTON, WINDOW_EX_STYLE, WINDOW_STYLE, WM_APP,
         WM_LBUTTONDBLCLK, WM_NULL, WM_RBUTTONUP, WM_SETICON, WNDCLASSW,
@@ -446,25 +448,47 @@ mod win {
             }
         };
 
-        let icon = load_app_icon(HINSTANCE(hinstance.0));
-        let mut nid = NOTIFYICONDATAW {
-            cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
-            hWnd: hwnd,
-            uID: TRAY_UID,
-            uFlags: NIF_ICON | NIF_MESSAGE | NIF_TIP,
-            uCallbackMessage: WM_TRAYICON,
-            hIcon: icon,
-            ..Default::default()
-        };
-        let tip: Vec<u16> = "Snipdeck".encode_utf16().collect();
-        nid.szTip[..tip.len()].copy_from_slice(&tip);
-        let _ = Shell_NotifyIconW(NIM_ADD, &nid);
+        // Explorer broadcasts "TaskbarCreated" when the taskbar comes back
+        // after a crash or restart, and every tray icon has to be added
+        // again: the new taskbar knows nothing of the old one's. Unheard, the
+        // icon was simply gone, and with the main window hidden to the tray
+        // so was the way back into the app. An elevated Snipdeck ("Run as
+        // administrator") would not hear it either without letting the
+        // message through UIPI: Explorer runs at the lower integrity level.
+        let taskbar_created = RegisterWindowMessageW(w!("TaskbarCreated"));
+        if taskbar_created != 0 {
+            TASKBAR_CREATED.store(taskbar_created, Ordering::Relaxed);
+            let _ = ChangeWindowMessageFilterEx(hwnd, taskbar_created, MSGFLT_ALLOW, None);
+        }
+
+        add_icon(hwnd);
         log::info!("tray icon active");
 
         let mut msg = MSG::default();
         while GetMessageW(&mut msg, None, 0, 0).0 > 0 {
             let _ = TranslateMessage(&msg);
             DispatchMessageW(&msg);
+        }
+    }
+
+    /// The registered "TaskbarCreated" message, 0 until registered.
+    static TASKBAR_CREATED: AtomicU32 = AtomicU32::new(0);
+
+    unsafe fn add_icon(hwnd: HWND) {
+        let hinstance = GetModuleHandleW(None).unwrap_or_default();
+        let mut nid = NOTIFYICONDATAW {
+            cbSize: std::mem::size_of::<NOTIFYICONDATAW>() as u32,
+            hWnd: hwnd,
+            uID: TRAY_UID,
+            uFlags: NIF_ICON | NIF_MESSAGE | NIF_TIP,
+            uCallbackMessage: WM_TRAYICON,
+            hIcon: load_app_icon(HINSTANCE(hinstance.0)),
+            ..Default::default()
+        };
+        let tip: Vec<u16> = "Snipdeck".encode_utf16().collect();
+        nid.szTip[..tip.len()].copy_from_slice(&tip);
+        if !Shell_NotifyIconW(NIM_ADD, &nid).as_bool() {
+            log::warn!("tray icon could not be added");
         }
     }
 
@@ -495,6 +519,12 @@ mod win {
         wparam: WPARAM,
         lparam: LPARAM,
     ) -> LRESULT {
+        let taskbar_created = TASKBAR_CREATED.load(Ordering::Relaxed);
+        if taskbar_created != 0 && msg == taskbar_created {
+            log::info!("taskbar recreated; adding the tray icon again");
+            add_icon(hwnd);
+            return LRESULT(0);
+        }
         if msg == WM_TRAYICON {
             let mouse_msg = (lparam.0 as u32) & 0xFFFF;
             match mouse_msg {
