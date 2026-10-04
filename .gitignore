@@ -15,3 +15,6 @@ Thumbs.db
 .vscode/
 .idea/
 *~
+
+# Staging folder for install.sh (see README, "Build from source")
+/dist/
