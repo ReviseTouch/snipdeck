@@ -561,12 +561,17 @@ impl AppState {
                 &["png", "jpg", "jpeg", "bmp", "gif", "tif", "tiff"],
             )
             .save_file();
-        if let Some(path) = dialog {
-            let _ = std::fs::create_dir_all(path.parent().unwrap_or(std::path::Path::new(".")));
-            if let Ok(img) = snip.load_image() {
-                if let Err(e) = img.save(&path) {
-                    self.last_error = Some(t1("Failed to save: {e}", "{e}", &e.to_string()));
-                }
+        if let Some(mut path) = dialog {
+            // A name typed without an extension gets the default format rather
+            // than an "unsupported image type" error.
+            if path.extension().is_none() {
+                path.set_extension(&self.settings.default_format);
+            }
+            let result = snip
+                .load_image()
+                .and_then(|img| crate::image_files::export(&path, &img));
+            if let Err(e) = result {
+                self.last_error = Some(t1("Failed to save: {e}", "{e}", &format!("{e:#}")));
             }
         }
     }
