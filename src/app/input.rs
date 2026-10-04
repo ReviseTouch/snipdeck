@@ -258,6 +258,15 @@ impl AppState {
         to_gallery: bool,
         window: &MainWindow,
     ) {
+        // A second trigger while a snip is already under way — the hotkey
+        // pressed twice — is ignored. Going ahead photographed the frozen
+        // overlay of the first, dim layer and all, and re-read the main
+        // window's visibility after the first trigger had hidden it, so the
+        // window never came back.
+        if self.snip_in_progress() {
+            log::info!("snip trigger ignored: a snip is already in progress");
+            return;
+        }
         // Arm a one-shot region drag: the next left-button drag starts a snip
         // with NO modifier held, routed the way the matching Win+drag would.
         self.armed_routing = Some((to_clip, keep_float, to_gallery));
@@ -284,8 +293,11 @@ impl AppState {
         // in the way of the region the user wants. It comes back when the snip
         // finishes (Release) or is cancelled (Esc) — see
         // `restore_main_after_snip` / `pending_show_main`.
+        // Only a window that was on screen comes back afterwards. A hotkey snip
+        // taken while Snipdeck sat in the tray used to throw the gallery up over
+        // whatever the user was doing.
+        self.restore_main_after_snip = window.window().is_visible();
         let _ = window.hide();
-        self.restore_main_after_snip = true;
         // Clear any stale banner so a previous error doesn't linger over the
         // armed snip.
         self.last_error = None;
@@ -295,6 +307,15 @@ impl AppState {
             self.pending_freeze_arm =
                 Some((centre.0, centre.1, std::time::Instant::now() + FREEZE_AFTER_HIDE));
         }
+    }
+
+    /// A snip is under way: a drag, a frozen frame, a freeze about to be
+    /// taken, or a toolbar / hotkey arm waiting for its drag.
+    fn snip_in_progress(&self) -> bool {
+        self.active.is_some()
+            || self.frozen_pending.is_some()
+            || self.pending_freeze_arm.is_some()
+            || self.armed_routing.is_some()
     }
 
     pub(crate) fn handle_hotkey(&mut self, action: HotkeyAction, window: &MainWindow) {
@@ -327,15 +348,10 @@ impl AppState {
     /// pinned where it was taken.
     #[cfg(target_os = "linux")]
     pub(crate) fn handle_region_snip(&mut self, snip: crate::gnome_bridge::RegionSnip) {
-        // Another snip is under way: a drag, a frozen frame, or a toolbar /
-        // hotkey arm with the main window hidden. Its Release would find this
-        // one in `active`, or this one would take the restore flag that brings
-        // the main window back — refuse rather than mix the two.
-        if self.active.is_some()
-            || self.frozen_pending.is_some()
-            || self.pending_freeze_arm.is_some()
-            || self.armed_routing.is_some()
-        {
+        // Another snip is under way. Its Release would find this one in
+        // `active`, or this one would take the restore flag that brings the
+        // main window back — refuse rather than mix the two.
+        if self.snip_in_progress() {
             log::warn!("region snip dropped: another snip is in progress");
             return;
         }
