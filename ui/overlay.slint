@@ -45,6 +45,10 @@ export component OverlayWindow inherits Window {
     in property <length> sel-y: 0px;
     in property <length> sel-w: 0px;
     in property <length> sel-h: 0px;
+    // The same selection's size in the pixels the snip will have. The readout
+    // shows these: the logical size above is smaller by the display scale.
+    in property <int> sel-px-w: 0;
+    in property <int> sel-px-h: 0;
     in property <bool> selecting: false;
     in property <color> border-color: #ff8a3d;
     in property <color> dim-color: #00000060;
@@ -183,7 +187,7 @@ export component OverlayWindow inherits Window {
         background: #000c;
         border-radius: 4px;
         Text {
-            text: round(sel-w / 1px) + " × " + round(sel-h / 1px);
+            text: root.sel-px-w + " × " + root.sel-px-h;
             color: white;
             font-size: 12px;
             horizontal-alignment: center;

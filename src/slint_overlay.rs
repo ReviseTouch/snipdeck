@@ -322,6 +322,9 @@ impl SlintOverlayManager {
         win.set_sel_y(sy);
         win.set_sel_w(sw);
         win.set_sel_h(sh);
+        // What `capture::crop` will cut: the physical extent.
+        win.set_sel_px_w((x1 - x2).abs());
+        win.set_sel_px_h((y1 - y2).abs());
         win.set_selecting(true);
     }
 
