@@ -261,6 +261,7 @@ fn main() -> Result<(), slint::PlatformError> {
     // guard above means no other Snipdeck can be mid-write in these folders.
     atomic_file::sweep(&paths::images_dir());
     atomic_file::sweep(&paths::thumbs_dir());
+    autostart::refresh();
 
     // Resolve the UI language from settings + OS locale and apply it to the
     // Rust-side catalog now (used by any early `i18n::t()` strings).

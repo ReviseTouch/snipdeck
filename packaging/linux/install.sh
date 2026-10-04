@@ -32,7 +32,10 @@ is_gnome() {
 }
 
 if [ "${1:-}" = "--uninstall" ]; then
-    rm -f "$BIN_DIR/snipdeck" "$APP_DIR/snipdeck.desktop" "$ICON_DIR/snipdeck.png"
+    # The login autostart entry too, if "Launch at login" was on: left behind,
+    # it ran a binary that no longer exists at every login.
+    rm -f "$BIN_DIR/snipdeck" "$APP_DIR/snipdeck.desktop" "$ICON_DIR/snipdeck.png" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/snipdeck.desktop"
     command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APP_DIR" || true
     if [ -d "$EXT_DIR" ]; then
         command -v gnome-extensions >/dev/null 2>&1 && gnome-extensions disable "$EXT_UUID" 2>/dev/null || true
@@ -84,6 +87,8 @@ esac
 
 if [ "$EXT_INSTALLED" = yes ]; then
     echo "  * GNOME Shell extension installed and enabled ($EXT_UUID)."
+    echo "    With Snipdeck running, hold Super+Alt and drag to snip a region"
+    echo "    straight from the screen."
     case "${XDG_SESSION_TYPE:-}" in
     wayland)
         # No way around this: GNOME Shell cannot be restarted in place on

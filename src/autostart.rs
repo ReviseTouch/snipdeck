@@ -19,6 +19,16 @@ pub fn set_enabled(enabled: bool) -> anyhow::Result<()> {
     imp::set_enabled(enabled)
 }
 
+/// At start-up: if launch-at-login is on, point it at this executable again.
+/// The entry records the path it was enabled from; moved or reinstalled
+/// elsewhere, the binary would otherwise stop starting at login without a
+/// word. Linux only for now — elsewhere a no-op.
+pub fn refresh() {
+    if let Err(e) = imp::refresh() {
+        log::warn!("could not refresh the launch-at-login entry: {e}");
+    }
+}
+
 /// Flip the current state; returns the new state.
 pub fn toggle() -> anyhow::Result<bool> {
     let next = !is_enabled();
@@ -44,6 +54,11 @@ mod imp {
                 .join(r"Microsoft\Windows\Start Menu\Programs\Startup")
                 .join("Snipdeck.lnk"),
         )
+    }
+
+    /// The shortcut keeps its target; not refreshed here.
+    pub fn refresh() -> Result<()> {
+        Ok(())
     }
 
     pub fn is_enabled() -> bool {
@@ -114,6 +129,10 @@ mod imp {
         )
     }
 
+    pub fn refresh() -> Result<()> {
+        Ok(())
+    }
+
     pub fn is_enabled() -> bool {
         plist_path().map(|p| p.exists()).unwrap_or(false)
     }
@@ -176,18 +195,79 @@ mod imp {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        let exe = std::env::current_exe()?;
-        let entry = format!(
-            "[Desktop Entry]\nType=Application\nName=Snipdeck\nExec={}\nX-GNOME-Autostart-enabled=true\nTerminal=false\n",
-            exe.display()
-        );
-        std::fs::write(&path, entry)?;
+        std::fs::write(&path, entry(&std::env::current_exe()?))?;
         Ok(())
+    }
+
+    pub fn refresh() -> Result<()> {
+        let Some(path) = desktop_path() else { return Ok(()) };
+        let Ok(current) = std::fs::read_to_string(&path) else { return Ok(()) };
+        let wanted = entry(&std::env::current_exe()?);
+        if current != wanted {
+            std::fs::write(&path, wanted)?;
+            log::info!("launch-at-login entry pointed at this executable again");
+        }
+        Ok(())
+    }
+
+    fn entry(exe: &std::path::Path) -> String {
+        format!(
+            "[Desktop Entry]\nType=Application\nName=Snipdeck\nExec={}\nX-GNOME-Autostart-enabled=true\nTerminal=false\n",
+            exec_arg(&exe.to_string_lossy())
+        )
+    }
+
+    /// One argument for an `Exec` key, as the Desktop Entry spec wants it.
+    ///
+    /// Written bare, a path with a space in it was two arguments, and the
+    /// login autostart ran nothing. Anything beyond plain path characters is
+    /// quoted: `"`, `` ` ``, `$` and `\` get a backslash (the quoting rule),
+    /// then every backslash is doubled (the string rule, which readers undo
+    /// first) — and `%` is doubled throughout, or it reads as a field code.
+    pub(super) fn exec_arg(arg: &str) -> String {
+        let arg = arg.replace('%', "%%");
+        let plain = !arg.is_empty()
+            && arg
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || "/._-+,:@%".contains(c));
+        if plain {
+            return arg;
+        }
+        let mut quoted = String::from("\"");
+        for c in arg.chars() {
+            if matches!(c, '"' | '`' | '$' | '\\') {
+                quoted.push('\\');
+            }
+            quoted.push(c);
+        }
+        quoted.push('"');
+        quoted.replace('\\', "\\\\")
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::exec_arg;
+
+        #[test]
+        fn a_plain_path_is_left_bare() {
+            assert_eq!(exec_arg("/home/u/.local/bin/snipdeck"), "/home/u/.local/bin/snipdeck");
+        }
+
+        #[test]
+        fn spaces_and_specials_are_quoted_and_escaped() {
+            assert_eq!(exec_arg("/home/a b/snipdeck"), "\"/home/a b/snipdeck\"");
+            assert_eq!(exec_arg("/opt/$x/snip"), "\"/opt/\\\\$x/snip\"");
+            assert_eq!(exec_arg("/a\\b c"), "\"/a\\\\\\\\b c\"");
+            assert_eq!(exec_arg("/100% sure/snip"), "\"/100%% sure/snip\"");
+        }
     }
 }
 
 #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
 mod imp {
+    pub fn refresh() -> anyhow::Result<()> {
+        Ok(())
+    }
     pub fn is_enabled() -> bool {
         false
     }
