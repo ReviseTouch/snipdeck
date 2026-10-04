@@ -255,10 +255,26 @@ places them where they were captured, keeps them above other windows, sticks
 them to every workspace, and takes them out of the window switcher. Placement
 travels in the window title, which is never visible on these borderless windows.
 
+The extension also brings back the capture gesture. On GNOME `Super`+drag
+already moves windows, so the gesture is **`Super`+`Alt`+drag**, active while
+Snipdeck is running:
+
+| Gesture (GNOME) | Result |
+|---|---|
+| `Super`+`Alt` + drag | Floating snip on screen |
+| `Super`+`Alt`+`Ctrl` + drag | Floating snip **and** copy to clipboard |
+| `Super`+`Alt`+`Shift` + drag | Gallery only (no floating window) |
+| `Super`+`Alt`+`Ctrl`+`Shift` + drag | Gallery **and** clipboard, no floating window |
+
+"Clipboard only" — `Win`+`Alt` on Windows — has no gesture here; use its
+hotkey. `Esc` cancels a drag, and keeping `Super`+`Alt` held lets you take
+several snips in a row.
+
 Log out and back in after installing; GNOME Shell cannot reload extensions in
 place on Wayland, because it *is* the compositor holding your session. The
 extension is entirely optional — without it Snipdeck behaves like any other
-Wayland client — and it touches nothing beyond Snipdeck's own windows.
+Wayland client — and beyond Snipdeck's own windows it touches only
+`Super`+`Alt`+drag, and only while Snipdeck is running.
 
 Still missing on GNOME Wayland: a snip you drag is moved by Mutter, and the app
 is never told where it landed, so its position is not remembered across

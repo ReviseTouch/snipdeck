@@ -147,6 +147,49 @@ though it were a real coordinate. Because `floating.rs` reads `last_position`
 resized reopened in the corner. The capability existed and said the right
 thing; nothing consulted it.
 
+#### Super+Alt+drag — the capture gesture, from the inside
+
+Snipdeck's capture gesture on Windows is Win+drag, read by a global mouse hook.
+Wayland gives no client a global hook, and on GNOME Super+drag is Mutter's
+window move besides. So the extension reads the gesture — with Alt added, which
+keeps plain Super+drag a window move — and does the capture as well:
+
+1. **It arms on the keys, not on the click.** A press over a window never
+   reaches the shell while Super is held: Mutter turns it into a window drag
+   first, raising and focusing the window on the way, and nothing on that path
+   can be vetoed from JavaScript. What diverts it is a stage grab — while the
+   shell holds one, Mutter routes pointer events to the shell and none to
+   windows. So the grab is taken when Super and Alt are both down and dropped
+   when either goes up. `ClutterKeymap::state-changed` fires on modifier
+   changes and nothing else, so between snips this costs no polling and no
+   per-event handler. Keybindings still work: Mutter matches them before it
+   looks at grabs.
+2. **It paints the stage before grabbing.** The grab tells the window under the
+   pointer that the pointer left, which takes hover states and tooltips with it.
+   `screenshot_stage_to_content` renders synchronously, so a frame taken in the
+   same call that arms still has them — and open menus. That frame is what the
+   first drag cuts from, and it is shown under the selection for the length of
+   the drag, so what is selected is what is kept. A further drag with the keys
+   still held paints afresh at its own press.
+3. **It cuts the region with the shell's own code.** `composite_to_stream`, the
+   path GNOME's screenshot UI uses: no portal, no "sharing your screen"
+   indicator, no shutter. One monitor per snip, as on Windows.
+4. **It hands over a finished region.** Over D-Bus, to `com.revisetouch.Snipdeck`
+   (`gnome_bridge`): the PNG, its top-left corner in the app's physical pixels
+   (logical × that monitor's scale — what `_toLogical` undoes) and Ctrl/Shift.
+   The app runs it through the ordinary Release path, so routing, clipboard,
+   gallery, OCR and the floating snip behave exactly as for any other capture.
+
+D-Bus here, not a window title, because this message runs the other way — from
+the shell to the app — and carries pixels. The bus name also answers whether
+the app is running: the extension only claims Super+Alt while the name has an
+owner, so with Snipdeck closed the chord is a window move again.
+
+Alt being the trigger shifts the modifier matrix by one. `routing_for_modifiers`
+never sees it: Super+Alt alone is a floating snip, Ctrl and Shift add what they
+add on Windows, and "clipboard only" — Win+Alt on Windows — has no gesture of
+its own on GNOME; its hotkey still reaches it.
+
 ### 3. Backends — one file per platform mechanism
 
 Where a feature genuinely has no shared implementation, the module carries the

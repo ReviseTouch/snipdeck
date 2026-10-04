@@ -11,6 +11,10 @@ mod context_menu;
 mod dxgi_capture;
 mod elevate;
 mod floating;
+/// Super+Alt+drag snips from the GNOME Shell extension. Linux-only: it is the
+/// extension's channel in, and GNOME is the only place the extension runs.
+#[cfg(target_os = "linux")]
+mod gnome_bridge;
 mod hotkeys;
 mod i18n;
 mod loupe;
@@ -114,7 +118,12 @@ fn main() -> Result<(), slint::PlatformError> {
     // "EventLoop can't be recreated" — an error about the second attempt, from
     // which the actual cause cannot be recovered. The line naming the real
     // failure was being written the whole time, into nothing.
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    //
+    // zbus is held to warnings: its object server logs every incoming call at
+    // info, with the whole message, which for a snip from the GNOME extension
+    // is a screenful per capture. RUST_LOG still overrides all of it.
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info,zbus=warn"))
+        .init();
 
     // Install the winit backend with the SOFTWARE renderer EXPLICITLY via
     // set_platform, rather than selecting it with the SLINT_BACKEND env var.

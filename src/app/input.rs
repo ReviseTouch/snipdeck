@@ -318,6 +318,59 @@ impl AppState {
         }
     }
 
+    /// A finished Super+Alt+drag from the GNOME extension.
+    ///
+    /// The extension has already done the drag and the capture, so there is no
+    /// overlay to show and nothing left to select: the image *is* the region.
+    /// It goes in as a selection covering exactly its own pixels, and Release
+    /// does the rest — routing, clipboard, gallery, OCR, the floating snip
+    /// pinned where it was taken.
+    #[cfg(target_os = "linux")]
+    pub(crate) fn handle_region_snip(&mut self, snip: crate::gnome_bridge::RegionSnip) {
+        // Another snip is under way: a drag, a frozen frame, or a toolbar /
+        // hotkey arm with the main window hidden. Its Release would find this
+        // one in `active`, or this one would take the restore flag that brings
+        // the main window back — refuse rather than mix the two.
+        if self.active.is_some()
+            || self.frozen_pending.is_some()
+            || self.pending_freeze_arm.is_some()
+            || self.armed_routing.is_some()
+        {
+            log::warn!("region snip dropped: another snip is in progress");
+            return;
+        }
+
+        let (w, h) = snip.image.dimensions();
+        let (x, y) = (snip.x, snip.y);
+        // Alt is what starts the gesture, not a modifier the user picked. Read
+        // as one, every Super+Alt snip would be "clipboard only".
+        let mods = crate::mouse_trigger::ModifierSet {
+            ctrl: snip.ctrl,
+            alt: false,
+            shift: snip.shift,
+        };
+        let (to_clipboard, keep_floating, to_gallery) = routing_for_modifiers(mods);
+        let monitor_label = capture::monitor_label_or_primary(x, y).unwrap_or_default();
+
+        self.active = Some(ActiveSelection {
+            captured: CapturedScreen {
+                area: ScreenRect::new(x, y, w, h),
+                image: snip.image,
+                monitor_label,
+            },
+            start: (x, y),
+            end: (x, y),
+            to_clipboard,
+            keep_floating,
+            to_gallery,
+            source_window: None,
+        });
+        self.handle_mouse_event(MouseTriggerEvent::Release {
+            x: x + w as i32,
+            y: y + h as i32,
+        });
+    }
+
     pub(crate) fn handle_mouse_event(&mut self, event: MouseTriggerEvent) {
         log::info!("mouse event: {:?}, active={}", event, self.active.is_some());
         match event {

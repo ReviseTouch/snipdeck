@@ -293,6 +293,25 @@ pub fn monitor_label_at(x: i32, y: i32) -> Option<String> {
     })
 }
 
+/// [`monitor_label_at`], falling back to the primary monitor's label (or the
+/// first's) when the point lands on none — the same fallback [`capture_at`]
+/// makes.
+///
+/// It lands on none routinely on a scaled Wayland session: the point is in
+/// physical pixels while xcap reports monitor rects in logical ones, so the
+/// right and bottom of the screen lie outside every rect.
+#[cfg(target_os = "linux")]
+pub fn monitor_label_or_primary(x: i32, y: i32) -> Option<String> {
+    monitor_label_at(x, y).or_else(|| {
+        let monitors = xcap::Monitor::all().ok()?;
+        let m = monitors
+            .iter()
+            .find(|m| m.is_primary())
+            .or(monitors.first())?;
+        monitor_label_at(m.x(), m.y())
+    })
+}
+
 /// Crop a sub-rect (in virtual-screen coordinates) out of a captured screen.
 pub fn crop(captured: &CapturedScreen, region: ScreenRect) -> anyhow::Result<RgbaImage> {
     let (iw, ih) = (captured.image.width(), captured.image.height());

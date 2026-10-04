@@ -29,11 +29,35 @@
  * move is skipped. Deliberately not D-Bus: a title is readable the instant the
  * window appears, needs no service to be running, no name to be owned, and no
  * ordering between app and extension start-up.
+ *
+ * Super+Alt+drag
+ * --------------
+ * The one thing that does go over D-Bus, because it runs the other way: the
+ * extension starting a snip. On Windows a snip is Win+drag, read by a global
+ * mouse hook. Wayland has no global hook, and on GNOME Super+drag is Mutter's
+ * window move besides — so `SnipGesture` takes Super+Alt+drag from inside the
+ * shell, captures the region itself and hands the pixels to the app. Details
+ * on the class.
  */
 
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
+import St from 'gi://St';
+
 import * as AltTab from 'resource:///org/gnome/shell/ui/altTab.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Workspace from 'resource:///org/gnome/shell/ui/workspace.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+
+// The shell's own screenshot UI promisifies the first two at start-up and
+// `_promisify` ignores a second request, so these only matter if the shell
+// ever stops importing that module eagerly.
+Gio._promisify(Shell.Screenshot.prototype, 'screenshot_stage_to_content');
+Gio._promisify(Shell.Screenshot, 'composite_to_stream');
+Gio._promisify(Gio.DBusConnection.prototype, 'call');
 
 /** WM_CLASS of every Snipdeck window. */
 const WM_CLASS = 'snipdeck';
@@ -52,6 +76,496 @@ const SNIP_TITLE = 'SnipdeckFloating';
  */
 const LISTED = 'listed';
 
+/**
+ * Snipdeck's name on the session bus, owned for exactly as long as the app
+ * runs. That makes it the "is Snipdeck there" signal as well as the address:
+ * Super+Alt is only claimed while it has an owner, so with the app closed the
+ * chord is a window move again. The other end is src/gnome_bridge.rs.
+ */
+const BUS_NAME = 'com.revisetouch.Snipdeck';
+const OBJECT_PATH = '/com/revisetouch/Snipdeck';
+const BUS_INTERFACE = 'com.revisetouch.Snipdeck1';
+
+/**
+ * Super can arrive as the real Mod4 bit, the virtual Super bit or both,
+ * depending on the keymap; either counts.
+ */
+const SUPER = Clutter.ModifierType.SUPER_MASK | Clutter.ModifierType.MOD4_MASK;
+const ALT = Clutter.ModifierType.MOD1_MASK;
+
+/** The app's selection look, from ui/overlay.slint. */
+const BORDER = '#ff8a3d';
+const DIM = 'rgba(0, 0, 0, 0.376)';
+
+/**
+ * Narrower or shorter than this, in physical pixels, is a click rather than a
+ * snip. The app drops such a region too (src/app/input.rs, at Release); this
+ * just spares it the PNG.
+ */
+const MIN_SNIP = 4;
+
+/** How long a selection border may wait for the snip window that replaces it. */
+const HANDOFF_MS = 2000;
+
+/**
+ * The selection outline from ui/overlay.slint: orange, white, orange, a pixel
+ * each, the white for contrast on any background. Sized by `sizeBorder`.
+ */
+function makeBorder() {
+    const outer = new St.Widget({style: `border: 1px solid ${BORDER};`});
+    const white = new St.Widget({style: 'border: 1px solid white;', x: 1, y: 1});
+    white.add_child(new St.Widget({style: `border: 1px solid ${BORDER};`, x: 1, y: 1}));
+    outer.add_child(white);
+    return outer;
+}
+
+/** Fit a `makeBorder` outline around a `w`×`h` area; the outer pixel sits just outside it. */
+function sizeBorder(outer, w, h) {
+    outer.set_size(w + 2, h + 2);
+    const white = outer.get_first_child();
+    white.set_size(w, h);
+    white.get_first_child().set_size(Math.max(w - 2, 0), Math.max(h - 2, 0));
+}
+
+/**
+ * Crosshair while armed, as the app's own overlay shows. Newer shells set
+ * cursors per actor; older ones have one global cursor on the display.
+ */
+function setCrosshair(actor, on) {
+    if (actor.set_cursor_type)
+        actor.set_cursor_type(on ? Clutter.CursorType.CROSSHAIR : Clutter.CursorType.INHERIT);
+    else
+        global.display.set_cursor(on ? Meta.Cursor.CROSSHAIR : Meta.Cursor.DEFAULT);
+}
+
+/**
+ * Super+Alt+drag to snip.
+ *
+ * Why here
+ * --------
+ * Snipdeck's capture gesture on Windows is Win+drag, read by a global mouse
+ * hook. Wayland grants no client a global hook, so on GNOME the gesture has to
+ * be read by the compositor — which this extension is part of. Alt is added
+ * because plain Super+drag is Mutter's window move, and that should keep
+ * working.
+ *
+ * Why arm on the keys, not on the click
+ * -------------------------------------
+ * A press over a window never reaches the shell while Super is held: Mutter
+ * turns it into a window drag first — raising and focusing the window, then
+ * starting the move — and nothing on that path can be vetoed from JavaScript.
+ * What diverts it is a stage grab: while the shell holds one, Mutter routes
+ * every pointer event to the shell and none to windows (src/core/events.c,
+ * `stage_has_grab`). So the grab is taken the moment Super and Alt are both
+ * down and dropped the moment either is released, before any click can land.
+ * The keymap's `state-changed` signal fires on modifier changes and nothing
+ * else, so between snips this costs nothing: no polling, no per-event handler.
+ * Keybindings still run — Mutter matches them before it looks at grabs.
+ *
+ * What the snip contains
+ * ----------------------
+ * The grab has a price: the window under the pointer is told the pointer left,
+ * so hover states and tooltips go away — exactly the things one snips. So the
+ * stage is painted to a texture first, before the grab exists. That frame is
+ * what the first drag cuts from, and it is shown under the selection for the
+ * length of the drag, so what is selected is what is kept. A further drag with
+ * the keys still held paints afresh at its own press. The paint is synchronous
+ * — `screenshot_stage_to_content` renders inside the call — so the frame is
+ * the one on screen when the keys went down, open menus included.
+ *
+ * What crosses to the app
+ * -----------------------
+ * The region as a PNG, cut by the shell's own screenshot code — no portal, no
+ * "sharing your screen" indicator, no shutter — plus its top-left corner in the
+ * app's physical-pixel convention and the Ctrl/Shift that pick the routing.
+ * Alt is the trigger here, not a choice, so it is not passed on.
+ */
+class SnipGesture {
+    enable() {
+        this._appRunning = false;
+        /** While Super+Alt are held: `{actor, grab, shot, fresh}`. */
+        this._armed = null;
+        /** While the button is down. */
+        this._drag = null;
+        /** The border left standing until the snip window replaces it. */
+        this._handoff = null;
+
+        this._watchId = Gio.bus_watch_name(
+            Gio.BusType.SESSION, BUS_NAME, Gio.BusNameWatcherFlags.NONE,
+            () => {
+                this._appRunning = true;
+                this._sync();
+            },
+            () => {
+                this._appRunning = false;
+                this._sync();
+            });
+
+        const backend = global.stage.context?.get_backend() ?? Clutter.get_default_backend();
+        this._keymap = backend.get_default_seat().get_keymap();
+        this._keymapId = this._keymap.connect('state-changed', () => this._sync());
+    }
+
+    disable() {
+        if (this._watchId) {
+            Gio.bus_unwatch_name(this._watchId);
+            this._watchId = 0;
+        }
+        if (this._keymapId) {
+            this._keymap.disconnect(this._keymapId);
+            this._keymapId = 0;
+        }
+        this._endDrag();
+        this._disarm();
+        this._endHandoff();
+    }
+
+    /** A snip window has painted its first frame; the border standing in for it can go. */
+    snipShown() {
+        this._endHandoff();
+    }
+
+    /**
+     * Armed while Super+Alt are held and the app is there to receive the snip,
+     * disarmed otherwise — but never under a drag, which ends on its release.
+     */
+    _sync() {
+        const [, , mods] = global.get_pointer();
+        if (this._appRunning && (mods & SUPER) && (mods & ALT))
+            this._arm();
+        else if (!this._drag)
+            this._disarm();
+    }
+
+    _arm() {
+        if (this._armed)
+            return;
+        // Only from the plain desktop. A grab already held — the overview, a
+        // shell menu, the screenshot UI, a modal dialog — owns the pointer for
+        // its own reasons.
+        if (Main.actionMode !== Shell.ActionMode.NORMAL || global.stage.get_grab_actor())
+            return;
+
+        // Before the grab: see "What the snip contains" above.
+        this._endHandoff();
+        const shot = this._paintStage();
+
+        const actor = new Clutter.Actor({
+            reactive: true,
+            width: global.stage.width,
+            height: global.stage.height,
+        });
+        Main.layoutManager.uiGroup.add_child(actor);
+        actor.connect('button-press-event', (_actor, event) => this._onPress(event));
+        actor.connect('motion-event', (_actor, event) => this._onMotion(event));
+        actor.connect('button-release-event', (_actor, event) => this._onRelease(event));
+        actor.connect('key-press-event', (_actor, event) => this._onKey(event));
+        setCrosshair(actor, true);
+
+        this._armed = {actor, grab: global.stage.grab(actor), shot, fresh: true};
+    }
+
+    _disarm() {
+        if (!this._armed)
+            return;
+        const {actor, grab} = this._armed;
+        this._armed = null;
+        grab.dismiss();
+        setCrosshair(actor, false);
+        actor.destroy();
+    }
+
+    /**
+     * Paint the whole stage, now. Resolves to `[content, scale]`, or to null if
+     * the paint failed — never rejects, so a frame nobody ends up using cannot
+     * surface as an unhandled rejection.
+     *
+     * A fresh `Shell.Screenshot` each time: the object keeps per-operation
+     * state, and a press can ask for a frame while the arm's is still settling.
+     */
+    _paintStage() {
+        return new Shell.Screenshot().screenshot_stage_to_content().catch(e => {
+            logError(e, 'snipdeck: could not paint the stage');
+            return null;
+        });
+    }
+
+    /**
+     * Belt and braces for `state-changed`. A grab that outlived its keys would
+     * take the pointer from every window on the desktop, so any event that
+     * finds Super+Alt released ends it — the next mouse move at the latest.
+     */
+    _keysStillHeld(event) {
+        const mods = event.get_state();
+        if (this._appRunning && (mods & SUPER) && (mods & ALT))
+            return true;
+        this._disarm();
+        return false;
+    }
+
+    _onPress(event) {
+        if (this._drag || !this._keysStillHeld(event) ||
+            event.get_button() !== Clutter.BUTTON_PRIMARY)
+            return Clutter.EVENT_STOP;
+
+        // The frame painted when the keys went down, unless a drag already used
+        // it — then a new one, painted now. A border still standing in for the
+        // previous snip goes first, or it would be in the picture.
+        let shot = this._armed.shot;
+        if (!this._armed.fresh) {
+            this._endHandoff();
+            shot = this._paintStage();
+        }
+        this._armed.shot = null;
+        this._armed.fresh = false;
+
+        const display = global.display;
+        const monitor = display.get_current_monitor();
+        const state = event.get_state();
+        const [x, y] = event.get_coords();
+
+        this._drag = {
+            x0: x, y0: y, x1: x, y1: y,
+            // One monitor per snip, as on Windows: the app places and sizes a
+            // snip in that monitor's scale, so a region spanning two scales
+            // has no single right answer.
+            geometry: display.get_monitor_geometry(monitor),
+            scale: display.get_monitor_scale(monitor),
+            ctrl: (state & Clutter.ModifierType.CONTROL_MASK) !== 0,
+            shift: (state & Clutter.ModifierType.SHIFT_MASK) !== 0,
+            shot,
+            view: this._buildView(shot),
+        };
+        // A fullscreen window may be scanned out directly, past the stage, and
+        // the selection would be painted where nobody sees it.
+        global.compositor.disable_unredirect();
+        this._layout();
+        return Clutter.EVENT_STOP;
+    }
+
+    _onMotion(event) {
+        if (this._drag) {
+            const [x, y] = event.get_coords();
+            this._moveTo(x, y);
+        } else {
+            this._keysStillHeld(event);
+        }
+        return Clutter.EVENT_STOP;
+    }
+
+    _onRelease(event) {
+        if (!this._drag || event.get_button() !== Clutter.BUTTON_PRIMARY)
+            return Clutter.EVENT_STOP;
+
+        const [x, y] = event.get_coords();
+        this._moveTo(x, y);
+        const drag = this._endDrag();
+
+        const region = this._region(drag);
+        if (region) {
+            // Only a floating snip replaces the border; the Shift routings
+            // leave nothing on screen to wait for.
+            if (!drag.shift)
+                this._beginHandoff(region);
+            this._deliver(drag, region).catch(e => {
+                this._endHandoff();
+                logError(e, 'snipdeck: snip not delivered');
+            });
+        }
+
+        // Keys still held: armed for the next one, as with Win held on
+        // Windows. Keys let go during the drag: done.
+        this._sync();
+        return Clutter.EVENT_STOP;
+    }
+
+    _onKey(event) {
+        if (event.get_key_symbol() === Clutter.KEY_Escape && this._drag) {
+            this._endDrag();
+            this._sync();
+        }
+        return Clutter.EVENT_STOP;
+    }
+
+    _moveTo(x, y) {
+        const d = this._drag;
+        const g = d.geometry;
+        d.x1 = Math.max(g.x, Math.min(x, g.x + g.width));
+        d.y1 = Math.max(g.y, Math.min(y, g.y + g.height));
+        this._layout();
+    }
+
+    /** Tear down the drag's visuals and hand back what it selected. */
+    _endDrag() {
+        const drag = this._drag;
+        if (!drag)
+            return null;
+        this._drag = null;
+        drag.view.root.destroy();
+        global.compositor.enable_unredirect();
+        return drag;
+    }
+
+    /**
+     * The frozen frame under a dimmed screen, the selection outline and its
+     * size readout. Lives inside the grab actor, so none of it can take events.
+     */
+    _buildView(shot) {
+        const root = new Clutter.Actor({width: global.stage.width, height: global.stage.height});
+
+        const backdrop = new Clutter.Actor({width: global.stage.width, height: global.stage.height});
+        root.add_child(backdrop);
+        let alive = true;
+        root.connect('destroy', () => {
+            alive = false;
+        });
+        shot.then(result => {
+            if (alive && result)
+                backdrop.set_content(result[0]);
+        });
+
+        const dim = [0, 1, 2, 3].map(() => new St.Widget({style: `background-color: ${DIM};`}));
+        dim.forEach(panel => root.add_child(panel));
+
+        const border = makeBorder();
+        root.add_child(border);
+
+        const size = new St.Label({
+            style: 'background-color: rgba(0, 0, 0, 0.8); color: white; ' +
+                'font-size: 12px; border-radius: 4px; padding: 3px 8px;',
+        });
+        root.add_child(size);
+
+        this._armed.actor.add_child(root);
+        return {root, dim, border, size};
+    }
+
+    _layout() {
+        const d = this._drag;
+        const {x, y, width, height} = d.geometry;
+        const l = Math.min(d.x0, d.x1);
+        const t = Math.min(d.y0, d.y1);
+        const r = Math.max(d.x0, d.x1);
+        const b = Math.max(d.y0, d.y1);
+
+        // Four panels around the selection rather than one mask over it, as in
+        // ui/overlay.slint, so the selected area stays untouched.
+        const [above, below, left, right] = d.view.dim;
+        above.set_position(x, y);
+        above.set_size(width, t - y);
+        below.set_position(x, b);
+        below.set_size(width, y + height - b);
+        left.set_position(x, t);
+        left.set_size(l - x, b - t);
+        right.set_position(r, t);
+        right.set_size(x + width - r, b - t);
+
+        const visible = r > l && b > t;
+        d.view.border.visible = visible;
+        d.view.size.visible = visible;
+        if (!visible)
+            return;
+
+        sizeBorder(d.view.border, r - l, b - t);
+        d.view.border.set_position(l - 1, t - 1);
+
+        // Physical pixels: the size the snip will actually be.
+        d.view.size.text =
+            `${Math.round((r - l) * d.scale)} × ${Math.round((b - t) * d.scale)}`;
+        d.view.size.set_position(
+            Math.min(r + 6, x + width - 88),
+            Math.min(b + 6, y + height - 24));
+    }
+
+    /**
+     * The selection in logical stage pixels (`l t r b`) and its top-left corner
+     * in the app's physical ones (`px py`); null if it is too small to keep.
+     *
+     * The app's physical space is logical × that monitor's scale, origin
+     * included — what `_toLogical` undoes when the floating snip comes back.
+     */
+    _region(drag) {
+        const l = Math.min(drag.x0, drag.x1);
+        const t = Math.min(drag.y0, drag.y1);
+        const r = Math.max(drag.x0, drag.x1);
+        const b = Math.max(drag.y0, drag.y1);
+        const s = drag.scale;
+        const px = Math.round(l * s);
+        const py = Math.round(t * s);
+        if (Math.round(r * s) - px < MIN_SNIP || Math.round(b * s) - py < MIN_SNIP)
+            return null;
+        return {l, t, r, b, px, py};
+    }
+
+    /** Cut the region out of the frame, encode it, and send it to the app. */
+    async _deliver(drag, region) {
+        const result = await drag.shot;
+        if (!result)
+            throw new Error('no frame to cut the snip from');
+        const [content, scale] = result;
+        const texture = content.get_texture();
+
+        // The frame has one scale for the whole stage — the largest of any
+        // monitor — which need not be this monitor's, so the cut is made in
+        // the frame's own pixels. The app sizes the snip from the PNG, not
+        // from anything sent alongside it.
+        const x = Math.round(region.l * scale);
+        const y = Math.round(region.t * scale);
+        const w = Math.min(Math.round(region.r * scale), texture.get_width()) - x;
+        const h = Math.min(Math.round(region.b * scale), texture.get_height()) - y;
+
+        const stream = Gio.MemoryOutputStream.new_resizable();
+        await Shell.Screenshot.composite_to_stream(
+            texture, x, y, w, h, scale, null, 0, 0, 1, stream);
+        stream.close(null);
+
+        const png = GLib.Variant.new_from_bytes(
+            new GLib.VariantType('ay'), stream.steal_as_bytes(), true);
+        await Gio.DBus.session.call(
+            BUS_NAME, OBJECT_PATH, BUS_INTERFACE, 'SnipRegion',
+            GLib.Variant.new_tuple([
+                png,
+                GLib.Variant.new_int32(region.px),
+                GLib.Variant.new_int32(region.py),
+                GLib.Variant.new_boolean(drag.ctrl),
+                GLib.Variant.new_boolean(drag.shift),
+            ]),
+            null, Gio.DBusCallFlags.NO_AUTO_START, 10000, null);
+    }
+
+    /**
+     * Leave the selection's outline up until the floating snip is on screen.
+     *
+     * The app's own overlay does the same, for the same reason (src/app/input.rs,
+     * at Release): without it the region blinks empty for the length of a PNG
+     * encode, a bus round trip and a window map before the snip appears.
+     */
+    _beginHandoff({l, t, r, b}) {
+        this._endHandoff();
+        const actor = makeBorder();
+        sizeBorder(actor, r - l, b - t);
+        actor.set_position(l - 1, t - 1);
+        Main.layoutManager.uiGroup.add_child(actor);
+
+        const timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HANDOFF_MS, () => {
+            this._handoff.timeoutId = 0;
+            this._endHandoff();
+            return GLib.SOURCE_REMOVE;
+        });
+        this._handoff = {actor, timeoutId};
+    }
+
+    _endHandoff() {
+        if (!this._handoff)
+            return;
+        const {actor, timeoutId} = this._handoff;
+        this._handoff = null;
+        if (timeoutId)
+            GLib.source_remove(timeoutId);
+        actor.destroy();
+    }
+}
+
 export default class SnipdeckExtension extends Extension {
     enable() {
         // One line at start-up, so a session can be asked which build of
@@ -59,11 +573,14 @@ export default class SnipdeckExtension extends Extension {
         // module, and on Wayland it cannot re-import one without a new
         // session — without this marker there is no way to tell a fix that
         // did not work from a fix that was never loaded.
-        log('snipdeck: enable() match=title placement=first-frame lists=switcher+overview listed-flag=on');
+        log('snipdeck: enable() match=title placement=first-frame lists=switcher+overview listed-flag=on gesture=super-alt-drag');
 
         this._handles = [];
         this._pending = new Set();
         this._placing = new Set();
+
+        this._gesture = new SnipGesture();
+        this._gesture.enable();
 
         this._handles.push([
             global.display,
@@ -174,6 +691,11 @@ export default class SnipdeckExtension extends Extension {
     }
 
     disable() {
+        // First: it may be holding a stage grab, and a grab left behind takes
+        // the pointer away from every window on the desktop.
+        this._gesture?.disable();
+        this._gesture = null;
+
         for (const [obj, id] of this._handles ?? [])
             obj.disconnect(id);
         this._handles = null;
@@ -340,8 +862,11 @@ export default class SnipdeckExtension extends Extension {
             this._placing?.delete(window);
 
             const title = window.get_title();
-            if (title && title.startsWith(SNIP_TITLE))
+            if (title && title.startsWith(SNIP_TITLE)) {
                 this._apply(window, title);
+                // A Super+Alt snip's outline has been waiting for exactly this.
+                this._gesture?.snipShown();
+            }
         });
     }
 

@@ -65,6 +65,10 @@ pub struct AppState {
 
     hotkey_service: Option<HotkeyService>,
     pub mouse_trigger: MouseTriggerService,
+    /// Super+Alt+drag snips the GNOME extension selected and captured. `None`
+    /// off GNOME, or when the session bus would not have us.
+    #[cfg(target_os = "linux")]
+    region_snips: Option<crossbeam_channel::Receiver<crate::gnome_bridge::RegionSnip>>,
     pub overlay: SlintOverlayManager,
     pub floating: FloatingManager,
     pub context_menu: ContextMenuManager,
@@ -202,6 +206,8 @@ impl AppState {
             filters: GalleryFilters::default(),
             hotkey_service,
             mouse_trigger,
+            #[cfg(target_os = "linux")]
+            region_snips: crate::gnome_bridge::start(),
             overlay,
             floating: FloatingManager::new(),
             context_menu: ContextMenuManager::new(),
@@ -410,6 +416,23 @@ impl AppState {
         for ev in events {
             self.handle_mouse_event(ev);
         }
+
+        // 3b. Super+Alt+drag snips from the GNOME extension.
+        #[cfg(target_os = "linux")]
+        let had_region_snips = {
+            let snips: Vec<_> = self
+                .region_snips
+                .as_ref()
+                .map(|rx| rx.try_iter().collect())
+                .unwrap_or_default();
+            let any = !snips.is_empty();
+            for snip in snips {
+                self.handle_region_snip(snip);
+            }
+            any
+        };
+        #[cfg(not(target_os = "linux"))]
+        let had_region_snips = false;
 
         // Deferred screen freeze: `begin_region_snip` hid our own window and
         // asked for the capture to happen a few frames later, once the
@@ -685,8 +708,12 @@ impl AppState {
         // and only sleeps once things settle (plus the grace period). A
         // dirty gallery counts as work so the debounced save above always
         // gets its quiet tick before the pump is allowed to sleep.
-        let did_work =
-            had_actions || had_events || had_drain || opened_any || self.gallery_dirty.is_some();
+        let did_work = had_actions
+            || had_events
+            || had_region_snips
+            || had_drain
+            || opened_any
+            || self.gallery_dirty.is_some();
         did_work || self.wants_awake()
     }
 

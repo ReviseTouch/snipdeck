@@ -145,6 +145,12 @@ ashpd = { version = "0.13", default-features = false, features = [
 # everywhere, and the xcap path is kept as the fallback regardless.
 pipewire = "0.10"
 pollster = "0.3"
+# The GNOME extension's channel into the app (see src/gnome_bridge.rs).
+#
+# Already in the tree — ashpd above and Slint's winit backend both pull zbus 5
+# with async-io — so naming it adds no crate. async-io for the same reason
+# ashpd uses it: there is no tokio runtime here.
+zbus = { version = "5", default-features = false, features = ["async-io"] }
 # Raw wl_surface access for `wl_surface.set_input_region` (see
 # src/wayland_input_region.rs). winit already links this exact version, and we
 # attach to its connection rather than opening a second one.
