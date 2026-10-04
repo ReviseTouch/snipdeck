@@ -160,7 +160,7 @@ impl AppState {
                 if let Some(snip) = self.gallery.get(id).cloned() {
                     match snip.load_image() {
                         Ok(img) => {
-                            if let Err(e) = self.annotate.open(id, img, self.scale_factor) {
+                            if let Err(e) = self.annotate.open(id, img) {
                                 self.last_error = Some(t1(
                                     "Failed to open annotation editor: {e}",
                                     "{e}",

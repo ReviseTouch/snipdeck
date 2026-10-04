@@ -479,30 +479,8 @@ fn place_popup(anchor: (i32, i32, i32, i32), pw: i32, ph: i32) -> (i32, i32) {
 }
 
 /// The work area (screen minus taskbar) of the monitor nearest `(x, y)`, in
-/// physical pixels, as `(left, top, right, bottom)`.
-#[cfg(target_os = "windows")]
+/// physical pixels. Where it cannot be asked (off Windows), an area generous
+/// enough that the clamp never moves the popup.
 fn work_area_at(x: i32, y: i32) -> (i32, i32, i32, i32) {
-    use windows::Win32::Foundation::POINT;
-    use windows::Win32::Graphics::Gdi::{
-        GetMonitorInfoW, MonitorFromPoint, MONITORINFO, MONITOR_DEFAULTTONEAREST,
-    };
-    unsafe {
-        let hmon = MonitorFromPoint(POINT { x, y }, MONITOR_DEFAULTTONEAREST);
-        let mut mi = MONITORINFO {
-            cbSize: std::mem::size_of::<MONITORINFO>() as u32,
-            ..Default::default()
-        };
-        if GetMonitorInfoW(hmon, &mut mi).as_bool() {
-            let r = mi.rcWork;
-            (r.left, r.top, r.right, r.bottom)
-        } else {
-            (x - 4000, y - 4000, x + 4000, y + 4000)
-        }
-    }
-}
-
-/// Non-Windows fallback: a generous area so the clamp never moves the popup.
-#[cfg(not(target_os = "windows"))]
-fn work_area_at(x: i32, y: i32) -> (i32, i32, i32, i32) {
-    (x - 4000, y - 4000, x + 4000, y + 4000)
+    crate::screen::work_area_at(x, y).unwrap_or((x - 4000, y - 4000, x + 4000, y + 4000))
 }

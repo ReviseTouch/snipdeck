@@ -7,7 +7,7 @@
 //! match exactly.
 //!
 //! Flow (mirrors `translate_popup.rs`):
-//!   1. `open(id, image, scale)` shows the editor for a snip.
+//!   1. `open(id, image)` shows the editor for a snip.
 //!   2. Toolbar callbacks set tool/colour/width; canvas callbacks build shapes.
 //!   3. On Save, `flatten` bakes the shapes onto the image at full resolution
 //!      (tiny-skia for vectors, parley + skrifa for text) and stashes the result.
@@ -173,7 +173,6 @@ impl Annotator {
         &mut self,
         id: Uuid,
         image: image::RgbaImage,
-        scale: f32,
     ) -> Result<(), slint::PlatformError> {
         let (iw, ih) = (image.width(), image.height());
         if iw == 0 || ih == 0 {
@@ -228,7 +227,7 @@ impl Annotator {
         w.set_draft_commands(SharedString::new());
         w.set_drafting(false);
         w.set_zoom_label(SharedString::from(format!("{}%", (disp * 100.0).round() as i32)));
-        w.set_wheel_image(make_color_wheel(WHEEL_TEX));
+        w.set_wheel_image(crate::color::make_color_wheel(WHEEL_TEX));
         apply_style(&w, &self.shared.borrow());
 
         self.wire(&w);
@@ -241,9 +240,7 @@ impl Annotator {
         let win_h = ch + chrome_h + 24.0;
         w.window()
             .set_size(slint::LogicalSize::new(win_w, win_h));
-        if let Some((px, py)) =
-            centre_window((win_w * scale.max(0.1)) as i32, (win_h * scale.max(0.1)) as i32)
-        {
+        if let Some((px, py)) = crate::screen::centre_on_cursor_monitor(win_w, win_h) {
             w.window().set_position(slint::PhysicalPosition::new(px, py));
         }
 
@@ -602,7 +599,7 @@ fn transparent() -> Brush {
 
 /// The active draw colour (HSV → RGB) with the tool's opacity folded into alpha.
 fn current_rgba(s: &Shared) -> [u8; 4] {
-    let [r, g, b] = hsv_to_rgb(s.hue, s.sat, s.val);
+    let [r, g, b] = crate::color::hsv_to_rgb(s.hue, s.sat, s.val);
     let op = s.opacities[s.tool.clamp(0, 6) as usize];
     [r, g, b, (255.0 * op).round().clamp(0.0, 255.0) as u8]
 }
@@ -623,7 +620,7 @@ fn apply_style(c: &AnnotateWindow, s: &Shared) {
     c.set_stroke_display(s.widths[t]);
     c.set_opacity_pct(s.opacities[t] * 100.0);
     c.set_fill_opacity(s.opacities[t]);
-    let [r, g, b] = hsv_to_rgb(s.hue, s.sat, s.val);
+    let [r, g, b] = crate::color::hsv_to_rgb(s.hue, s.sat, s.val);
     c.set_current_color(brush([r, g, b, 255]));
     c.set_text_color(brush(current_rgba(s)));
     c.set_brightness(s.val * 100.0);
@@ -632,57 +629,6 @@ fn apply_style(c: &AnnotateWindow, s: &Shared) {
     let ang = s.hue.to_radians();
     c.set_wheel_sel_x(rr + s.sat * rr * ang.cos());
     c.set_wheel_sel_y(rr + s.sat * rr * ang.sin());
-}
-
-/// HSV (h 0..360, s/v 0..1) → RGB.
-fn hsv_to_rgb(h: f32, s: f32, v: f32) -> [u8; 3] {
-    let h = h.rem_euclid(360.0);
-    let c = v * s;
-    let x = c * (1.0 - (((h / 60.0) % 2.0) - 1.0).abs());
-    let m = v - c;
-    let (r, g, b) = match (h as u32) / 60 {
-        0 => (c, x, 0.0),
-        1 => (x, c, 0.0),
-        2 => (0.0, c, x),
-        3 => (0.0, x, c),
-        4 => (x, 0.0, c),
-        _ => (c, 0.0, x),
-    };
-    [
-        ((r + m) * 255.0).round().clamp(0.0, 255.0) as u8,
-        ((g + m) * 255.0).round().clamp(0.0, 255.0) as u8,
-        ((b + m) * 255.0).round().clamp(0.0, 255.0) as u8,
-    ]
-}
-
-/// Generate the HSV colour-wheel texture (hue around, saturation outward, full
-/// value). Transparent outside the disc, with a 1.5px anti-aliased edge.
-fn make_color_wheel(tex: u32) -> slint::Image {
-    let mut buf = SharedPixelBuffer::<slint::Rgba8Pixel>::new(tex, tex);
-    let r = tex as f32 / 2.0;
-    let data = buf.make_mut_slice();
-    for y in 0..tex {
-        for x in 0..tex {
-            let dx = x as f32 + 0.5 - r;
-            let dy = y as f32 + 0.5 - r;
-            let dist = (dx * dx + dy * dy).sqrt();
-            let idx = (y * tex + x) as usize;
-            data[idx] = if dist <= r {
-                let hue = dy.atan2(dx).to_degrees().rem_euclid(360.0);
-                let sat = (dist / r).min(1.0);
-                let [rr, gg, bb] = hsv_to_rgb(hue, sat, 1.0);
-                let a = if dist > r - 1.5 {
-                    ((r - dist + 0.5).clamp(0.0, 1.0) * 255.0) as u8
-                } else {
-                    255
-                };
-                slint::Rgba8Pixel { r: rr, g: gg, b: bb, a }
-            } else {
-                slint::Rgba8Pixel { r: 0, g: 0, b: 0, a: 0 }
-            };
-        }
-    }
-    slint::Image::from_rgba8(buf)
 }
 
 /// Push the in-progress draft shape to the window for live preview.
@@ -1124,41 +1070,6 @@ impl skrifa::outline::OutlinePen for GlyphPen {
     fn close(&mut self) {
         self.path.close();
     }
-}
-
-// ---- Window placement ------------------------------------------------------
-
-/// Top-left (physical px) to centre a `wp`×`hp` window on the monitor under the
-/// cursor. `None` off-Windows (let the OS place it).
-#[cfg(target_os = "windows")]
-fn centre_window(wp: i32, hp: i32) -> Option<(i32, i32)> {
-    use windows::Win32::Foundation::POINT;
-    use windows::Win32::Graphics::Gdi::{
-        GetMonitorInfoW, MonitorFromPoint, MONITORINFO, MONITOR_DEFAULTTONEAREST,
-    };
-    use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
-    unsafe {
-        let mut p = POINT::default();
-        let _ = GetCursorPos(&mut p);
-        let hmon = MonitorFromPoint(p, MONITOR_DEFAULTTONEAREST);
-        let mut mi = MONITORINFO {
-            cbSize: std::mem::size_of::<MONITORINFO>() as u32,
-            ..Default::default()
-        };
-        if GetMonitorInfoW(hmon, &mut mi).as_bool() {
-            let r = mi.rcWork;
-            let cx = (r.left + r.right) / 2;
-            let cy = (r.top + r.bottom) / 2;
-            Some((cx - wp / 2, (cy - hp / 2).max(r.top)))
-        } else {
-            None
-        }
-    }
-}
-
-#[cfg(not(target_os = "windows"))]
-fn centre_window(_wp: i32, _hp: i32) -> Option<(i32, i32)> {
-    None
 }
 
 #[cfg(test)]

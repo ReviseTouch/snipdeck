@@ -181,7 +181,7 @@ impl Collager {
         }
 
         let w = CollageWindow::new()?;
-        w.set_wheel_image(make_color_wheel(WHEEL_TEX));
+        w.set_wheel_image(crate::color::make_color_wheel(WHEEL_TEX));
         // One checkerboard for the transparent-background backdrop; generated
         // once and stretched to fit (tile distortion is invisible).
         w.set_checker(make_checker(AVAIL_W as u32, AVAIL_H as u32));
@@ -191,9 +191,7 @@ impl Collager {
         let win_w = AVAIL_W + 60.0;
         let win_h = 66.0 + AVAIL_H + 110.0 + 66.0 + 16.0;
         w.window().set_size(slint::LogicalSize::new(win_w, win_h));
-        if let Some((px, py)) =
-            centre_window((win_w * scale.max(0.1)) as i32, (win_h * scale.max(0.1)) as i32)
-        {
+        if let Some((px, py)) = crate::screen::centre_on_cursor_monitor(win_w, win_h) {
             w.window().set_position(slint::PhysicalPosition::new(px, py));
         }
 
@@ -277,7 +275,7 @@ impl Collager {
                 let dist = (dx * dx + dy * dy).sqrt();
                 st.sat = (dist / r).min(1.0);
                 st.hue = dy.atan2(dx).to_degrees().rem_euclid(360.0);
-                let [rr, gg, bb] = hsv_to_rgb(st.hue, st.sat, st.val);
+                let [rr, gg, bb] = crate::color::hsv_to_rgb(st.hue, st.sat, st.val);
                 st.bg = [rr, gg, bb, 255];
                 st.bg_mode = 3;
             }
@@ -291,7 +289,7 @@ impl Collager {
                 let mut st = s.borrow_mut();
                 st.val = (v / 100.0).clamp(0.0, 1.0);
                 if st.bg_mode == 3 {
-                    let [rr, gg, bb] = hsv_to_rgb(st.hue, st.sat, st.val);
+                    let [rr, gg, bb] = crate::color::hsv_to_rgb(st.hue, st.sat, st.val);
                     st.bg = [rr, gg, bb, 255];
                 }
             }
@@ -437,7 +435,7 @@ fn refresh(sh: &Rc<RefCell<Shared>>, weak: &slint::Weak<CollageWindow>) {
             .collect();
         let tray_w = st.sources.len() as f32 * 92.0 + 26.0;
 
-        let [r, g, b] = hsv_to_rgb(st.hue, st.sat, st.val);
+        let [r, g, b] = crate::color::hsv_to_rgb(st.hue, st.sat, st.val);
         let rr = WHEEL_DISP / 2.0;
         let ang = st.hue.to_radians();
         (
@@ -731,55 +729,6 @@ fn blend_over(dst: &mut image::Rgba<u8>, s: [u8; 4], cov: f32) {
 
 // ---- Colour helpers (shared shape with annotate.rs) ------------------------
 
-fn hsv_to_rgb(h: f32, s: f32, v: f32) -> [u8; 3] {
-    let h = h.rem_euclid(360.0);
-    let c = v * s;
-    let x = c * (1.0 - (((h / 60.0) % 2.0) - 1.0).abs());
-    let m = v - c;
-    let (r, g, b) = match (h as u32) / 60 {
-        0 => (c, x, 0.0),
-        1 => (x, c, 0.0),
-        2 => (0.0, c, x),
-        3 => (0.0, x, c),
-        4 => (x, 0.0, c),
-        _ => (c, 0.0, x),
-    };
-    [
-        ((r + m) * 255.0).round().clamp(0.0, 255.0) as u8,
-        ((g + m) * 255.0).round().clamp(0.0, 255.0) as u8,
-        ((b + m) * 255.0).round().clamp(0.0, 255.0) as u8,
-    ]
-}
-
-/// HSV colour wheel (hue around, saturation outward), transparent outside.
-fn make_color_wheel(tex: u32) -> Image {
-    let mut buf = SharedPixelBuffer::<slint::Rgba8Pixel>::new(tex, tex);
-    let r = tex as f32 / 2.0;
-    let data = buf.make_mut_slice();
-    for y in 0..tex {
-        for x in 0..tex {
-            let dx = x as f32 + 0.5 - r;
-            let dy = y as f32 + 0.5 - r;
-            let dist = (dx * dx + dy * dy).sqrt();
-            let idx = (y * tex + x) as usize;
-            data[idx] = if dist <= r {
-                let hue = dy.atan2(dx).to_degrees().rem_euclid(360.0);
-                let sat = (dist / r).min(1.0);
-                let [rr, gg, bb] = hsv_to_rgb(hue, sat, 1.0);
-                let a = if dist > r - 1.5 {
-                    ((r - dist + 0.5).clamp(0.0, 1.0) * 255.0) as u8
-                } else {
-                    255
-                };
-                slint::Rgba8Pixel { r: rr, g: gg, b: bb, a }
-            } else {
-                slint::Rgba8Pixel { r: 0, g: 0, b: 0, a: 0 }
-            };
-        }
-    }
-    Image::from_rgba8(buf)
-}
-
 /// A subtle dark checkerboard, shown behind the collage when the background is
 /// transparent so the user can tell "no background" from a solid colour.
 fn make_checker(w: u32, h: u32) -> Image {
@@ -798,35 +747,3 @@ fn make_checker(w: u32, h: u32) -> Image {
     Image::from_rgba8(buf)
 }
 
-// ---- Window placement (same as annotate.rs) --------------------------------
-
-#[cfg(target_os = "windows")]
-fn centre_window(wp: i32, hp: i32) -> Option<(i32, i32)> {
-    use windows::Win32::Foundation::POINT;
-    use windows::Win32::Graphics::Gdi::{
-        GetMonitorInfoW, MonitorFromPoint, MONITORINFO, MONITOR_DEFAULTTONEAREST,
-    };
-    use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
-    unsafe {
-        let mut p = POINT::default();
-        let _ = GetCursorPos(&mut p);
-        let hmon = MonitorFromPoint(p, MONITOR_DEFAULTTONEAREST);
-        let mut mi = MONITORINFO {
-            cbSize: std::mem::size_of::<MONITORINFO>() as u32,
-            ..Default::default()
-        };
-        if GetMonitorInfoW(hmon, &mut mi).as_bool() {
-            let r = mi.rcWork;
-            let cx = (r.left + r.right) / 2;
-            let cy = (r.top + r.bottom) / 2;
-            Some((cx - wp / 2, (cy - hp / 2).max(r.top)))
-        } else {
-            None
-        }
-    }
-}
-
-#[cfg(not(target_os = "windows"))]
-fn centre_window(_wp: i32, _hp: i32) -> Option<(i32, i32)> {
-    None
-}

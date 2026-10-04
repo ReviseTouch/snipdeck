@@ -1,4 +1,5 @@
-//! Screen colour sampling for the eyedropper / colour-picker tool.
+//! Colour: screen sampling for the eyedropper / colour-picker tool, and the
+//! HSV colour wheel the annotation editor and the collage share.
 //!
 //! Reads a small square of desktop pixels around a screen point via GDI
 //! `BitBlt` — enough to feed the magnifier loupe and to read the exact pixel
@@ -132,4 +133,57 @@ pub fn hex(rgb: [u8; 3]) -> String {
 /// "rgb(r, g, b)".
 pub fn rgb_str(rgb: [u8; 3]) -> String {
     format!("rgb({}, {}, {})", rgb[0], rgb[1], rgb[2])
+}
+
+// ---- Colour wheel (annotation editor, collage background) -------------------
+
+/// HSV (h 0..360, s/v 0..1) → RGB.
+pub fn hsv_to_rgb(h: f32, s: f32, v: f32) -> [u8; 3] {
+    let h = h.rem_euclid(360.0);
+    let c = v * s;
+    let x = c * (1.0 - (((h / 60.0) % 2.0) - 1.0).abs());
+    let m = v - c;
+    let (r, g, b) = match (h as u32) / 60 {
+        0 => (c, x, 0.0),
+        1 => (x, c, 0.0),
+        2 => (0.0, c, x),
+        3 => (0.0, x, c),
+        4 => (x, 0.0, c),
+        _ => (c, 0.0, x),
+    };
+    [
+        ((r + m) * 255.0).round().clamp(0.0, 255.0) as u8,
+        ((g + m) * 255.0).round().clamp(0.0, 255.0) as u8,
+        ((b + m) * 255.0).round().clamp(0.0, 255.0) as u8,
+    ]
+}
+
+/// Generate the HSV colour-wheel texture (hue around, saturation outward, full
+/// value). Transparent outside the disc, with a 1.5px anti-aliased edge.
+pub fn make_color_wheel(tex: u32) -> slint::Image {
+    let mut buf = slint::SharedPixelBuffer::<slint::Rgba8Pixel>::new(tex, tex);
+    let r = tex as f32 / 2.0;
+    let data = buf.make_mut_slice();
+    for y in 0..tex {
+        for x in 0..tex {
+            let dx = x as f32 + 0.5 - r;
+            let dy = y as f32 + 0.5 - r;
+            let dist = (dx * dx + dy * dy).sqrt();
+            let idx = (y * tex + x) as usize;
+            data[idx] = if dist <= r {
+                let hue = dy.atan2(dx).to_degrees().rem_euclid(360.0);
+                let sat = (dist / r).min(1.0);
+                let [rr, gg, bb] = hsv_to_rgb(hue, sat, 1.0);
+                let a = if dist > r - 1.5 {
+                    ((r - dist + 0.5).clamp(0.0, 1.0) * 255.0) as u8
+                } else {
+                    255
+                };
+                slint::Rgba8Pixel { r: rr, g: gg, b: bb, a }
+            } else {
+                slint::Rgba8Pixel { r: 0, g: 0, b: 0, a: 0 }
+            };
+        }
+    }
+    slint::Image::from_rgba8(buf)
 }

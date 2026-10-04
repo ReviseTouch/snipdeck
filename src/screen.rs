@@ -83,6 +83,31 @@ pub fn work_area_at(x: i32, y: i32) -> Option<(i32, i32, i32, i32)> {
     Some((r.left, r.top, r.right, r.bottom))
 }
 
+/// Top-left (physical px) that centres a window of the given LOGICAL size on
+/// the work area of the monitor under the cursor, sized in that monitor's own
+/// scale. `None` off Windows, where the compositor places new windows.
+#[cfg(target_os = "windows")]
+pub fn centre_on_cursor_monitor(logical_w: f32, logical_h: f32) -> Option<(i32, i32)> {
+    use windows::Win32::Foundation::POINT;
+    use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
+    let mut p = POINT::default();
+    unsafe { GetCursorPos(&mut p).ok()? };
+    let (left, top, right, bottom) = work_area_at(p.x, p.y)?;
+    let sf = scale_at(p.x, p.y).unwrap_or(1.0);
+    let (w, h) = ((logical_w * sf) as i32, (logical_h * sf) as i32);
+    Some(((left + right - w) / 2, ((top + bottom - h) / 2).max(top)))
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn centre_on_cursor_monitor(_logical_w: f32, _logical_h: f32) -> Option<(i32, i32)> {
+    None
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn work_area_at(_x: i32, _y: i32) -> Option<(i32, i32, i32, i32)> {
+    None
+}
+
 /// Top-left for a `w`×`h` popup opened at a click, kept inside `work`
 /// (`left, top, right, bottom`), all physical pixels. It opens toward the room
 /// there is, as a native menu does: up from a click near the bottom, to the
