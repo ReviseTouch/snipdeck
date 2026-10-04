@@ -12,12 +12,14 @@
 
 **Un _deck_ de capture d'écran rapide et piloté au clavier pour Windows.**
 
+<sub>Une application gratuite et open source de <a href="https://revisetouch.com"><b>ReviseTouch</b></a>.</sub>
+
 Capturez une zone, gardez vos captures flottantes au-dessus de tout, annotez-les,
 indexez-les par OCR et recherchez parmi des centaines de captures d'écran depuis une seule galerie dense —
 le tout depuis une application Rust native dotée d'une interface [Slint](https://slint.dev) rendue de manière logicielle.
 
 ![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white)
-![soon](https://img.shields.io/badge/macOS%20%2F%20Linux-on%20the%20way-lightgrey)
+![linux](https://img.shields.io/badge/Linux-GNOME%20full%20%2F%20others%20partial-yellow) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
 ![built with](https://img.shields.io/badge/built%20with-Rust%20%2B%20Slint-orange?logo=rust&logoColor=white)
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -31,7 +33,7 @@ le tout depuis une application Rust native dotée d'une interface [Slint](https:
 <!--
   Drop your screenshots into docs/screenshots/ with these exact names and they
   will show up here automatically:
-    gallery.png · floating.png · annotate.png · translate.png
+    gallery.png · floating.png · annotate.png · collage.png
 -->
 
 <div align="center">
@@ -39,8 +41,8 @@ le tout depuis une application Rust native dotée d'une interface [Slint](https:
 | L'espace de travail de la galerie | Captures flottantes sur le bureau |
 | :---: | :---: |
 | <img src="docs/screenshots/gallery.png" alt="Galerie" width="420" /> | <img src="docs/screenshots/floating.png" alt="Captures flottantes" width="420" /> |
-| **L'éditeur d'annotation** | **OCR + traduction** |
-| <img src="docs/screenshots/annotate.png" alt="Éditeur d'annotation" width="420" /> | <img src="docs/screenshots/translate.png" alt="Traduction OCR" width="420" /> |
+| **L'éditeur d'annotation** | **L'éditeur de collage** |
+| <img src="docs/screenshots/annotate.png" alt="Éditeur d'annotation" width="420" /> | <img src="docs/screenshots/collage.png" alt="Éditeur de collage" width="420" /> |
 
 </div>
 
@@ -49,22 +51,25 @@ le tout depuis une application Rust native dotée d'une interface [Slint](https:
 ## ✨ Points forts
 
 - 🖱️ **Capture sur modificateur + glisser.** Maintenez `Win` et faites glisser une zone ; les modificateurs décident de ce qui
-  arrive au résultat — fenêtre flottante, presse-papiers, galerie uniquement (matrice ci-dessous).
+  arrive au résultat — fenêtre flottante, presse-papiers, galerie uniquement ([matrice ci-dessous](#️-raccourcis-de-capture)).
 - 🧊 **Capture par gel d'abord** (`Win`+`Shift`+`Space`). Assombrit et gèle l'écran *avant* votre
   sélection, afin que les info-bulles au survol et autres éléments d'interface sensibles au clic restent capturés.
 - 📌 **Captures flottantes.** Les captures restent épinglées au-dessus sous forme de superpositions légères et sans bordure que vous pouvez
   déplacer, redimensionner, épingler, rogner, faire pivoter/retourner et fermer.
 - ✏️ **Éditeur d'annotation intégré.** Stylo, surligneur, formes, flèches et texte avec une roue chromatique TSV
-  complète, taille et opacité réglables, zoom, et annuler/rétablir (détails).
+  complète, taille et opacité réglables, zoom, et annuler/rétablir ([détails](#️-éditeur-dannotation)).
+- 🧩 **Collage.** Disposez plusieurs captures en une seule image — grille, rangées justifiées ou mosaïque (masonry),
+  avec espacement, coins arrondis et arrière-plan — enregistrée dans la galerie comme une nouvelle capture.
 - 🔍 **OCR intégré.** Chaque capture est indexée par OCR en arrière-plan grâce au moteur du système d'exploitation
   (`Windows.Media.Ocr`) — aucun téléchargement de modèle, aucun réseau, entièrement local.
 - 🌐 **OCR + traduction.** Lisez le texte d'une capture dans une autre langue directement sur place (plus de 30 cibles, avec
   des favoris que vous pouvez marquer d'une étoile).
 - 🗂️ **Galerie puissante.** Recherche en texte intégral sur le texte OCR, les métadonnées de fenêtre, le moniteur et le chemin ;
-  filtrage par statut / contenu / taille / date ; une grille virtualisée qui reste fluide même avec des milliers de captures.
+  filtrage par statut / contenu / taille / date ; une grille virtualisée qui reste fluide même avec des milliers de captures
+  ([visite guidée](#️-la-galerie)).
 - 📤 **Partage et envoi.** Volet de partage Windows, un nouvel e-mail (Simple MAPI), l'éditeur d'images du système,
   ou un hébergeur d'images — les envois sont **facultatifs avec une boîte de dialogue de consentement explicite**.
-- 🌍 **23 langues**, détectées automatiquement depuis votre système d'exploitation et commutables depuis la barre d'outils.
+- 🌍 **23 langues**, détectées automatiquement depuis votre système d'exploitation et commutables depuis le menu `⋯` de la barre d'outils.
 - 🌗 **Thèmes clair / sombre**, un accueil dans la zone de notification, et un lancement au démarrage **sans registre**.
 
 ---
@@ -93,12 +98,14 @@ Outre `Win` + glisser, Snipdeck enregistre cinq raccourcis clavier globaux confi
 | Raccourci | Action |
 | --- | --- |
 | `Win`+`Alt`+`H` | Afficher / masquer toutes les captures à l'écran |
-| `Ctrl`+`Shift`+`A` | Nouvelle capture |
-| `Ctrl`+`Shift`+`C` | Nouvelle capture **et** copie dans le presse-papiers |
-| `Ctrl`+`Shift`+`X` | Presse-papiers uniquement |
-| `Ctrl`+`Shift`+`G` | Ouvrir la galerie |
+| `Ctrl`+`Alt`+`Shift`+`A` | Nouvelle capture |
+| `Ctrl`+`Alt`+`Shift`+`C` | Nouvelle capture **et** copie dans le presse-papiers |
+| `Ctrl`+`Alt`+`Shift`+`X` | Presse-papiers uniquement |
+| `Ctrl`+`Alt`+`Shift`+`G` | Ouvrir la galerie |
 
-Modifiez-les avec les clés `hotkey_*` dans `settings.json`.
+Modifiez-les avec les clés `hotkey_*` dans `settings.json`. Sous Wayland, les raccourcis
+globaux appartiennent au bureau : ils ne sont que proposés au premier lancement, et vous les
+modifiez ensuite dans les paramètres clavier de votre bureau.
 
 ---
 
@@ -112,7 +119,7 @@ de vos captures.
 - **Curseurs de taille et d'opacité** avec un aperçu de taille clignotant sur l'image, mémorisé par outil.
 - **Zoom avant / arrière / ajuster** pour un travail précis ; le canevas se déplace lorsqu'on est zoomé.
 - **Annuler / rétablir / effacer**, ainsi que `Esc`, `Ctrl`+`Z`, `Ctrl`+`Y`.
-- À l'**enregistrement**, les tracés sont aplatis sur l'image en pleine résolution (nets, à taille native).
+- Avec **Enregistrer**, les tracés sont aplatis sur l'image en pleine résolution (nets, à taille native).
 
 L'aperçu en direct et le résultat enregistré proviennent du même code, donc **ce que vous voyez est ce que vous obtenez**.
 
@@ -124,13 +131,31 @@ Faites un clic droit sur une capture flottante **ou** une vignette de la galerie
 
 - **Copier** l'image dans le presse-papiers
 - **OCR + Presse-papiers** — lance l'OCR et copie le texte reconnu
-- **OCR + Traduction** — ouvre la fenêtre de traduction
+- **OCR + Traduire** — ouvre la fenêtre de traduction
 - **Annoter** — ouvre l'éditeur ci-dessus
-- **Partager** — volet de partage Windows, **Courrier** (pièce jointe MAPI), ouvrir dans l'**éditeur** (Paint),
-  ou **Envoyer** vers un hébergeur d'images
+- **Partager** — volet de partage Windows, **E-mail** (pièce jointe MAPI), ouvrir dans l'**éditeur** (Paint),
+  ou **Téléverser** vers un hébergeur d'images
 - **Transformer** — pivoter (90° / 180°), retourner horizontalement / verticalement
 - **Rogner** (faites glisser les poignées vers l'intérieur) et **Redimensionner**
 - **Masquer de l'écran** / **Supprimer**
+
+---
+
+## 🗂️ La galerie
+
+Une seule rangée de barre d'outils ; tout le reste est à un clic.
+
+- **Nouveau** prend une capture. Sa flèche propose **Capture + Copier** et **Presse-papiers uniquement**, chacun avec son
+  raccourci.
+- **Collage** et **Choisir une couleur** se trouvent juste à côté, et le champ de recherche occupe le reste de la
+  rangée — `Ctrl`+`F` pour y placer le curseur, `Esc` pour le vider.
+- **Filtrer** ouvre statut, contenu, taille et date dans un seul panneau. Les filtres actifs s'affichent sous forme
+  de puces sous la barre d'outils, chacun supprimable individuellement, ou tous à la fois avec **Effacer les filtres**.
+- **`⋯`** regroupe ce qui change rarement : Captures flottantes dans la barre des tâches, Thème sombre, Lancer à la
+  connexion, Langue, le vidage de la galerie et À propos de Snipdeck.
+- La barre d'état compte ce qui est affiché et contient **Trier** ainsi que la taille des cartes **S / M / L**.
+
+Survolez une carte pour ses actions rapides ; faites un clic droit dessus pour [tout le reste](#️-actions-du-clic-droit).
 
 ---
 
@@ -138,27 +163,62 @@ Faites un clic droit sur une capture flottante **ou** une vignette de la galerie
 
 ### Téléchargement
 
-Récupérez le dernier `snipdeck.exe` depuis la page [**Releases**](https://github.com/hasantr/snipdeck/releases).
-C'est un unique exécutable portable — pas d'installateur.
+**Windows** — récupérez `snipdeck-windows-x64.exe` depuis la page
+[**Releases**](https://github.com/hasantr/snipdeck/releases). Un unique
+exécutable portable, sans installateur.
+
+**Linux (x64)** — récupérez `snipdeck-linux-x64.tar.gz` depuis la même page :
+
+```bash
+tar xzf snipdeck-linux-x64.tar.gz
+cd snipdeck-linux-x64
+./install.sh          # into ~/.local, no root; --uninstall reverses it
+```
+
+Lancez-le ensuite depuis votre menu d'applications. Ce n'est pas une question de goût : sous
+Wayland, le portail du bureau déduit l'identifiant d'application de l'entrée `.desktop` par
+laquelle l'application a été lancée, et sans elle il refuse d'associer le moindre raccourci
+global.
 
 ### Compilation depuis les sources
 
-Prérequis : [Rust](https://rustup.rs/) (stable) et Windows 10 ou 11.
+Prérequis : [Rust](https://rustup.rs/) (stable).
 
-```powershell
+```bash
 git clone https://github.com/hasantr/snipdeck.git
 cd snipdeck
 cargo build --release
 ```
 
-Le binaire se retrouve dans `target\release\snipdeck.exe`.
+**Windows** (10 ou 11) : le binaire se retrouve dans `target\release\snipdeck.exe`.
+
+**Linux** : la compilation nécessite les en-têtes de GTK, X11/Wayland, de la zone de
+notification, de D-Bus et de GL. Sous Debian/Ubuntu :
+
+```bash
+sudo apt install libgtk-3-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev \
+  libxcb-xfixes0-dev libxcb-randr0-dev libxrandr-dev libxkbcommon-dev \
+  libwayland-dev libayatana-appindicator3-dev libfontconfig-dev libdbus-1-dev \
+  libgl1-mesa-dev libegl1-mesa-dev
+```
+
+PipeWire n'est pas nécessaire à la compilation : il est chargé à l'exécution pour la capture
+sous Wayland. Pour installer votre build comme le fait une version publiée, placez-le à côté de
+l'installateur :
+
+```bash
+mkdir -p dist/snipdeck && cp target/release/snipdeck packaging/linux/snipdeck.desktop \
+  packaging/linux/install.sh dist/snipdeck/
+cp -r packaging/gnome-extension/snipdeck@revisetouch.com dist/snipdeck/
+dist/snipdeck/install.sh
+```
 
 ---
 
 ## 🌍 Langues
 
 Snipdeck est entièrement localisé. Au premier lancement, il choisit votre langue selon les paramètres régionaux du système d'exploitation ;
-modifiez-la à tout moment depuis le **menu globe** de la barre d'outils.
+modifiez-la à tout moment depuis **`⋯` → Langue** dans la barre d'outils.
 
 > Anglais · Espagnol · Chinois simplifié · Hindi · Arabe · Portugais · Russe · Japonais ·
 > Allemand · Français · Coréen · Italien · Turc · Indonésien · Vietnamien · Polonais · Ukrainien ·
@@ -184,29 +244,98 @@ binaire au moment de la compilation (aucune dépendance gettext à l'exécution)
 
 ## 🔒 Confidentialité et sécurité
 
-- **La capture et l'OCR sont entièrement locaux.** L'OCR utilise le moteur intégré `Windows.Media.Ocr` ; rien
-  n'est envoyé où que ce soit pour la capture ou l'indexation.
-- **Le lancement au démarrage est sans registre.** Snipdeck dépose un raccourci normal dans votre dossier `shell:Startup`
-  au lieu d'écrire une valeur `HKCU\…\Run` — le mécanisme ordinaire et visible par l'utilisateur qui
-  évite la clé de registre de démarrage automatique que les outils antivirus / EDR signalent le plus souvent.
+- **La capture et l'OCR sont locaux.** L'OCR utilise `Windows.Media.Ocr` sous Windows et
+  Tesseract sous Linux (alimenté par un tube, sans fichier temporaire) ; rien n'est envoyé où
+  que ce soit pour la capture ou l'indexation. Sous Wayland, l'écran est lu via le portail
+  ScreenCast : vous l'autorisez une fois, et l'indicateur de partage ne s'affiche qu'au moment
+  où une capture est prise.
+- **OCR + Traduire demande d'abord.** La première fois, il explique que le *texte* issu de
+  l'OCR — jamais l'image — part vers Google Traduction, et attend votre accord.
+  Le texte est envoyé dans le corps de la requête, pas dans l'URL.
 - **Les envois sont facultatifs.** Rien ne quitte votre machine sans une boîte de dialogue de consentement explicite qui
   précise la destination. N'envoyez pas de contenu sensible vers un hébergeur public par lien.
-- **OCR + Traduction utilise le réseau.** Seul le *texte* issu de l'OCR est envoyé au point de terminaison public
-  `translate_a` de Google pour être traduit ; il n'est utilisé nulle part ailleurs.
+- **Les copies transmises restent privées.** Les images passées à un client de messagerie ou à
+  un éditeur vont dans un dossier que vous seul pouvez lire (`$XDG_RUNTIME_DIR` sous Linux,
+  `%TEMP%\Snipdeck` sous Windows) et sont supprimées ensuite.
+- **Les journaux ne gardent aucune trace.** Les coordonnées du pointeur et les titres de fenêtre
+  ne sont journalisés qu'au niveau débogage.
+- **Le lancement au démarrage repose sur un fichier.** Un raccourci normal dans `shell:Startup`
+  sous Windows (et non la clé `HKCU\…\Run` que les outils de sécurité signalent le plus souvent),
+  une entrée de démarrage automatique XDG sous Linux.
 
 ---
 
 ## 🗺️ Feuille de route
 
 - [x] Windows 10 / 11
+- [x] **Linux / GNOME** (Wayland) — avec l'extension shell fournie : capture
+      avec `Super`+`Alt`+glisser ou les raccourcis, captures placées là où elles ont été
+      prises et maintenues au premier plan, OCR, le sélecteur de couleur
+- [~] **Linux / autres bureaux** — capture depuis les raccourcis et la barre d'outils,
+      OCR, le sélecteur de couleur (via le portail du bureau). Il n'y a pas de geste
+      modificateur+glisser en dehors de GNOME : il faudrait un hook global du pointeur, que
+      Linux n'accorde qu'en lisant `/dev/input` — un enregistreur de frappe à l'échelle du
+      système que Snipdeck ne vous demandera pas d'activer. Sous Wayland, le placement et le
+      maintien au premier plan manquent sans l'extension (voir ci-dessous)
 - [ ] **macOS** — en chemin
-- [ ] **Linux** — en chemin
 - [ ] Fenêtre de paramètres dans l'application
 - [ ] Plus d'outils d'annotation (flou / pixelisation, badges d'étapes numérotés, déplacer/modifier des formes)
 
-> Snipdeck est aujourd'hui réservé à Windows car la capture, l'OCR, la zone de notification et le partage utilisent tous des
-> API spécifiques à Windows. L'interface ([Slint](https://slint.dev)) et la majeure partie du cœur sont déjà
-> multiplateformes, donc **les versions macOS et Linux sont en chemin.**
+### Exécution sous Linux
+
+Installez-le et **lancez-le depuis le menu d'applications**, pas depuis un terminal.
+Les raccourcis globaux passent par le portail du bureau, qui refuse une session venant d'un
+client sans identifiant d'application, et une application hors bac à sable n'en obtient un que
+lorsque le bureau la lance depuis une entrée `.desktop` — voir `packaging/linux/snipdeck.desktop`.
+
+Dépendances d'exécution : `libayatana-appindicator` (zone de notification), `xdg-utils`
+(partage), et `tesseract` avec les données de langue souhaitées (OCR — facultatif ; sans lui,
+l'OCR est ignoré plutôt que d'échouer).
+
+**Ce que Wayland ne permet pas.** Un client Wayland ne peut ni positionner ses propres
+fenêtres, ni demander où elles se trouvent, ni exiger qu'elles restent au-dessus des autres ;
+le compositeur détient ces trois pouvoirs. Ainsi, dans une session Wayland nue, une capture
+s'ouvre là où le compositeur la place plutôt qu'au-dessus de la zone d'où elle a été prise,
+elle ne peut pas flotter au-dessus des autres applications, et elle apparaît dans la liste des
+fenêtres. Tout le reste — capture de zone, superposition figée, raccourcis globaux, OCR,
+déplacement, menu contextuel — fonctionne.
+
+KDE et les compositeurs wlroots (sway, Hyprland, river, COSMIC) exposent
+`wlr-layer-shell`, qui accorde exactement ces trois pouvoirs ; Snipdeck ne l'utilise pas
+encore. GNOME/Mutter a refusé de l'implémenter.
+
+**Sous GNOME, une extension shell comble le manque.** Ce qu'un client n'a pas le droit de
+faire, du code exécuté à l'intérieur de GNOME Shell le peut. `install.sh` installe donc aussi
+`snipdeck@revisetouch.com` (depuis `packaging/gnome-extension/`) lorsqu'il détecte une
+session GNOME — un fichier unique qui surveille les fenêtres de capture de Snipdeck, les place
+là où elles ont été prises, les garde au-dessus des autres fenêtres, les épingle sur tous les
+espaces de travail et les retire du sélecteur de fenêtres. Le placement voyage dans le titre
+de la fenêtre, qui n'est jamais visible sur ces fenêtres sans bordure.
+
+L'extension ramène aussi le geste de capture. Sous GNOME, `Super`+glisser déplace déjà les
+fenêtres ; le geste est donc **`Super`+`Alt`+glisser**, actif tant que
+Snipdeck tourne :
+
+| Geste (GNOME) | Résultat |
+|---|---|
+| `Super`+`Alt` + glisser | Capture flottante à l'écran |
+| `Super`+`Alt`+`Ctrl` + glisser | Capture flottante **et** copie dans le presse-papiers |
+| `Super`+`Alt`+`Shift` + glisser | Galerie uniquement (pas de fenêtre flottante) |
+| `Super`+`Alt`+`Ctrl`+`Shift` + glisser | Galerie **et** presse-papiers, pas de fenêtre flottante |
+
+« Presse-papiers uniquement » — `Win`+`Alt` sous Windows — n'a pas de geste ici ; utilisez
+son raccourci. `Esc` annule un glissement, et garder `Super`+`Alt` enfoncées vous permet de
+prendre plusieurs captures d'affilée.
+
+Déconnectez-vous puis reconnectez-vous après l'installation ; GNOME Shell ne peut pas
+recharger les extensions à chaud sous Wayland, car il *est* le compositeur qui porte votre
+session. L'extension est entièrement facultative — sans elle, Snipdeck se comporte comme
+n'importe quel autre client Wayland — et, en dehors des fenêtres de Snipdeck, elle ne touche
+qu'à `Super`+`Alt`+glisser, et seulement tant que Snipdeck tourne.
+
+Il manque encore sous GNOME Wayland : une capture que vous faites glisser est déplacée par
+Mutter, et l'application n'est jamais informée de l'endroit où elle a atterri ; sa position
+n'est donc pas mémorisée d'un redémarrage à l'autre.
 
 ---
 
@@ -228,7 +357,7 @@ fichier directement, puis redémarrez Snipdeck.
 | --- | --- | --- |
 | `language` | `"auto"` | Code de langue de l'interface, ou `"auto"` pour suivre le système d'exploitation |
 | `dark_theme` | `true` | Habillage clair ou sombre |
-| `upload_service` | `"catbox"` | Hébergeur d'images pour *Envoyer* : `"catbox"` (sans clé) ou `"imgur"` |
+| `upload_service` | `"catbox"` | Hébergeur d'images pour *Téléverser* : `"catbox"` (sans clé) ou `"imgur"` |
 | `imgur_client_id` | `""` | Client-ID Imgur, requis uniquement lorsque `upload_service` vaut `"imgur"` |
 | `translate_target` | `"en"` | Code de langue cible par défaut pour la traduction OCR |
 | `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Langues à sélection rapide dans la fenêtre de traduction |
@@ -264,9 +393,18 @@ threads et renvoient les résultats via des canaux, vidés une fois par tick.
 | `src/share.rs`, `src/upload.rs` | Volet de partage / courrier MAPI / éditeur / envoi vers hébergeur d'images |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Icône de zone de notification, lancement au démarrage, garde d'instance unique |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Persistance de la galerie (SQLite + FTS), paramètres, chemins |
+| `src/image_files.rs`, `src/atomic_file.rs` | Images des captures sur disque : WebP sans perte, écritures atomiques |
 | `src/i18n.rs`, `lang/` | i18n à l'exécution + catalogues gettext `.po` intégrés (23 langues) |
 
 </details>
+
+---
+
+## ✨ Conçu par ReviseTouch
+
+Snipdeck est une application gratuite et open source de **[ReviseTouch](https://revisetouch.com)** —
+nous créons des outils pour développeurs et des produits d'IA. Découvrez ce que nous construisons
+d'autre sur **[revisetouch.com](https://revisetouch.com)**.
 
 ---
 

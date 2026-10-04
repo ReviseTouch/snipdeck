@@ -12,12 +12,14 @@
 
 **Ein schnelles, tastaturgesteuertes _Deck_ für Bildschirmausschnitte unter Windows.**
 
+<sub>Eine kostenlose Open-Source-App von <a href="https://revisetouch.com"><b>ReviseTouch</b></a>.</sub>
+
 Erfasse einen Bereich, halte Ausschnitte über allem schwebend, versieh sie mit Anmerkungen,
 indexiere sie per OCR und durchsuche hunderte Screenshots aus einer einzigen, dichten Galerie –
 alles aus einer nativen Rust-App mit einer softwaregerenderten [Slint](https://slint.dev)-Oberfläche.
 
 ![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white)
-![soon](https://img.shields.io/badge/macOS%20%2F%20Linux-on%20the%20way-lightgrey)
+![linux](https://img.shields.io/badge/Linux-GNOME%20full%20%2F%20others%20partial-yellow) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
 ![built with](https://img.shields.io/badge/built%20with-Rust%20%2B%20Slint-orange?logo=rust&logoColor=white)
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -31,7 +33,7 @@ alles aus einer nativen Rust-App mit einer softwaregerenderten [Slint](https://s
 <!--
   Drop your screenshots into docs/screenshots/ with these exact names and they
   will show up here automatically:
-    gallery.png · floating.png · annotate.png · translate.png
+    gallery.png · floating.png · annotate.png · collage.png
 -->
 
 <div align="center">
@@ -39,8 +41,8 @@ alles aus einer nativen Rust-App mit einer softwaregerenderten [Slint](https://s
 | Der Galerie-Arbeitsbereich | Schwebende Ausschnitte auf dem Desktop |
 | :---: | :---: |
 | <img src="docs/screenshots/gallery.png" alt="Galerie" width="420" /> | <img src="docs/screenshots/floating.png" alt="Schwebende Ausschnitte" width="420" /> |
-| **Der Anmerkungseditor** | **OCR + Übersetzen** |
-| <img src="docs/screenshots/annotate.png" alt="Anmerkungseditor" width="420" /> | <img src="docs/screenshots/translate.png" alt="OCR-Übersetzung" width="420" /> |
+| **Der Anmerkungseditor** | **Der Collage-Editor** |
+| <img src="docs/screenshots/annotate.png" alt="Anmerkungseditor" width="420" /> | <img src="docs/screenshots/collage.png" alt="Collage-Editor" width="420" /> |
 
 </div>
 
@@ -49,22 +51,25 @@ alles aus einer nativen Rust-App mit einer softwaregerenderten [Slint](https://s
 ## ✨ Highlights
 
 - 🖱️ **Erfassen per Modifikatortaste + Ziehen.** Halte `Win` und ziehe einen Bereich auf; die Modifikatoren entscheiden, was
-  mit dem Ergebnis geschieht – schwebendes Fenster, Zwischenablage, nur Galerie (Matrix unten).
+  mit dem Ergebnis geschieht – schwebendes Fenster, Zwischenablage, nur Galerie ([Matrix unten](#️-tastenkürzel-zum-erfassen)).
 - 🧊 **Erfassen mit Einfrieren zuerst** (`Win`+`Shift`+`Space`). Dimmt und friert den Bildschirm ein, *bevor* du
   auswählst, sodass Hover-Tooltips und andere klick-empfindliche UI-Elemente erfasst bleiben.
 - 📌 **Schwebende Ausschnitte.** Erfassungen bleiben als leichtgewichtige, rahmenlose Overlays oben angeheftet, die du
   ziehen, skalieren, anheften, zuschneiden, drehen/spiegeln und schließen kannst.
 - ✏️ **Integrierter Anmerkungseditor.** Stift, Textmarker, Formen, Pfeile und Text mit einem vollständigen HSV-
-  Farbkreis, einstellbarer Größe + Deckkraft, Zoom sowie Rückgängig/Wiederholen (Details).
+  Farbkreis, einstellbarer Größe + Deckkraft, Zoom sowie Rückgängig/Wiederholen ([Details](#️-anmerkungseditor)).
+- 🧩 **Collage.** Lege mehrere Ausschnitte zu einem Bild zusammen – Raster, ausgerichtete Zeilen oder Masonry, mit
+  Abstand, abgerundeten Ecken und Hintergrund –, das als neuer Ausschnitt zurück in die Galerie gespeichert wird.
 - 🔍 **Integrierte OCR.** Jeder Ausschnitt wird im Hintergrund mit der Betriebssystem-Engine OCR-indexiert
   (`Windows.Media.Ocr`) – kein Modell-Download, kein Netzwerk, vollständig lokal.
 - 🌐 **OCR + Übersetzen.** Lies den Text eines Ausschnitts inline in einer anderen Sprache (30+ Zielsprachen, mit
   Favoriten, die du markieren kannst).
 - 🗂️ **Leistungsstarke Galerie.** Volltextsuche über OCR-Text, Fenster-Metadaten, Monitor und Pfad;
-  Filtern nach Status / Inhalt / Größe / Datum; ein virtualisiertes Raster, das auch bei tausenden Ausschnitten flüssig bleibt.
+  Filtern nach Status / Inhalt / Größe / Datum; ein virtualisiertes Raster, das auch bei tausenden Ausschnitten flüssig bleibt
+  ([Rundgang](#️-die-galerie)).
 - 📤 **Teilen & Hochladen.** Windows-Teilen-Dialog, eine neue E-Mail (Simple MAPI), der System-Bildeditor
   oder ein Bild-Hoster – Uploads sind **opt-in mit einem expliziten Einwilligungsdialog**.
-- 🌍 **23 Sprachen**, automatisch aus deinem Betriebssystem erkannt und über die Symbolleiste umschaltbar.
+- 🌍 **23 Sprachen**, automatisch aus deinem Betriebssystem erkannt und über das `⋯`-Menü der Symbolleiste umschaltbar.
 - 🌗 **Helle / dunkle Designs**, ein fester Platz im System-Tray und **registry-freier** Start bei der Anmeldung.
 
 ---
@@ -93,12 +98,14 @@ Neben `Win` + Ziehen registriert Snipdeck fünf konfigurierbare globale Tastenk�
 | Tastenkürzel | Aktion |
 | --- | --- |
 | `Win`+`Alt`+`H` | Alle Ausschnitte auf dem Bildschirm ein- / ausblenden |
-| `Ctrl`+`Shift`+`A` | Neuer Ausschnitt |
-| `Ctrl`+`Shift`+`C` | Neuer Ausschnitt **und** in die Zwischenablage kopieren |
-| `Ctrl`+`Shift`+`X` | Nur Zwischenablage |
-| `Ctrl`+`Shift`+`G` | Galerie öffnen |
+| `Ctrl`+`Alt`+`Shift`+`A` | Neuer Ausschnitt |
+| `Ctrl`+`Alt`+`Shift`+`C` | Neuer Ausschnitt **und** in die Zwischenablage kopieren |
+| `Ctrl`+`Alt`+`Shift`+`X` | Nur Zwischenablage |
+| `Ctrl`+`Alt`+`Shift`+`G` | Galerie öffnen |
 
-Ändere sie über die `hotkey_*`-Schlüssel in `settings.json`.
+Ändere sie über die `hotkey_*`-Schlüssel in `settings.json`. Unter Wayland gehören globale
+Tastenkürzel dem Desktop: Sie werden nur beim ersten Start vorgeschlagen, danach änderst du sie
+in den Tastatureinstellungen deines Desktops.
 
 ---
 
@@ -126,7 +133,7 @@ Klicke mit der rechten Maustaste auf einen schwebenden Ausschnitt **oder** ein G
 - **OCR + Zwischenablage** – OCR ausführen und den erkannten Text kopieren
 - **OCR + Übersetzen** – das Übersetzungs-Popup öffnen
 - **Anmerken** – den oben beschriebenen Editor öffnen
-- **Teilen** – Windows-Teilen-Dialog, **Mail** (MAPI-Anhang), in **Editor** öffnen (Paint)
+- **Teilen** – Windows-Teilen-Dialog, **E-Mail** (MAPI-Anhang), in **Editor** öffnen (Paint)
   oder zu einem Bild-Hoster **Hochladen**
 - **Transformieren** – drehen (90° / 180°), horizontal / vertikal spiegeln
 - **Zuschneiden** (die Griffe nach innen ziehen) und **Größe ändern**
@@ -134,31 +141,83 @@ Klicke mit der rechten Maustaste auf einen schwebenden Ausschnitt **oder** ein G
 
 ---
 
+## 🗂️ Die Galerie
+
+Eine einzige Symbolleistenzeile; alles andere ist nur einen Klick entfernt.
+
+- **Neu** erstellt einen Ausschnitt. Sein Pfeil enthält **Ausschnitt + Kopie** und **Nur Kopie**, jeweils mit
+  ihrem Tastenkürzel.
+- **Collage** und **Farbe wählen** sitzen daneben, und das Suchfeld nimmt den Rest der Zeile ein –
+  `Ctrl`+`F` setzt den Fokus hinein, `Esc` leert es.
+- **Filtern** öffnet Status, Inhalt, Größe und Datum in einem einzigen Panel. Aktive Filter erscheinen als Chips
+  unter der Symbolleiste; jeder lässt sich einzeln entfernen, oder alle auf einmal mit **Filter zurücksetzen**.
+- **`⋯`** enthält, was sich selten ändert: Schwebende Ausschnitte in der Taskleiste, Dunkles Design, Beim
+  Anmelden starten, Sprache, das Leeren der Galerie und Über Snipdeck.
+- Die Statusleiste zählt, was angezeigt wird, und enthält **Sortierung** sowie die Kartengröße **S / M / L**.
+
+Fahre mit der Maus über eine Karte, um ihre Schnellaktionen zu sehen; ein Rechtsklick bietet [alles andere](#️-rechtsklick-aktionen).
+
+---
+
 ## 📦 Installation
 
 ### Herunterladen
 
-Hol dir die neueste `snipdeck.exe` von der Seite [**Releases**](https://github.com/hasantr/snipdeck/releases).
-Es handelt sich um eine einzelne portable ausführbare Datei – kein Installer.
+**Windows** – hol dir `snipdeck-windows-x64.exe` von der Seite
+[**Releases**](https://github.com/hasantr/snipdeck/releases). Eine einzelne
+portable ausführbare Datei, kein Installer.
+
+**Linux (x64)** – hol dir `snipdeck-linux-x64.tar.gz` von derselben Seite:
+
+```bash
+tar xzf snipdeck-linux-x64.tar.gz
+cd snipdeck-linux-x64
+./install.sh          # into ~/.local, no root; --uninstall reverses it
+```
+
+Starte es danach über dein Anwendungsmenü. Das ist keine Stilfrage: Unter Wayland leitet
+das Desktop-Portal die Anwendungs-ID aus dem `.desktop`-Eintrag ab, über den die App gestartet
+wurde, und ohne einen solchen weigert es sich, irgendein globales Tastenkürzel zu binden.
 
 ### Aus dem Quellcode erstellen
 
-Voraussetzungen: [Rust](https://rustup.rs/) (stable) und Windows 10 oder 11.
+Voraussetzungen: [Rust](https://rustup.rs/) (stable).
 
-```powershell
+```bash
 git clone https://github.com/hasantr/snipdeck.git
 cd snipdeck
 cargo build --release
 ```
 
-Die Binärdatei landet unter `target\release\snipdeck.exe`.
+**Windows** (10 oder 11): Die Binärdatei landet unter `target\release\snipdeck.exe`.
+
+**Linux**: Der Build benötigt die Header für GTK, X11/Wayland, Tray, D-Bus und GL.
+Unter Debian/Ubuntu:
+
+```bash
+sudo apt install libgtk-3-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev \
+  libxcb-xfixes0-dev libxcb-randr0-dev libxrandr-dev libxkbcommon-dev \
+  libwayland-dev libayatana-appindicator3-dev libfontconfig-dev libdbus-1-dev \
+  libgl1-mesa-dev libegl1-mesa-dev
+```
+
+PipeWire wird zur Build-Zeit nicht benötigt: Es wird zur Laufzeit für die Wayland-Erfassung
+geladen. Um deinen Build so zu installieren, wie ein Release installiert wird, lege ihn neben
+den Installer:
+
+```bash
+mkdir -p dist/snipdeck && cp target/release/snipdeck packaging/linux/snipdeck.desktop \
+  packaging/linux/install.sh dist/snipdeck/
+cp -r packaging/gnome-extension/snipdeck@revisetouch.com dist/snipdeck/
+dist/snipdeck/install.sh
+```
 
 ---
 
 ## 🌍 Sprachen
 
 Snipdeck ist vollständig lokalisiert. Beim ersten Start wählt es deine Sprache anhand der OS-Locale;
-überschreibe sie jederzeit über das **Globus-Menü** in der Symbolleiste.
+überschreibe sie jederzeit über **`⋯` → Sprache** in der Symbolleiste.
 
 > Englisch · Spanisch · Vereinfachtes Chinesisch · Hindi · Arabisch · Portugiesisch · Russisch · Japanisch ·
 > Deutsch · Französisch · Koreanisch · Italienisch · Türkisch · Indonesisch · Vietnamesisch · Polnisch · Ukrainisch ·
@@ -184,29 +243,98 @@ Binärdatei eingebettet wird (keine Laufzeitabhängigkeit von gettext).
 
 ## 🔒 Datenschutz & Sicherheit
 
-- **Erfassung und OCR sind vollständig lokal.** OCR nutzt die integrierte `Windows.Media.Ocr`-Engine; nichts
-  wird für Erfassung oder Indexierung irgendwohin gesendet.
-- **Der Start bei der Anmeldung ist registry-frei.** Snipdeck legt eine normale Verknüpfung in deinem `shell:Startup`-
-  Ordner ab, anstatt einen `HKCU\…\Run`-Wert zu schreiben – der gewöhnliche, für den Nutzer sichtbare Mechanismus, der
-  den Autostart-Registry-Schlüssel vermeidet, den Antiviren- / EDR-Tools am häufigsten kennzeichnen.
+- **Erfassung und OCR sind lokal.** OCR nutzt unter Windows `Windows.Media.Ocr` und unter Linux
+  Tesseract (über eine Pipe gespeist, ohne temporäre Datei); für Erfassung oder Indexierung wird
+  nichts irgendwohin gesendet. Unter Wayland wird der Bildschirm über das ScreenCast-Portal
+  gelesen: Du erteilst die Freigabe einmal, und die Freigabeanzeige erscheint nur in dem Moment,
+  in dem ein Ausschnitt aufgenommen wird.
+- **OCR + Übersetzen fragt zuerst.** Beim ersten Mal erklärt es, dass der per OCR erkannte
+  *Text* – niemals das Bild – an Google Übersetzer geht, und wartet auf dein Ja.
+  Der Text wird im Request-Body gesendet, nicht in der URL.
 - **Uploads sind opt-in.** Nichts verlässt deinen Rechner ohne einen expliziten Einwilligungsdialog, der
   das Ziel klar benennt. Lade keine sensiblen Inhalte zu einem per Link öffentlich zugänglichen Hoster hoch.
-- **OCR + Übersetzen nutzt das Netzwerk.** Nur der per OCR erkannte *Text* wird an Googles öffentlichen
-  `translate_a`-Endpunkt zur Übersetzung gesendet; er wird sonst nirgendwo verwendet.
+- **Übergabekopien bleiben privat.** Bilder, die an ein Mailprogramm oder einen Editor übergeben
+  werden, landen in einem Ordner, den nur du lesen kannst (`$XDG_RUNTIME_DIR` unter Linux,
+  `%TEMP%\Snipdeck` unter Windows), und werden danach entfernt.
+- **Logs hinterlassen keine Spuren.** Zeigerkoordinaten und Fenstertitel werden nur auf
+  Debug-Ebene protokolliert.
+- **Der Start bei der Anmeldung ist dateibasiert.** Eine normale Verknüpfung in `shell:Startup`
+  unter Windows (nicht der `HKCU\…\Run`-Schlüssel, den Sicherheitstools am häufigsten kennzeichnen),
+  ein XDG-Autostart-Eintrag unter Linux.
 
 ---
 
 ## 🗺️ Roadmap
 
 - [x] Windows 10 / 11
+- [x] **Linux / GNOME** (Wayland) – mit der mitgelieferten Shell-Erweiterung: Erfassen
+      mit `Super`+`Alt`+Ziehen oder den Tastenkürzeln, Ausschnitte erscheinen dort, wo sie
+      erfasst wurden, und bleiben im Vordergrund, OCR, die Farbauswahl
+- [~] **Linux / andere Desktops** – Erfassen über die Tastenkürzel und die Symbolleiste,
+      OCR, die Farbauswahl (über das Desktop-Portal). Außerhalb von GNOME gibt es keine
+      Modifikator+Ziehen-Geste: Sie bräuchte einen globalen Zeiger-Hook, den Linux nur durch
+      Lesen von `/dev/input` gewährt – ein systemweiter Keylogger, um dessen Aktivierung
+      Snipdeck dich nicht bitten wird. Unter Wayland fehlen ohne die Erweiterung Platzierung und
+      Immer-im-Vordergrund (siehe unten)
 - [ ] **macOS** – in Arbeit
-- [ ] **Linux** – in Arbeit
 - [ ] In-App-Einstellungsfenster
 - [ ] Mehr Anmerkungswerkzeuge (Weichzeichnen / Verpixeln, nummerierte Schritt-Badges, Formen verschieben/bearbeiten)
 
-> Snipdeck ist heute ausschließlich für Windows, da Erfassung, OCR, der Tray und das Teilen allesamt
-> Windows-spezifische APIs verwenden. Die Oberfläche ([Slint](https://slint.dev)) und der Großteil des Kerns sind bereits
-> plattformübergreifend, sodass **macOS- und Linux-Builds in Arbeit sind.**
+### Unter Linux ausführen
+
+Installiere es und **starte es über das Anwendungsmenü**, nicht aus einem Terminal.
+Globale Tastenkürzel laufen über das Desktop-Portal, das eine Sitzung von einem Client ohne
+Anwendungs-ID ablehnt, und eine App ohne Sandbox bekommt eine solche ID nur, wenn der Desktop
+sie über einen `.desktop`-Eintrag startet – siehe `packaging/linux/snipdeck.desktop`.
+
+Laufzeitabhängigkeiten: `libayatana-appindicator` (Tray), `xdg-utils` (Teilen) und
+`tesseract` samt den gewünschten Sprachdaten (OCR – optional; ohne es wird OCR übersprungen,
+statt fehlzuschlagen).
+
+**Was Wayland nicht erlaubt.** Ein Wayland-Client kann seine eigenen Fenster weder
+positionieren noch abfragen, wo sie sind, noch verlangen, dass sie über anderen bleiben; alle
+drei Dinge gehören dem Compositor. Daher öffnet sich ein Ausschnitt in einer reinen
+Wayland-Sitzung dort, wo der Compositor ihn hinsetzt, statt über dem Bereich, aus dem er erfasst
+wurde; er kann nicht über anderen Anwendungen schweben, und er erscheint in der Fensterliste.
+Alles andere – Bereichserfassung, das Einfrier-Overlay, globale Tastenkürzel, OCR, Ziehen, das
+Kontextmenü – funktioniert.
+
+KDE und die wlroots-Compositoren (sway, Hyprland, river, COSMIC) bieten
+`wlr-layer-shell` an, das genau diese drei Dinge gewährt; Snipdeck nutzt es noch nicht.
+GNOME/Mutter hat es abgelehnt, es zu implementieren.
+
+**Unter GNOME schließt eine Shell-Erweiterung die Lücke.** Was ein Client nicht darf, darf
+Code, der innerhalb der GNOME Shell läuft. `install.sh` installiert daher zusätzlich
+`snipdeck@revisetouch.com` (aus `packaging/gnome-extension/`), wenn es eine GNOME-Sitzung
+erkennt – eine einzelne Datei, die auf Snipdecks Ausschnittfenster achtet, sie dort platziert,
+wo sie erfasst wurden, sie über anderen Fenstern hält, sie an jede Arbeitsfläche heftet und sie
+aus dem Fensterumschalter herausnimmt. Die Platzierung reist im Fenstertitel mit, der bei diesen
+rahmenlosen Fenstern nie sichtbar ist.
+
+Die Erweiterung bringt auch die Erfassungsgeste zurück. Unter GNOME verschiebt `Super`+Ziehen
+bereits Fenster, daher lautet die Geste **`Super`+`Alt`+Ziehen**, aktiv, solange
+Snipdeck läuft:
+
+| Geste (GNOME) | Ergebnis |
+|---|---|
+| `Super`+`Alt` + Ziehen | Schwebender Ausschnitt auf dem Bildschirm |
+| `Super`+`Alt`+`Ctrl` + Ziehen | Schwebender Ausschnitt **und** Kopie in die Zwischenablage |
+| `Super`+`Alt`+`Shift` + Ziehen | Nur Galerie (kein schwebendes Fenster) |
+| `Super`+`Alt`+`Ctrl`+`Shift` + Ziehen | Galerie **und** Zwischenablage, kein schwebendes Fenster |
+
+„Nur Zwischenablage“ – `Win`+`Alt` unter Windows – hat hier keine Geste; nutze ihr
+Tastenkürzel. `Esc` bricht ein Ziehen ab, und solange du `Super`+`Alt` gedrückt hältst, kannst
+du mehrere Ausschnitte nacheinander aufnehmen.
+
+Melde dich nach der Installation ab und wieder an; die GNOME Shell kann Erweiterungen unter
+Wayland nicht an Ort und Stelle neu laden, weil sie *selbst* der Compositor ist, der deine
+Sitzung trägt. Die Erweiterung ist völlig optional – ohne sie verhält sich Snipdeck wie jeder
+andere Wayland-Client – und abgesehen von Snipdecks eigenen Fenstern berührt sie nur
+`Super`+`Alt`+Ziehen, und auch das nur, solange Snipdeck läuft.
+
+Unter GNOME Wayland fehlt noch: Einen Ausschnitt, den du ziehst, verschiebt Mutter, und die App
+erfährt nie, wo er gelandet ist; daher wird seine Position über Neustarts hinweg nicht
+gespeichert.
 
 ---
 
@@ -264,9 +392,18 @@ Threads und reichen Ergebnisse über Kanäle zurück, die einmal pro Tick geleer
 | `src/share.rs`, `src/upload.rs` | Teilen-Dialog / MAPI-Mail / Editor / Bild-Hoster-Upload |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Tray-Symbol, Start bei der Anmeldung, Single-Instance-Schutz |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Galerie-Persistenz (SQLite + FTS), Einstellungen, Pfade |
+| `src/image_files.rs`, `src/atomic_file.rs` | Ausschnittbilder auf der Festplatte: verlustfreies WebP, atomare Schreibvorgänge |
 | `src/i18n.rs`, `lang/` | Laufzeit-i18n + eingebettete gettext-`.po`-Kataloge (23 Sprachen) |
 
 </details>
+
+---
+
+## ✨ Entwickelt von ReviseTouch
+
+Snipdeck ist eine kostenlose Open-Source-App von **[ReviseTouch](https://revisetouch.com)** –
+wir bauen Entwicklertools und KI-Produkte. Was wir sonst noch bauen, siehst du auf
+**[revisetouch.com](https://revisetouch.com)**.
 
 ---
 
