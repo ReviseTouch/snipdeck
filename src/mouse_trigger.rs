@@ -62,6 +62,13 @@ pub fn pointer_hook_failed() -> bool {
     POINTER_HOOK_FAILED.load(Ordering::Relaxed)
 }
 
+/// For the native Windows hook, which lives in its own module: record that it
+/// could not be installed, as the rdev listener below does for itself.
+#[cfg(target_os = "windows")]
+pub(crate) fn note_pointer_hook_failed() {
+    POINTER_HOOK_FAILED.store(true, Ordering::Relaxed);
+}
+
 /// Arm a one-shot drag-snip (called from the tray menu).
 pub fn arm_snip() {
     SNIP_ARMED.store(true, Ordering::Relaxed);

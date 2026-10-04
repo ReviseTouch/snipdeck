@@ -81,6 +81,10 @@ mod imp {
                 Ok(hook) => hook,
                 Err(err) => {
                     log::error!("native keyboard hook failed: {err}");
+                    // Recorded, not just logged: the toolbar snip and the
+                    // colour picker hide the main window and wait for a click
+                    // from this hook, and have to know none is coming.
+                    crate::mouse_trigger::note_pointer_hook_failed();
                     return;
                 }
             };
@@ -90,6 +94,7 @@ mod imp {
                     Ok(hook) => hook,
                     Err(err) => {
                         log::error!("native mouse hook failed: {err}");
+                        crate::mouse_trigger::note_pointer_hook_failed();
                         let _ = UnhookWindowsHookEx(keyboard_hook);
                         return;
                     }
@@ -281,14 +286,19 @@ mod imp {
             && state.shift_down()
         {
             // Swallow EVERY Win+Shift+Space (including key-repeat); fire
-            // FreezeArm only once.
-            if !FREEZE_ARMED.swap(true, Ordering::Relaxed) {
-                // The Space that would have counted as "a key during the Win
-                // hold" never reaches the OS (we swallow it), so the eventual
-                // Win-up could still read as a lone Win. Arm the release-time
-                // disguise here too — Win is held by definition of the chord.
-                DISGUISE_WINUP_ARMED.store(true, Ordering::Relaxed);
+            // FreezeArm only once. Armed only together with the event: armed
+            // with no position to send, nothing on the app side knew of the
+            // arm, nothing expired it, and the next plain click — no Win held
+            // — started a snip.
+            if !FREEZE_ARMED.load(Ordering::Relaxed) {
                 if let Some((x, y)) = cursor_pos() {
+                    FREEZE_ARMED.store(true, Ordering::Relaxed);
+                    // The Space that would have counted as "a key during the
+                    // Win hold" never reaches the OS (we swallow it), so the
+                    // eventual Win-up could still read as a lone Win. Arm the
+                    // release-time disguise here too — Win is held by
+                    // definition of the chord.
+                    DISGUISE_WINUP_ARMED.store(true, Ordering::Relaxed);
                     let _ = state.tx.send(MouseTriggerEvent::FreezeArm { x, y });
                     crate::pump::wake();
                 }

@@ -249,6 +249,16 @@ impl AppState {
             log::info!("snip trigger ignored: a snip is already in progress");
             return;
         }
+        // On Windows the drag is read by the pointer hook. Without one, the
+        // window would hide and wait for a click that never comes; say so with
+        // the window still on screen, as the colour picker does.
+        #[cfg(target_os = "windows")]
+        if crate::mouse_trigger::pointer_hook_failed() {
+            self.last_error = Some(t(
+                "Snipping needs pointer access this session does not grant.",
+            ));
+            return;
+        }
         // Arm a one-shot region drag: the next left-button drag starts a snip
         // with NO modifier held, routed the way the matching Win+drag would.
         self.armed_routing = Some((to_clip, keep_float, to_gallery));
@@ -288,6 +298,23 @@ impl AppState {
         {
             self.pending_freeze_arm =
                 Some((centre.0, centre.1, std::time::Instant::now() + FREEZE_AFTER_HIDE));
+        }
+    }
+
+    /// A snip that cannot go ahead — its capture failed — gives everything
+    /// back at once: the arm and its routing, the hook's freeze, the overlay,
+    /// and the main window if the snip hid it. Left to the watchdogs in `tick`,
+    /// the window stayed hidden for twelve seconds, with the banner explaining
+    /// the failure inside it, and the arm waited to turn the next ordinary
+    /// click into another attempt.
+    fn abandon_snip(&mut self) {
+        self.armed_snip_at = None;
+        self.armed_routing = None;
+        crate::mouse_trigger::consume_armed();
+        crate::mouse_trigger::clear_freeze();
+        self.overlay.hide();
+        if std::mem::take(&mut self.restore_main_after_snip) {
+            self.pending_show_main = true;
         }
     }
 
@@ -510,7 +537,7 @@ impl AppState {
                         });
                     }
                     Err(e) => {
-                        self.overlay.hide();
+                        self.abandon_snip();
                         log::warn!("snip capture failed: {e:#}");
                         self.last_error = Some(t1("Failed to capture screen: {e}", "{e}", &e.to_string()));
                     }
@@ -522,6 +549,10 @@ impl AppState {
                 // as the overlay backdrop. The drag that starts the selection
                 // arrives as the next StartSnip, which reuses this capture.
                 if self.active.is_some() {
+                    // The hook armed the freeze before sending this; disarm it,
+                    // or with no frozen frame for the watchdog to expire, the
+                    // next plain click would start a snip.
+                    crate::mouse_trigger::clear_freeze();
                     return;
                 }
                 match capture::capture_at(x, y) {
@@ -540,8 +571,7 @@ impl AppState {
                         self.frozen_pending = None;
                         // Capture failed — clear the hook's freeze flag too, or
                         // it stays armed and the next plain click starts a snip.
-                        crate::mouse_trigger::clear_freeze();
-                        self.overlay.hide();
+                        self.abandon_snip();
                         // The banner only has room for the outermost context
                         // ("capturing screen"), which on Wayland hides whatever
                         // the compositor actually refused. Log the whole chain.
