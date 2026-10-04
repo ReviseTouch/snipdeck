@@ -173,12 +173,16 @@ ashpd = { version = "0.13", default-features = false, features = [
 # xcap's Wayland path asks GNOME to write a full-screen PNG into /tmp and reads
 # it back — a 3840x2400 encode, a disk round-trip and a decode for every snip,
 # which measured 5-9 seconds on this machine and rings the shutter each time.
-# ScreenCast hands over PipeWire buffers in memory instead. libpipewire is
-# present wherever PipeWire is the audio server, which on a Wayland desktop is
-# everywhere, and the xcap path is kept as the fallback regardless.
-pipewire = "0.10"
+# ScreenCast hands over PipeWire buffers in memory instead.
+#
+# libpipewire is loaded at run time (src/pipewire_dl.rs), not linked: the
+# `pipewire` crate's bindings needed SPA headers newer than Ubuntu 22.04 has,
+# where the release is built. libpipewire is present wherever PipeWire is the
+# audio server, which on a Wayland desktop is everywhere, and the xcap path is
+# kept as the fallback regardless. Already in the tree, via wayland-sys.
+libloading = "0.8"
 pollster = "0.3"
-# The GNOME extension's channel into the app (see src/gnome_bridge.rs).
+# The GNOME extension's channel into the app (see src/bus_service.rs).
 #
 # Already in the tree — ashpd above and Slint's winit backend both pull zbus 5
 # with async-io — so naming it adds no crate. async-io for the same reason

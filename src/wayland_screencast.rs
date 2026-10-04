@@ -35,18 +35,12 @@
 //! screen.
 
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::{anyhow, Context as _};
 use image::RgbaImage;
 
-/// One frame, already in the layout `image` wants.
-struct Frame {
-    width: u32,
-    height: u32,
-    rgba: Vec<u8>,
-}
+use crate::pipewire_dl::Frame;
 
 /// Path the restore token lives at, so consent survives a restart.
 fn token_path() -> std::path::PathBuf {
@@ -79,6 +73,9 @@ const CAPTURE_TIMEOUT: Duration = Duration::from_secs(30);
 /// so waiting holds up nothing else.
 const CONSENT_TIMEOUT: Duration = Duration::from_secs(120);
 
+/// Long enough for the portal's consent dialog to finish closing.
+const CONSENT_DIALOG_CLOSE: Duration = Duration::from_millis(500);
+
 /// Set for as long as a capture thread is alive.
 ///
 /// A capture that gave up waiting leaves its thread — and the portal's
@@ -101,15 +98,17 @@ impl Drop for InFlight {
 /// exists the portal has already answered, so the only thing left to wait for
 /// is the compositor sending a buffer. This has to fire *before* the caller
 /// gives up, because the caller giving up does not stop this thread — see the
-/// timer in `pipewire_once`.
+/// timer in `pipewire_dl::capture_frame`.
 const FIRST_FRAME_DEADLINE: Duration = Duration::from_secs(10);
 
 /// Is this path worth trying at all?
 ///
-/// Only on a Wayland session. Under X11 xcap talks to the X server directly,
-/// which is already fast and does not involve a portal.
+/// Only on a Wayland session — under X11 xcap talks to the X server directly,
+/// which is already fast and does not involve a portal — and only where
+/// libpipewire can be loaded (see `pipewire_dl`).
 pub fn usable() -> bool {
     crate::window_env::caps().backend == crate::window_env::Backend::Wayland
+        && crate::pipewire_dl::available()
 }
 
 /// Grab the current screen.
@@ -154,9 +153,21 @@ pub fn capture() -> anyhow::Result<(i32, i32, RgbaImage)> {
 
 /// Thread body: portal handshake, one frame, done.
 fn one_shot(tx: &crossbeam_channel::Sender<anyhow::Result<(i32, i32, Frame)>>) -> anyhow::Result<()> {
+    let consent_asked = read_token().is_none();
     let (session, fd, node_id, position) = pollster::block_on(negotiate())?;
     log::debug!("screencast: node {node_id} at {position:?}");
-    let outcome = pipewire_once(fd, node_id, position, tx);
+    if consent_asked {
+        // The consent dialog has only just been answered and is still on its
+        // way out; a stream started now sends a first frame with the dialog in
+        // it, and the very first snip after granting access was a picture of
+        // the permission prompt. Started once it has gone, the stream's first
+        // frame is the screen.
+        std::thread::sleep(CONSENT_DIALOG_CLOSE);
+    }
+    let outcome = crate::pipewire_dl::capture_frame(fd, node_id, FIRST_FRAME_DEADLINE)
+        .map(|frame| {
+            let _ = tx.try_send(Ok((position.0, position.1, frame)));
+        });
 
     // Close it, always. Dropping an ashpd `Session` does not end the portal
     // session — closing is an explicit call — and an unclosed cast is what
@@ -233,269 +244,4 @@ async fn negotiate() -> anyhow::Result<(CastSession, std::os::fd::OwnedFd, u32, 
     // The session is handed back rather than dropped: it has to outlive the
     // stream, and then be closed explicitly. See `one_shot`.
     Ok((session, fd, node_id, position))
-}
-
-/// The PipeWire half: connect, negotiate a format, take one frame, quit.
-fn pipewire_once(
-    fd: std::os::fd::OwnedFd,
-    node_id: u32,
-    position: (i32, i32),
-    tx: &crossbeam_channel::Sender<anyhow::Result<(i32, i32, Frame)>>,
-) -> anyhow::Result<()> {
-    use pipewire as pw;
-    use pw::spa;
-
-    pw::init();
-
-    let mainloop = pw::main_loop::MainLoopRc::new(None).context("pipewire main loop")?;
-    let context = pw::context::ContextRc::new(&mainloop, None).context("pipewire context")?;
-    let core = context
-        .connect_fd_rc(fd, None)
-        .context("connecting to the PipeWire remote")?;
-
-    let stream = pw::stream::StreamRc::new(
-        core,
-        "snipdeck-capture",
-        pw::properties::properties! {
-            *pw::keys::MEDIA_TYPE => "Video",
-            *pw::keys::MEDIA_CATEGORY => "Capture",
-            *pw::keys::MEDIA_ROLE => "Screen",
-        },
-    )
-    .context("creating the capture stream")?;
-
-    // Filled in by `param_changed`, read by `process`.
-    let format = Arc::new(Mutex::new(spa::param::video::VideoInfoRaw::default()));
-    let format_cb = format.clone();
-    let sender = Arc::new(Mutex::new(Some(tx.clone())));
-    let quit = mainloop.clone();
-    let sender_state = sender.clone();
-    let quit_state = mainloop.clone();
-    // Cloned here rather than at the timer below: `process` takes `sender` by
-    // move when the listener is registered.
-    let sender_timer = sender.clone();
-
-    let _listener = stream
-        .add_local_listener_with_user_data(())
-        .state_changed(move |_, _, old, new| {
-            log::debug!("screencast stream state: {old:?} -> {new:?}");
-            // A stream that has errored will never produce a frame. Waiting out
-            // the caller's timeout after that is not patience, it is a hang:
-            // thirty seconds of an application that looks frozen, and then a
-            // fallback that could have run immediately.
-            if let pw::stream::StreamState::Error(msg) = &new {
-                if let Some(tx) = sender_state.lock().unwrap().take() {
-                    let _ = tx.try_send(Err(anyhow!("the capture stream failed: {msg}")));
-                }
-                quit_state.quit();
-            }
-        })
-        .param_changed(move |_, _, id, param| {
-            let Some(param) = param else { return };
-            if id != spa::param::ParamType::Format.as_raw() {
-                return;
-            }
-            let Ok((media_type, media_subtype)) = spa::param::format_utils::parse_format(param)
-            else {
-                return;
-            };
-            if media_type != spa::param::format::MediaType::Video
-                || media_subtype != spa::param::format::MediaSubtype::Raw
-            {
-                return;
-            }
-            let mut f = format_cb.lock().unwrap();
-            if f.parse(param).is_ok() {
-                log::debug!(
-                    "screencast format: {}x{} {:?}",
-                    f.size().width,
-                    f.size().height,
-                    f.format()
-                );
-            }
-        })
-        .process(move |stream, _| {
-            // Nothing left to answer: the frame has been sent and the loop is
-            // on its way out. Buffers still arriving are drained and dropped.
-            if sender.lock().unwrap().is_none() {
-                let _ = stream.dequeue_buffer();
-                return;
-            }
-            let Some(mut buffer) = stream.dequeue_buffer() else {
-                return;
-            };
-            let datas = buffer.datas_mut();
-            let Some(data) = datas.first_mut() else { return };
-            let info = *format.lock().unwrap();
-            let (w, h) = (info.size().width, info.size().height);
-            if w == 0 || h == 0 {
-                return;
-            }
-            let chunk_stride = data.chunk().stride().max(0) as usize;
-            // A zero-size chunk is the compositor saying "nothing new"; it is
-            // not a frame, and treating it as one is how a capture comes back
-            // blank.
-            if data.chunk().size() == 0 {
-                return;
-            }
-            let Some(src) = data.data() else { return };
-
-            let stride = if chunk_stride > 0 {
-                chunk_stride
-            } else {
-                w as usize * 4
-            };
-            let row_bytes = w as usize * 4;
-            let mut rgba = vec![0u8; row_bytes * h as usize];
-            let swap = matches!(
-                info.format(),
-                spa::param::video::VideoFormat::BGRx | spa::param::video::VideoFormat::BGRA
-            );
-            for row in 0..h as usize {
-                let s = row * stride;
-                if s + row_bytes > src.len() {
-                    break;
-                }
-                let srow = &src[s..s + row_bytes];
-                let drow = &mut rgba[row * row_bytes..(row + 1) * row_bytes];
-                for (px_s, px_d) in srow.chunks_exact(4).zip(drow.chunks_exact_mut(4)) {
-                    if swap {
-                        // BGRx/BGRA -> RGBA.
-                        px_d[0] = px_s[2];
-                        px_d[1] = px_s[1];
-                        px_d[2] = px_s[0];
-                    } else {
-                        px_d[0] = px_s[0];
-                        px_d[1] = px_s[1];
-                        px_d[2] = px_s[2];
-                    }
-                    // Force alpha: `x` is undefined padding, and carrying it
-                    // through leaves the snip transparent in patches.
-                    px_d[3] = 255;
-                }
-            }
-
-            if let Some(tx) = sender.lock().unwrap().take() {
-                let _ = tx.try_send(Ok((
-                    position.0,
-                    position.1,
-                    Frame {
-                        width: w,
-                        height: h,
-                        rgba,
-                    },
-                )));
-            }
-            // One frame is all this session was for.
-            quit.quit();
-        })
-        .register()
-        .context("registering the stream listener")?;
-
-    let obj = spa::pod::object!(
-        spa::utils::SpaTypes::ObjectParamFormat,
-        spa::param::ParamType::EnumFormat,
-        spa::pod::property!(
-            spa::param::format::FormatProperties::MediaType,
-            Id,
-            spa::param::format::MediaType::Video
-        ),
-        spa::pod::property!(
-            spa::param::format::FormatProperties::MediaSubtype,
-            Id,
-            spa::param::format::MediaSubtype::Raw
-        ),
-        spa::pod::property!(
-            spa::param::format::FormatProperties::VideoFormat,
-            Choice,
-            Enum,
-            Id,
-            spa::param::video::VideoFormat::BGRx,
-            spa::param::video::VideoFormat::RGBx,
-            spa::param::video::VideoFormat::BGRA,
-            spa::param::video::VideoFormat::RGBA
-        ),
-        spa::pod::property!(
-            spa::param::format::FormatProperties::VideoSize,
-            Choice,
-            Range,
-            Rectangle,
-            spa::utils::Rectangle {
-                width: 1920,
-                height: 1080
-            },
-            spa::utils::Rectangle {
-                width: 1,
-                height: 1
-            },
-            spa::utils::Rectangle {
-                width: 8192,
-                height: 8192
-            }
-        ),
-        spa::pod::property!(
-            spa::param::format::FormatProperties::VideoFramerate,
-            Choice,
-            Range,
-            Fraction,
-            spa::utils::Fraction { num: 60, denom: 1 },
-            // Minimum 0/1, NOT 1/1. A screencast source advertises a variable
-            // rate — it sends on damage, not on a clock — and demanding at
-            // least one frame a second leaves no format in common with it:
-            // the stream goes straight to Error("no more input formats").
-            spa::utils::Fraction { num: 0, denom: 1 },
-            spa::utils::Fraction { num: 60, denom: 1 }
-        ),
-    );
-
-    let values: Vec<u8> = spa::pod::serialize::PodSerializer::serialize(
-        std::io::Cursor::new(Vec::new()),
-        &spa::pod::Value::Object(obj),
-    )
-    .context("serialising the format request")?
-    .0
-    .into_inner();
-    let mut params = [spa::pod::Pod::from_bytes(&values)
-        .ok_or_else(|| anyhow!("format pod did not round-trip"))?];
-
-    stream
-        .connect(
-            spa::utils::Direction::Input,
-            Some(node_id),
-            pw::stream::StreamFlags::AUTOCONNECT | pw::stream::StreamFlags::MAP_BUFFERS,
-            &mut params,
-        )
-        .context("connecting the capture stream")?;
-
-    // A deadline INSIDE the loop, not merely around it.
-    //
-    // `mainloop.run()` returns when `process` has a frame or `state_changed`
-    // reports an error. A stream that does neither leaves this thread running
-    // after `capture()` has already given up on it — and a screencast source
-    // sends on damage rather than on a clock, so "neither" is a real state, not
-    // a hypothetical one. The cost is not the idle thread: `one_shot` never
-    // reaches its `session.close()`, so the cast stays open and the desktop's
-    // screen-sharing indicator stays lit, and every retry stacks another one.
-    // That is exactly the accumulation the per-snip design exists to prevent,
-    // and without this timer it survived in the one path nobody watches.
-    let quit_timer = mainloop.clone();
-    let timer = mainloop.loop_().add_timer(move |_| {
-        if let Some(tx) = sender_timer.lock().unwrap().take() {
-            let _ = tx.try_send(Err(anyhow!(
-                "the compositor sent no frame within {}s",
-                FIRST_FRAME_DEADLINE.as_secs()
-            )));
-        }
-        quit_timer.quit();
-    });
-    timer
-        .update_timer(Some(FIRST_FRAME_DEADLINE), None)
-        .into_result()
-        .map_err(|e| anyhow!("arming the first-frame deadline: {e:?}"))?;
-
-    // Returns once `process` has a frame, the stream reports an error, or the
-    // timer above fires. Every one of those paths unwinds to `one_shot`, which
-    // closes the portal session.
-    mainloop.run();
-    Ok(())
 }

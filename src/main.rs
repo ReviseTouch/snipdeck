@@ -25,6 +25,9 @@ mod native_mouse_trigger;
 mod ocr;
 mod os;
 mod paths;
+/// libpipewire, loaded at run time for the ScreenCast capture. Linux-only.
+#[cfg(target_os = "linux")]
+mod pipewire_dl;
 /// Wayland global shortcuts. Linux-only: every other platform has a working
 /// `global-hotkey` backend and never reaches for the portal.
 #[cfg(target_os = "linux")]
