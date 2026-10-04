@@ -78,7 +78,7 @@ impl AppState {
         window.set_pinned_count(self.gallery.snips.iter().filter(|s| s.pinned).count() as i32);
         window.set_floating_count(self.floating.shown_count() as i32);
         window.set_filtered_count(items.len() as i32);
-        window.set_storage_size(SharedString::from(storage_size_text(&self.gallery.snips)));
+        window.set_storage_size(SharedString::from(storage_size_text(&self.gallery.snips, &mut self.file_sizes)));
     }
 
     /// Chunk the already-built `gallery_cards` into rows of `gallery_cols`
@@ -274,12 +274,14 @@ impl AppState {
     /// re-insert put the id in it twice, so the stale copy evicted the fresh
     /// thumbnail early.
     pub(crate) fn forget_thumb(&mut self, id: Uuid) {
+        self.file_sizes.remove(&id);
         if self.thumb_cache.remove(&id).is_some() {
             self.thumb_order.retain(|&o| o != id);
         }
     }
 
     pub(crate) fn forget_all_thumbs(&mut self) {
+        self.file_sizes.clear();
         self.thumb_cache.clear();
         self.thumb_order.clear();
     }

@@ -137,6 +137,11 @@ pub struct AppState {
     // Decoded-thumbnail cache, bounded (LRU-ish) so total memory stays flat
     // no matter how many snips accumulate; visible cards fetch from here.
     thumb_cache: std::collections::HashMap<Uuid, Image>,
+    /// Each snip's image file size, for the storage total in the status bar.
+    /// Stat-ing every file on every gallery refresh — each search keystroke —
+    /// grew with the gallery; sizes are read once and dropped on an edit, a
+    /// delete or a format conversion (`forget_thumb`).
+    file_sizes: std::collections::HashMap<Uuid, u64>,
     thumb_order: std::collections::VecDeque<Uuid>,
     /// Flat, already-built cards (id + SnipItem) for the current filter/sort.
     /// Kept so a column-count change can re-chunk into rows cheaply (no
@@ -255,6 +260,7 @@ impl AppState {
             hotkey_error,
             background_errors: crossbeam_channel::unbounded(),
             thumb_cache: std::collections::HashMap::new(),
+            file_sizes: std::collections::HashMap::new(),
             thumb_order: std::collections::VecDeque::new(),
             gallery_cards: Vec::new(),
             gallery_rows: Vec::new(),
@@ -485,7 +491,10 @@ impl AppState {
         if !converted.is_empty() {
             let stale: Vec<_> = converted
                 .into_iter()
-                .flat_map(|c| self.gallery.apply_conversion(c))
+                .flat_map(|c| {
+                    self.file_sizes.remove(&c.id);
+                    self.gallery.apply_conversion(c)
+                })
                 .collect();
             match self.save_gallery() {
                 Ok(()) => stale.iter().for_each(|p| crate::image_files::remove(p)),
@@ -1080,11 +1089,20 @@ fn snip_preview(
     ("", String::new())
 }
 
-fn storage_size_text(snips: &[crate::snip::Snip]) -> String {
+fn storage_size_text(
+    snips: &[crate::snip::Snip],
+    sizes: &mut std::collections::HashMap<Uuid, u64>,
+) -> String {
     let bytes: u64 = snips
         .iter()
-        .filter_map(|snip| std::fs::metadata(snip.image_path()).ok())
-        .map(|meta| meta.len())
+        .filter_map(|snip| match sizes.get(&snip.id) {
+            Some(&len) => Some(len),
+            None => {
+                let len = std::fs::metadata(snip.image_path()).ok()?.len();
+                sizes.insert(snip.id, len);
+                Some(len)
+            }
+        })
         .sum();
     if bytes >= 1024 * 1024 {
         format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))

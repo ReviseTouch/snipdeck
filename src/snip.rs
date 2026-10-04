@@ -182,7 +182,7 @@ pub fn make_snip(area: ScreenRect) -> Snip {
 /// A snip moved from PNG to lossless WebP in the background, ready to be
 /// recorded by [`GalleryState::apply_conversion`].
 pub struct Converted {
-    id: Uuid,
+    pub id: Uuid,
     /// The PNG the conversion read; the snip must still point at it.
     from: String,
     image_file: String,
