@@ -1,0 +1,534 @@
+// The main window's controls — one implementation each, size by role.
+//
+// Ladders (quiet-desktop):
+//   28 px   toolbar controls          ToolbarButton, SplitButton, IconButton,
+//                                     SearchBox
+//   26 px   card actions, options     CardAction, Option
+//   24 px   strip and status bar      FilterChip, TextButton, SizeToggle
+//   32 px   menu rows                 MenuRow
+//   icons   16 in controls, 14 in chips and rows; stroke 1.6, 1.9 on hover
+//
+// Hover on an inactive control darkens its INK and moves nothing else; the
+// ground changes only on press. Selection is shown by ground + ink, never by
+// weight — a label that turns bold re-measures itself and shifts its row.
+
+import { Glyph } from "icons.slint";
+import { Theme } from "theme.slint";
+
+// The single tooltip the main window draws; buttons publish into it.
+export global Tips {
+    in-out property <string> text: "";
+    in-out property <length> x: 0px;
+    in-out property <length> y: 0px;
+}
+
+component TipArea inherits TouchArea {
+    in property <string> tip: "";
+    in property <length> anchor-x;
+    in property <length> anchor-y;
+    in property <length> anchor-h;
+    changed has-hover => {
+        if (self.has-hover && root.tip != "") {
+            Tips.text = root.tip;
+            Tips.x = root.anchor-x;
+            Tips.y = root.anchor-y + root.anchor-h + 4px;
+        } else if (Tips.text == root.tip) {
+            Tips.text = "";
+        }
+    }
+}
+
+export component ToolbarButton inherits Rectangle {
+    in property <string> icon: "";
+    in property <string> label: "";
+    in property <bool> primary: false;
+    in property <bool> active: false;
+    in property <bool> destructive: false;
+    // Icon only — for a narrow window; the label moves into the tooltip.
+    in property <bool> compact: false;
+    in property <string> tooltip: "";
+    callback clicked();
+
+    property <color> ink: primary ? Theme.on-accent
+        : destructive ? Theme.on-danger
+        : (active || ta.has-hover) ? Theme.ink-1 : Theme.ink-2;
+
+    height: 28px;
+    min-width: 28px;
+    border-radius: 7px;
+    border-width: (primary || destructive || active) ? 0px : 1px;
+    border-color: Theme.line-2;
+    background: primary ? (ta.pressed ? Theme.accent-pressed : (ta.has-hover ? Theme.accent-hover : Theme.accent))
+        : destructive ? (ta.has-hover ? Theme.danger-fill-hover : Theme.danger-fill)
+        : active ? Theme.selected
+        : ta.pressed ? Theme.hover : transparent;
+    animate background { duration: 80ms; }
+
+    HorizontalLayout {
+        padding-left: root.compact ? 6px : 10px;
+        padding-right: root.compact ? 6px : 10px;
+        spacing: 6px;
+        alignment: center;
+        if root.icon != "" : Glyph {
+            name: root.icon;
+            paint: root.ink;
+            size: 16px;
+            weight: ta.has-hover ? 1.9px : 1.6px;
+        }
+        if !root.compact && root.label != "" : Text {
+            text: root.label;
+            color: root.ink;
+            font-size: 13.5px;
+            font-weight: 500;
+            vertical-alignment: center;
+        }
+    }
+
+    ta := TipArea {
+        tip: root.compact && root.tooltip == "" ? root.label : root.tooltip;
+        anchor-x: root.absolute-position.x;
+        anchor-y: root.absolute-position.y;
+        anchor-h: root.height;
+        clicked => { Tips.text = ""; root.clicked(); }
+    }
+}
+
+// The primary action with its variants behind a chevron: one button, one
+// accent, instead of three side by side.
+export component SplitButton inherits Rectangle {
+    in property <string> icon: "";
+    in property <string> label: "";
+    in property <string> tooltip: "";
+    in property <string> menu-tooltip: "";
+    in property <bool> menu-open: false;
+    callback clicked();
+    callback menu();
+
+    height: 28px;
+    border-radius: 7px;
+    background: Theme.accent;
+
+    HorizontalLayout {
+        spacing: 0px;
+        main := Rectangle {
+            border-radius: 7px;
+            background: main-ta.pressed ? Theme.accent-pressed : (main-ta.has-hover ? Theme.accent-hover : transparent);
+            animate background { duration: 80ms; }
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                spacing: 6px;
+                Glyph { name: root.icon; paint: Theme.on-accent; size: 16px; weight: main-ta.has-hover ? 1.9px : 1.6px; }
+                Text {
+                    text: root.label;
+                    color: Theme.on-accent;
+                    font-size: 13.5px;
+                    font-weight: 500;
+                    vertical-alignment: center;
+                }
+            }
+            main-ta := TipArea {
+                tip: root.tooltip;
+                anchor-x: root.absolute-position.x;
+                anchor-y: root.absolute-position.y;
+                anchor-h: root.height;
+                clicked => { Tips.text = ""; root.clicked(); }
+            }
+        }
+        Rectangle {
+            width: 1px;
+            background: transparent;
+            Rectangle { y: 6px; height: parent.height - 12px; width: 1px; background: #1e1d1a40; }
+        }
+        Rectangle {
+            width: 26px;
+            border-radius: 7px;
+            background: (menu-ta.pressed || root.menu-open) ? Theme.accent-pressed : (menu-ta.has-hover ? Theme.accent-hover : transparent);
+            animate background { duration: 80ms; }
+            Glyph {
+                name: "chevron-down";
+                paint: Theme.on-accent;
+                size: 14px;
+                weight: menu-ta.has-hover ? 1.9px : 1.6px;
+                x: (parent.width - self.width) / 2;
+            }
+            menu-ta := TipArea {
+                tip: root.menu-tooltip;
+                anchor-x: root.absolute-position.x;
+                anchor-y: root.absolute-position.y;
+                anchor-h: root.height;
+                clicked => { Tips.text = ""; root.menu(); }
+            }
+        }
+    }
+}
+
+export component IconButton inherits Rectangle {
+    in property <string> icon: "";
+    in property <bool> active: false;
+    in property <string> tooltip: "";
+    callback clicked();
+
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: active ? Theme.selected : (ta.pressed ? Theme.hover : transparent);
+    animate background { duration: 80ms; }
+
+    Glyph {
+        name: root.icon;
+        paint: (root.active || ta.has-hover) ? Theme.ink-1 : Theme.ink-2;
+        size: 16px;
+        weight: ta.has-hover ? 1.9px : 1.6px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+    }
+
+    ta := TipArea {
+        tip: root.tooltip;
+        anchor-x: root.absolute-position.x;
+        anchor-y: root.absolute-position.y;
+        anchor-h: root.height;
+        clicked => { Tips.text = ""; root.clicked(); }
+    }
+}
+
+export component SearchBox inherits Rectangle {
+    in-out property <string> value;
+    in property <string> placeholder: "";
+    callback edited(string);
+    callback cleared();
+
+    public function focus-input() {
+        input.focus();
+    }
+
+    height: 28px;
+    border-radius: 7px;
+    border-width: 1px;
+    border-color: input.has-focus ? Theme.line-strong : Theme.line-2;
+    background: Theme.ground;
+
+    Glyph {
+        name: "search";
+        paint: Theme.ink-3;
+        size: 16px;
+        weight: 1.6px;
+        x: 9px;
+        y: (parent.height - self.height) / 2;
+    }
+
+    if root.value == "" : Text {
+        x: 32px;
+        width: parent.width - 40px;
+        height: parent.height;
+        text: root.placeholder;
+        color: Theme.ink-4;
+        font-size: 13.5px;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+
+    input := TextInput {
+        x: 32px;
+        width: parent.width - 40px - (root.value != "" ? 22px : 0px);
+        height: parent.height;
+        color: Theme.ink-1;
+        selection-background-color: Theme.accent;
+        selection-foreground-color: Theme.on-accent;
+        font-size: 13.5px;
+        single-line: true;
+        vertical-alignment: center;
+        text <=> root.value;
+        edited => { root.edited(self.text); }
+        key-pressed(event) => {
+            if (event.text == Key.Escape && root.value != "") {
+                root.value = "";
+                root.cleared();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    if root.value != "" : Rectangle {
+        x: parent.width - 24px;
+        y: (parent.height - self.height) / 2;
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        background: clear-ta.pressed ? Theme.hover : transparent;
+        Glyph {
+            name: "x";
+            paint: clear-ta.has-hover ? Theme.ink-1 : Theme.ink-3;
+            size: 14px;
+            weight: 1.6px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+        }
+        clear-ta := TouchArea {
+            clicked => {
+                root.value = "";
+                root.cleared();
+            }
+        }
+    }
+}
+
+// One active filter, with the cross that clears it.
+export component FilterChip inherits Rectangle {
+    in property <string> text: "";
+    callback removed();
+
+    height: 24px;
+    border-radius: 12px;
+    background: x-ta.pressed ? Theme.selected : Theme.fill;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 5px;
+        spacing: 4px;
+        Text {
+            text: root.text;
+            color: Theme.ink-2;
+            font-size: 12.5px;
+            vertical-alignment: center;
+        }
+        Glyph {
+            name: "x";
+            paint: x-ta.has-hover ? Theme.ink-1 : Theme.ink-3;
+            size: 14px;
+            weight: x-ta.has-hover ? 1.9px : 1.6px;
+        }
+    }
+    x-ta := TouchArea {
+        clicked => { root.removed(); }
+    }
+}
+
+// Text with an optional trailing chevron: "Clear filters", "Sort: Newest ▾".
+export component TextButton inherits Rectangle {
+    in property <string> text: "";
+    in property <string> value: "";
+    in property <bool> chevron: false;
+    in property <bool> open: false;
+    callback clicked();
+
+    height: 24px;
+    border-radius: 7px;
+    background: (ta.pressed || root.open) ? Theme.hover : transparent;
+
+    HorizontalLayout {
+        padding-left: 6px;
+        padding-right: 6px;
+        spacing: 4px;
+        Text {
+            text: root.text;
+            color: ta.has-hover ? Theme.ink-1 : Theme.ink-3;
+            font-size: 12.5px;
+            vertical-alignment: center;
+        }
+        if root.value != "" : Text {
+            text: root.value;
+            color: ta.has-hover ? Theme.ink-1 : Theme.ink-2;
+            font-size: 12.5px;
+            vertical-alignment: center;
+        }
+        if root.chevron : Glyph {
+            name: "chevron-down";
+            paint: ta.has-hover ? Theme.ink-1 : Theme.ink-3;
+            size: 14px;
+            weight: 1.6px;
+        }
+    }
+    ta := TouchArea {
+        clicked => { Tips.text = ""; root.clicked(); }
+    }
+}
+
+// Segmented S / M / L for the gallery card size.
+export component SizeToggle inherits Rectangle {
+    in property <int> current: 1; // 0 = S, 1 = M, 2 = L
+    in property <string> tooltip: "";
+    callback changed(int);
+
+    height: 24px;
+    width: 84px;
+    border-radius: 7px;
+    background: Theme.fill;
+
+    HorizontalLayout {
+        padding: 2px;
+        spacing: 2px;
+        for opt[i] in ["S", "M", "L"] : cell := Rectangle {
+            horizontal-stretch: 1;
+            border-radius: 5px;
+            property <bool> sel: i == root.current;
+            background: cell.sel ? Theme.segment-on : transparent;
+            animate background { duration: 80ms; }
+            Text {
+                text: opt;
+                color: (cell.sel || cell-ta.has-hover) ? Theme.ink-1 : Theme.ink-3;
+                font-size: 12.5px;
+                font-weight: 500;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            cell-ta := TipArea {
+                tip: root.tooltip;
+                anchor-x: root.absolute-position.x;
+                anchor-y: root.absolute-position.y;
+                anchor-h: root.height;
+                clicked => { Tips.text = ""; root.changed(i); }
+            }
+        }
+    }
+}
+
+// A card's status: neutral, sitting over the thumbnail.
+export component Badge inherits Rectangle {
+    in property <string> text: "";
+
+    height: 18px;
+    border-radius: 9px;
+    border-width: 1px;
+    border-color: Theme.line;
+    background: Theme.raised;
+    HorizontalLayout {
+        padding-left: 7px;
+        padding-right: 7px;
+        Text {
+            text: root.text;
+            color: Theme.ink-2;
+            font-size: 11px;
+            font-weight: 500;
+            vertical-alignment: center;
+        }
+    }
+}
+
+export component CardAction inherits Rectangle {
+    in property <string> icon: "";
+    in property <bool> active: false;
+    in property <bool> danger: false;
+    // Exposed so the card keeps its action row while the pointer is over a
+    // button (the button's TouchArea otherwise steals hover from the card's).
+    out property <bool> hovered: ta.has-hover;
+    callback clicked();
+
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border-width: 1px;
+    border-color: Theme.line-2;
+    background: active ? Theme.selected : (ta.pressed ? Theme.hover : Theme.raised);
+    animate background { duration: 80ms; }
+
+    Glyph {
+        name: root.icon;
+        paint: root.danger && ta.has-hover ? Theme.danger : ((root.active || ta.has-hover) ? Theme.ink-1 : Theme.ink-2);
+        size: 14px;
+        weight: ta.has-hover ? 1.9px : 1.6px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+    }
+
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// The surface every popover sits on: an island, edged so it still separates
+// where the renderer draws no shadow.
+export component Popover inherits Rectangle {
+    background: Theme.raised;
+    border-radius: 9px;
+    border-width: 1px;
+    border-color: Theme.island;
+    drop-shadow-blur: 36px;
+    drop-shadow-offset-y: 14px;
+    drop-shadow-color: Theme.shadow-pop;
+    // Clicks inside the popover never reach the backdrop behind it.
+    TouchArea { }
+    @children
+}
+
+export component MenuRow inherits Rectangle {
+    in property <string> text: "";
+    in property <string> shortcut: "";
+    in property <bool> checkable: false;
+    in property <bool> checked: false;
+    in property <bool> submenu: false;
+    in property <bool> danger: false;
+    callback clicked();
+
+    height: 32px;
+    border-radius: 5px;
+    background: ta.pressed ? Theme.selected : (ta.has-hover ? Theme.hover : transparent);
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 8px;
+        if root.checkable : Glyph {
+            name: root.checked ? "check" : "";
+            paint: Theme.ink-1;
+            size: 14px;
+            weight: 1.6px;
+        }
+        Text {
+            text: root.text;
+            color: root.danger ? Theme.danger : Theme.ink-1;
+            font-size: 13.5px;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            overflow: elide;
+        }
+        if root.shortcut != "" : Text {
+            text: root.shortcut;
+            color: Theme.ink-3;
+            font-family: "monospace";
+            font-size: 11px;
+            vertical-alignment: center;
+        }
+        if root.submenu : Glyph {
+            name: "chevron-right";
+            paint: Theme.ink-3;
+            size: 14px;
+            weight: 1.6px;
+        }
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+export component MenuSeparator inherits Rectangle {
+    height: 9px;
+    Rectangle { y: 4px; height: 1px; background: Theme.line; }
+}
+
+// One choice in the filter panel: selected by ground and ink.
+export component Option inherits Rectangle {
+    in property <string> text: "";
+    in property <bool> selected: false;
+    callback clicked();
+
+    height: 26px;
+    border-radius: 7px;
+    background: selected ? Theme.selected : (ta.pressed ? Theme.hover : transparent);
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        Text {
+            text: root.text;
+            color: (root.selected || ta.has-hover) ? Theme.ink-1 : Theme.ink-3;
+            font-size: 13px;
+            font-weight: 500;
+            vertical-alignment: center;
+        }
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}

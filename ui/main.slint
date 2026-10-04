@@ -9,31 +9,21 @@ import { LoupeWindow } from "loupe.slint";
 import { ColorResultWindow } from "color_result.slint";
 import { Glyph } from "icons.slint";
 import { ListView, ScrollView } from "std-widgets.slint";
+import { Theme } from "theme.slint";
+import { Tips, ToolbarButton, SplitButton, IconButton, SearchBox, FilterChip, TextButton, SizeToggle, Badge, CardAction, Popover, MenuRow, MenuSeparator, Option } from "widgets.slint";
 
 export { FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape, CollageWindow, CollageCell, TrayItem, AboutWindow, LoupeWindow, ColorResultWindow }
 
-// Singleton holding the currently-hovered element's tooltip text + where to
-// show it (window coords). MainWindow draws ONE overlay box from this, on top
-// of everything, so a tooltip is never clipped by a sibling toolbar/filter row.
-global Tips {
-    in-out property <string> text: "";
-    in-out property <length> x: 0px;
-    in-out property <length> y: 0px;
-}
-
 export struct SnipItem {
     id: string,
-    label: string,
-    preview: string,
-    preview_tag: string,
+    // The window the snip was taken from, when known; empty otherwise.
+    title: string,
     dims: string,
-    size_text: string,
     pinned: bool,
     floating: bool,
     has_ocr: bool,
     has_window: bool,
     monitor: string,
-    source: string,
     created: string,
     thumb: image,
     aspect: float,
@@ -42,381 +32,6 @@ export struct SnipItem {
 export struct LangItem {
     code: string,
     name: string,
-}
-
-component ToolbarButton inherits Rectangle {
-    in property <string> icon: "";
-    in property <string> label: "";
-    in property <string> kbd: "";
-    in property <bool> dark: true;
-    in property <bool> primary: false;
-    in property <bool> danger: false;
-    // Filled red: the confirming button of an irreversible action.
-    in property <bool> destructive: false;
-    in property <bool> active: false;
-    in property <string> tooltip: "";
-    callback clicked();
-
-    property <color> fg: destructive ? #ffffff : primary ? (dark ? #1a0e05 : #ffffff) : (danger && ta.has-hover ? (dark ? #f0a0a0 : #b83434) : (active ? (dark ? #ffb066 : #b85a14) : (dark ? #b8b6b1 : #3a3631)));
-
-    height: 30px;
-    border-radius: 6px;
-    border-width: primary ? 1px : (active ? 1px : 0px);
-    border-color: primary ? (dark ? #d96a1f : #b85a14) : (dark ? #4a3520 : #ecd3b0);
-    background: destructive ? (ta.pressed ? #9e2b2b : (ta.has-hover ? #c93c3c : #b33434)) : ta.pressed
-        ? (primary ? (dark ? #e5731f : #cc5f14)
-            : (danger ? (dark ? #5a2222 : #f6cccc)
-                : (dark ? #3a3a3a : #dedcd4)))
-        : (primary
-            ? (ta.has-hover ? (dark ? #ffa05c : #f08540) : (dark ? #ff8a3d : #e5731f))
-            : (danger && ta.has-hover
-                ? (dark ? #3a1a1a : #fbe6e6)
-                : (active ? (dark ? #2a2520 : #fbe9d6) : (ta.has-hover ? (dark ? #262626 : #ecebe5) : transparent))));
-    animate background { duration: 80ms; }
-
-    HorizontalLayout {
-        padding-left: 9px;
-        padding-right: 9px;
-        spacing: 6px;
-        alignment: center;
-
-        if root.icon != "" : Glyph {
-            name: root.icon;
-            paint: root.fg;
-            size: 17.25px;
-            weight: 1.7px;
-        }
-        Text {
-            text: root.label;
-            color: root.fg;
-            font-size: 12px;
-            font-weight: 500;
-            vertical-alignment: center;
-            overflow: elide;
-        }
-        if root.kbd != "" : Rectangle {
-            height: 16px;
-            min-width: 28px;
-            border-radius: 3px;
-            border-width: 1px;
-            border-color: root.primary ? #00000044 : (root.dark ? #2a2a2a : #dcd9d1);
-            background: root.primary ? #00000022 : (root.dark ? #0e0e0e : #f7f6f1);
-            Text {
-                text: root.kbd;
-                color: root.primary ? #4a2810 : (root.dark ? #5e5b56 : #6e6962);
-                font-size: 10px;
-                font-family: "Consolas";
-                horizontal-alignment: center;
-                vertical-alignment: center;
-                width: 100%;
-                height: 100%;
-            }
-        }
-    }
-
-    ta := TouchArea {
-        clicked => { Tips.text = ""; root.clicked(); }
-        changed has-hover => {
-            if (self.has-hover && root.tooltip != "") {
-                Tips.text = root.tooltip;
-                Tips.x = root.absolute-position.x;
-                Tips.y = root.absolute-position.y + root.height + 4px;
-            } else if (Tips.text == root.tooltip) {
-                Tips.text = "";
-            }
-        }
-    }
-}
-
-component IconButton inherits Rectangle {
-    in property <string> icon: "";
-    in property <bool> dark: true;
-    in property <bool> active: false;
-    in property <bool> danger: false;
-    in property <string> tooltip: "";
-    callback clicked();
-
-    property <color> fg: active ? (dark ? #ffb066 : #b85a14) : (danger && ta.has-hover ? (dark ? #f0a0a0 : #b83434) : (dark ? #b8b6b1 : #3a3631));
-
-    width: 30px;
-    height: 30px;
-    border-radius: 6px;
-    border-width: active ? 1px : 0px;
-    border-color: active ? (dark ? #4a3520 : #ecd3b0) : transparent;
-    background: ta.pressed
-        ? (danger ? (dark ? #5a2222 : #f6cccc) : (dark ? #3a3a3a : #dedcd4))
-        : (active ? (dark ? #2a2520 : #fbe9d6) : (ta.has-hover ? (danger ? (dark ? #3a1a1a : #fbe6e6) : (dark ? #262626 : #ecebe5)) : transparent));
-    animate background { duration: 80ms; }
-
-    Glyph {
-        name: root.icon;
-        paint: root.fg;
-        size: 19.5px;
-        weight: 1.7px;
-        x: (parent.width - self.width) / 2;
-        y: (parent.height - self.height) / 2;
-    }
-
-    ta := TouchArea {
-        clicked => { Tips.text = ""; root.clicked(); }
-        changed has-hover => {
-            if (self.has-hover && root.tooltip != "") {
-                Tips.text = root.tooltip;
-                Tips.x = root.absolute-position.x;
-                Tips.y = root.absolute-position.y + root.height + 4px;
-            } else if (Tips.text == root.tooltip) {
-                Tips.text = "";
-            }
-        }
-    }
-}
-
-component FilterPill inherits Rectangle {
-    in property <string> label: "";
-    in property <string> value: "";
-    in property <bool> dark: true;
-    in property <bool> active: false;
-    in property <string> tooltip: "";
-    callback clicked();
-
-    height: 30px;
-    border-radius: 6px;
-    border-width: 1px;
-    border-color: active ? (dark ? #4a3520 : #ecd3b0) : (dark ? #2e2e2e : #dcd9d1);
-    background: ta.pressed
-        ? (active ? (dark ? #2e2620 : #f5ddc2) : (dark ? #242424 : #eeece4))
-        : (active ? (dark ? #221d18 : #fbe9d6) : (ta.has-hover ? (dark ? #1c1c1c : #fbfaf6) : (dark ? #161616 : #ffffff)));
-    animate background { duration: 80ms; }
-
-    HorizontalLayout {
-        padding-left: 10px;
-        padding-right: 8px;
-        spacing: 6px;
-        alignment: center;
-        Text {
-            text: root.label;
-            color: root.dark ? #5e5b56 : #6e6962;
-            font-size: 12px;
-            font-weight: 500;
-            vertical-alignment: center;
-        }
-        Text {
-            text: root.value;
-            color: root.active ? (root.dark ? #ffb066 : #b85a14) : (root.dark ? #e8e6e2 : #1a1816);
-            font-size: 12px;
-            font-weight: 500;
-            vertical-alignment: center;
-            overflow: elide;
-            horizontal-stretch: 1;
-        }
-        Glyph {
-            name: "chevron-down";
-            paint: root.dark ? #8a8782 : #6e6962;
-            size: 13px;
-            weight: 1.7px;
-        }
-    }
-
-    ta := TouchArea {
-        clicked => { Tips.text = ""; root.clicked(); }
-        changed has-hover => {
-            if (self.has-hover && root.tooltip != "") {
-                Tips.text = root.tooltip;
-                Tips.x = root.absolute-position.x;
-                Tips.y = root.absolute-position.y + root.height + 4px;
-            } else if (Tips.text == root.tooltip) {
-                Tips.text = "";
-            }
-        }
-    }
-}
-
-// Segmented S / M / L control for the gallery card size.
-component SizeToggle inherits Rectangle {
-    in property <bool> dark: true;
-    in property <int> current: 1; // 0 = S, 1 = M, 2 = L
-    in property <string> tooltip: "";
-    callback changed(int);
-
-    height: 30px;
-    width: 90px;
-    border-radius: 6px;
-    border-width: 1px;
-    border-color: dark ? #2e2e2e : #dcd9d1;
-    background: dark ? #161616 : #ffffff;
-
-    HorizontalLayout {
-        padding: 3px;
-        spacing: 3px;
-        for opt[i] in ["S", "M", "L"] : cell := Rectangle {
-            horizontal-stretch: 1;
-            border-radius: 4px;
-            property <bool> sel: i == root.current;
-            background: cell.sel
-                ? (root.dark ? #2a2520 : #fbe9d6)
-                : (cell-ta.pressed ? (root.dark ? #2e2e2e : #e6e5df) : (cell-ta.has-hover ? (root.dark ? #232323 : #f1f0ea) : transparent));
-            animate background { duration: 80ms; }
-            cell-ta := TouchArea {
-                clicked => { Tips.text = ""; root.changed(i); }
-                changed has-hover => {
-                    if (self.has-hover && root.tooltip != "") {
-                        Tips.text = root.tooltip;
-                        Tips.x = root.absolute-position.x;
-                        Tips.y = root.absolute-position.y + root.height + 4px;
-                    } else if (Tips.text == root.tooltip) {
-                        Tips.text = "";
-                    }
-                }
-            }
-            Text {
-                text: opt;
-                color: cell.sel ? (root.dark ? #ffb066 : #b85a14) : (root.dark ? #8a8782 : #6e6962);
-                font-size: 12px;
-                font-weight: cell.sel ? 700 : 500;
-                horizontal-alignment: center;
-                vertical-alignment: center;
-            }
-        }
-    }
-}
-
-component SearchBox inherits Rectangle {
-    in-out property <string> value;
-    in property <bool> dark: true;
-    callback edited(string);
-    callback cleared();
-
-    height: 30px;
-    border-radius: 6px;
-    border-width: 1px;
-    border-color: dark ? #2e2e2e : #dcd9d1;
-    background: dark ? #161616 : #ffffff;
-
-    Glyph {
-        name: "search";
-        paint: root.dark ? #8a8782 : #6e6962;
-        size: 15px;
-        weight: 1.7px;
-        x: 11px;
-        y: (parent.height - self.height) / 2;
-    }
-
-    if root.value == "" : Text {
-        x: 34px;
-        y: 0px;
-        width: parent.width - 45px;
-        height: parent.height;
-        text: @tr("text / OCR / window / monitor / path");
-        color: root.dark ? #6f6b64 : #8c867d;
-        font-size: 13px;
-        vertical-alignment: center;
-        overflow: elide;
-    }
-
-    TextInput {
-        x: 34px;
-        y: 0px;
-        width: parent.width - 42px - (root.value != "" ? 24px : 0px);
-        height: parent.height;
-        color: root.dark ? #e8e6e2 : #1a1816;
-        selection-background-color: #ff8a3d;
-        selection-foreground-color: #1a0e05;
-        font-size: 13px;
-        single-line: true;
-        vertical-alignment: center;
-        text <=> root.value;
-        edited => { root.edited(self.text); }
-    }
-
-    if root.value != "" : Rectangle {
-        x: parent.width - 24px;
-        y: (parent.height - self.height) / 2;
-        width: 18px;
-        height: 18px;
-        border-radius: 3px;
-        background: clear-touch.pressed ? (root.dark ? #3a3a3a : #dcdad2) : (clear-touch.has-hover ? (root.dark ? #2a2a2a : #ecebe5) : transparent);
-        animate background { duration: 80ms; }
-        Glyph {
-            name: "x";
-            paint: clear-touch.has-hover ? (root.dark ? #e8e6e2 : #1a1816) : (root.dark ? #8a8782 : #6e6962);
-            size: 13px;
-            weight: 1.7px;
-            x: (parent.width - self.width) / 2;
-            y: (parent.height - self.height) / 2;
-        }
-        clear-touch := TouchArea {
-            clicked => {
-                root.value = "";
-                root.cleared();
-            }
-        }
-    }
-}
-
-component Chip inherits Rectangle {
-    in property <string> text: "";
-    in property <color> bg: #000000aa;
-    in property <color> fg: #b8b6b1;
-    in property <length> chip-width: 42px;
-
-    width: chip-width;
-    height: 18px;
-    border-radius: 9px;
-    border-width: 1px;
-    border-color: #00000088;
-    background: bg;
-
-    Text {
-        text: root.text;
-        color: root.fg;
-        font-size: 10px;
-        font-weight: 600;
-        horizontal-alignment: center;
-        vertical-alignment: center;
-        width: 100%;
-        height: 100%;
-        overflow: elide;
-    }
-}
-
-component CardAction inherits Rectangle {
-    in property <string> icon: "";
-    in property <bool> dark: true;
-    in property <bool> active_pin: false;
-    in property <bool> active_float: false;
-    in property <bool> danger: false;
-    // Exposed so the card can keep the action row visible while the pointer is
-    // over a button (the button's TouchArea otherwise steals hover from the
-    // card's TouchArea, which would flicker the row out from under the cursor).
-    out property <bool> hovered: ta.has-hover;
-    callback clicked();
-
-    property <color> fg: active_pin ? #2b1f00 : (active_float ? #0e2a17 : (danger && ta.has-hover ? #ffb0b0 : #f6f3ef));
-
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
-    border-width: 1px;
-    border-color: active_pin ? #c89a1a : (active_float ? #2faa55 : (danger && ta.has-hover ? #a84545 : #ffffff44));
-    background: ta.pressed
-        ? (active_pin ? #e0af1e : (active_float ? #37b863 : (danger ? #661c1cee : #454545ee)))
-        : (active_pin
-            ? #ffc832
-            : (active_float ? #4cd47a : (danger && ta.has-hover ? #4a1616ee : (ta.has-hover ? #303030ee : #1b1b1bdd))));
-    animate background { duration: 80ms; }
-
-    Glyph {
-        name: root.icon;
-        paint: root.fg;
-        size: 14px;
-        weight: 1.7px;
-        x: (parent.width - self.width) / 2;
-        y: (parent.height - self.height) / 2;
-    }
-
-    ta := TouchArea {
-        clicked => { root.clicked(); }
-    }
 }
 
 export component MainWindow inherits Window {
@@ -430,9 +45,16 @@ export component MainWindow inherits Window {
     title: "Snipdeck";
     preferred-width: 1100px;
     preferred-height: 700px;
-    min-width: 700px;
-    min-height: 500px;
-    background: c-bg;
+    min-width: 640px;
+    min-height: 480px;
+    background: Theme.ground;
+
+    init => {
+        Theme.dark = root.dark-theme;
+        root.narrow = root.width < 860px;
+        keys.focus();
+    }
+    changed dark-theme => { Theme.dark = root.dark-theme; }
 
     // Rows of cards. Rust chunks the flat snip list into rows of `cols`
     // (reported via gallery-cols-changed) so the ListView below can
@@ -464,7 +86,34 @@ export component MainWindow inherits Window {
     // (Win+drag), 1 = GNOME (Super+Alt+drag, through the shell extension),
     // 2 = anywhere else (the toolbar and the hotkeys; there is no drag gesture).
     in property <int> capture-gesture: 0;
+    // The capture hotkeys as the user reads them ("Ctrl+Alt+Shift+A"), for
+    // the New menu.
+    in property <string> hotkey-snip: "";
+    in property <string> hotkey-snip-clip: "";
+    in property <string> hotkey-clip-only: "";
     property <bool> lang-open: false;
+    property <bool> any-popover: new-menu-open || more-open || filter-open || sort-open || lang-open;
+    function close-popovers() {
+        root.new-menu-open = false;
+        root.more-open = false;
+        root.filter-open = false;
+        root.sort-open = false;
+        root.lang-open = false;
+    }
+    // Popovers: at most one is open at a time.
+    property <bool> new-menu-open: false;
+    property <bool> more-open: false;
+    property <bool> filter-open: false;
+    property <bool> sort-open: false;
+    // How many of the four filters are set (sort and search are not filters).
+    property <int> filter-count: (status-filter-index != 0 ? 1 : 0) + (content-filter-index != 0 ? 1 : 0)
+        + (size-filter-index != 0 ? 1 : 0) + (date-filter-index != 0 ? 1 : 0);
+    // Below this width the secondary toolbar buttons drop their labels. Set
+    // from a change handler, not bound: the labels feed the toolbar's minimum
+    // width, which feeds the window's, which feeds `width` — a binding here is
+    // the layout asking about itself.
+    property <bool> narrow: false;
+    changed width => { root.narrow = root.width < 860px; }
     // Bulk-delete confirmation: 0 = closed, 1 = clear unpinned, 2 = clear all.
     // Both toolbar actions delete files permanently, and the trash button sits
     // right beside the theme toggle — one stray click used to empty the whole
@@ -478,31 +127,24 @@ export component MainWindow inherits Window {
     // the cards-per-row formula so the whole grid reflows when the step changes.
     property <length> card-w: root.thumb-size-index == 0 ? 184px : (root.thumb-size-index == 2 ? 320px : 240px);
     property <length> thumb-h: root.card-w * 0.617;
-    property <length> card-h: root.thumb-h + 72px;
+    property <length> card-h: root.thumb-h + 52px;
     property <length> row-h: root.card-h + 10px;
 
     property <string> status-filter-value: status-filter-index == 1 ? @tr("Pinned") : (status-filter-index == 2 ? @tr("Unpinned") : (status-filter-index == 3 ? @tr("On screen") : (status-filter-index == 4 ? @tr("Hidden") : @tr("All"))));
-    property <string> content-filter-value: content-filter-index == 1 ? @tr("Has OCR") : (content-filter-index == 2 ? @tr("No OCR") : (content-filter-index == 3 ? @tr("Has window") : (content-filter-index == 4 ? @tr("No window") : (content-filter-index == 5 ? @tr("Tagged") : @tr("All")))));
+    property <string> content-filter-value: content-filter-index == 1 ? @tr("Has OCR") : (content-filter-index == 2 ? @tr("No OCR") : (content-filter-index == 3 ? @tr("Has window") : (content-filter-index == 4 ? @tr("No window") : @tr("All"))));
     property <string> size-filter-value: size-filter-index == 1 ? @tr("Small") : (size-filter-index == 2 ? @tr("Medium") : (size-filter-index == 3 ? @tr("Large") : (size-filter-index == 4 ? @tr("Wide") : (size-filter-index == 5 ? @tr("Tall") : (size-filter-index == 6 ? @tr("Square") : @tr("All"))))));
     property <string> date-filter-value: date-filter-index == 1 ? @tr("Today") : (date-filter-index == 2 ? @tr("24 hours") : (date-filter-index == 3 ? @tr("7 days") : (date-filter-index == 4 ? @tr("30 days") : @tr("All"))));
     property <string> sort-filter-value: sort-index == 1 ? @tr("Oldest") : (sort-index == 2 ? @tr("Pinned") : (sort-index == 3 ? @tr("Largest") : (sort-index == 4 ? @tr("Smallest") : (sort-index == 5 ? @tr("Width") : (sort-index == 6 ? @tr("Height") : (sort-index == 7 ? @tr("Monitor") : @tr("Newest")))))));
-    property <bool> filters-active: search-text != "" || status-filter-index != 0 || content-filter-index != 0 || size-filter-index != 0 || date-filter-index != 0 || sort-index != 0;
-    property <color> c-bg: dark-theme ? #141414 : #f3f1ec;
-    property <color> c-toolbar: dark-theme ? #1f1f1f : #ffffff;
-    property <color> c-filter: dark-theme ? #181818 : #f7f6f1;
-    property <color> c-status: dark-theme ? #161616 : #ecebe5;
-    property <color> c-divider: dark-theme ? #262626 : #e2dfd6;
-    property <color> c-card: dark-theme ? #1c1c1c : #ffffff;
-    property <color> c-card-hover: dark-theme ? #232323 : #fbfaf6;
-    property <color> c-card-border: dark-theme ? #2a2a2a : #e2dfd6;
-    property <color> c-card-border-hover: dark-theme ? #4a4a4a : #b8b3a6;
-    property <color> c-well: dark-theme ? #0e0e0e : #101010;
-    property <color> c-fg: dark-theme ? #e8e6e2 : #1a1816;
-    property <color> c-fg2: dark-theme ? #b8b6b1 : #3a3631;
-    property <color> c-fg3: dark-theme ? #8a8782 : #6e6962;
-    property <color> c-fg4: dark-theme ? #5e5b56 : #9a948a;
-    property <color> c-meta: dark-theme ? #7e9bbf : #3a5a8a;
-    property <color> c-label: dark-theme ? #a8a29a : #5a544c;
+    property <bool> filters-active: search-text != "" || filter-count > 0 || sort-index != 0;
+    // Older names for the theme's tokens, kept for the gallery's markup.
+    property <color> c-bg: Theme.ground;
+    property <color> c-divider: Theme.line;
+    property <color> c-card: Theme.raised;
+    property <color> c-card-border: Theme.line;
+    property <color> c-card-border-hover: Theme.line-2;
+    property <color> c-fg: Theme.ink-1;
+    property <color> c-fg2: Theme.ink-2;
+    property <color> c-fg3: Theme.ink-3;
 
     callback new-snip();
     callback new-snip-clip();
@@ -539,297 +181,205 @@ export component MainWindow inherits Window {
     // Reports the chosen card-size step (0/1/2) so Rust can persist it.
     callback thumb-size-changed(int);
 
+    // Window-wide keys: Escape closes whatever popover is open; Ctrl+F goes
+    // to search (the status bar used to advertise it with nothing behind it).
+    keys := FocusScope {
+        width: 100%;
+        height: 100%;
+        key-pressed(event) => {
+            if (event.text == Key.Escape && root.any-popover) {
+                root.close-popovers();
+                return accept;
+            }
+            if (event.modifiers.control && (event.text == "f" || event.text == "F")) {
+                search.focus-input();
+                return accept;
+            }
+            reject
+        }
+
     VerticalLayout {
+        width: 100%;
+        height: 100%;
         spacing: 0px;
 
         if root.error-text != "" : Rectangle {
-            height: 30px;
-            background: #4a1818;
+            height: 34px;
+            background: Theme.danger-ground;
             HorizontalLayout {
                 padding-left: 12px;
                 padding-right: 10px;
                 spacing: 10px;
-                alignment: center;
-                Rectangle { width: 6px; height: 6px; border-radius: 3px; background: #e06363; }
+                VerticalLayout {
+                    alignment: center;
+                    Rectangle { width: 6px; height: 6px; border-radius: 3px; background: Theme.danger; }
+                }
                 Text {
                     text: root.error-text;
-                    color: #f3d0d0;
-                    font-size: 12px;
+                    color: Theme.ink-1;
+                    font-size: 13px;
                     vertical-alignment: center;
                     horizontal-stretch: 1;
                     overflow: elide;
                 }
-                ToolbarButton {
-                    label: @tr("Close");
-                    dark: root.dark-theme;
-                    width: 62px;
-                    clicked => { root.close-error(); }
+                VerticalLayout {
+                    alignment: center;
+                    TextButton {
+                        text: @tr("Close");
+                        clicked => { root.close-error(); }
+                    }
                 }
             }
             Rectangle {
                 y: parent.height - 1px;
-                width: parent.width;
                 height: 1px;
-                background: #5a1f1f;
+                background: Theme.line;
             }
         }
 
+        // Toolbar — a panel: pinned to the window, no radius, one hairline.
+        // Seven controls, every one of them at the toolbar's 28 px.
         Rectangle {
-            height: 48px;
-            background: root.c-toolbar;
+            height: 46px;
+            background: Theme.panel;
 
             HorizontalLayout {
                 padding-left: 10px;
                 padding-right: 10px;
-                padding-top: 9px;
-                padding-bottom: 9px;
-                spacing: 4px;
-                alignment: center;
+                spacing: 8px;
 
-                ToolbarButton { icon: "plus"; label: @tr("New"); kbd: ""; primary: true; dark: root.dark-theme; tooltip: root.capture-gesture == 0 ? @tr("Take a new snip — drag a region with Win + left click") : root.capture-gesture == 1 ? @tr("Take a new snip — or drag a region with Super + Alt") : @tr("Take a new snip"); width: 84px; clicked => { root.new-snip(); } }
-                ToolbarButton { icon: "copy"; label: @tr("Snip + Clip"); dark: root.dark-theme; tooltip: @tr("Take a snip and copy it to the clipboard"); width: 112px; clicked => { root.new-snip-clip(); } }
-                ToolbarButton { icon: "clipboard"; label: @tr("Clip only"); dark: root.dark-theme; tooltip: @tr("Copy to the clipboard only (without saving to the gallery)"); width: 98px; clicked => { root.new-snip-clip-only(); } }
-                ToolbarButton { icon: "layers"; label: @tr("Collage"); dark: root.dark-theme; tooltip: @tr("Combine several snips into one collage"); width: 96px; clicked => { root.collage-create(); } }
-                ToolbarButton { icon: "wand"; label: @tr("Pick color"); dark: root.dark-theme; tooltip: @tr("Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"); width: 104px; clicked => { root.pick-color(); } }
-
-                Rectangle { width: 1px; background: root.c-divider; }
-
-                IconButton {
-                    icon: root.any-floating ? "eye" : "eye-off";
-                    dark: root.dark-theme;
-                    active: root.any-floating;
-                    tooltip: (root.any-floating ? @tr("Hide on-screen snips") : @tr("Show snips on screen")) + (root.capture-gesture == 0 ? " (Win+Alt+H)" : " (Super+Alt+H)");
-                    clicked => { root.toggle-all-visibility(); }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    new-btn := SplitButton {
+                        icon: "plus";
+                        label: @tr("New");
+                        menu-open: root.new-menu-open;
+                        tooltip: root.capture-gesture == 0 ? @tr("Take a new snip — drag a region with Win + left click")
+                            : root.capture-gesture == 1 ? @tr("Take a new snip — or drag a region with Super + Alt")
+                            : @tr("Take a new snip");
+                        clicked => { root.new-snip(); }
+                        menu => { root.new-menu-open = !root.new-menu-open; }
+                    }
                 }
-                IconButton {
-                    icon: "window";
-                    dark: root.dark-theme;
-                    active: root.floating-in-taskbar;
-                    tooltip: @tr("Show / hide floating snips in the taskbar");
-                    clicked => { root.toggle-floating-in-taskbar(); }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    ToolbarButton {
+                        icon: "layers";
+                        label: @tr("Collage");
+                        compact: root.narrow;
+                        tooltip: @tr("Combine several snips into one collage");
+                        clicked => { root.collage-create(); }
+                    }
                 }
-
-                Rectangle { horizontal-stretch: 1; }
-
-                IconButton { icon: "pin-off"; dark: root.dark-theme; danger: true; tooltip: @tr("Clear unpinned snips"); clicked => { if (root.gallery-total - root.pinned-count > 0) { root.confirm-kind = 1; } } }
-                IconButton { icon: "trash"; dark: root.dark-theme; danger: true; tooltip: @tr("Clear all snips"); clicked => { if (root.gallery-total > 0) { root.confirm-kind = 2; } } }
-                IconButton { icon: root.dark-theme ? "sun" : "moon"; dark: root.dark-theme; tooltip: @tr("Toggle light / dark theme"); clicked => { root.toggle-theme(); } }
-                IconButton { icon: "globe"; dark: root.dark-theme; active: root.lang-open; tooltip: @tr("Language"); clicked => { root.lang-open = !root.lang-open; } }
-                IconButton { icon: "power"; dark: root.dark-theme; active: root.autostart-enabled; tooltip: @tr("Launch at Login"); clicked => { root.toggle-autostart(); } }
-                IconButton { icon: "info"; dark: root.dark-theme; tooltip: @tr("About Snipdeck"); clicked => { root.show-about(); } }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    ToolbarButton {
+                        icon: "wand";
+                        label: @tr("Pick color");
+                        compact: root.narrow;
+                        tooltip: @tr("Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab");
+                        clicked => { root.pick-color(); }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 1;
+                    search := SearchBox {
+                        value <=> root.search-text;
+                        placeholder: @tr("text / OCR / window / monitor / path");
+                        min-width: 160px;
+                        edited(text) => { root.search-changed(text); }
+                        cleared => { root.search-changed(""); }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    filter-btn := ToolbarButton {
+                        icon: "sliders";
+                        label: root.filter-count > 0 ? @tr("Filter") + " · " + root.filter-count : @tr("Filter");
+                        active: root.filter-open || root.filter-count > 0;
+                        compact: root.narrow && root.filter-count == 0;
+                        clicked => { root.filter-open = !root.filter-open; }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    IconButton {
+                        icon: root.any-floating ? "eye" : "eye-off";
+                        active: root.any-floating;
+                        tooltip: (root.any-floating ? @tr("Hide on-screen snips") : @tr("Show snips on screen")) + (root.capture-gesture == 0 ? " (Win+Alt+H)" : " (Super+Alt+H)");
+                        clicked => { root.toggle-all-visibility(); }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    more-btn := IconButton {
+                        icon: "more";
+                        active: root.more-open;
+                        tooltip: @tr("More");
+                        clicked => { root.more-open = !root.more-open; }
+                    }
+                }
             }
             Rectangle {
                 y: parent.height - 1px;
-                width: parent.width;
                 height: 1px;
-                background: root.c-divider;
+                background: Theme.line;
             }
         }
 
-        Rectangle {
-            height: root.width < 760px ? 88px : (root.width < 1040px ? 84px : 47px);
-            background: root.c-filter;
-
-            if root.width >= 1040px : HorizontalLayout {
+        // Active filters — part of the panel, shown only while there are any.
+        if root.filter-count > 0 : Rectangle {
+            height: 34px;
+            background: Theme.panel;
+            HorizontalLayout {
                 padding-left: 10px;
                 padding-right: 10px;
-                padding-top: 8px;
-                padding-bottom: 8px;
                 spacing: 6px;
-                alignment: center;
-
-                FilterPill {
-                    label: @tr("Status");
-                    value: root.status-filter-value;
-                    dark: root.dark-theme;
-                    active: root.status-filter-index != 0;
-                    tooltip: @tr("Filter by status — All → Pinned → Unpinned → On screen → Hidden");
-                    width: 124px;
-                    clicked => {
-                        root.status-filter-index = root.status-filter-index == 4 ? 0 : root.status-filter-index + 1;
-                        root.status-filter-changed(root.status-filter-index);
-                    }
+                alignment: start;
+                if root.status-filter-index != 0 : VerticalLayout {
+                    alignment: center;
+                    FilterChip { text: root.status-filter-value; removed => { root.status-filter-index = 0; root.status-filter-changed(0); } }
                 }
-                FilterPill {
-                    label: @tr("Content");
-                    value: root.content-filter-value;
-                    dark: root.dark-theme;
-                    active: root.content-filter-index != 0;
-                    tooltip: @tr("Filter by content — Has/No OCR · Has/No window · Tagged");
-                    width: 146px;
-                    clicked => {
-                        root.content-filter-index = root.content-filter-index == 5 ? 0 : root.content-filter-index + 1;
-                        root.content-filter-changed(root.content-filter-index);
-                    }
+                if root.content-filter-index != 0 : VerticalLayout {
+                    alignment: center;
+                    FilterChip { text: root.content-filter-value; removed => { root.content-filter-index = 0; root.content-filter-changed(0); } }
                 }
-                FilterPill {
-                    label: @tr("Size");
-                    value: root.size-filter-value;
-                    dark: root.dark-theme;
-                    active: root.size-filter-index != 0;
-                    tooltip: @tr("Filter by size — Small / Medium / Large / Wide / Tall / Square");
-                    width: 132px;
-                    clicked => {
-                        root.size-filter-index = root.size-filter-index == 6 ? 0 : root.size-filter-index + 1;
-                        root.size-filter-changed(root.size-filter-index);
-                    }
+                if root.size-filter-index != 0 : VerticalLayout {
+                    alignment: center;
+                    FilterChip { text: root.size-filter-value; removed => { root.size-filter-index = 0; root.size-filter-changed(0); } }
                 }
-                FilterPill {
-                    label: @tr("Date");
-                    value: root.date-filter-value;
-                    dark: root.dark-theme;
-                    active: root.date-filter-index != 0;
-                    tooltip: @tr("Filter by date — Today / 24 hours / 7 days / 30 days");
-                    width: 132px;
-                    clicked => {
-                        root.date-filter-index = root.date-filter-index == 4 ? 0 : root.date-filter-index + 1;
-                        root.date-filter-changed(root.date-filter-index);
-                    }
+                if root.date-filter-index != 0 : VerticalLayout {
+                    alignment: center;
+                    FilterChip { text: root.date-filter-value; removed => { root.date-filter-index = 0; root.date-filter-changed(0); } }
                 }
-                FilterPill {
-                    label: @tr("Sort");
-                    value: root.sort-filter-value;
-                    dark: root.dark-theme;
-                    active: root.sort-index != 0;
-                    tooltip: @tr("Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor");
-                    width: 144px;
-                    clicked => {
-                        root.sort-index = root.sort-index == 7 ? 0 : root.sort-index + 1;
-                        root.sort-changed(root.sort-index);
-                    }
-                }
-                SearchBox {
-                    value <=> root.search-text;
-                    dark: root.dark-theme;
-                    edited(text) => { root.search-changed(text); }
-                    cleared => { root.search-changed(""); }
-                    horizontal-stretch: 1;
-                    min-width: 220px;
-                }
-                SizeToggle {
-                    dark: root.dark-theme;
-                    current: root.thumb-size-index;
-                    tooltip: @tr("Thumbnail size — Small / Medium / Large");
-                    changed(i) => {
-                        root.thumb-size-index = i;
-                        root.thumb-size-changed(i);
-                    }
-                }
-                ToolbarButton {
-                    icon: "reset";
-                    label: @tr("Reset");
-                    dark: root.dark-theme;
-                    active: root.filters-active;
-                    tooltip: @tr("Reset all filters and search");
-                    width: 84px;
-                    clicked => { root.reset-filters(); }
-                }
-            }
-
-            if root.width < 1040px : VerticalLayout {
-                padding-left: 10px;
-                padding-right: 10px;
-                padding-top: 8px;
-                padding-bottom: 8px;
-                spacing: 6px;
-
-                HorizontalLayout {
-                    spacing: 6px;
-                    FilterPill {
-                        label: @tr("Status");
-                        value: root.status-filter-value;
-                        dark: root.dark-theme;
-                        active: root.status-filter-index != 0;
-                        tooltip: @tr("Filter by status — All → Pinned → Unpinned → On screen → Hidden");
-                        width: 118px;
+                VerticalLayout {
+                    alignment: center;
+                    TextButton {
+                        text: @tr("Clear filters");
                         clicked => {
-                            root.status-filter-index = root.status-filter-index == 4 ? 0 : root.status-filter-index + 1;
-                            root.status-filter-changed(root.status-filter-index);
+                            root.status-filter-index = 0;
+                            root.content-filter-index = 0;
+                            root.size-filter-index = 0;
+                            root.date-filter-index = 0;
+                            root.status-filter-changed(0);
+                            root.content-filter-changed(0);
+                            root.size-filter-changed(0);
+                            root.date-filter-changed(0);
                         }
-                    }
-                    FilterPill {
-                        label: @tr("Content");
-                        value: root.content-filter-value;
-                        dark: root.dark-theme;
-                        active: root.content-filter-index != 0;
-                        tooltip: @tr("Filter by content — Has/No OCR · Has/No window · Tagged");
-                        horizontal-stretch: 1;
-                        clicked => {
-                            root.content-filter-index = root.content-filter-index == 5 ? 0 : root.content-filter-index + 1;
-                            root.content-filter-changed(root.content-filter-index);
-                        }
-                    }
-                    FilterPill {
-                        label: @tr("Size");
-                        value: root.size-filter-value;
-                        dark: root.dark-theme;
-                        active: root.size-filter-index != 0;
-                        tooltip: @tr("Filter by size — Small / Medium / Large / Wide / Tall / Square");
-                        width: 120px;
-                        clicked => {
-                            root.size-filter-index = root.size-filter-index == 6 ? 0 : root.size-filter-index + 1;
-                            root.size-filter-changed(root.size-filter-index);
-                        }
-                    }
-                    FilterPill {
-                        label: @tr("Date");
-                        value: root.date-filter-value;
-                        dark: root.dark-theme;
-                        active: root.date-filter-index != 0;
-                        tooltip: @tr("Filter by date — Today / 24 hours / 7 days / 30 days");
-                        width: 118px;
-                        clicked => {
-                            root.date-filter-index = root.date-filter-index == 4 ? 0 : root.date-filter-index + 1;
-                            root.date-filter-changed(root.date-filter-index);
-                        }
-                    }
-                    FilterPill {
-                        label: @tr("Sort");
-                        value: root.sort-filter-value;
-                        dark: root.dark-theme;
-                        active: root.sort-index != 0;
-                        tooltip: @tr("Sort by — Newest / Oldest / Pinned / Size / Width / Height / Monitor");
-                        width: 126px;
-                        clicked => {
-                            root.sort-index = root.sort-index == 7 ? 0 : root.sort-index + 1;
-                            root.sort-changed(root.sort-index);
-                        }
-                    }
-                }
-                HorizontalLayout {
-                    spacing: 6px;
-                    SearchBox {
-                        value <=> root.search-text;
-                        dark: root.dark-theme;
-                        edited(text) => { root.search-changed(text); }
-                        cleared => { root.search-changed(""); }
-                        horizontal-stretch: 1;
-                    }
-                    SizeToggle {
-                        dark: root.dark-theme;
-                        current: root.thumb-size-index;
-                        tooltip: @tr("Thumbnail size — Small / Medium / Large");
-                        changed(i) => {
-                            root.thumb-size-index = i;
-                            root.thumb-size-changed(i);
-                        }
-                    }
-                    ToolbarButton {
-                        icon: "reset";
-                        label: @tr("Reset");
-                        dark: root.dark-theme;
-                        active: root.filters-active;
-                        tooltip: @tr("Reset all filters and search");
-                        width: 84px;
-                        clicked => { root.reset-filters(); }
                     }
                 }
             }
             Rectangle {
                 y: parent.height - 1px;
-                width: parent.width;
                 height: 1px;
-                background: root.c-divider;
+                background: Theme.line;
             }
         }
 
@@ -905,17 +455,12 @@ export component MainWindow inherits Window {
                             // Lazy-load the thumbnail once this card is realized.
                             init => { root.request-thumb(snip.id); }
 
-                            background: card-touch.pressed ? (root.dark-theme ? #2e2e2e : #ebe9e2) : (card-touch.has-hover ? root.c-card-hover : root.c-card);
-                            animate background { duration: 80ms; }
-                border-color: snip.pinned && snip.floating
-                    ? #5a5520
-                    : (snip.floating
-                        ? (card-touch.has-hover ? #3a7a4f : #2a5a3a)
-                        : (snip.pinned
-                            ? (card-touch.has-hover ? #6a5520 : #4a3a14)
-                            : (card-touch.has-hover ? root.c-card-border-hover : root.c-card-border)));
+                            // An island: raised, edged, 9 px. Hover darkens the
+                            // edge, not the card — the signal is in the line.
+                            background: Theme.raised;
+                border-color: card-touch.has-hover ? Theme.line-strong : Theme.line;
                 border-width: 1px;
-                border-radius: 8px;
+                border-radius: 9px;
                 clip: true;
 
                 card-touch := TouchArea {
@@ -932,7 +477,7 @@ export component MainWindow inherits Window {
                     y: 0px;
                     width: parent.width;
                     height: root.thumb-h;
-                    background: root.dark-theme ? #181818 : #e7e3da;
+                    background: Theme.fill;
                     clip: true;
 
                     // Checkerboard backdrop — a neutral, theme-aware ground so
@@ -944,9 +489,8 @@ export component MainWindow inherits Window {
                         height: 100%;
                     }
 
-                    // The snip drawn at its true aspect ratio as a floating
-                    // "sheet" with a soft drop shadow, so it stands apart from
-                    // the backdrop even when it doesn't fill the box.
+                    // The snip at its true aspect ratio as a "sheet" with a
+                    // soft shadow, so it stands apart from the backdrop.
                     Rectangle {
                         property <float> a: snip.aspect > 0 ? snip.aspect : 1.0;
                         property <float> well-a: parent.width / parent.height;
@@ -954,9 +498,9 @@ export component MainWindow inherits Window {
                         height: well-a > a ? parent.height : parent.width / a;
                         x: (parent.width - self.width) / 2;
                         y: (parent.height - self.height) / 2;
-                        background: root.dark-theme ? #0e0e0e : #ffffff;
-                        drop-shadow-blur: 9px;
-                        drop-shadow-color: #00000088;
+                        background: Theme.raised;
+                        drop-shadow-blur: 10px;
+                        drop-shadow-color: #00000055;
                         drop-shadow-offset-y: 2px;
                         Image {
                             source: snip.thumb;
@@ -966,37 +510,16 @@ export component MainWindow inherits Window {
                         }
                     }
 
+                    // Status, neutral: what the snip is, not a rainbow of it.
                     HorizontalLayout {
                         x: 6px;
                         y: 6px;
-                        spacing: 4px;
-                        if snip.pinned : Chip { text: @tr("pinned"); bg: #ffc832; fg: #2b1f00; chip-width: 50px; }
-                        if snip.floating : Chip { text: @tr("on screen"); bg: #4cd47a; fg: #0e2a17; chip-width: 64px; }
-                        if snip.has_ocr : Chip { text: "OCR"; bg: #15233a; fg: #6aa7ff; chip-width: 40px; }
-                        if snip.has_window : Chip { text: "WIN"; bg: #251a3a; fg: #b48bff; chip-width: 38px; }
-                    }
-
-                    Rectangle {
-                        x: parent.width - 88px;
-                        y: 6px;
-                        width: 82px;
+                        width: self.preferred-width;
                         height: 18px;
-                        border-radius: 4px;
-                        border-width: 1px;
-                        border-color: #00000088;
-                        background: #000000bb;
-                        Text {
-                            text: snip.size_text;
-                            color: #e0e0e0;
-                            font-family: "Consolas";
-                            font-size: 10px;
-                            font-weight: 500;
-                            horizontal-alignment: center;
-                            vertical-alignment: center;
-                            width: 100%;
-                            height: 100%;
-                            overflow: elide;
-                        }
+                        spacing: 4px;
+                        if snip.pinned : Badge { text: @tr("pinned"); }
+                        if snip.floating : Badge { text: @tr("on screen"); }
+                        if snip.has_ocr : Badge { text: "OCR"; }
                     }
 
                     // Always present (not `if`-gated) so a button never vanishes
@@ -1005,90 +528,56 @@ export component MainWindow inherits Window {
                     // through to card-touch, so the OR never has a dead frame.
                     HorizontalLayout {
                         x: parent.width - 6px - 116px;
-                        y: parent.height - 34px;
+                        y: parent.height - 32px;
                         width: 116px;
                         height: 26px;
                         spacing: 4px;
                         visible: card-touch.has-hover || act-copy.hovered || act-save.hovered || act-pin.hovered || act-trash.hovered;
-                        act-copy := CardAction { icon: "copy"; dark: root.dark-theme; clicked => { root.snip-copy(snip.id); } }
-                        act-save := CardAction { icon: "save"; dark: root.dark-theme; clicked => { root.snip-save(snip.id); } }
-                        act-pin := CardAction { icon: "pin"; dark: root.dark-theme; active_pin: snip.pinned; clicked => { root.snip-toggle-pin(snip.id); } }
-                        act-trash := CardAction { icon: "trash"; dark: root.dark-theme; danger: true; clicked => { root.snip-delete(snip.id); } }
+                        act-copy := CardAction { icon: "copy"; clicked => { root.snip-copy(snip.id); } }
+                        act-save := CardAction { icon: "save"; clicked => { root.snip-save(snip.id); } }
+                        act-pin := CardAction { icon: "pin"; active: snip.pinned; clicked => { root.snip-toggle-pin(snip.id); } }
+                        act-trash := CardAction { icon: "trash"; danger: true; clicked => { root.snip-delete(snip.id); } }
                     }
                     Rectangle {
                         y: parent.height - 1px;
                         width: parent.width;
                         height: 1px;
-                        background: root.c-divider;
+                        background: Theme.line;
                     }
                 }
 
-                Rectangle {
+                // Two lines: what it is (the window it came from, or when),
+                // and where — time, monitor, and the size, once, as data.
+                VerticalLayout {
                     x: 0px;
                     y: root.thumb-h;
                     width: parent.width;
                     height: parent.height - root.thumb-h;
-                    background: transparent;
-
-                    VerticalLayout {
-                        padding-left: 9px;
-                        padding-right: 9px;
-                        padding-top: 7px;
-                        padding-bottom: 8px;
-                        spacing: 3px;
-
-                        HorizontalLayout {
-                            spacing: 6px;
-                            Text {
-                                text: snip.dims;
-                                color: root.c-fg;
-                                font-family: "Consolas";
-                                font-size: 12px;
-                                font-weight: 500;
-                                vertical-alignment: center;
-                            }
-                            Rectangle { horizontal-stretch: 1; }
-                            Text {
-                                text: snip.created;
-                                color: root.c-fg3;
-                                font-family: "Consolas";
-                                font-size: 11px;
-                                vertical-alignment: center;
-                            }
-                        }
-
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    alignment: center;
+                    spacing: 2px;
+                    Text {
+                        text: snip.title != "" ? snip.title : snip.created;
+                        color: Theme.ink-1;
+                        font-size: 13.5px;
+                        overflow: elide;
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
                         Text {
-                            text: snip.source;
-                            color: root.c-meta;
-                            font-size: 11px;
+                            text: snip.title != "" ? snip.created + " · " + snip.monitor : snip.monitor;
+                            color: Theme.ink-3;
+                            font-size: 12.5px;
                             overflow: elide;
+                            horizontal-stretch: 1;
                         }
-
-                        if snip.preview != "" : HorizontalLayout {
-                            spacing: 4px;
-                            Rectangle {
-                                width: 30px;
-                                height: 15px;
-                                border-radius: 3px;
-                                background: root.dark-theme ? #2a2520 : #fbe9d6;
-                                Text {
-                                    text: snip.preview_tag;
-                                    color: root.dark-theme ? #ffb066 : #b85a14;
-                                    font-size: 9px;
-                                    font-weight: 700;
-                                    horizontal-alignment: center;
-                                    vertical-alignment: center;
-                                    width: 100%;
-                                    height: 100%;
-                                }
-                            }
-                            Text {
-                                text: snip.preview;
-                                color: root.c-label;
-                                font-size: 11px;
-                                overflow: elide;
-                                horizontal-stretch: 1;
-                            }
+                        Text {
+                            text: snip.dims;
+                            color: Theme.ink-3;
+                            font-family: "monospace";
+                            font-size: 11px;
+                            vertical-alignment: center;
                         }
                     }
                 }
@@ -1111,7 +600,7 @@ export component MainWindow inherits Window {
                 y: 4px;
                 width: 9px;
                 height: parent.height - 8px;
-                background: root.dark-theme ? #ffffff12 : #00000010;
+                background: Theme.fill;
                 border-radius: 4px;
 
                 sb-thumb := Rectangle {
@@ -1119,11 +608,7 @@ export component MainWindow inherits Window {
                     height: max(40px, parent.height * (lv.height / max(1px, lv.viewport-height)));
                     y: (parent.height - self.height)
                         * (-lv.viewport-y / max(1px, lv.viewport-height - lv.height));
-                    background: sb-ta.pressed
-                        ? (root.dark-theme ? #dadada : #4e4e4e)
-                        : (sb-ta.has-hover
-                            ? (root.dark-theme ? #b8b8b8 : #6c6c6c)
-                            : (root.dark-theme ? #8c8c8c : #9c9c9c));
+                    background: sb-ta.pressed ? Theme.ink-3 : (sb-ta.has-hover ? Theme.line-strong : Theme.island);
                     border-radius: 4px;
                 }
 
@@ -1156,114 +641,270 @@ export component MainWindow inherits Window {
             }
         }
 
+        // Status bar — a panel. Counts on the left; how the gallery is shown
+        // (order, card size) on the right, where they no longer crowd the
+        // toolbar.
         Rectangle {
-            height: 28px;
-            background: root.c-status;
+            height: 33px;
+            background: Theme.panel;
             HorizontalLayout {
-                padding-left: 10px;
+                padding-left: 12px;
                 padding-right: 10px;
-                spacing: 14px;
-                alignment: center;
-                Text { text: "*"; color: #ff8a3d; font-size: 10px; vertical-alignment: center; }
-                Text { text: @tr("Total {}", root.gallery-total); color: root.c-fg3; font-size: 11px; vertical-alignment: center; }
-                Text { text: @tr("Pinned {}", root.pinned-count); color: root.c-fg3; font-size: 11px; vertical-alignment: center; }
-                Text { text: @tr("On screen {}", root.floating-count); color: root.c-fg3; font-size: 11px; vertical-alignment: center; }
-                Text { text: @tr("Filtered {}", root.filtered-count); color: root.c-fg3; font-size: 11px; vertical-alignment: center; }
-                Rectangle { horizontal-stretch: 1; }
-                Text { text: root.storage-size; color: root.c-fg3; font-size: 11px; vertical-alignment: center; }
-                Rectangle { width: 1px; height: 14px; background: root.c-divider; }
-                Text { text: @tr("Ctrl+F search"); color: root.c-fg4; font-family: "Consolas"; font-size: 10px; vertical-alignment: center; }
+                spacing: 12px;
+                Text {
+                    text: @tr("Total {}", root.gallery-total) + "  ·  " + @tr("Pinned {}", root.pinned-count) + "  ·  " + @tr("On screen {}", root.floating-count)
+                        + (root.filters-active ? "  ·  " + @tr("Filtered {}", root.filtered-count) : "")
+                        + "  ·  " + root.storage-size;
+                    color: Theme.ink-3;
+                    font-size: 12.5px;
+                    vertical-alignment: center;
+                    overflow: elide;
+                    horizontal-stretch: 1;
+                }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    sort-btn := TextButton {
+                        text: @tr("Sort") + ":";
+                        value: root.sort-filter-value;
+                        chevron: true;
+                        open: root.sort-open;
+                        clicked => { root.sort-open = !root.sort-open; }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    SizeToggle {
+                        current: root.thumb-size-index;
+                        tooltip: @tr("Thumbnail size — Small / Medium / Large");
+                        changed(i) => {
+                            root.thumb-size-index = i;
+                            root.thumb-size-changed(i);
+                        }
+                    }
+                }
             }
-            // Top divider between the gallery and the status bar. Anchored to
-            // y:0 — without it Slint centres this 1px line vertically, so it cut
-            // straight across the middle of the status text.
+            // Hairline against the gallery, pinned to the top — unanchored, a
+            // 1px child is centred and cuts across the text.
             Rectangle {
                 y: 0;
-                width: parent.width;
                 height: 1px;
-                background: root.c-divider;
+                background: Theme.line;
             }
         }
     }
+    } // keys
 
-    // Tooltip overlay — drawn last (on top of everything) from the Tips
-    // singleton, clamped to stay inside the window's right edge.
+    // Tooltip — an island: raised, edged, drawn last over everything and
+    // clamped inside the window's right edge.
     if Tips.text != "" : Rectangle {
         x: min(Tips.x, root.width - self.width - 6px);
         y: Tips.y;
         width: tip-label.preferred-width + 16px;
-        height: 23px;
-        border-radius: 5px;
-        background: #2b2b2b;
+        height: 24px;
+        border-radius: 7px;
+        background: Theme.raised;
         border-width: 1px;
-        border-color: #00000077;
+        border-color: Theme.island;
         tip-label := Text {
             text: Tips.text;
-            color: #f0eeea;
-            font-size: 11px;
+            color: Theme.ink-1;
+            font-size: 12.5px;
             x: 8px;
             vertical-alignment: center;
             height: 100%;
         }
     }
 
-    // Language menu — opens from the toolbar globe button. Drawn last so it
-    // sits above the gallery; a full-window backdrop closes it on outside click.
-    if root.lang-open : TouchArea {
+    // One backdrop for every popover: a click outside closes it.
+    if root.any-popover : TouchArea {
         width: root.width;
         height: root.height;
-        clicked => { root.lang-open = false; }
+        clicked => { root.close-popovers(); }
     }
-    if root.lang-open : Rectangle {
-        x: root.width - self.width - 16px;
-        y: root.error-text != "" ? 80px : 50px;
-        width: 210px;
-        height: min(380px, root.languages.length * 28px + 8px);
-        background: root.dark-theme ? #1f1f1f : #ffffff;
-        border-radius: 8px;
-        border-width: 1px;
-        border-color: root.dark-theme ? #3a3a3a : #dcd9d1;
-        drop-shadow-blur: 14px;
-        drop-shadow-color: #00000077;
-        drop-shadow-offset-y: 4px;
+
+    // New ▾ — the capture variants, with their hotkeys.
+    if root.new-menu-open : Popover {
+        x: new-btn.absolute-position.x;
+        y: new-btn.absolute-position.y + new-btn.height + 6px;
+        width: 300px;
+        height: new-menu.preferred-height;
+        new-menu := VerticalLayout {
+            padding: 4px;
+            MenuRow { text: @tr("Take a new snip"); shortcut: root.hotkey-snip; clicked => { root.close-popovers(); root.new-snip(); } }
+            MenuRow { text: @tr("Snip + Clip"); shortcut: root.hotkey-snip-clip; clicked => { root.close-popovers(); root.new-snip-clip(); } }
+            MenuRow { text: @tr("Clip only"); shortcut: root.hotkey-clip-only; clicked => { root.close-popovers(); root.new-snip-clip-only(); } }
+        }
+    }
+
+    // ⋯ — settings that are set once, the destructive clean-ups, About.
+    if root.more-open : Popover {
+        x: more-btn.absolute-position.x + more-btn.width - self.width;
+        y: more-btn.absolute-position.y + more-btn.height + 6px;
+        width: 280px;
+        height: more-menu.preferred-height;
+        more-menu := VerticalLayout {
+            padding: 4px;
+            MenuRow {
+                text: @tr("Floating snips in the taskbar");
+                checkable: true;
+                checked: root.floating-in-taskbar;
+                clicked => { root.toggle-floating-in-taskbar(); }
+            }
+            MenuRow {
+                text: @tr("Dark theme");
+                checkable: true;
+                checked: root.dark-theme;
+                clicked => { root.toggle-theme(); }
+            }
+            MenuRow {
+                text: @tr("Launch at Login");
+                checkable: true;
+                checked: root.autostart-enabled;
+                clicked => { root.toggle-autostart(); }
+            }
+            MenuRow {
+                text: @tr("Language");
+                checkable: true;
+                submenu: true;
+                clicked => { root.more-open = false; root.lang-open = true; }
+            }
+            MenuSeparator { }
+            MenuRow {
+                text: @tr("Clear unpinned snips");
+                danger: true;
+                clicked => {
+                    root.close-popovers();
+                    if (root.gallery-total - root.pinned-count > 0) { root.confirm-kind = 1; }
+                }
+            }
+            MenuRow {
+                text: @tr("Clear all snips");
+                danger: true;
+                clicked => {
+                    root.close-popovers();
+                    if (root.gallery-total > 0) { root.confirm-kind = 2; }
+                }
+            }
+            MenuSeparator { }
+            MenuRow {
+                text: @tr("About Snipdeck");
+                checkable: true;
+                clicked => { root.close-popovers(); root.show-about(); }
+            }
+        }
+    }
+
+    // Language — opened from ⋯, in the same place.
+    if root.lang-open : Popover {
+        x: more-btn.absolute-position.x + more-btn.width - self.width;
+        y: more-btn.absolute-position.y + more-btn.height + 6px;
+        width: 240px;
+        height: min(root.height - self.y - 16px, root.languages.length * 32px + 8px);
         ScrollView {
             width: 100%;
             height: 100%;
             VerticalLayout {
                 padding: 4px;
-                for l in root.languages : Rectangle {
-                    height: 28px;
-                    border-radius: 5px;
-                    background: l.code == root.current-language
-                        ? (root.dark-theme ? #2a2520 : #fbe9d6)
-                        : (lang-row.pressed ? (root.dark-theme ? #333333 : #e6e5df) : (lang-row.has-hover ? (root.dark-theme ? #2a2a2a : #f0efe9) : transparent));
-                    animate background { duration: 80ms; }
-                    lang-row := TouchArea {
-                        clicked => { root.set-language(l.code); root.lang-open = false; }
-                    }
-                    HorizontalLayout {
-                        padding-left: 9px;
-                        padding-right: 9px;
-                        spacing: 8px;
-                        Text {
-                            text: l.name;
-                            color: l.code == root.current-language
-                                ? (root.dark-theme ? #ffb066 : #b85a14)
-                                : (root.dark-theme ? #e8e6e2 : #1a1816);
-                            font-size: 12px;
-                            font-weight: l.code == root.current-language ? 600 : 400;
-                            vertical-alignment: center;
-                            horizontal-stretch: 1;
-                        }
-                        Text {
-                            text: l.code;
-                            color: root.dark-theme ? #6f6b64 : #9a948a;
-                            font-size: 10px;
-                            font-family: "Consolas";
-                            vertical-alignment: center;
-                        }
-                    }
+                for l in root.languages : MenuRow {
+                    text: l.name;
+                    shortcut: l.code;
+                    checkable: true;
+                    checked: l.code == root.current-language;
+                    clicked => { root.set-language(l.code); root.lang-open = false; }
                 }
+            }
+        }
+    }
+
+    // Filter — the four filters, each as direct choices. Stays open while
+    // choosing; the strip under the toolbar shows what is set.
+    if root.filter-open : Popover {
+        x: max(8px, filter-btn.absolute-position.x + filter-btn.width - self.width);
+        y: filter-btn.absolute-position.y + filter-btn.height + 6px;
+        width: 380px;
+        height: filter-panel.preferred-height;
+        filter-panel := VerticalLayout {
+            padding: 12px;
+            spacing: 4px;
+            Text { text: @tr("Status"); color: Theme.ink-3; font-size: 12.5px; height: 20px; vertical-alignment: center; }
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: start;
+                Option { text: @tr("All"); selected: root.status-filter-index == 0; clicked => { root.status-filter-index = 0; root.status-filter-changed(0); } }
+                Option { text: @tr("Pinned"); selected: root.status-filter-index == 1; clicked => { root.status-filter-index = 1; root.status-filter-changed(1); } }
+                Option { text: @tr("Unpinned"); selected: root.status-filter-index == 2; clicked => { root.status-filter-index = 2; root.status-filter-changed(2); } }
+            }
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: start;
+                Option { text: @tr("On screen"); selected: root.status-filter-index == 3; clicked => { root.status-filter-index = 3; root.status-filter-changed(3); } }
+                Option { text: @tr("Hidden"); selected: root.status-filter-index == 4; clicked => { root.status-filter-index = 4; root.status-filter-changed(4); } }
+            }
+            Rectangle { height: 6px; }
+            Text { text: @tr("Content"); color: Theme.ink-3; font-size: 12.5px; height: 20px; vertical-alignment: center; }
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: start;
+                Option { text: @tr("All"); selected: root.content-filter-index == 0; clicked => { root.content-filter-index = 0; root.content-filter-changed(0); } }
+                Option { text: @tr("Has OCR"); selected: root.content-filter-index == 1; clicked => { root.content-filter-index = 1; root.content-filter-changed(1); } }
+                Option { text: @tr("No OCR"); selected: root.content-filter-index == 2; clicked => { root.content-filter-index = 2; root.content-filter-changed(2); } }
+            }
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: start;
+                Option { text: @tr("Has window"); selected: root.content-filter-index == 3; clicked => { root.content-filter-index = 3; root.content-filter-changed(3); } }
+                Option { text: @tr("No window"); selected: root.content-filter-index == 4; clicked => { root.content-filter-index = 4; root.content-filter-changed(4); } }
+            }
+            Rectangle { height: 6px; }
+            Text { text: @tr("Size"); color: Theme.ink-3; font-size: 12.5px; height: 20px; vertical-alignment: center; }
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: start;
+                Option { text: @tr("All"); selected: root.size-filter-index == 0; clicked => { root.size-filter-index = 0; root.size-filter-changed(0); } }
+                Option { text: @tr("Small"); selected: root.size-filter-index == 1; clicked => { root.size-filter-index = 1; root.size-filter-changed(1); } }
+                Option { text: @tr("Medium"); selected: root.size-filter-index == 2; clicked => { root.size-filter-index = 2; root.size-filter-changed(2); } }
+                Option { text: @tr("Large"); selected: root.size-filter-index == 3; clicked => { root.size-filter-index = 3; root.size-filter-changed(3); } }
+            }
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: start;
+                Option { text: @tr("Wide"); selected: root.size-filter-index == 4; clicked => { root.size-filter-index = 4; root.size-filter-changed(4); } }
+                Option { text: @tr("Tall"); selected: root.size-filter-index == 5; clicked => { root.size-filter-index = 5; root.size-filter-changed(5); } }
+                Option { text: @tr("Square"); selected: root.size-filter-index == 6; clicked => { root.size-filter-index = 6; root.size-filter-changed(6); } }
+            }
+            Rectangle { height: 6px; }
+            Text { text: @tr("Date"); color: Theme.ink-3; font-size: 12.5px; height: 20px; vertical-alignment: center; }
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: start;
+                Option { text: @tr("All"); selected: root.date-filter-index == 0; clicked => { root.date-filter-index = 0; root.date-filter-changed(0); } }
+                Option { text: @tr("Today"); selected: root.date-filter-index == 1; clicked => { root.date-filter-index = 1; root.date-filter-changed(1); } }
+                Option { text: @tr("24 hours"); selected: root.date-filter-index == 2; clicked => { root.date-filter-index = 2; root.date-filter-changed(2); } }
+            }
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: start;
+                Option { text: @tr("7 days"); selected: root.date-filter-index == 3; clicked => { root.date-filter-index = 3; root.date-filter-changed(3); } }
+                Option { text: @tr("30 days"); selected: root.date-filter-index == 4; clicked => { root.date-filter-index = 4; root.date-filter-changed(4); } }
+            }
+        }
+    }
+
+    // Sort — opens upward from the status bar.
+    if root.sort-open : Popover {
+        x: sort-btn.absolute-position.x + sort-btn.width - self.width;
+        y: sort-btn.absolute-position.y - self.height - 6px;
+        width: 220px;
+        height: sort-menu.preferred-height;
+        sort-menu := VerticalLayout {
+            padding: 4px;
+            for opt[i] in [@tr("Newest"), @tr("Oldest"), @tr("Pinned"), @tr("Largest"), @tr("Smallest"), @tr("Width"), @tr("Height"), @tr("Monitor")] : MenuRow {
+                text: opt;
+                checkable: true;
+                checked: root.sort-index == i;
+                clicked => { root.sort-index = i; root.sort-changed(i); root.sort-open = false; }
             }
         }
     }
@@ -1273,7 +914,7 @@ export component MainWindow inherits Window {
     if root.confirm-kind != 0 : Rectangle {
         width: root.width;
         height: root.height;
-        background: #00000088;
+        background: Theme.scrim;
         TouchArea {
             width: 100%;
             height: 100%;
@@ -1292,15 +933,15 @@ export component MainWindow inherits Window {
         Rectangle {
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
-            width: 380px;
-            height: 158px;
-            background: root.dark-theme ? #1f1f1f : #ffffff;
+            width: 400px;
+            height: 168px;
+            background: Theme.raised;
             border-radius: 10px;
             border-width: 1px;
-            border-color: root.dark-theme ? #3a3a3a : #dcd9d1;
-            drop-shadow-blur: 18px;
-            drop-shadow-color: #00000088;
-            drop-shadow-offset-y: 6px;
+            border-color: Theme.island;
+            drop-shadow-blur: 64px;
+            drop-shadow-color: Theme.shadow-modal;
+            drop-shadow-offset-y: 22px;
             // Swallow clicks on the card itself, so only the backdrop cancels.
             TouchArea {
                 width: 100%;
@@ -1313,16 +954,16 @@ export component MainWindow inherits Window {
                     text: root.confirm-kind == 2
                         ? @tr("Delete all {} snips?", root.confirm-count)
                         : @tr("Delete {} unpinned snips?", root.confirm-count);
-                    color: root.dark-theme ? #f0eeea : #1a1816;
-                    font-size: 15px;
+                    color: Theme.ink-1;
+                    font-size: 16px;
                     font-weight: 600;
                 }
                 Text {
                     text: root.confirm-kind == 2
                         ? @tr("Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored.")
                         : @tr("Pinned snips stay. The images are deleted from disk and cannot be restored.");
-                    color: root.dark-theme ? #a8a49d : #5a554d;
-                    font-size: 12px;
+                    color: Theme.ink-2;
+                    font-size: 13.5px;
                     wrap: word-wrap;
                     vertical-stretch: 1;
                 }
@@ -1331,16 +972,11 @@ export component MainWindow inherits Window {
                     alignment: end;
                     ToolbarButton {
                         label: @tr("Cancel");
-                        dark: root.dark-theme;
-                        active: true;
-                        width: 90px;
                         clicked => { root.confirm-kind = 0; }
                     }
                     ToolbarButton {
                         label: @tr("Delete");
-                        dark: root.dark-theme;
                         destructive: true;
-                        width: 90px;
                         clicked => {
                             if (root.confirm-kind == 2) {
                                 root.clear-all();

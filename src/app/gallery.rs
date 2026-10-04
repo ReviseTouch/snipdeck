@@ -50,21 +50,17 @@ impl AppState {
                 let is_floating = self.floating.is_shown(s.id);
                 let has_ocr = metadata.ocr_ids.contains(&s.id);
                 let has_window = metadata.window_ids.contains(&s.id);
-                let (preview_tag, preview) = snip_preview(s, has_ocr, has_window);
                 let thumb = self.thumb_cache.get(&s.id).cloned().unwrap_or_default();
+                let title = metadata.window_titles.get(&s.id).cloned().unwrap_or_default();
                 let item = SnipItem {
                     id: SharedString::from(s.id.to_string()),
-                    label: SharedString::from(s.label.clone().unwrap_or_default()),
-                    preview: SharedString::from(preview),
-                    preview_tag: SharedString::from(preview_tag),
-                    dims: SharedString::from(format!("{}×{} px", s.area.w, s.area.h)),
-                    size_text: SharedString::from(format!("{}×{}", s.area.w, s.area.h)),
+                    title: SharedString::from(title),
+                    dims: SharedString::from(format!("{}×{}", s.area.w, s.area.h)),
                     pinned: s.pinned,
                     floating: is_floating,
                     has_ocr,
                     has_window,
-                    monitor: SharedString::from(s.monitor_label.clone().unwrap_or_default()),
-                    source: SharedString::from(snip_source(s, has_window)),
+                    monitor: SharedString::from(s.monitor_label.clone().unwrap_or_else(|| t("Monitor"))),
                     created: SharedString::from(short_date(s.created_at)),
                     thumb,
                     aspect: s.area.w as f32 / (s.area.h.max(1) as f32),
@@ -148,11 +144,6 @@ impl AppState {
             2 => !metadata.ocr_ids.contains(&snip.id),
             3 => metadata.window_ids.contains(&snip.id),
             4 => !metadata.window_ids.contains(&snip.id),
-            5 => snip
-                .label
-                .as_deref()
-                .map(|label| !label.trim().is_empty())
-                .unwrap_or(false),
             _ => true,
         }
     }

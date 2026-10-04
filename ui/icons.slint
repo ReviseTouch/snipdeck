@@ -66,6 +66,16 @@ export component Glyph inherits Rectangle {
         paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
     }
 
+    if root.name == "check" : StrokeGlyph {
+        commands: "M5 12.5 L10 17.5 L19 7";
+        paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
+    }
+
+    if root.name == "chevron-right" : StrokeGlyph {
+        commands: "M9 6 L15 12 L9 18";
+        paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;
+    }
+
     if root.name == "x" : StrokeGlyph {
         commands: "M6 6 L18 18 M18 6 L6 18";
         paint: root.paint; weight: root.weight; box: root.size; x: root.cx; y: root.cy;

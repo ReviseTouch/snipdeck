@@ -161,6 +161,23 @@ fn parse_hotkey(s: &str) -> anyhow::Result<HotKey> {
     Ok(HotKey::new(Some(mods), code))
 }
 
+/// A configured combination as people write it: "CtrlAltShift+A" becomes
+/// "Ctrl+Alt+Shift+A", and Win is "Super" where the key is called that.
+pub fn display(combo: &str) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    for token in combo.split('+').map(str::trim).filter(|t| !t.is_empty()) {
+        for part in split_modifiers(token) {
+            let part = if part == "Win" && cfg!(not(target_os = "windows")) {
+                "Super".to_string()
+            } else {
+                part
+            };
+            parts.push(part);
+        }
+    }
+    parts.join("+")
+}
+
 /// Split a token like "CtrlShift" into ["Ctrl", "Shift"]: the settings format
 /// packs modifiers without separators. Shared with the portal backend.
 pub(crate) fn split_modifiers(s: &str) -> Vec<String> {
@@ -246,6 +263,14 @@ fn parse_code(s: &str) -> Option<Code> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn combinations_are_shown_as_written() {
+        assert_eq!(display("CtrlAltShift+A"), "Ctrl+Alt+Shift+A");
+        assert_eq!(display("Ctrl+Alt+F12"), "Ctrl+Alt+F12");
+        let win = if cfg!(target_os = "windows") { "Win" } else { "Super" };
+        assert_eq!(display("WinAlt+H"), format!("{win}+Alt+H"));
+    }
 
     #[test]
     fn parses_ctrl_shift_a() {

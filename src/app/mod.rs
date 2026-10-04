@@ -349,6 +349,9 @@ impl AppState {
         let p = pending.clone();
         window.on_toggle_autostart(move || p.borrow_mut().push(Action::ToggleAutostart));
         window.set_autostart_enabled(crate::autostart::is_enabled());
+        window.set_hotkey_snip(crate::hotkeys::display(&self.settings.hotkey_snip).into());
+        window.set_hotkey_snip_clip(crate::hotkeys::display(&self.settings.hotkey_snip_clip).into());
+        window.set_hotkey_clip_only(crate::hotkeys::display(&self.settings.hotkey_clip_only).into());
         // Which gesture the hints should name: Win+drag needs the Windows hook,
         // Super+Alt+drag the GNOME extension, and elsewhere there is none.
         window.set_capture_gesture(if cfg!(target_os = "windows") {
@@ -1053,40 +1056,6 @@ fn short_date(dt: chrono::DateTime<chrono::Utc>) -> String {
         .copied()
         .unwrap_or("May");
     format!("{} {} {}", local.format("%d"), t(month), local.format("%H:%M"))
-}
-
-fn snip_source(snip: &crate::snip::Snip, has_window: bool) -> String {
-    let monitor = snip
-        .monitor_label
-        .clone()
-        .unwrap_or_else(|| t("Monitor"));
-    if has_window {
-        format!("{monitor} · {}", t("window"))
-    } else {
-        monitor
-    }
-}
-
-fn snip_preview(
-    snip: &crate::snip::Snip,
-    has_ocr: bool,
-    has_window: bool,
-) -> (&'static str, String) {
-    if let Some(label) = snip
-        .label
-        .as_deref()
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-    {
-        return ("TAG", label.to_string());
-    }
-    if has_ocr {
-        return ("OCR", t("OCR text indexed"));
-    }
-    if has_window {
-        return ("WIN", t("Window info indexed"));
-    }
-    ("", String::new())
 }
 
 fn storage_size_text(

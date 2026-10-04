@@ -34,6 +34,8 @@ mod portal_hotkeys;
 mod pump;
 mod screen;
 mod settings;
+#[cfg(test)]
+mod theme_tests;
 mod share;
 mod single_instance;
 mod slint_overlay;

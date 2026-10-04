@@ -1012,13 +1012,31 @@ pub fn cached_ocr_text(id: Uuid) -> anyhow::Result<Option<String>> {
 pub struct SnipMetadataIndex {
     pub ocr_ids: HashSet<Uuid>,
     pub window_ids: HashSet<Uuid>,
+    /// What each snip's source window was called — its title, or the app's
+    /// name where it had none — for the gallery card.
+    pub window_titles: HashMap<Uuid, String>,
 }
 
 pub fn metadata_index() -> anyhow::Result<SnipMetadataIndex> {
     with_db(|conn| {
+        let mut stmt = conn.prepare(
+            "SELECT snip_id, COALESCE(NULLIF(TRIM(title), ''), NULLIF(TRIM(app_name), ''))
+             FROM snip_window",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?))
+        })?;
+        let mut window_titles = HashMap::new();
+        for row in rows {
+            let (id, title) = row?;
+            if let (Ok(id), Some(title)) = (Uuid::parse_str(&id), title) {
+                window_titles.insert(id, title);
+            }
+        }
         Ok(SnipMetadataIndex {
             ocr_ids: uuid_set(conn, "SELECT snip_id FROM snip_ocr")?,
             window_ids: uuid_set(conn, "SELECT snip_id FROM snip_window")?,
+            window_titles,
         })
     })
 }

@@ -1,0 +1,60 @@
+// The main window's design tokens, derived rather than picked.
+//
+// One hue, h = 90° in OKLCH (the warm neutral Snipdeck already used), solved
+// by the quiet-desktop ramp: surfaces in even lightness steps, inks at fixed
+// contrast against the ground — 3.1 (placeholder), 5.2 (labels, meta),
+// 10.5 (secondary), 16.5 (primary). A token nudged by hand fails
+// src/theme_tests.rs.
+//
+// Roles:
+//   ground   the body the gallery sits on
+//   panel    chrome pinned to the window edge: toolbar, filter strip, status
+//            bar — no radius, no shadow, one hairline against its neighbour
+//   raised   islands: cards, popovers, dialogs
+//   hover / fill / selected   interaction grounds, in that order of weight
+//   line     hairline inside a surface; line-2 a control border;
+//   island   an island's own edge (popovers rely on it: the software renderer
+//            Windows uses draws no drop shadow)
+//
+// One accent, reserved for the primary action and the snip itself. Active
+// states elsewhere use ink on `selected`, not orange: when everything is
+// accented, nothing is.
+
+export global Theme {
+    in-out property <bool> dark: true;
+
+    out property <color> ground: dark ? #0d0c09 : #fdfcfa;
+    out property <color> panel: dark ? #11100d : #faf9f6;
+    out property <color> raised: dark ? #151411 : #fffffe;
+    out property <color> hover: dark ? #1c1a17 : #f5f4f1;
+    out property <color> fill: dark ? #22201c : #f1efeb;
+    out property <color> selected: dark ? #2b2924 : #ecebe6;
+    out property <color> line: dark ? #32302b : #e8e6e1;
+    out property <color> line-2: dark ? #424039 : #dcd9d2;
+    out property <color> island: dark ? #504d45 : #c7c4bb;
+    out property <color> line-strong: dark ? #66635b : #b7b3aa;
+
+    out property <color> ink-1: dark ? #edece7 : #1e1d1a;
+    out property <color> ink-2: dark ? #c1beb6 : #403d37;
+    out property <color> ink-3: dark ? #878479 : #6e6b61;
+    out property <color> ink-4: dark ? #636057 : #949086;
+
+    // The active half of a segmented control.
+    out property <color> segment-on: dark ? #2b2924 : #fffffe;
+
+    out property <color> accent: #ff8a3d;
+    out property <color> accent-hover: #ff9a57;
+    out property <color> accent-pressed: #f07a2c;
+    // Dark ink on the accent in both themes: white on #ff8a3d is 2.35:1.
+    out property <color> on-accent: #1e1d1a;
+
+    out property <color> danger: dark ? #f08f86 : #b3362f;
+    out property <color> danger-fill: #b3362f;
+    out property <color> danger-fill-hover: #c4443c;
+    out property <color> on-danger: #ffffff;
+    out property <color> danger-ground: dark ? #2a1512 : #fbecea;
+
+    out property <color> scrim: #00000088;
+    out property <color> shadow-pop: #00000052;
+    out property <color> shadow-modal: #0000006b;
+}
