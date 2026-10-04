@@ -170,6 +170,9 @@ pub struct AppState {
     /// full — used to be retried on the very next tick, every tick, each
     /// attempt holding the UI thread for up to the five-second busy timeout.
     gallery_retry: Option<(std::time::Instant, std::time::Duration)>,
+    /// A freeze-first capture running on its own thread, its result to come.
+    #[cfg(target_os = "linux")]
+    freeze_capture: Option<crossbeam_channel::Receiver<anyhow::Result<crate::capture::CapturedScreen>>>,
 }
 
 mod input;
@@ -264,6 +267,8 @@ impl AppState {
             scale_factor: 1.0,
             gallery_dirty: None,
             gallery_retry: None,
+            #[cfg(target_os = "linux")]
+            freeze_capture: None,
         }
     }
 
@@ -521,6 +526,21 @@ impl AppState {
                 self.handle_mouse_event(MouseTriggerEvent::FreezeArm { x, y });
             }
         }
+        // Its result, once the capture thread has one (it wakes the pump).
+        #[cfg(target_os = "linux")]
+        if let Some(rx) = &self.freeze_capture {
+            let result = match rx.try_recv() {
+                Ok(result) => Some(result),
+                Err(crossbeam_channel::TryRecvError::Empty) => None,
+                Err(crossbeam_channel::TryRecvError::Disconnected) => {
+                    Some(Err(anyhow::anyhow!("the capture thread ended without a result")))
+                }
+            };
+            if let Some(result) = result {
+                self.freeze_capture = None;
+                self.freeze_captured(result);
+            }
+        }
 
         // The overlay adopts the compositor's idea of its own size/scale, which
         // only becomes known a frame or two after the fullscreen request lands.
@@ -607,6 +627,9 @@ impl AppState {
             if armed_at.elapsed() > std::time::Duration::from_secs(12)
                 && self.active.is_none()
                 && self.frozen_pending.is_none()
+                // Still capturing — possibly waiting on the portal's consent
+                // dialog — is not walking away.
+                && !self.freeze_capture_in_flight()
             {
                 self.armed_snip_at = None;
                 crate::mouse_trigger::consume_armed();

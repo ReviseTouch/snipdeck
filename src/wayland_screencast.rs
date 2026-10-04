@@ -34,6 +34,7 @@
 //! again, which is the truth: that is exactly when this process can see the
 //! screen.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -69,11 +70,30 @@ fn write_token(token: &str) {
 }
 
 /// How long a whole capture may take: portal handshake, stream, first frame.
-///
-/// Generous, because it also covers the very first run, where the portal shows
-/// its consent dialog and waits for a human. Every later capture is expected to
-/// be a small fraction of this.
+/// Every capture after the first is expected to be a small fraction of this.
 const CAPTURE_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// The same for the first capture, with no restore token yet: the portal shows
+/// its consent dialog and waits for a human, who may well read it first. The
+/// caller is a capture thread of its own (see `AppState::freeze_captured`),
+/// so waiting holds up nothing else.
+const CONSENT_TIMEOUT: Duration = Duration::from_secs(120);
+
+/// Set for as long as a capture thread is alive.
+///
+/// A capture that gave up waiting leaves its thread — and the portal's
+/// consent dialog — still running. Starting another stacked a second dialog
+/// on the first, and another on each further try.
+static IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+
+/// Clears `IN_FLIGHT` when the capture thread ends, however it ends.
+struct InFlight;
+
+impl Drop for InFlight {
+    fn drop(&mut self) {
+        IN_FLIGHT.store(false, Ordering::Release);
+    }
+}
 
 /// How long the PipeWire loop waits for its first frame once the stream is up.
 ///
@@ -98,11 +118,23 @@ pub fn usable() -> bool {
 /// and tears everything down again. The first call may show the portal's
 /// consent dialog; after that the restore token answers it.
 pub fn capture() -> anyhow::Result<(i32, i32, RgbaImage)> {
+    if IN_FLIGHT.swap(true, Ordering::AcqRel) {
+        return Err(anyhow!(
+            "still waiting for the screen-sharing dialog from the last attempt"
+        ));
+    }
+    let guard = InFlight;
+    let timeout = if read_token().is_some() {
+        CAPTURE_TIMEOUT
+    } else {
+        CONSENT_TIMEOUT
+    };
     let (tx, rx) = crossbeam_channel::bounded::<anyhow::Result<(i32, i32, Frame)>>(1);
 
     std::thread::Builder::new()
         .name("screencast".into())
         .spawn(move || {
+            let _guard = guard;
             let outcome = one_shot(&tx);
             // Only lands if the loop fell over before sending anything.
             if let Err(e) = outcome {
@@ -112,7 +144,7 @@ pub fn capture() -> anyhow::Result<(i32, i32, RgbaImage)> {
         .context("spawning the screencast thread")?;
 
     let (x, y, frame) = rx
-        .recv_timeout(CAPTURE_TIMEOUT)
+        .recv_timeout(timeout)
         .map_err(|_| anyhow!("the screencast portal did not answer in time"))??;
 
     let img = RgbaImage::from_raw(frame.width, frame.height, frame.rgba)

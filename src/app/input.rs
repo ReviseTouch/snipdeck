@@ -301,6 +301,35 @@ impl AppState {
         }
     }
 
+    /// The screen captured for a freeze-first snip: show it frozen under the
+    /// overlay, for the drag that follows (`StartSnip` takes it from
+    /// `frozen_pending`).
+    pub(crate) fn freeze_captured(&mut self, result: anyhow::Result<crate::capture::CapturedScreen>) {
+        match result {
+            Ok(captured) => {
+                let area = captured.area;
+                if let Err(e) =
+                    self.overlay
+                        .show_for_monitor(area, self.scale_factor, Some(&captured.image))
+                {
+                    log::warn!("frozen overlay show failed: {e}");
+                }
+                self.frozen_pending = Some((std::time::Instant::now(), captured));
+            }
+            Err(e) => {
+                self.frozen_pending = None;
+                // Capture failed — clear the hook's freeze flag too, or it
+                // stays armed and the next plain click starts a snip.
+                self.abandon_snip();
+                // The banner only has room for the outermost context
+                // ("capturing screen"), which on Wayland hides whatever the
+                // compositor actually refused. Log the whole chain.
+                log::warn!("freeze capture failed: {e:#}");
+                self.last_error = Some(t1("Failed to freeze screen: {e}", "{e}", &e.to_string()));
+            }
+        }
+    }
+
     /// A snip that cannot go ahead — its capture failed — gives everything
     /// back at once: the arm and its routing, the hook's freeze, the overlay,
     /// and the main window if the snip hid it. Left to the watchdogs in `tick`,
@@ -363,6 +392,19 @@ impl AppState {
             || self.frozen_pending.is_some()
             || self.pending_freeze_arm.is_some()
             || self.armed_routing.is_some()
+            || self.freeze_capture_in_flight()
+    }
+
+    /// A freeze capture still running on its thread (Linux; see `FreezeArm`).
+    pub(crate) fn freeze_capture_in_flight(&self) -> bool {
+        #[cfg(target_os = "linux")]
+        {
+            self.freeze_capture.is_some()
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            false
+        }
     }
 
     pub(crate) fn handle_hotkey(&mut self, action: HotkeyAction, window: &MainWindow) {
@@ -555,30 +597,29 @@ impl AppState {
                     crate::mouse_trigger::clear_freeze();
                     return;
                 }
-                match capture::capture_at(x, y) {
-                    Ok(captured) => {
-                        let area = captured.area;
-                        if let Err(e) = self.overlay.show_for_monitor(
-                            area,
-                            self.scale_factor,
-                            Some(&captured.image),
-                        ) {
-                            log::warn!("frozen overlay show failed: {e}");
-                        }
-                        self.frozen_pending = Some((std::time::Instant::now(), captured));
+                // Off the UI thread on Linux. A Wayland capture goes through
+                // the ScreenCast portal, and the first one waits on its consent
+                // dialog — for as long as the user takes to answer. Taken here,
+                // that froze the UI thread for up to the portal timeout.
+                #[cfg(target_os = "linux")]
+                {
+                    if self.freeze_capture.is_some() {
+                        return;
                     }
-                    Err(e) => {
-                        self.frozen_pending = None;
-                        // Capture failed — clear the hook's freeze flag too, or
-                        // it stays armed and the next plain click starts a snip.
-                        self.abandon_snip();
-                        // The banner only has room for the outermost context
-                        // ("capturing screen"), which on Wayland hides whatever
-                        // the compositor actually refused. Log the whole chain.
-                        log::warn!("freeze capture failed: {e:#}");
-                        self.last_error = Some(t1("Failed to freeze screen: {e}", "{e}", &e.to_string()));
+                    let (tx, rx) = crossbeam_channel::bounded(1);
+                    let spawned = std::thread::Builder::new()
+                        .name("freeze-capture".into())
+                        .spawn(move || {
+                            let _ = tx.send(capture::capture_at(x, y));
+                            crate::pump::wake();
+                        });
+                    match spawned {
+                        Ok(_) => self.freeze_capture = Some(rx),
+                        Err(e) => self.freeze_captured(Err(e.into())),
                     }
                 }
+                #[cfg(not(target_os = "linux"))]
+                self.freeze_captured(capture::capture_at(x, y));
             }
             MouseTriggerEvent::Move { x, y } => {
                 if let Some(sel) = self.active.as_mut() {
