@@ -268,6 +268,22 @@ impl AppState {
         }
     }
 
+    /// Drop a snip's cached thumbnail — it was edited or deleted — and its
+    /// place in the eviction order. Removed from the map alone, the id stayed
+    /// in `thumb_order`: the order grew by one with every edit, and a later
+    /// re-insert put the id in it twice, so the stale copy evicted the fresh
+    /// thumbnail early.
+    pub(crate) fn forget_thumb(&mut self, id: Uuid) {
+        if self.thumb_cache.remove(&id).is_some() {
+            self.thumb_order.retain(|&o| o != id);
+        }
+    }
+
+    pub(crate) fn forget_all_thumbs(&mut self) {
+        self.thumb_cache.clear();
+        self.thumb_order.clear();
+    }
+
     /// Lazy thumbnail write-back: a card scrolled into view, so decode its
     /// thumbnail (if needed) and push it into that exact card's model item.
     pub(crate) fn load_thumb_into_model(&mut self, id: Uuid) {

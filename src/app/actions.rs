@@ -20,7 +20,7 @@ impl AppState {
             ContextAction::Delete => {
                 self.floating.close(id);
                 self.gallery.remove(id);
-                self.thumb_cache.remove(&id);
+                self.forget_thumb(id);
                 let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
@@ -186,7 +186,7 @@ impl AppState {
             None => return,
         }
         let _ = self.save_gallery();
-        self.thumb_cache.remove(&id);
+        self.forget_thumb(id);
         if self.floating.is_shown(id) {
             self.floating.close(id);
             if let Some(s) = self.gallery.get(id).cloned() {
@@ -452,7 +452,7 @@ impl AppState {
         let _ = self.save_gallery();
         // Force the gallery card + any floating window to pick up the new
         // pixels (the cached decoded thumbnail is now stale).
-        self.thumb_cache.remove(&id);
+        self.forget_thumb(id);
         if self.floating.is_shown(id) {
             self.floating.close(id);
             if let Some(s) = self.gallery.get(id).cloned() {
@@ -506,7 +506,7 @@ impl AppState {
             s.remember_position(new_pos);
         }
         let _ = self.save_gallery();
-        self.thumb_cache.remove(&id);
+        self.forget_thumb(id);
         self.floating.close(id);
         if let Some(s) = self.gallery.get(id).cloned() {
             let sf = self.scale_factor;

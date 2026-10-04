@@ -87,7 +87,7 @@ impl AppState {
                 for id in unpinned {
                     self.floating.close(id);
                     self.gallery.remove(id);
-                    self.thumb_cache.remove(&id);
+                    self.forget_thumb(id);
                 }
                 let _ = self.save_gallery();
                 self.refresh_gallery(window);
@@ -95,7 +95,7 @@ impl AppState {
             Action::ClearAll => {
                 self.floating.close_all();
                 self.gallery.clear_all();
-                self.thumb_cache.clear();
+                self.forget_all_thumbs();
                 let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
@@ -144,7 +144,7 @@ impl AppState {
             Action::Delete(id) => {
                 self.floating.close(id);
                 self.gallery.remove(id);
-                self.thumb_cache.remove(&id);
+                self.forget_thumb(id);
                 let _ = self.save_gallery();
                 self.refresh_gallery(window);
             }
