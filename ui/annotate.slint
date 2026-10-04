@@ -249,6 +249,14 @@ export component AnnotateWindow inherits Window {
     in property <length> text-disp-size;
     in property <brush> text-color;
 
+    // What is typed into the text box but not yet committed with Enter. Save
+    // commits it first; it used to be dropped without a trace.
+    out property <string> pending-text: "";
+    // "Discard your annotations?" — shown instead of closing when there is
+    // anything to lose. Rust raises it too, for the window's own close button.
+    in-out property <bool> confirm-discard: false;
+    property <bool> has-changes: root.shapes.length > 0 || (root.editing-text && root.pending-text != "");
+
     // True while a size/opacity slider is dragged → blink the size preview.
     out property <bool> size-previewing: width-slider.pressed || opacity-slider.pressed;
 
@@ -271,6 +279,16 @@ export component AnnotateWindow inherits Window {
     callback clear-all();
     callback cancel();
     callback save();
+
+    // Cancel, Esc and the close button all come here: straight out when there
+    // is nothing to lose, through the confirmation otherwise.
+    function request-cancel() {
+        if (root.has-changes) {
+            root.confirm-discard = true;
+        } else {
+            root.cancel();
+        }
+    }
 
     forward-focus: key-catcher;
 
@@ -438,9 +456,11 @@ export component AnnotateWindow inherits Window {
                         wrap: no-wrap;
                         init => {
                             self.text = "";
+                            root.pending-text = "";
                             self.focus();
                         }
-                        accepted => { root.commit-text(self.text); }
+                        edited => { root.pending-text = self.text; }
+                        accepted => { root.commit-text(self.text); root.pending-text = ""; }
                     }
                         }
                     }
@@ -466,7 +486,7 @@ export component AnnotateWindow inherits Window {
                             spacing: 10px;
                             alignment: center;
 
-                            TextButton { label: @tr("Cancel"); clicked => { root.cancel(); } }
+                            TextButton { label: @tr("Cancel"); clicked => { root.request-cancel(); } }
                             VDiv {}
                             Glyph { name: "pencil"; paint: #98989a; size: 16px; }
                             width-slider := Slider {
@@ -488,7 +508,17 @@ export component AnnotateWindow inherits Window {
                             }
                             Lbl { min-width: 40px; text: round(root.opacity-pct) + "%"; }
                             VDiv {}
-                            TextButton { label: @tr("Save"); accent: true; clicked => { root.save(); } }
+                            TextButton {
+                                label: @tr("Save");
+                                accent: true;
+                                clicked => {
+                                    if (root.editing-text && root.pending-text != "") {
+                                        root.commit-text(root.pending-text);
+                                        root.pending-text = "";
+                                    }
+                                    root.save();
+                                }
+                            }
                         }
                     }
                 }
@@ -612,10 +642,76 @@ export component AnnotateWindow inherits Window {
         height: 0px;
         enabled: !root.editing-text;
         key-pressed(e) => {
-            if (e.text == Key.Escape) { root.cancel(); return accept; }
+            if (e.text == Key.Escape) {
+                if (root.confirm-discard) {
+                    root.confirm-discard = false;
+                } else {
+                    root.request-cancel();
+                }
+                return accept;
+            }
             if (e.modifiers.control && e.text == "z") { root.undo(); return accept; }
             if (e.modifiers.control && e.text == "y") { root.redo(); return accept; }
             return reject;
+        }
+    }
+
+    // Discard confirmation. Keep editing, Esc or a click outside closes it;
+    // only Discard throws the annotations away.
+    if root.confirm-discard : Rectangle {
+        width: root.width;
+        height: root.height;
+        background: #00000099;
+        TouchArea {
+            width: 100%;
+            height: 100%;
+            clicked => { root.confirm-discard = false; }
+        }
+        Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            width: 360px;
+            height: 136px;
+            border-radius: 14px;
+            background: #1e1e20;
+            border-width: 1px;
+            border-color: #333336;
+            drop-shadow-blur: 18px;
+            drop-shadow-color: #00000088;
+            drop-shadow-offset-y: 5px;
+            TouchArea {
+                width: 100%;
+                height: 100%;
+            }
+            VerticalLayout {
+                padding: 18px;
+                spacing: 8px;
+                Text {
+                    text: @tr("Discard your annotations?");
+                    color: #f0f0f2;
+                    font-size: 15px;
+                    font-weight: 600;
+                }
+                Text {
+                    text: @tr("Everything drawn since the editor opened will be lost.");
+                    color: #a8a8ac;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                    vertical-stretch: 1;
+                }
+                HorizontalLayout {
+                    spacing: 10px;
+                    alignment: end;
+                    TextButton { label: @tr("Keep editing"); clicked => { root.confirm-discard = false; } }
+                    TextButton {
+                        label: @tr("Discard");
+                        clicked => {
+                            root.confirm-discard = false;
+                            root.cancel();
+                        }
+                    }
+                }
+            }
         }
     }
 }

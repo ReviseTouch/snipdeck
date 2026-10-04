@@ -146,6 +146,21 @@ impl Annotator {
             .map_or(false, |w| w.window().is_visible())
     }
 
+    /// An open editor holding work that closing it would lose.
+    pub fn has_unsaved(&self) -> bool {
+        self.window
+            .as_ref()
+            .filter(|w| w.window().is_visible())
+            .is_some_and(|w| has_unsaved(&self.shared.borrow(), w))
+    }
+
+    /// Bring the open editor back to the front.
+    pub fn raise(&self) {
+        if let Some(w) = &self.window {
+            let _ = w.show();
+        }
+    }
+
     pub fn open(
         &mut self,
         id: Uuid,
@@ -224,10 +239,23 @@ impl Annotator {
             w.window().set_position(slint::PhysicalPosition::new(px, py));
         }
 
-        // Closing the editor via its window frame discards (same as Cancel).
+        // The window's own close button goes through the same confirmation as
+        // Cancel and Esc: it used to discard every shape without asking.
         let shared_close = self.shared.clone();
+        let weak_close = w.as_weak();
         w.window().on_close_requested(move || {
-            shared_close.borrow_mut().id = None;
+            let unsaved = weak_close
+                .upgrade()
+                .is_some_and(|c| has_unsaved(&shared_close.borrow(), &c));
+            if unsaved {
+                if let Some(c) = weak_close.upgrade() {
+                    c.set_confirm_discard(true);
+                }
+                return slint::CloseRequestResponse::KeepWindowShown;
+            }
+            let mut st = shared_close.borrow_mut();
+            st.id = None;
+            st.base = None;
             slint::CloseRequestResponse::HideWindow
         });
 
@@ -550,6 +578,11 @@ impl Annotator {
 }
 
 // ---- UI model construction -------------------------------------------------
+
+/// Shapes drawn, or text typed but not yet committed.
+fn has_unsaved(s: &Shared, w: &AnnotateWindow) -> bool {
+    !s.shapes.is_empty() || (w.get_editing_text() && !w.get_pending_text().is_empty())
+}
 
 fn brush(c: [u8; 4]) -> Brush {
     Brush::SolidColor(Color::from_argb_u8(c[3], c[0], c[1], c[2]))

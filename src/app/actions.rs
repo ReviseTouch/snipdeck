@@ -127,6 +127,15 @@ impl AppState {
                 crate::tray::focus_main_window();
             }
             ContextAction::Annotate => {
+                // Opening an editor replaces the one already open, and that used
+                // to throw its unsaved shapes away. Bring it back instead.
+                if self.annotate.has_unsaved() {
+                    self.annotate.raise();
+                    self.last_error = Some(t(
+                        "Finish or cancel the open annotation before starting another.",
+                    ));
+                    return;
+                }
                 if let Some(snip) = self.gallery.get(id).cloned() {
                     match snip.load_image() {
                         Ok(img) => {

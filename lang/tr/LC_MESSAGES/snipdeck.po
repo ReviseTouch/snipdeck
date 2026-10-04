@@ -598,3 +598,19 @@ msgstr "Sabitlenmiş snip'ler kalır. Görüntüler diskten silinir ve geri geti
 
 msgid "Settings could not be read and were reset. The old file is kept as {path}"
 msgstr "Ayarlar okunamadı ve sıfırlandı. Eski dosya {path} olarak saklandı"
+
+#. ── Annotation editor: discard confirmation ──
+msgid "Discard your annotations?"
+msgstr "Notlar atılsın mı?"
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr "Editör açıldığından beri çizilen her şey kaybolacak."
+
+msgid "Keep editing"
+msgstr "Düzenlemeye devam et"
+
+msgid "Discard"
+msgstr "At"
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr "Yenisine başlamadan önce açık olan notu bitirin ya da iptal edin."
