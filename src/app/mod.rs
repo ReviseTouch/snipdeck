@@ -170,6 +170,9 @@ pub struct AppState {
     /// full — used to be retried on the very next tick, every tick, each
     /// attempt holding the UI thread for up to the five-second busy timeout.
     gallery_retry: Option<(std::time::Instant, std::time::Duration)>,
+    /// The foreground window when a floating snip was last selected; see
+    /// `window_tamer::foreground_token`.
+    selection_foreground: isize,
     /// A freeze-first capture running on its own thread, its result to come.
     #[cfg(target_os = "linux")]
     freeze_capture: Option<crossbeam_channel::Receiver<anyhow::Result<crate::capture::CapturedScreen>>>,
@@ -267,6 +270,7 @@ impl AppState {
             scale_factor: 1.0,
             gallery_dirty: None,
             gallery_retry: None,
+            selection_foreground: 0,
             #[cfg(target_os = "linux")]
             freeze_capture: None,
         }
@@ -707,13 +711,17 @@ impl AppState {
         if let Some(&id) = drained.select_requests.last() {
             if self.floating.is_shown(id) {
                 self.floating.select(id);
+                self.selection_foreground = crate::window_tamer::foreground_token();
             }
         }
-        // The selection highlight is shown only while Snipdeck is the active
-        // (foreground) app; whenever the user is in another application every
-        // snip is reset to its default border.
-        self.floating
-            .refresh_selection_display(crate::window_tamer::app_is_foreground());
+        // The selection highlight shows while Snipdeck is the active app, or
+        // while the window that was in front when the snip was clicked still
+        // is — a snip never takes the foreground itself (see
+        // `window_tamer::foreground_token`). Once the user moves on, every snip
+        // is reset to its default border.
+        let selection_live = crate::window_tamer::app_is_foreground()
+            || crate::window_tamer::foreground_token() == self.selection_foreground;
+        self.floating.refresh_selection_display(selection_live);
 
         for (id, sx, sy) in drained.menu_requests {
             if let Err(e) = self.context_menu.show_for(id, sx, sy, true) {

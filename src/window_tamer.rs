@@ -26,6 +26,11 @@ pub fn app_is_foreground() -> bool {
 }
 
 #[cfg(not(target_os = "windows"))]
+pub fn foreground_token() -> isize {
+    0
+}
+
+#[cfg(not(target_os = "windows"))]
 pub fn set_floating_in_taskbar(_in_taskbar: bool) {}
 
 #[cfg(not(target_os = "windows"))]
@@ -49,6 +54,19 @@ pub fn start() {
 #[cfg(target_os = "windows")]
 pub fn app_is_foreground() -> bool {
     imp::app_is_foreground()
+}
+
+/// The window in the foreground right now, as an opaque token.
+///
+/// A floating snip refuses activation (WS_EX_NOACTIVATE, so popping one
+/// never steals focus), which means clicking it leaves another app in the
+/// foreground — and the selection highlight, shown "while Snipdeck is the
+/// active app", was never shown at all. The app records this token when a
+/// snip is selected and keeps the highlight while it is unchanged: until the
+/// user actually moves to another window.
+#[cfg(target_os = "windows")]
+pub fn foreground_token() -> isize {
+    imp::foreground_token()
 }
 
 /// Toggle whether floating snip windows appear in the taskbar / alt-tab
@@ -110,7 +128,7 @@ mod imp {
         GetWindowLongPtrW, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
         IsWindowVisible, KillTimer, PostThreadMessageW, SetTimer,
         SetWindowDisplayAffinity, SetWindowLongPtrW, SetWindowPos, ShowWindow, TranslateMessage,
-        EVENT_OBJECT_CREATE, GWL_EXSTYLE, GWL_HWNDPARENT, GWL_STYLE, GW_OWNER, HWND_TOPMOST, MSG,
+        EVENT_OBJECT_CREATE, EVENT_SYSTEM_FOREGROUND, GWL_EXSTYLE, GWL_HWNDPARENT, GWL_STYLE, GW_OWNER, HWND_TOPMOST, MSG,
         SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER,
         SWP_NOSIZE, SWP_NOZORDER, SW_HIDE, SW_SHOWNA, WDA_EXCLUDEFROMCAPTURE,
         WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS, WM_APP, WM_TIMER, WS_CAPTION,
@@ -176,6 +194,21 @@ mod imp {
                 None,
                 Some(win_event_cb),
                 pid,
+                0,
+                WINEVENT_OUTOFCONTEXT,
+            );
+
+            // Foreground changes anywhere on the desktop wake the pump, which
+            // re-judges the floating-snip selection highlight (see
+            // `foreground_token`). With the pump asleep, the highlight would
+            // otherwise outlast the switch to another app until something
+            // else happened to wake it.
+            let _foreground_hook = SetWinEventHook(
+                EVENT_SYSTEM_FOREGROUND,
+                EVENT_SYSTEM_FOREGROUND,
+                None,
+                Some(foreground_cb),
+                0,
                 0,
                 WINEVENT_OUTOFCONTEXT,
             );
@@ -356,6 +389,22 @@ mod imp {
         if exclude_from_capture {
             let _ = SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
         }
+    }
+
+    unsafe extern "system" fn foreground_cb(
+        _hook: HWINEVENTHOOK,
+        _event: u32,
+        _hwnd: HWND,
+        _id_object: i32,
+        _id_child: i32,
+        _id_thread: u32,
+        _event_time: u32,
+    ) {
+        crate::pump::wake();
+    }
+
+    pub fn foreground_token() -> isize {
+        unsafe { GetForegroundWindow().0 as isize }
     }
 
     unsafe extern "system" fn win_event_cb(
