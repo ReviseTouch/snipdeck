@@ -161,15 +161,36 @@ shortcut.
 
 ### Build from source
 
-Requirements: [Rust](https://rustup.rs/) (stable) and Windows 10 or 11.
+Requirements: [Rust](https://rustup.rs/) (stable).
 
-```powershell
+```bash
 git clone https://github.com/hasantr/snipdeck.git
 cd snipdeck
 cargo build --release
 ```
 
-The binary lands at `target\release\snipdeck.exe`.
+**Windows** (10 or 11): the binary lands at `target\release\snipdeck.exe`.
+
+**Linux**: the build needs the GTK, X11/Wayland, tray, D-Bus and GL headers.
+On Debian/Ubuntu:
+
+```bash
+sudo apt install libgtk-3-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev \
+  libxcb-xfixes0-dev libxcb-randr0-dev libxrandr-dev libxkbcommon-dev \
+  libwayland-dev libayatana-appindicator3-dev libfontconfig-dev libdbus-1-dev \
+  libgl1-mesa-dev libegl1-mesa-dev
+```
+
+PipeWire needs nothing at build time: it is loaded at run time for Wayland
+capture. To install your build the way a release installs, stage it beside the
+installer:
+
+```bash
+mkdir -p dist/snipdeck && cp target/release/snipdeck packaging/linux/snipdeck.desktop \
+  packaging/linux/install.sh dist/snipdeck/
+cp -r packaging/gnome-extension/snipdeck@revisetouch.com dist/snipdeck/
+dist/snipdeck/install.sh
+```
 
 ---
 
@@ -202,15 +223,25 @@ binary at build time (no runtime gettext dependency).
 
 ## 🔒 Privacy & security
 
-- **Capture and OCR are fully local.** OCR uses the built-in `Windows.Media.Ocr` engine; nothing
-  is sent anywhere for capture or indexing.
-- **Launch-at-login is registry-free.** Snipdeck drops a normal shortcut in your `shell:Startup`
-  folder instead of writing an `HKCU\…\Run` value — the ordinary, user-visible mechanism that
-  avoids the autostart registry key antivirus / EDR tools most often flag.
-- **Uploads are opt-in.** Nothing leaves your machine without an explicit consent dialog that
-  spells out the destination. Don't upload sensitive content to a public-by-link host.
-- **OCR + Translate uses the network.** Only the OCR'd *text* is sent to Google's public
-  `translate_a` endpoint to be translated; it is not used anywhere else.
+- **Capture and OCR are local.** OCR uses `Windows.Media.Ocr` on Windows and
+  Tesseract on Linux (fed through a pipe, no temporary file); nothing is sent
+  anywhere for capture or indexing. On Wayland the screen is read through the
+  ScreenCast portal: you grant it once, and the sharing indicator shows only
+  for the moment a snip is taken.
+- **OCR + Translate asks first.** The first time, it explains that the OCR'd
+  *text* — never the image — goes to Google Translate, and waits for your yes.
+  The text is sent in the request body, not the URL.
+- **Uploads are opt-in.** Nothing leaves your machine without an explicit
+  consent dialog that spells out the destination. Don't upload sensitive
+  content to a public-by-link host.
+- **Hand-over copies stay private.** Images passed to a mail client or editor go
+  to a folder only you can read (`$XDG_RUNTIME_DIR` on Linux,
+  `%TEMP%\Snipdeck` on Windows) and are swept afterwards.
+- **Logs keep no traces.** Pointer coordinates and window titles are logged
+  only at debug level.
+- **Launch-at-login is file-based.** A normal shortcut in `shell:Startup` on
+  Windows (not the `HKCU\…\Run` key security tools most often flag), an XDG
+  autostart entry on Linux.
 
 ---
 
