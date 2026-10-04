@@ -233,6 +233,14 @@ component VDiv inherits Rectangle {
 
 export component CollageWindow inherits Window {
     title: @tr("Collage");
+    // The size Rust works out for the content, as the window's preferred size.
+    // `Window::set_size` alone does not survive mapping on Wayland: the window
+    // opens at the size the layout prefers, and the content laid out for the
+    // size asked for was cropped on both sides.
+    in property <length> start-w: 0px;
+    in property <length> start-h: 0px;
+    preferred-width: start-w;
+    preferred-height: start-h;
     background: #0d0d0f;
     icon: @image-url("../assets/preview_256.png");
     // The snip windows are always-on-top; the editor must sit above them.

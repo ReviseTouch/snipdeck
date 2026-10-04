@@ -238,6 +238,8 @@ impl Annotator {
         let chrome_h = 66.0 * 2.0;
         let win_w = (cw + 48.0).max(760.0);
         let win_h = ch + chrome_h + 24.0;
+        w.set_start_w(win_w);
+        w.set_start_h(win_h);
         w.window()
             .set_size(slint::LogicalSize::new(win_w, win_h));
         if let Some((px, py)) = crate::screen::centre_on_cursor_monitor(win_w, win_h) {

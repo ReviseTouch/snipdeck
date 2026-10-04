@@ -190,6 +190,8 @@ impl Collager {
 
         let win_w = AVAIL_W + 60.0;
         let win_h = 66.0 + AVAIL_H + 110.0 + 66.0 + 16.0;
+        w.set_start_w(win_w);
+        w.set_start_h(win_h);
         w.window().set_size(slint::LogicalSize::new(win_w, win_h));
         if let Some((px, py)) = crate::screen::centre_on_cursor_monitor(win_w, win_h) {
             w.window().set_position(slint::PhysicalPosition::new(px, py));
