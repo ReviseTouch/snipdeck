@@ -50,6 +50,9 @@ pub fn open_in_editor(img: &image::RgbaImage) -> anyhow::Result<()> {
 /// xdg-utils helper". The helper resolves the user's actual mail client /
 /// image viewer, so we don't have to guess at desktop environments.
 #[cfg(not(target_os = "windows"))]
+pub use unix::spawn_detached;
+
+#[cfg(not(target_os = "windows"))]
 mod unix {
     use anyhow::{Context, Result};
     use std::path::PathBuf;
@@ -97,11 +100,25 @@ mod unix {
 
     pub fn spawn_with(program: &str, args: &[&str], img: &image::RgbaImage) -> Result<()> {
         let path = temp_png(img)?;
-        Command::new(program)
-            .args(args)
-            .arg(&path)
-            .spawn()
-            .with_context(|| format!("could not run {program} — install xdg-utils"))?;
+        let mut command = Command::new(program);
+        command.args(args).arg(&path);
+        spawn_detached(command)
+            .with_context(|| format!("could not run {program} — install xdg-utils"))
+    }
+
+    /// Start a helper and leave it to run, reaping it when it exits.
+    ///
+    /// xdg-open and xdg-email hand the file on and exit at once, and a child
+    /// nobody waits for stays in the process table as a zombie until Snipdeck
+    /// itself exits — one per share, open and link click. A small thread
+    /// waits on each instead.
+    pub fn spawn_detached(mut command: Command) -> std::io::Result<()> {
+        let mut child = command.spawn()?;
+        let _ = std::thread::Builder::new()
+            .name("reap-child".into())
+            .spawn(move || {
+                let _ = child.wait();
+            });
         Ok(())
     }
 }

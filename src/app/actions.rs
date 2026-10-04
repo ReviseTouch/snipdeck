@@ -285,7 +285,9 @@ impl AppState {
             } else {
                 "xdg-open"
             };
-            if let Err(err) = std::process::Command::new(opener).arg(url).spawn() {
+            let mut command = std::process::Command::new(opener);
+            command.arg(url);
+            if let Err(err) = crate::share::spawn_detached(command) {
                 log::warn!("could not open {url} via {opener}: {err}");
             }
         }
