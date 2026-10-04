@@ -152,6 +152,8 @@ export component ContextMenuWindow inherits Window {
 
     // "Show Snipdeck" is shown only for a floating snip's menu, not the gallery.
     in property <bool> show-app-item: true;
+    // Which OCR engine reads the text, shown beside "OCR + Clipboard".
+    in property <string> ocr-engine: "Win OCR";
     // Description of the item the mouse is currently over, shown in the bottom
     // strip so every action — especially the icon-only Share/Transform buttons —
     // says what it does on hover.
@@ -262,7 +264,7 @@ export component ContextMenuWindow inherits Window {
             MenuItem {
                 icon: "ocr";
                 label: @tr("OCR + Clipboard");
-                hint: "Win OCR";
+                hint: root.ocr-engine;
                 tip: @tr("Read the text in the image and copy it");
                 hovered(t) => { root.current-tip = t; }
                 clicked => { root.picked(4); }

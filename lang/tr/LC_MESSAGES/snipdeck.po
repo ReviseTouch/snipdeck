@@ -617,3 +617,16 @@ msgstr "Yenisine başlamadan önce açık olan notu bitirin ya da iptal edin."
 
 msgid "Colour picker unavailable: {e}"
 msgstr "Renk seçici kullanılamıyor: {e}"
+
+#. ── Capture hints off Windows ──
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr "Yeni kesim al — ya da Super + Alt ile bölge sürükle"
+
+msgid "Take a new snip"
+msgstr "Yeni kesim al"
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr "Super + Alt + sürükle ile ekrandan bir bölge yakala."
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr "Yeni düğmesi ya da bir kısayolla ekrandan bir bölge yakala."

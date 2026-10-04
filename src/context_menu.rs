@@ -341,6 +341,11 @@ impl ContextMenuManager {
         // "Show Snipdeck" is only meaningful from a floating snip — the gallery
         // menu is already opened from the app window.
         w.set_show_app_item(from_floating);
+        w.set_ocr_engine(match crate::ocr::engine_name() {
+            "windows-media-ocr" => "Win OCR".into(),
+            "macos-vision" => "Vision".into(),
+            other => other.into(),
+        });
 
         #[cfg(target_os = "windows")]
         {

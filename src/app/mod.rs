@@ -323,6 +323,15 @@ impl AppState {
         let p = pending.clone();
         window.on_toggle_autostart(move || p.borrow_mut().push(Action::ToggleAutostart));
         window.set_autostart_enabled(crate::autostart::is_enabled());
+        // Which gesture the hints should name: Win+drag needs the Windows hook,
+        // Super+Alt+drag the GNOME extension, and elsewhere there is none.
+        window.set_capture_gesture(if cfg!(target_os = "windows") {
+            0
+        } else if crate::window_env::caps().compositor == crate::window_env::Compositor::Gnome {
+            1
+        } else {
+            2
+        });
         let p = pending.clone();
         window.on_toggle_theme(move || p.borrow_mut().push(Action::ToggleTheme));
         let p = pending.clone();

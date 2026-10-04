@@ -454,6 +454,10 @@ export component MainWindow inherits Window {
     in property <[LangItem]> languages: [];
     in property <string> current-language: "en";
     in property <bool> autostart-enabled: false;
+    // How a snip is started here, for the hints that name it: 0 = Windows
+    // (Win+drag), 1 = GNOME (Super+Alt+drag, through the shell extension),
+    // 2 = anywhere else (the toolbar and the hotkeys; there is no drag gesture).
+    in property <int> capture-gesture: 0;
     property <bool> lang-open: false;
     // Bulk-delete confirmation: 0 = closed, 1 = clear unpinned, 2 = clear all.
     // Both toolbar actions delete files permanently, and the trash button sits
@@ -576,7 +580,7 @@ export component MainWindow inherits Window {
                 spacing: 4px;
                 alignment: center;
 
-                ToolbarButton { icon: "plus"; label: @tr("New"); kbd: ""; primary: true; dark: root.dark-theme; tooltip: @tr("Take a new snip — drag a region with Win + left click"); width: 84px; clicked => { root.new-snip(); } }
+                ToolbarButton { icon: "plus"; label: @tr("New"); kbd: ""; primary: true; dark: root.dark-theme; tooltip: root.capture-gesture == 0 ? @tr("Take a new snip — drag a region with Win + left click") : root.capture-gesture == 1 ? @tr("Take a new snip — or drag a region with Super + Alt") : @tr("Take a new snip"); width: 84px; clicked => { root.new-snip(); } }
                 ToolbarButton { icon: "copy"; label: @tr("Snip + Clip"); dark: root.dark-theme; tooltip: @tr("Take a snip and copy it to the clipboard"); width: 112px; clicked => { root.new-snip-clip(); } }
                 ToolbarButton { icon: "clipboard"; label: @tr("Clip only"); dark: root.dark-theme; tooltip: @tr("Copy to the clipboard only (without saving to the gallery)"); width: 98px; clicked => { root.new-snip-clip-only(); } }
                 ToolbarButton { icon: "layers"; label: @tr("Collage"); dark: root.dark-theme; tooltip: @tr("Combine several snips into one collage"); width: 96px; clicked => { root.collage-create(); } }
@@ -588,7 +592,7 @@ export component MainWindow inherits Window {
                     icon: root.any-floating ? "eye" : "eye-off";
                     dark: root.dark-theme;
                     active: root.any-floating;
-                    tooltip: (root.any-floating ? @tr("Hide on-screen snips") : @tr("Show snips on screen")) + " (Win+Alt+H)";
+                    tooltip: (root.any-floating ? @tr("Hide on-screen snips") : @tr("Show snips on screen")) + (root.capture-gesture == 0 ? " (Win+Alt+H)" : " (Super+Alt+H)");
                     clicked => { root.toggle-all-visibility(); }
                 }
                 IconButton {
@@ -837,7 +841,9 @@ export component MainWindow inherits Window {
                     horizontal-alignment: center;
                 }
                 Text {
-                    text: @tr("Capture a region from the screen with Win + left mouse.");
+                    text: root.capture-gesture == 0 ? @tr("Capture a region from the screen with Win + left mouse.")
+                        : root.capture-gesture == 1 ? @tr("Capture a region from the screen with Super + Alt + drag.")
+                        : @tr("Capture a region from the screen with the New button or a hotkey.");
                     color: root.c-fg2;
                     horizontal-alignment: center;
                 }
