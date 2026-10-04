@@ -111,6 +111,16 @@ pub fn usable() -> bool {
         && crate::pipewire_dl::available()
 }
 
+/// Did this capture fail because the user declined the sharing dialog?
+pub fn declined_by_user(e: &anyhow::Error) -> bool {
+    e.chain().any(|cause| {
+        matches!(
+            cause.downcast_ref::<ashpd::Error>(),
+            Some(ashpd::Error::Response(ashpd::desktop::ResponseError::Cancelled))
+        )
+    })
+}
+
 /// Grab the current screen.
 ///
 /// Brings a ScreenCast session up, takes the first frame the compositor sends,
@@ -184,16 +194,40 @@ fn one_shot(tx: &crossbeam_channel::Sender<anyhow::Result<(i32, i32, Frame)>>) -
 type CastSession = ashpd::desktop::Session<ashpd::desktop::screencast::Screencast>;
 
 async fn negotiate() -> anyhow::Result<(CastSession, std::os::fd::OwnedFd, u32, (i32, i32))> {
-    use ashpd::desktop::{
-        screencast::{CursorMode, Screencast, SelectSourcesOptions, SourceType},
-        PersistMode,
-    };
+    use ashpd::desktop::screencast::Screencast;
 
     let proxy = Screencast::new().await.context("opening the ScreenCast portal")?;
     let session = proxy
         .create_session(Default::default())
         .await
         .context("creating a screencast session")?;
+
+    // Once the session exists every way out closes it. A source selection or
+    // start that failed — a refused dialog included — used to drop it open,
+    // and a portal session left open is a screen cast the desktop still
+    // shows as running.
+    match start_cast(&proxy, &session).await {
+        // The session is handed back rather than dropped: it has to outlive
+        // the stream, and then be closed explicitly. See `one_shot`.
+        Ok((fd, node_id, position)) => Ok((session, fd, node_id, position)),
+        Err(e) => {
+            if let Err(close) = session.close().await {
+                log::debug!("could not close the failed screencast session: {close}");
+            }
+            Err(e)
+        }
+    }
+}
+
+/// Sources, start, and the PipeWire fd, on a session already created.
+async fn start_cast(
+    proxy: &ashpd::desktop::screencast::Screencast,
+    session: &CastSession,
+) -> anyhow::Result<(std::os::fd::OwnedFd, u32, (i32, i32))> {
+    use ashpd::desktop::{
+        screencast::{CursorMode, SelectSourcesOptions, SourceType},
+        PersistMode,
+    };
 
     let token = read_token();
     // Spelled out rather than `.into()`: the setter takes an
@@ -214,12 +248,12 @@ async fn negotiate() -> anyhow::Result<(CastSession, std::os::fd::OwnedFd, u32, 
     }
 
     proxy
-        .select_sources(&session, options)
+        .select_sources(session, options)
         .await
         .context("selecting the monitor to cast")?;
 
     let response = proxy
-        .start(&session, None, Default::default())
+        .start(session, None, Default::default())
         .await
         .context("starting the cast")?
         .response()
@@ -237,11 +271,9 @@ async fn negotiate() -> anyhow::Result<(CastSession, std::os::fd::OwnedFd, u32, 
     let position = stream.position().unwrap_or((0, 0));
 
     let fd = proxy
-        .open_pipe_wire_remote(&session, Default::default())
+        .open_pipe_wire_remote(session, Default::default())
         .await
         .context("opening the PipeWire remote")?;
 
-    // The session is handed back rather than dropped: it has to outlive the
-    // stream, and then be closed explicitly. See `one_shot`.
-    Ok((session, fd, node_id, position))
+    Ok((fd, node_id, position))
 }

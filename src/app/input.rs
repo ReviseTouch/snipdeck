@@ -317,6 +317,12 @@ impl AppState {
                 }
                 self.frozen_pending = Some((std::time::Instant::now(), captured));
             }
+            Err(e) if e.chain().any(|c| c.is::<crate::capture::CaptureCancelled>()) => {
+                // Declined in the sharing dialog: called off, not failed — no
+                // banner, just everything back as it was.
+                self.frozen_pending = None;
+                self.abandon_snip();
+            }
             Err(e) => {
                 self.frozen_pending = None;
                 // Capture failed — clear the hook's freeze flag too, or it

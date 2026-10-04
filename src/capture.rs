@@ -93,31 +93,53 @@ fn normalise_to_image(
 /// logical ones, so on a scaled session the two do not agree on any number.
 /// One monitor is the case where the question cannot arise, and it is also the
 /// case the fast path was justified by — "nearly everyone".
+///
+/// `Ok(None)` sends the caller on to xcap. A user who declined the screen-
+/// sharing dialog is the exception, answered with [`CaptureCancelled`]: going
+/// on to xcap asked again by another route — on GNOME through the Screenshot
+/// portal, shutter and all — after the user had said no.
 #[cfg(not(target_os = "windows"))]
-fn screencast_image(monitor_count: usize) -> Option<image::RgbaImage> {
+fn screencast_image(monitor_count: usize) -> anyhow::Result<Option<image::RgbaImage>> {
     if !crate::wayland_screencast::usable() {
-        return None;
+        return Ok(None);
     }
     if monitor_count != 1 {
         log::debug!("screencast skipped: {monitor_count} monitors, cast covers only one");
-        return None;
+        return Ok(None);
     }
     match crate::wayland_screencast::capture() {
         Ok((_, _, img)) => {
             log::info!("capture path: ScreenCast (PipeWire)");
-            Some(img)
+            Ok(Some(img))
+        }
+        Err(e) if crate::wayland_screencast::declined_by_user(&e) => {
+            log::info!("screen sharing declined; no capture");
+            Err(CaptureCancelled.into())
         }
         Err(e) => {
             log::debug!("screencast capture unavailable ({e:#}); using xcap");
-            None
+            Ok(None)
         }
     }
 }
 
 #[cfg(target_os = "windows")]
-fn screencast_image(_monitor_count: usize) -> Option<image::RgbaImage> {
-    None
+fn screencast_image(_monitor_count: usize) -> anyhow::Result<Option<image::RgbaImage>> {
+    Ok(None)
 }
+
+/// The user declined to share the screen: not a failure to report, a snip
+/// they called off.
+#[derive(Debug)]
+pub struct CaptureCancelled;
+
+impl std::fmt::Display for CaptureCancelled {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("screen sharing was declined")
+    }
+}
+
+impl std::error::Error for CaptureCancelled {}
 
 fn capture_monitor(
     m: xcap::Monitor,
@@ -163,7 +185,7 @@ fn capture_monitor(
             // unusable: it asks GNOME to encode the whole screen as a PNG into
             // /tmp and reads it back, which measured five to nine seconds and
             // rang the shutter every time. See `wayland_screencast`.
-            match screencast_image(monitor_count) {
+            match screencast_image(monitor_count)? {
                 Some(img) => img,
                 None => {
                     log::info!("capture path: GDI (xcap)");
