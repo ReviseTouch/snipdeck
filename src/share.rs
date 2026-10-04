@@ -110,7 +110,9 @@ mod unix {
 mod win {
     use anyhow::{anyhow, Context, Result};
     use std::os::windows::ffi::OsStrExt;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::Duration;
     use windows::core::{factory, s, w, HSTRING, PCWSTR, PWSTR};
     use windows::ApplicationModel::DataTransfer::{
         DataRequestedEventArgs, DataTransferManager,
@@ -141,8 +143,7 @@ mod win {
     /// copy the snip to the clipboard, open an empty compose with `mailto:`, and
     /// pop a notice telling the user to paste it with Ctrl+V.
     pub fn share_mail(img: &image::RgbaImage) -> Result<()> {
-        let path = std::env::temp_dir().join("snipdeck_share.png");
-        img.save(&path).context("failed to write temp PNG for sharing")?;
+        let path = temp_png(img, "mail")?;
         let fallback_img = img.clone();
         std::thread::spawn(move || match mapi_send(&path) {
             Ok(()) => log::info!("share: MAPI mail opened with attachment"),
@@ -234,8 +235,7 @@ mod win {
     /// (the "edit" verb — usually Paint). Some setups don't register an "edit"
     /// verb for PNG, so we fall back to launching `mspaint.exe` with the file.
     pub fn open_in_editor(img: &image::RgbaImage) -> Result<()> {
-        let path = std::env::temp_dir().join("snipdeck_edit.png");
-        img.save(&path).context("failed to write temp PNG for editing")?;
+        let path = temp_png(img, "edit")?;
         let path_w: Vec<u16> = path
             .as_os_str()
             .encode_wide()
@@ -293,6 +293,56 @@ mod win {
             }
         }
         Ok(())
+    }
+
+    /// How long a handed-over copy is kept for the program it went to.
+    const KEEP: Duration = Duration::from_secs(24 * 60 * 60);
+
+    /// A copy of the snip for another program to open: the mail client's
+    /// attachment, the editor's file. That program reads it after we return,
+    /// so it cannot be deleted here.
+    ///
+    /// Unique per hand-over: under the old fixed names a second "edit in
+    /// Paint" overwrote the file the first Paint window had open, and a second
+    /// mail share replaced an attachment the first compose had not read yet.
+    /// Kept in a folder of Snipdeck's own in %TEMP%, where copies older than a
+    /// day are swept at the next hand-over rather than left in Temp for good.
+    fn temp_png(img: &image::RgbaImage, kind: &str) -> Result<PathBuf> {
+        static SEQ: AtomicU64 = AtomicU64::new(0);
+        let dir = std::env::temp_dir().join("Snipdeck");
+        std::fs::create_dir_all(&dir).context("creating Snipdeck's temp folder")?;
+        sweep(&dir);
+        let path = dir.join(format!(
+            "snipdeck-{kind}-{}-{}.png",
+            std::process::id(),
+            SEQ.fetch_add(1, Ordering::Relaxed)
+        ));
+        img.save_with_format(&path, image::ImageFormat::Png)
+            .with_context(|| format!("writing {}", path.display()))?;
+        Ok(path)
+    }
+
+    fn sweep(dir: &Path) {
+        let Ok(entries) = std::fs::read_dir(dir) else { return };
+        for entry in entries.flatten() {
+            let stale = entry
+                .metadata()
+                .and_then(|m| m.modified())
+                .ok()
+                .and_then(|t| t.elapsed().ok())
+                .is_some_and(|age| age > KEEP);
+            if stale && entry.file_name().to_string_lossy().starts_with("snipdeck-") {
+                // Fails harmlessly on a file a program still holds open.
+                let _ = std::fs::remove_file(entry.path());
+            }
+        }
+    }
+
+    thread_local! {
+        // The share before this one's DataRequested registration, to remove.
+        static PREVIOUS_SHARE: std::cell::RefCell<
+            Option<(DataTransferManager, windows::Foundation::EventRegistrationToken)>,
+        > = const { std::cell::RefCell::new(None) };
     }
 
     /// A window to anchor the share flyout on. Prefer the MAIN window: it's a
@@ -375,7 +425,19 @@ mod win {
                     Ok(())
                 },
             );
-            dtm.DataRequested(&handler).context("DataRequested")?;
+            // One handler per share, and the last one taken back before the
+            // next goes in. Registered and never removed, every earlier share's
+            // handler fired again on each later one — each setting its own,
+            // older bitmap on the same request, the stale image racing the new
+            // one into the target app — and each kept its PNG alive for the
+            // rest of the session.
+            PREVIOUS_SHARE.with(|previous| {
+                if let Some((old_dtm, token)) = previous.borrow_mut().take() {
+                    let _ = old_dtm.RemoveDataRequested(token);
+                }
+            });
+            let token = dtm.DataRequested(&handler).context("DataRequested")?;
+            PREVIOUS_SHARE.with(|previous| *previous.borrow_mut() = Some((dtm.clone(), token)));
             interop
                 .ShowShareUIForWindow(hwnd)
                 .context("ShowShareUIForWindow")?;
