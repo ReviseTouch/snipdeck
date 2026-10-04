@@ -349,8 +349,21 @@ impl ContextMenuManager {
 
         #[cfg(target_os = "windows")]
         {
-            // The window is the menu: place it at the cursor and be done.
-            w.window().set_position(PhysicalPosition::new(x, y));
+            // The window is the menu: place it at the cursor, kept on the
+            // monitor. Placed at the click as it was, a right-click near the
+            // bottom or the right-hand edge put most of the menu off screen,
+            // out of reach. Its size is in the scale of the monitor it opens
+            // on, which is the one it will take once Windows has moved it there.
+            let sf = crate::screen::scale_at(x, y).unwrap_or_else(|| w.window().scale_factor());
+            let size = (
+                (w.get_menu_w() * sf).ceil() as i32,
+                (w.get_menu_h() * sf).ceil() as i32,
+            );
+            let (px, py) = match crate::screen::work_area_at(x, y) {
+                Some(work) => crate::screen::fit_popup((x, y), size, work),
+                None => (x, y),
+            };
+            w.window().set_position(PhysicalPosition::new(px, py));
         }
         #[cfg(not(target_os = "windows"))]
         {

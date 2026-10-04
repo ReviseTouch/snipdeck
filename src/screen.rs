@@ -80,6 +80,47 @@ pub fn scale_at(x: i32, y: i32) -> Option<f32> {
     (dpi_x > 0).then(|| dpi_x as f32 / 96.0)
 }
 
+/// Work area (the monitor minus the taskbar) of the monitor nearest a
+/// physical screen point, as `(left, top, right, bottom)` in physical pixels.
+/// Windows only — the one platform where the app places its own windows.
+#[cfg(target_os = "windows")]
+pub fn work_area_at(x: i32, y: i32) -> Option<(i32, i32, i32, i32)> {
+    use windows::Win32::Foundation::POINT;
+    use windows::Win32::Graphics::Gdi::{
+        GetMonitorInfoW, MonitorFromPoint, MONITORINFO, MONITOR_DEFAULTTONEAREST,
+    };
+    let mut info = MONITORINFO {
+        cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+        ..Default::default()
+    };
+    unsafe {
+        let monitor = MonitorFromPoint(POINT { x, y }, MONITOR_DEFAULTTONEAREST);
+        if !GetMonitorInfoW(monitor, &mut info).as_bool() {
+            return None;
+        }
+    }
+    let r = info.rcWork;
+    Some((r.left, r.top, r.right, r.bottom))
+}
+
+/// Top-left for a `w`×`h` popup opened at a click, kept inside `work`
+/// (`left, top, right, bottom`), all physical pixels. It opens toward the room
+/// there is, as a native menu does: up from a click near the bottom, to the
+/// left from one near the right-hand edge; and where it fits neither way it is
+/// pushed inside, the work area's top-left edge winning.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+pub fn fit_popup(click: (i32, i32), size: (i32, i32), work: (i32, i32, i32, i32)) -> (i32, i32) {
+    let (left, top, right, bottom) = work;
+    let axis = |at: i32, len: i32, lo: i32, hi: i32| {
+        let start = if at + len > hi { at - len } else { at };
+        start.min(hi - len).max(lo)
+    };
+    (
+        axis(click.0, size.0, left, right),
+        axis(click.1, size.1, top, bottom),
+    )
+}
+
 #[cfg(not(target_os = "windows"))]
 pub fn scale_at(_x: i32, _y: i32) -> Option<f32> {
     None
@@ -88,6 +129,30 @@ pub fn scale_at(_x: i32, _y: i32) -> Option<f32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const WORK: (i32, i32, i32, i32) = (0, 0, 1920, 1040);
+
+    #[test]
+    fn popup_opens_at_the_click_when_it_fits() {
+        assert_eq!(fit_popup((100, 200), (300, 400), WORK), (100, 200));
+    }
+
+    #[test]
+    fn popup_flips_away_from_the_right_and_bottom_edges() {
+        assert_eq!(fit_popup((1800, 900), (300, 400), WORK), (1500, 500));
+    }
+
+    #[test]
+    fn popup_taller_than_the_room_either_way_is_pushed_inside() {
+        // 690 px tall from a click at 600 on a 1040 px work area: neither
+        // below (to 1290) nor above (from -90) fits.
+        assert_eq!(fit_popup((10, 600), (300, 690), WORK), (10, 0));
+        // A second monitor to the left, at negative coordinates.
+        assert_eq!(
+            fit_popup((-50, 10), (300, 400), (-1920, 0, 0, 1080)),
+            (-350, 10)
+        );
+    }
 
     /// Not an assertion about this machine — just that the helper answers
     /// something coherent wherever it runs, including headless CI with no

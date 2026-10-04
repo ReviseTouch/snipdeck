@@ -281,9 +281,14 @@ impl FloatingManager {
         win.on_drag_delta(move |dx, dy| {
             crate::pump::wake();
             if let Some(c) = weak.upgrade() {
+                // The delta is in logical pixels, the window position in
+                // physical ones. Added as they came, the snip covered 1/scale
+                // of the pointer's travel each step and trailed behind it on
+                // any display not at 100%.
+                let sf = c.window().scale_factor();
                 let pos = c.window().position();
-                let nx = pos.x + dx as i32;
-                let ny = pos.y + dy as i32;
+                let nx = pos.x + (dx * sf).round() as i32;
+                let ny = pos.y + (dy * sf).round() as i32;
                 c.window().set_position(PhysicalPosition::new(nx, ny));
                 let mut sh = shared.borrow_mut();
                 sh.pending_pos_writes.insert(snip_id, (nx, ny));
@@ -299,9 +304,13 @@ impl FloatingManager {
         win.on_right_pressed(move |lx, ly| {
             crate::pump::wake();
             if let Some(c) = weak_menu.upgrade() {
+                // Logical pointer offset → physical, like the position it is
+                // added to; unscaled, the menu opened up and to the left of
+                // the click on a scaled display.
+                let sf = c.window().scale_factor();
                 let pos = c.window().position();
-                let sx = pos.x + lx as i32;
-                let sy = pos.y + ly as i32;
+                let sx = pos.x + (lx * sf).round() as i32;
+                let sy = pos.y + (ly * sf).round() as i32;
                 shared_menu
                     .borrow_mut()
                     .pending_menu
