@@ -2,13 +2,13 @@
 name = "snipdeck"
 version = "0.2.0"
 edition = "2021"
-description = "A fast Windows screen-snipping deck: capture regions, keep floating snips on screen, OCR-index, search, and manage hundreds of screenshots."
+description = "A fast screen-snipping deck for Windows and Linux: capture regions, keep floating snips on screen, OCR-index, search, and manage hundreds of screenshots."
 authors = ["Hasan Salihoğlu <hsn.salihoglu@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/hasantr/snipdeck"
 homepage = "https://github.com/hasantr/snipdeck"
 readme = "README.md"
-keywords = ["screenshot", "snipping", "ocr", "capture", "windows"]
+keywords = ["screenshot", "snipping", "ocr", "windows", "linux"]
 categories = ["multimedia::images", "gui"]
 
 [[bin]]
