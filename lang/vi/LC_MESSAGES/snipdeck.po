@@ -332,30 +332,8 @@ msgstr "Không thể mở cửa sổ dịch: {e}"
 msgid "Failed to open editor: {e}"
 msgstr "Không thể mở trình chỉnh sửa: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "Không thể bắt đầu tải lên: {e}"
-
 msgid "Share failed: {e}"
 msgstr "Chia sẻ thất bại: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "Ảnh đã được tải lên.\r\nĐã sao chép liên kết vào bộ nhớ tạm:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "Ảnh đã được tải lên:\r\n{url}\r\n\r\n(Không thể sao chép liên kết vào bộ nhớ tạm.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — Tải lên"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "Tải lên thất bại:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Yêu cầu Imgur Client-ID"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — Tải lên internet"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "Giao diện tối"
 
 msgid "Floating snips in the taskbar"
 msgstr "Ảnh chụp nổi trên thanh tác vụ"
+
+msgid "Upload to"
+msgstr "Tải lên tới"
+
+msgid "Add from a .sxcu file…"
+msgstr "Thêm từ tệp .sxcu…"
+
+msgid "Remove this host"
+msgstr "Gỡ dịch vụ này"
+
+msgid "Upload this snip?"
+msgstr "Tải ảnh chụp này lên?"
+
+msgid "Uploading…"
+msgstr "Đang tải lên…"
+
+msgid "Uploaded"
+msgstr "Đã tải lên"
+
+msgid "Upload failed"
+msgstr "Tải lên không thành công"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur cần Client-ID"
+
+msgid "Anyone with the link can open the image."
+msgstr "Bất kỳ ai có liên kết đều có thể mở ảnh."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "Ảnh không được liệt kê hay tìm thấy ở bất kỳ đâu."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "Ảnh được tải lên ẩn danh nên không thể xóa sau này."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "Kết nối không được mã hóa: người khác trong mạng có thể thấy ảnh."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "Đừng tải lên giấy tờ tùy thân, mật khẩu hay tin nhắn riêng tư."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "Khi hoàn tất, liên kết sẽ được sao chép vào bộ nhớ tạm."
+
+msgid "The link is on the clipboard."
+msgstr "Liên kết đã ở trong bộ nhớ tạm."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "Không thể sao chép liên kết; hãy dùng “Sao chép liên kết”."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Tải lên ẩn danh của Imgur cần một Client-ID miễn phí. Hãy đăng ký một ứng dụng tại imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), đặt Client-ID của ứng dụng vào tệp cài đặt dưới dạng \"imgur_client_id\", rồi khởi động lại Snipdeck."
+
+msgid "Upload"
+msgstr "Tải lên"
+
+msgid "Hide"
+msgstr "Ẩn"
+
+msgid "Copy link"
+msgstr "Sao chép liên kết"
+
+msgid "Open link"
+msgstr "Mở liên kết"
+
+msgid "Open settings file"
+msgstr "Mở tệp cài đặt"
+
+msgid "Try again"
+msgstr "Thử lại"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "Tệp này không phải là trình tải lên tùy chỉnh của ShareX."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "Tệp gửi ảnh dưới dạng \"{body}\"; Snipdeck có thể gửi dữ liệu biểu mẫu multipart hoặc nội dung nhị phân."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "Tệp phải tải lên một địa chỉ http:// hoặc https://."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "Chỉ hỗ trợ tải lên bằng POST, PUT và PATCH."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "Tệp dùng để tải lên văn bản hoặc rút gọn liên kết, không phải ảnh."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "Tệp không cho biết trường biểu mẫu nào chứa ảnh (FileFormName)."
+
+msgid "The host answered without a link: {answer}"
+msgstr "Dịch vụ phản hồi mà không có liên kết: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "Tệp dùng {what}, mà Snipdeck không hỗ trợ."
+
+msgid "The host's answer has no {what}."
+msgstr "Phản hồi của dịch vụ không có {what}."
+
+msgid "Could not reach {host}: {e}"
+msgstr "Không thể kết nối tới {host}: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "Không thể thêm dịch vụ tải lên: {why}"

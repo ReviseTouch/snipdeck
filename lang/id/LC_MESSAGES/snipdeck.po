@@ -332,30 +332,8 @@ msgstr "Gagal membuka jendela terjemahan: {e}"
 msgid "Failed to open editor: {e}"
 msgstr "Gagal membuka editor: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "Gagal memulai unggahan: {e}"
-
 msgid "Share failed: {e}"
 msgstr "Berbagi gagal: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "Gambar diunggah.\r\nTautan disalin ke papan klip:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "Gambar diunggah:\r\n{url}\r\n\r\n(Tautan tidak dapat disalin ke papan klip.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — Unggah"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "Unggahan gagal:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Imgur Client-ID diperlukan"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — Unggah ke internet"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "Tema gelap"
 
 msgid "Floating snips in the taskbar"
 msgstr "Snip mengambang di bilah tugas"
+
+msgid "Upload to"
+msgstr "Unggah ke"
+
+msgid "Add from a .sxcu file…"
+msgstr "Tambah dari file .sxcu…"
+
+msgid "Remove this host"
+msgstr "Hapus host ini"
+
+msgid "Upload this snip?"
+msgstr "Unggah snip ini?"
+
+msgid "Uploading…"
+msgstr "Mengunggah…"
+
+msgid "Uploaded"
+msgstr "Terunggah"
+
+msgid "Upload failed"
+msgstr "Gagal mengunggah"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur memerlukan Client-ID"
+
+msgid "Anyone with the link can open the image."
+msgstr "Siapa pun yang memiliki tautan dapat membuka gambar ini."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "Gambar tidak tercantum atau dapat dicari di mana pun."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "Diunggah secara anonim, gambar tidak dapat dihapus nanti."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "Koneksi tidak terenkripsi: orang lain di jaringan dapat melihat gambar."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "Jangan unggah kartu identitas, kata sandi, atau pesan pribadi."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "Setelah selesai, tautan disalin ke papan klip."
+
+msgid "The link is on the clipboard."
+msgstr "Tautan ada di papan klip."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "Tautan tidak dapat disalin; gunakan Salin tautan."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Unggahan anonim Imgur memerlukan Client-ID gratis. Daftarkan aplikasi di imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), masukkan Client-ID-nya ke file pengaturan sebagai \"imgur_client_id\", lalu mulai ulang Snipdeck."
+
+msgid "Upload"
+msgstr "Unggah"
+
+msgid "Hide"
+msgstr "Sembunyikan"
+
+msgid "Copy link"
+msgstr "Salin tautan"
+
+msgid "Open link"
+msgstr "Buka tautan"
+
+msgid "Open settings file"
+msgstr "Buka file pengaturan"
+
+msgid "Try again"
+msgstr "Coba lagi"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "File ini bukan pengunggah kustom ShareX."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "File ini mengirim gambar sebagai \"{body}\"; Snipdeck dapat mengirim data formulir multipart atau body biner."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "File ini harus mengunggah ke alamat http:// atau https://."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "Hanya unggahan POST, PUT, dan PATCH yang didukung."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "File ini mengunggah teks atau memendekkan tautan, bukan gambar."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "File ini tidak menyebutkan kolom formulir mana yang membawa gambar (FileFormName)."
+
+msgid "The host answered without a link: {answer}"
+msgstr "Host menjawab tanpa tautan: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "File ini menggunakan {what}, yang tidak didukung Snipdeck."
+
+msgid "The host's answer has no {what}."
+msgstr "Jawaban host tidak berisi {what}."
+
+msgid "Could not reach {host}: {e}"
+msgstr "Tidak dapat menghubungi {host}: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "Gagal menambahkan host unggahan: {why}"

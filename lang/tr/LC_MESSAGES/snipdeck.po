@@ -338,30 +338,8 @@ msgstr "Çeviri penceresi açılamadı: {e}"
 msgid "Failed to open editor: {e}"
 msgstr "Düzenleyici açılamadı: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "Yükleme başlatılamadı: {e}"
-
 msgid "Share failed: {e}"
 msgstr "Paylaşım başarısız: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "Görüntü yüklendi.\r\nBağlantı panoya kopyalandı:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "Görüntü yüklendi:\r\n{url}\r\n\r\n(Bağlantı panoya kopyalanamadı.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — Yükleme"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "Yükleme başarısız:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Imgur Client-ID gerekli"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — İnternet'e yükle"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -601,3 +579,105 @@ msgstr "Koyu tema"
 
 msgid "Floating snips in the taskbar"
 msgstr "Yüzen snip'ler görev çubuğunda"
+
+msgid "Upload to"
+msgstr "Yükleme yeri"
+
+msgid "Add from a .sxcu file…"
+msgstr ".sxcu dosyasından ekle…"
+
+msgid "Remove this host"
+msgstr "Bu barındırıcıyı kaldır"
+
+msgid "Upload this snip?"
+msgstr "Bu snip yüklensin mi?"
+
+msgid "Uploading…"
+msgstr "Yükleniyor…"
+
+msgid "Uploaded"
+msgstr "Yüklendi"
+
+msgid "Upload failed"
+msgstr "Yükleme başarısız"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur bir Client-ID istiyor"
+
+msgid "Anyone with the link can open the image."
+msgstr "Bağlantıya sahip olan herkes görüntüyü açabilir."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "Hiçbir yerde listelenmez, aramada çıkmaz."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "Anonim yüklendiği için sonradan silinemez."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "Aktarım şifrelenmiyor: ağdaki başkaları görüntüyü görebilir."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "Kimlik, parola veya özel mesaj içeren görüntüler yüklemeyin."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "Bittiğinde bağlantı panoya kopyalanır."
+
+msgid "The link is on the clipboard."
+msgstr "Bağlantı panoda."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "Bağlantı kopyalanamadı; Bağlantıyı kopyala düğmesini kullanın."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Imgur'a anonim yükleme için ücretsiz bir Client-ID gerekir. imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\") altında bir uygulama kaydedin, Client-ID'sini ayar dosyasına \"imgur_client_id\" olarak yazın ve Snipdeck'i yeniden başlatın."
+
+msgid "Upload"
+msgstr "Yükle"
+
+msgid "Hide"
+msgstr "Gizle"
+
+msgid "Copy link"
+msgstr "Bağlantıyı kopyala"
+
+msgid "Open link"
+msgstr "Bağlantıyı aç"
+
+msgid "Open settings file"
+msgstr "Ayar dosyasını aç"
+
+msgid "Try again"
+msgstr "Yeniden dene"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "Bu dosya bir ShareX özel yükleyicisi değil."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "Görüntüyü \"{body}\" olarak gönderiyor; Snipdeck multipart form verisi ya da ikili gövde gönderebilir."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "Bir http:// veya https:// adresine yüklemesi gerekir."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "Yalnızca POST, PUT ve PATCH yüklemeleri desteklenir."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "Görüntü değil, metin yüklüyor ya da bağlantı kısaltıyor."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "Görüntünün hangi form alanında gönderileceğini belirtmiyor (FileFormName)."
+
+msgid "The host answered without a link: {answer}"
+msgstr "Barındırıcı bağlantı vermeden yanıt verdi: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "{what} kullanıyor; Snipdeck bunu desteklemiyor."
+
+msgid "The host's answer has no {what}."
+msgstr "Barındırıcının yanıtında {what} yok."
+
+msgid "Could not reach {host}: {e}"
+msgstr "{host} sunucusuna ulaşılamadı: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "Yükleme barındırıcısı eklenemedi: {why}"

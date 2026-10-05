@@ -332,30 +332,8 @@ msgstr "Échec de l'ouverture de la fenêtre de traduction : {e}"
 msgid "Failed to open editor: {e}"
 msgstr "Échec de l'ouverture de l'éditeur : {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "Échec du démarrage du téléversement : {e}"
-
 msgid "Share failed: {e}"
 msgstr "Échec du partage : {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "Image téléversée.\r\nLien copié dans le presse-papiers :\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "Image téléversée :\r\n{url}\r\n\r\n(Impossible de copier le lien dans le presse-papiers.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — Téléversement"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "Échec du téléversement :\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Imgur Client-ID requis"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — Téléverser sur internet"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "Thème sombre"
 
 msgid "Floating snips in the taskbar"
 msgstr "Captures flottantes dans la barre des tâches"
+
+msgid "Upload to"
+msgstr "Téléverser vers"
+
+msgid "Add from a .sxcu file…"
+msgstr "Ajouter depuis un fichier .sxcu…"
+
+msgid "Remove this host"
+msgstr "Retirer cet hébergeur"
+
+msgid "Upload this snip?"
+msgstr "Téléverser cette capture ?"
+
+msgid "Uploading…"
+msgstr "Téléversement…"
+
+msgid "Uploaded"
+msgstr "Téléversement terminé"
+
+msgid "Upload failed"
+msgstr "Échec du téléversement"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur exige un Client-ID"
+
+msgid "Anyone with the link can open the image."
+msgstr "Toute personne disposant du lien peut ouvrir l'image."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "Elle n'est ni répertoriée ni trouvable par une recherche."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "Téléversée anonymement, elle ne pourra pas être supprimée ensuite."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "La connexion n'est pas chiffrée : d'autres personnes sur le réseau peuvent voir l'image."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "Ne téléversez pas de pièces d'identité, de mots de passe ni de messages privés."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "Une fois terminé, le lien est copié dans le presse-papiers."
+
+msgid "The link is on the clipboard."
+msgstr "Le lien est dans le presse-papiers."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "Le lien n'a pas pu être copié ; utilisez Copier le lien."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Les téléversements anonymes sur Imgur nécessitent un Client-ID gratuit. Enregistrez une application sur imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), indiquez son Client-ID dans le fichier de paramètres sous \"imgur_client_id\", puis redémarrez Snipdeck."
+
+msgid "Upload"
+msgstr "Téléverser"
+
+msgid "Hide"
+msgstr "Masquer"
+
+msgid "Copy link"
+msgstr "Copier le lien"
+
+msgid "Open link"
+msgstr "Ouvrir le lien"
+
+msgid "Open settings file"
+msgstr "Ouvrir les paramètres"
+
+msgid "Try again"
+msgstr "Réessayer"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "Ce fichier n'est pas un uploader personnalisé ShareX."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "Le fichier envoie l'image sous la forme \"{body}\" ; Snipdeck peut envoyer des données de formulaire multipart ou un corps binaire."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "Le fichier doit téléverser vers une adresse http:// ou https://."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "Seuls les téléversements POST, PUT et PATCH sont pris en charge."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "Le fichier téléverse du texte ou raccourcit des liens, pas des images."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "Le fichier n'indique pas quel champ de formulaire contient l'image (FileFormName)."
+
+msgid "The host answered without a link: {answer}"
+msgstr "L'hébergeur a répondu sans lien : {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "Le fichier utilise {what}, que Snipdeck ne prend pas en charge."
+
+msgid "The host's answer has no {what}."
+msgstr "Il manque {what} dans la réponse de l'hébergeur."
+
+msgid "Could not reach {host}: {e}"
+msgstr "Impossible de joindre {host} : {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "Impossible d'ajouter l'hébergeur : {why}"

@@ -332,30 +332,8 @@ msgstr "فشل فتح نافذة الترجمة: {e}"
 msgid "Failed to open editor: {e}"
 msgstr "فشل فتح المحرر: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "فشل بدء الرفع: {e}"
-
 msgid "Share failed: {e}"
 msgstr "فشلت المشاركة: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "تم رفع الصورة.\r\nتم نسخ الرابط إلى الحافظة:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "تم رفع الصورة:\r\n{url}\r\n\r\n(تعذّر نسخ الرابط إلى الحافظة.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — رفع"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "فشل الرفع:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — مطلوب Imgur Client-ID"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — رفع إلى الإنترنت"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "المظهر الداكن"
 
 msgid "Floating snips in the taskbar"
 msgstr "اللقطات العائمة في شريط المهام"
+
+msgid "Upload to"
+msgstr "رفع إلى"
+
+msgid "Add from a .sxcu file…"
+msgstr "إضافة من ملف .sxcu…"
+
+msgid "Remove this host"
+msgstr "إزالة هذه الخدمة"
+
+msgid "Upload this snip?"
+msgstr "هل تريد رفع هذه اللقطة؟"
+
+msgid "Uploading…"
+msgstr "جارٍ الرفع…"
+
+msgid "Uploaded"
+msgstr "تم الرفع"
+
+msgid "Upload failed"
+msgstr "فشل الرفع"
+
+msgid "Imgur needs a Client-ID"
+msgstr "يحتاج Imgur إلى Client-ID"
+
+msgid "Anyone with the link can open the image."
+msgstr "يمكن لأي شخص لديه الرابط فتح الصورة."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "لا تظهر في أي قائمة ولا يمكن العثور عليها بالبحث."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "تُرفع بشكل مجهول، ولا يمكن حذفها لاحقًا."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "الاتصال غير مشفّر: يمكن للآخرين على الشبكة رؤية الصورة."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "لا ترفع بطاقات الهوية أو كلمات المرور أو الرسائل الخاصة."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "عند الانتهاء، يُنسخ الرابط إلى الحافظة."
+
+msgid "The link is on the clipboard."
+msgstr "الرابط في الحافظة."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "تعذّر نسخ الرابط؛ استخدم «نسخ الرابط»."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "يحتاج الرفع المجهول إلى Imgur إلى Client-ID مجاني. سجّل تطبيقًا في imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\")، وضع Client-ID الخاص به في ملف الإعدادات باسم \"imgur_client_id\"، ثم أعد تشغيل Snipdeck."
+
+msgid "Upload"
+msgstr "رفع"
+
+msgid "Hide"
+msgstr "إخفاء"
+
+msgid "Copy link"
+msgstr "نسخ الرابط"
+
+msgid "Open link"
+msgstr "فتح الرابط"
+
+msgid "Open settings file"
+msgstr "فتح ملف الإعدادات"
+
+msgid "Try again"
+msgstr "إعادة المحاولة"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "هذا الملف ليس أداة رفع مخصّصة من ShareX."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "يرسل الصورة بصيغة \"{body}\"؛ يستطيع Snipdeck إرسال بيانات نموذج multipart أو محتوى ثنائي."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "يجب أن يرفع إلى عنوان http:// أو https://."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "لا يُدعم إلا الرفع عبر POST و PUT و PATCH."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "يرفع نصوصًا أو يختصر روابط، لا صورًا."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "لا يحدد حقل النموذج الذي يحمل الصورة (FileFormName)."
+
+msgid "The host answered without a link: {answer}"
+msgstr "ردّ الخادم دون رابط: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "يستخدم {what}، وهو ما لا يدعمه Snipdeck."
+
+msgid "The host's answer has no {what}."
+msgstr "لا يحتوي ردّ الخادم على {what}."
+
+msgid "Could not reach {host}: {e}"
+msgstr "تعذّر الوصول إلى {host}: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "تعذّرت إضافة خدمة الرفع: {why}"

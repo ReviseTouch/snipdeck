@@ -332,30 +332,8 @@ msgstr "অনুবাদ উইন্ডো খুলতে ব্যর্থ
 msgid "Failed to open editor: {e}"
 msgstr "এডিটর খুলতে ব্যর্থ: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "আপলোড শুরু করতে ব্যর্থ: {e}"
-
 msgid "Share failed: {e}"
 msgstr "শেয়ার করতে ব্যর্থ: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "ছবি আপলোড হয়েছে।\r\nলিঙ্ক ক্লিপবোর্ডে কপি করা হয়েছে:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "ছবি আপলোড হয়েছে:\r\n{url}\r\n\r\n(ক্লিপবোর্ডে লিঙ্ক কপি করা সম্ভব হয়নি।)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — আপলোড"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "আপলোড ব্যর্থ হয়েছে:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Imgur Client-ID প্রয়োজন"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — ইন্টারনেটে আপলোড"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "গাঢ় থিম"
 
 msgid "Floating snips in the taskbar"
 msgstr "টাস্কবারে ভাসমান স্নিপ"
+
+msgid "Upload to"
+msgstr "হোস্টে আপলোড"
+
+msgid "Add from a .sxcu file…"
+msgstr ".sxcu ফাইল থেকে যোগ করুন…"
+
+msgid "Remove this host"
+msgstr "এই হোস্ট সরান"
+
+msgid "Upload this snip?"
+msgstr "এই স্নিপটি আপলোড করবেন?"
+
+msgid "Uploading…"
+msgstr "আপলোড হচ্ছে…"
+
+msgid "Uploaded"
+msgstr "আপলোড হয়েছে"
+
+msgid "Upload failed"
+msgstr "আপলোড ব্যর্থ"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur-এর জন্য Client-ID প্রয়োজন"
+
+msgid "Anyone with the link can open the image."
+msgstr "লিঙ্ক আছে এমন যে কেউ ছবিটি খুলতে পারবে।"
+
+msgid "It is not listed or searchable anywhere."
+msgstr "এটি কোথাও তালিকাভুক্ত নয়, খুঁজেও পাওয়া যায় না।"
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "বেনামে আপলোড হওয়ায় এটি পরে মোছা যাবে না।"
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "সংযোগটি এনক্রিপ্ট করা নয়: নেটওয়ার্কের অন্যরা ছবিটি দেখতে পারে।"
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "পরিচয়পত্র, পাসওয়ার্ড বা ব্যক্তিগত বার্তা আপলোড করবেন না।"
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "শেষ হলে লিঙ্কটি ক্লিপবোর্ডে কপি হবে।"
+
+msgid "The link is on the clipboard."
+msgstr "লিঙ্কটি ক্লিপবোর্ডে আছে।"
+
+msgid "The link could not be copied; use Copy link."
+msgstr "লিঙ্কটি কপি করা যায়নি; “লিঙ্ক কপি” ব্যবহার করুন।"
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Imgur-এর বেনামি আপলোডের জন্য একটি বিনামূল্যের Client-ID প্রয়োজন। imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\")-এ একটি অ্যাপ্লিকেশন নিবন্ধন করুন, এর Client-ID সেটিংস ফাইলে \"imgur_client_id\" হিসেবে লিখুন, তারপর Snipdeck পুনরায় চালু করুন।"
+
+msgid "Upload"
+msgstr "আপলোড"
+
+msgid "Hide"
+msgstr "লুকান"
+
+msgid "Copy link"
+msgstr "লিঙ্ক কপি"
+
+msgid "Open link"
+msgstr "লিঙ্ক খুলুন"
+
+msgid "Open settings file"
+msgstr "সেটিংস ফাইল খুলুন"
+
+msgid "Try again"
+msgstr "আবার চেষ্টা"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "এই ফাইলটি ShareX কাস্টম আপলোডার নয়।"
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "এটি ছবিটি \"{body}\" হিসেবে পাঠায়; Snipdeck মাল্টিপার্ট ফর্ম ডেটা বা বাইনারি বডি পাঠাতে পারে।"
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "এটিকে অবশ্যই একটি http:// বা https:// ঠিকানায় আপলোড করতে হবে।"
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "শুধু POST, PUT এবং PATCH আপলোড সমর্থিত।"
+
+msgid "It uploads text or shortens links, not images."
+msgstr "এটি ছবি নয়, টেক্সট আপলোড করে বা লিঙ্ক ছোট করে।"
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "কোন ফর্ম ফিল্ড ছবিটি বহন করে তা এতে বলা নেই (FileFormName)।"
+
+msgid "The host answered without a link: {answer}"
+msgstr "হোস্ট লিঙ্ক ছাড়াই উত্তর দিয়েছে: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "এটি {what} ব্যবহার করে, যা Snipdeck সমর্থন করে না।"
+
+msgid "The host's answer has no {what}."
+msgstr "হোস্টের উত্তরে কোনো {what} নেই।"
+
+msgid "Could not reach {host}: {e}"
+msgstr "{host}-এ সংযোগ করা যায়নি: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "আপলোড হোস্ট যোগ করা যায়নি: {why}"

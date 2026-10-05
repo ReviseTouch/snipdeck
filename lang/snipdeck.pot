@@ -340,29 +340,7 @@ msgstr ""
 msgid "Failed to open editor: {e}"
 msgstr ""
 
-msgid "Failed to start upload: {e}"
-msgstr ""
-
 msgid "Share failed: {e}"
-msgstr ""
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr ""
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr ""
-
-msgid "Snipdeck — Upload"
-msgstr ""
-
-msgid "Upload failed:\r\n{err}"
-msgstr ""
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr ""
-
-msgid "Snipdeck — Upload to the internet"
 msgstr ""
 
 #. ── Share / mail dialogs ──
@@ -453,4 +431,106 @@ msgid "Dark theme"
 msgstr ""
 
 msgid "Floating snips in the taskbar"
+msgstr ""
+
+msgid "Upload to"
+msgstr ""
+
+msgid "Add from a .sxcu file…"
+msgstr ""
+
+msgid "Remove this host"
+msgstr ""
+
+msgid "Upload this snip?"
+msgstr ""
+
+msgid "Uploading…"
+msgstr ""
+
+msgid "Uploaded"
+msgstr ""
+
+msgid "Upload failed"
+msgstr ""
+
+msgid "Imgur needs a Client-ID"
+msgstr ""
+
+msgid "Anyone with the link can open the image."
+msgstr ""
+
+msgid "It is not listed or searchable anywhere."
+msgstr ""
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr ""
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr ""
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr ""
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr ""
+
+msgid "The link is on the clipboard."
+msgstr ""
+
+msgid "The link could not be copied; use Copy link."
+msgstr ""
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr ""
+
+msgid "Upload"
+msgstr ""
+
+msgid "Hide"
+msgstr ""
+
+msgid "Copy link"
+msgstr ""
+
+msgid "Open link"
+msgstr ""
+
+msgid "Open settings file"
+msgstr ""
+
+msgid "Try again"
+msgstr ""
+
+msgid "This file is not a ShareX custom uploader."
+msgstr ""
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr ""
+
+msgid "It must upload to an http:// or https:// address."
+msgstr ""
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr ""
+
+msgid "It uploads text or shortens links, not images."
+msgstr ""
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr ""
+
+msgid "The host answered without a link: {answer}"
+msgstr ""
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr ""
+
+msgid "The host's answer has no {what}."
+msgstr ""
+
+msgid "Could not reach {host}: {e}"
+msgstr ""
+
+msgid "Could not add the upload host: {why}"
 msgstr ""

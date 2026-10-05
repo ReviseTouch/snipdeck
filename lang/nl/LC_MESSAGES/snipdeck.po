@@ -332,30 +332,8 @@ msgstr "Vertaalvenster openen mislukt: {e}"
 msgid "Failed to open editor: {e}"
 msgstr "Editor openen mislukt: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "Uploaden starten mislukt: {e}"
-
 msgid "Share failed: {e}"
 msgstr "Delen mislukt: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "Afbeelding geüpload.\r\nLink gekopieerd naar klembord:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "Afbeelding geüpload:\r\n{url}\r\n\r\n(De link kon niet naar het klembord worden gekopieerd.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — Uploaden"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "Uploaden mislukt:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Imgur Client-ID vereist"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — Uploaden naar internet"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "Donker thema"
 
 msgid "Floating snips in the taskbar"
 msgstr "Zwevende knipsels in de taakbalk"
+
+msgid "Upload to"
+msgstr "Uploaden naar"
+
+msgid "Add from a .sxcu file…"
+msgstr "Toevoegen uit een .sxcu-bestand…"
+
+msgid "Remove this host"
+msgstr "Deze host verwijderen"
+
+msgid "Upload this snip?"
+msgstr "Dit knipsel uploaden?"
+
+msgid "Uploading…"
+msgstr "Bezig met uploaden…"
+
+msgid "Uploaded"
+msgstr "Geüpload"
+
+msgid "Upload failed"
+msgstr "Uploaden mislukt"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur heeft een Client-ID nodig"
+
+msgid "Anyone with the link can open the image."
+msgstr "Iedereen met de link kan de afbeelding openen."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "De afbeelding wordt nergens vermeld en is niet vindbaar."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "Anoniem geüpload, dus later niet te verwijderen."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "De verbinding is niet versleuteld: anderen op het netwerk kunnen de afbeelding zien."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "Upload geen identiteitsbewijzen, wachtwoorden of privéberichten."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "Als het klaar is, wordt de link naar het klembord gekopieerd."
+
+msgid "The link is on the clipboard."
+msgstr "De link staat op het klembord."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "De link kon niet worden gekopieerd; gebruik Link kopiëren."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Anonieme uploads naar Imgur vereisen een gratis Client-ID. Registreer een applicatie op imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), zet de Client-ID in het instellingenbestand als \"imgur_client_id\" en start Snipdeck opnieuw."
+
+msgid "Upload"
+msgstr "Uploaden"
+
+msgid "Hide"
+msgstr "Verbergen"
+
+msgid "Copy link"
+msgstr "Link kopiëren"
+
+msgid "Open link"
+msgstr "Link openen"
+
+msgid "Open settings file"
+msgstr "Instellingenbestand openen"
+
+msgid "Try again"
+msgstr "Opnieuw proberen"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "Dit bestand is geen aangepaste ShareX-uploader."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "Het bestand verstuurt de afbeelding als \"{body}\"; Snipdeck kan multipart-formuliergegevens of een binaire body versturen."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "Het bestand moet uploaden naar een http://- of https://-adres."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "Alleen POST-, PUT- en PATCH-uploads worden ondersteund."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "Het bestand uploadt tekst of verkort links, geen afbeeldingen."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "Het bestand geeft niet aan welk formulierveld de afbeelding bevat (FileFormName)."
+
+msgid "The host answered without a link: {answer}"
+msgstr "De host antwoordde zonder link: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "Het bestand gebruikt {what}, wat Snipdeck niet ondersteunt."
+
+msgid "The host's answer has no {what}."
+msgstr "Het antwoord van de host bevat geen {what}."
+
+msgid "Could not reach {host}: {e}"
+msgstr "Kan {host} niet bereiken: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "Kan de uploadhost niet toevoegen: {why}"

@@ -332,30 +332,8 @@ msgstr "अनुवाद विंडो खोलने में विफ�
 msgid "Failed to open editor: {e}"
 msgstr "संपादक खोलने में विफल: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "अपलोड शुरू करने में विफल: {e}"
-
 msgid "Share failed: {e}"
 msgstr "साझा करने में विफल: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "छवि अपलोड हुई।\r\nलिंक क्लिपबोर्ड पर कॉपी हुआ:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "छवि अपलोड हुई:\r\n{url}\r\n\r\n(लिंक क्लिपबोर्ड पर कॉपी नहीं हो सका।)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — अपलोड"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "अपलोड विफल:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Imgur Client-ID आवश्यक है"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — इंटरनेट पर अपलोड करें"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "डार्क थीम"
 
 msgid "Floating snips in the taskbar"
 msgstr "टास्कबार में फ्लोटिंग स्निप"
+
+msgid "Upload to"
+msgstr "होस्ट पर अपलोड करें"
+
+msgid "Add from a .sxcu file…"
+msgstr ".sxcu फ़ाइल से जोड़ें…"
+
+msgid "Remove this host"
+msgstr "यह होस्ट हटाएँ"
+
+msgid "Upload this snip?"
+msgstr "यह स्निप अपलोड करें?"
+
+msgid "Uploading…"
+msgstr "अपलोड हो रहा है…"
+
+msgid "Uploaded"
+msgstr "अपलोड हो गया"
+
+msgid "Upload failed"
+msgstr "अपलोड विफल"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur को Client-ID चाहिए"
+
+msgid "Anyone with the link can open the image."
+msgstr "लिंक वाला कोई भी व्यक्ति छवि खोल सकता है।"
+
+msgid "It is not listed or searchable anywhere."
+msgstr "यह कहीं भी सूचीबद्ध या खोजने योग्य नहीं है।"
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "गुमनाम रूप से अपलोड होने के कारण इसे बाद में हटाया नहीं जा सकता।"
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "कनेक्शन एन्क्रिप्टेड नहीं है: नेटवर्क पर अन्य लोग छवि देख सकते हैं।"
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "पहचान पत्र, पासवर्ड या निजी संदेश अपलोड न करें।"
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "पूरा होने पर लिंक क्लिपबोर्ड पर कॉपी हो जाएगा।"
+
+msgid "The link is on the clipboard."
+msgstr "लिंक क्लिपबोर्ड पर है।"
+
+msgid "The link could not be copied; use Copy link."
+msgstr "लिंक कॉपी नहीं हो सका; “लिंक कॉपी करें” का उपयोग करें।"
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Imgur के गुमनाम अपलोड के लिए एक मुफ़्त Client-ID चाहिए। imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\") पर एक एप्लिकेशन पंजीकृत करें, उसका Client-ID सेटिंग्स फ़ाइल में \"imgur_client_id\" के रूप में डालें, और Snipdeck को पुनः आरंभ करें।"
+
+msgid "Upload"
+msgstr "अपलोड करें"
+
+msgid "Hide"
+msgstr "छिपाएँ"
+
+msgid "Copy link"
+msgstr "लिंक कॉपी करें"
+
+msgid "Open link"
+msgstr "लिंक खोलें"
+
+msgid "Open settings file"
+msgstr "सेटिंग्स फ़ाइल खोलें"
+
+msgid "Try again"
+msgstr "पुनः प्रयास करें"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "यह फ़ाइल ShareX कस्टम अपलोडर नहीं है।"
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "यह छवि को \"{body}\" के रूप में भेजता है; Snipdeck मल्टीपार्ट फ़ॉर्म डेटा या बाइनरी बॉडी भेज सकता है।"
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "इसे http:// या https:// पते पर अपलोड करना होगा।"
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "केवल POST, PUT और PATCH अपलोड समर्थित हैं।"
+
+msgid "It uploads text or shortens links, not images."
+msgstr "यह छवियाँ नहीं, बल्कि टेक्स्ट अपलोड करता है या लिंक छोटे करता है।"
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "यह नहीं बताता कि कौन-सा फ़ॉर्म फ़ील्ड छवि ले जाता है (FileFormName)।"
+
+msgid "The host answered without a link: {answer}"
+msgstr "होस्ट ने बिना लिंक के उत्तर दिया: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "यह {what} का उपयोग करता है, जो Snipdeck में समर्थित नहीं है।"
+
+msgid "The host's answer has no {what}."
+msgstr "होस्ट के उत्तर में {what} नहीं है।"
+
+msgid "Could not reach {host}: {e}"
+msgstr "{host} से कनेक्ट नहीं हो सका: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "अपलोड होस्ट नहीं जोड़ा जा सका: {why}"

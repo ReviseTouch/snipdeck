@@ -332,30 +332,8 @@ msgstr "Deschiderea ferestrei de traducere a eșuat: {e}"
 msgid "Failed to open editor: {e}"
 msgstr "Deschiderea editorului a eșuat: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "Pornirea încărcării a eșuat: {e}"
-
 msgid "Share failed: {e}"
 msgstr "Partajarea a eșuat: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "Imaginea a fost încărcată.\r\nLink copiat în clipboard:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "Imaginea a fost încărcată:\r\n{url}\r\n\r\n(Link-ul nu a putut fi copiat în clipboard.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — Încărcare"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "Încărcarea a eșuat:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Imgur Client-ID necesar"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — Încărcare pe internet"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "Temă întunecată"
 
 msgid "Floating snips in the taskbar"
 msgstr "Capturi flotante în bara de activități"
+
+msgid "Upload to"
+msgstr "Încarcă pe"
+
+msgid "Add from a .sxcu file…"
+msgstr "Adaugă dintr-un fișier .sxcu…"
+
+msgid "Remove this host"
+msgstr "Elimină acest serviciu"
+
+msgid "Upload this snip?"
+msgstr "Încarci această captură?"
+
+msgid "Uploading…"
+msgstr "Se încarcă…"
+
+msgid "Uploaded"
+msgstr "Încărcat"
+
+msgid "Upload failed"
+msgstr "Încărcarea a eșuat"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur necesită un Client-ID"
+
+msgid "Anyone with the link can open the image."
+msgstr "Oricine are linkul poate deschide imaginea."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "Nu apare în nicio listă și nu poate fi găsită prin căutare."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "Încărcată anonim, nu mai poate fi ștearsă ulterior."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "Conexiunea nu este criptată: alții din rețea pot vedea imaginea."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "Nu încărca acte de identitate, parole sau mesaje private."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "La final, linkul este copiat în clipboard."
+
+msgid "The link is on the clipboard."
+msgstr "Linkul este în clipboard."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "Linkul nu a putut fi copiat; folosește Copiază linkul."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Încărcările anonime pe Imgur necesită un Client-ID gratuit. Înregistrează o aplicație la imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), pune Client-ID-ul ei în fișierul de setări ca \"imgur_client_id\" și repornește Snipdeck."
+
+msgid "Upload"
+msgstr "Încarcă"
+
+msgid "Hide"
+msgstr "Ascunde"
+
+msgid "Copy link"
+msgstr "Copiază linkul"
+
+msgid "Open link"
+msgstr "Deschide linkul"
+
+msgid "Open settings file"
+msgstr "Deschide setările"
+
+msgid "Try again"
+msgstr "Reîncearcă"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "Acest fișier nu este un uploader personalizat ShareX."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "Trimite imaginea ca \"{body}\"; Snipdeck poate trimite date de formular multipart sau un corp binar."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "Trebuie să încarce la o adresă http:// sau https://."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "Sunt acceptate doar încărcările POST, PUT și PATCH."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "Încarcă text sau scurtează linkuri, nu imagini."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "Nu precizează ce câmp de formular conține imaginea (FileFormName)."
+
+msgid "The host answered without a link: {answer}"
+msgstr "Serverul a răspuns fără link: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "Folosește {what}, pe care Snipdeck nu îl acceptă."
+
+msgid "The host's answer has no {what}."
+msgstr "Răspunsul serverului nu conține {what}."
+
+msgid "Could not reach {host}: {e}"
+msgstr "Nu s-a putut contacta {host}: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "Serviciul de încărcare nu a putut fi adăugat: {why}"

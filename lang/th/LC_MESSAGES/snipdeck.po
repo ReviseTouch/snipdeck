@@ -332,30 +332,8 @@ msgstr "เปิดหน้าต่างแปลภาษาไม่สำ
 msgid "Failed to open editor: {e}"
 msgstr "เปิดตัวแก้ไขไม่สำเร็จ: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "เริ่มอัปโหลดไม่สำเร็จ: {e}"
-
 msgid "Share failed: {e}"
 msgstr "การแชร์ล้มเหลว: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "อัปโหลดรูปภาพสำเร็จ\r\nคัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "อัปโหลดรูปภาพสำเร็จ:\r\n{url}\r\n\r\n(ไม่สามารถคัดลอกลิงก์ไปยังคลิปบอร์ดได้)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — อัปโหลด"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "อัปโหลดล้มเหลว:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — ต้องการ Imgur Client-ID"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — อัปโหลดไปยังอินเทอร์เน็ต"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "ธีมมืด"
 
 msgid "Floating snips in the taskbar"
 msgstr "ภาพลอยตัวในแถบงาน"
+
+msgid "Upload to"
+msgstr "อัปโหลดไปยัง"
+
+msgid "Add from a .sxcu file…"
+msgstr "เพิ่มจากไฟล์ .sxcu…"
+
+msgid "Remove this host"
+msgstr "นำโฮสต์นี้ออก"
+
+msgid "Upload this snip?"
+msgstr "อัปโหลดภาพนี้หรือไม่"
+
+msgid "Uploading…"
+msgstr "กำลังอัปโหลด…"
+
+msgid "Uploaded"
+msgstr "อัปโหลดแล้ว"
+
+msgid "Upload failed"
+msgstr "อัปโหลดไม่สำเร็จ"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur ต้องใช้ Client-ID"
+
+msgid "Anyone with the link can open the image."
+msgstr "ทุกคนที่มีลิงก์สามารถเปิดรูปภาพนี้ได้"
+
+msgid "It is not listed or searchable anywhere."
+msgstr "รูปภาพจะไม่ปรากฏในรายการใดและค้นหาไม่ได้"
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "อัปโหลดแบบไม่ระบุตัวตน จึงลบภายหลังไม่ได้"
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "การเชื่อมต่อไม่ได้เข้ารหัส: ผู้อื่นในเครือข่ายสามารถเห็นรูปภาพได้"
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "อย่าอัปโหลดบัตรประจำตัว รหัสผ่าน หรือข้อความส่วนตัว"
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "เมื่อเสร็จแล้ว ลิงก์จะถูกคัดลอกไปยังคลิปบอร์ด"
+
+msgid "The link is on the clipboard."
+msgstr "ลิงก์อยู่ในคลิปบอร์ดแล้ว"
+
+msgid "The link could not be copied; use Copy link."
+msgstr "คัดลอกลิงก์ไม่สำเร็จ ให้ใช้ “คัดลอกลิงก์”"
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "การอัปโหลดแบบไม่ระบุตัวตนของ Imgur ต้องใช้ Client-ID ฟรี ลงทะเบียนแอปพลิเคชันที่ imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\") ใส่ Client-ID ของแอปลงในไฟล์การตั้งค่าเป็น \"imgur_client_id\" แล้วรีสตาร์ท Snipdeck"
+
+msgid "Upload"
+msgstr "อัปโหลด"
+
+msgid "Hide"
+msgstr "ซ่อน"
+
+msgid "Copy link"
+msgstr "คัดลอกลิงก์"
+
+msgid "Open link"
+msgstr "เปิดลิงก์"
+
+msgid "Open settings file"
+msgstr "เปิดไฟล์การตั้งค่า"
+
+msgid "Try again"
+msgstr "ลองอีกครั้ง"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "ไฟล์นี้ไม่ใช่ตัวอัปโหลดแบบกำหนดเองของ ShareX"
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "ไฟล์นี้ส่งรูปภาพเป็น \"{body}\" แต่ Snipdeck ส่งได้เฉพาะข้อมูลฟอร์มแบบ multipart หรือเนื้อหาแบบไบนารี"
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "ต้องอัปโหลดไปยังที่อยู่ http:// หรือ https://"
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "รองรับเฉพาะการอัปโหลดแบบ POST, PUT และ PATCH"
+
+msgid "It uploads text or shortens links, not images."
+msgstr "ไฟล์นี้ใช้อัปโหลดข้อความหรือย่อลิงก์ ไม่ใช่รูปภาพ"
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "ไม่ได้ระบุว่าฟิลด์ฟอร์มใดใช้ส่งรูปภาพ (FileFormName)"
+
+msgid "The host answered without a link: {answer}"
+msgstr "โฮสต์ตอบกลับโดยไม่มีลิงก์: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "ไฟล์นี้ใช้ {what} ซึ่ง Snipdeck ไม่รองรับ"
+
+msgid "The host's answer has no {what}."
+msgstr "คำตอบของโฮสต์ไม่มี {what}"
+
+msgid "Could not reach {host}: {e}"
+msgstr "เชื่อมต่อ {host} ไม่สำเร็จ: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "เพิ่มโฮสต์สำหรับอัปโหลดไม่สำเร็จ: {why}"

@@ -332,30 +332,8 @@ msgstr "Nie udało się otworzyć okna tłumaczenia: {e}"
 msgid "Failed to open editor: {e}"
 msgstr "Nie udało się otworzyć edytora: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "Nie udało się rozpocząć przesyłania: {e}"
-
 msgid "Share failed: {e}"
 msgstr "Udostępnianie nie powiodło się: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "Obraz przesłany.\r\nLink skopiowany do schowka:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "Obraz przesłany:\r\n{url}\r\n\r\n(Nie udało się skopiować linku do schowka.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — Przesyłanie"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "Przesyłanie nie powiodło się:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Wymagany Imgur Client-ID"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — Prześlij do internetu"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "Ciemny motyw"
 
 msgid "Floating snips in the taskbar"
 msgstr "Pływające zrzuty na pasku zadań"
+
+msgid "Upload to"
+msgstr "Prześlij do"
+
+msgid "Add from a .sxcu file…"
+msgstr "Dodaj z pliku .sxcu…"
+
+msgid "Remove this host"
+msgstr "Usuń ten serwis"
+
+msgid "Upload this snip?"
+msgstr "Przesłać ten zrzut?"
+
+msgid "Uploading…"
+msgstr "Przesyłanie…"
+
+msgid "Uploaded"
+msgstr "Przesłano"
+
+msgid "Upload failed"
+msgstr "Przesyłanie nie powiodło się"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur wymaga Client-ID"
+
+msgid "Anyone with the link can open the image."
+msgstr "Każdy, kto ma link, może otworzyć obraz."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "Nie pojawia się na żadnej liście ani w wyszukiwarkach."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "Przesłany anonimowo — nie da się go później usunąć."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "Połączenie nie jest szyfrowane: inni w sieci mogą zobaczyć obraz."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "Nie przesyłaj dokumentów tożsamości, haseł ani prywatnych wiadomości."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "Po zakończeniu link zostanie skopiowany do schowka."
+
+msgid "The link is on the clipboard."
+msgstr "Link jest w schowku."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "Nie udało się skopiować linku; użyj przycisku Kopiuj link."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Anonimowe przesyłanie do Imgur wymaga darmowego Client-ID. Zarejestruj aplikację na imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), wpisz jej Client-ID w pliku ustawień jako \"imgur_client_id\" i uruchom ponownie Snipdeck."
+
+msgid "Upload"
+msgstr "Prześlij"
+
+msgid "Hide"
+msgstr "Ukryj"
+
+msgid "Copy link"
+msgstr "Kopiuj link"
+
+msgid "Open link"
+msgstr "Otwórz link"
+
+msgid "Open settings file"
+msgstr "Otwórz plik ustawień"
+
+msgid "Try again"
+msgstr "Spróbuj ponownie"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "Ten plik nie jest niestandardowym uploaderem ShareX."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "Wysyła obraz jako \"{body}\"; Snipdeck potrafi wysłać dane formularza multipart lub treść binarną."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "Musi przesyłać na adres http:// lub https://."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "Obsługiwane jest tylko przesyłanie metodą POST, PUT i PATCH."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "Przesyła tekst lub skraca linki, a nie obrazy."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "Nie określa, które pole formularza zawiera obraz (FileFormName)."
+
+msgid "The host answered without a link: {answer}"
+msgstr "Serwer odpowiedział bez linku: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "Używa {what}, czego Snipdeck nie obsługuje."
+
+msgid "The host's answer has no {what}."
+msgstr "Odpowiedź serwera nie zawiera {what}."
+
+msgid "Could not reach {host}: {e}"
+msgstr "Nie można połączyć się z {host}: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "Nie udało się dodać serwisu do przesyłania: {why}"

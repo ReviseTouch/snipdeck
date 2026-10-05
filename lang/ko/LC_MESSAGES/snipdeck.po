@@ -332,30 +332,8 @@ msgstr "번역 창 열기 실패: {e}"
 msgid "Failed to open editor: {e}"
 msgstr "편집기 열기 실패: {e}"
 
-msgid "Failed to start upload: {e}"
-msgstr "업로드 시작 실패: {e}"
-
 msgid "Share failed: {e}"
 msgstr "공유 실패: {e}"
-
-#. ── Upload dialogs (\r\n = line breaks; keep them and {url}/{err}/{path}) ──
-msgid "Image uploaded.\r\nLink copied to clipboard:\r\n{url}"
-msgstr "이미지가 업로드되었습니다.\r\n링크가 클립보드에 복사되었습니다:\r\n{url}"
-
-msgid "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)"
-msgstr "이미지가 업로드되었습니다:\r\n{url}\r\n\r\n(링크를 클립보드에 복사하지 못했습니다.)"
-
-msgid "Snipdeck — Upload"
-msgstr "Snipdeck — 업로드"
-
-msgid "Upload failed:\r\n{err}"
-msgstr "업로드 실패:\r\n{err}"
-
-msgid "Snipdeck — Imgur Client-ID required"
-msgstr "Snipdeck — Imgur Client-ID 필요"
-
-msgid "Snipdeck — Upload to the internet"
-msgstr "Snipdeck — 인터넷에 업로드"
 
 #. ── Share / mail dialogs ──
 msgid "The image has been copied to the clipboard.\r\nPaste it into the open email with Ctrl+V."
@@ -595,3 +573,105 @@ msgstr "어두운 테마"
 
 msgid "Floating snips in the taskbar"
 msgstr "작업 표시줄에 플로팅 캡처 표시"
+
+msgid "Upload to"
+msgstr "업로드할 곳"
+
+msgid "Add from a .sxcu file…"
+msgstr ".sxcu 파일에서 추가…"
+
+msgid "Remove this host"
+msgstr "이 호스트 제거"
+
+msgid "Upload this snip?"
+msgstr "이 캡처를 업로드할까요?"
+
+msgid "Uploading…"
+msgstr "업로드 중…"
+
+msgid "Uploaded"
+msgstr "업로드 완료"
+
+msgid "Upload failed"
+msgstr "업로드 실패"
+
+msgid "Imgur needs a Client-ID"
+msgstr "Imgur에는 Client-ID가 필요합니다"
+
+msgid "Anyone with the link can open the image."
+msgstr "링크가 있는 사람은 누구나 이미지를 열 수 있습니다."
+
+msgid "It is not listed or searchable anywhere."
+msgstr "어디에도 목록에 표시되거나 검색되지 않습니다."
+
+msgid "Uploaded anonymously, it cannot be deleted later."
+msgstr "익명으로 업로드되므로 나중에 삭제할 수 없습니다."
+
+msgid "The connection is not encrypted: others on the network can see the image."
+msgstr "연결이 암호화되지 않았습니다. 같은 네트워크의 다른 사람이 이미지를 볼 수 있습니다."
+
+msgid "Don't upload IDs, passwords or private messages."
+msgstr "신분증, 비밀번호, 개인 메시지는 업로드하지 마세요."
+
+msgid "When it is done, the link is copied to the clipboard."
+msgstr "완료되면 링크가 클립보드에 복사됩니다."
+
+msgid "The link is on the clipboard."
+msgstr "링크가 클립보드에 복사되었습니다."
+
+msgid "The link could not be copied; use Copy link."
+msgstr "링크를 복사하지 못했습니다. '링크 복사'를 사용하세요."
+
+msgid "Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck."
+msgstr "Imgur의 익명 업로드에는 무료 Client-ID가 필요합니다. imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\")에서 애플리케이션을 등록하고, 해당 Client-ID를 설정 파일에 \"imgur_client_id\"(으)로 넣은 뒤 Snipdeck을 다시 시작하세요."
+
+msgid "Upload"
+msgstr "업로드"
+
+msgid "Hide"
+msgstr "숨기기"
+
+msgid "Copy link"
+msgstr "링크 복사"
+
+msgid "Open link"
+msgstr "링크 열기"
+
+msgid "Open settings file"
+msgstr "설정 파일 열기"
+
+msgid "Try again"
+msgstr "다시 시도"
+
+msgid "This file is not a ShareX custom uploader."
+msgstr "이 파일은 ShareX 사용자 지정 업로더가 아닙니다."
+
+msgid "It sends the image as \"{body}\"; Snipdeck can send multipart form data or a binary body."
+msgstr "이미지를 \"{body}\" 형식으로 보냅니다. Snipdeck은 멀티파트 폼 데이터나 바이너리 본문만 보낼 수 있습니다."
+
+msgid "It must upload to an http:// or https:// address."
+msgstr "http:// 또는 https:// 주소로 업로드해야 합니다."
+
+msgid "Only POST, PUT and PATCH uploads are supported."
+msgstr "POST, PUT, PATCH 업로드만 지원됩니다."
+
+msgid "It uploads text or shortens links, not images."
+msgstr "이미지가 아니라 텍스트를 업로드하거나 링크를 줄이는 업로더입니다."
+
+msgid "It does not say which form field carries the image (FileFormName)."
+msgstr "이미지를 담는 폼 필드(FileFormName)가 지정되지 않았습니다."
+
+msgid "The host answered without a link: {answer}"
+msgstr "호스트가 링크 없이 응답했습니다: {answer}"
+
+msgid "It uses {what}, which Snipdeck does not support."
+msgstr "{what}을(를) 사용하지만 Snipdeck에서는 지원하지 않습니다."
+
+msgid "The host's answer has no {what}."
+msgstr "호스트의 응답에 {what}이(가) 없습니다."
+
+msgid "Could not reach {host}: {e}"
+msgstr "{host}에 연결할 수 없습니다: {e}"
+
+msgid "Could not add the upload host: {why}"
+msgstr "업로드 호스트를 추가할 수 없습니다: {why}"
