@@ -68,7 +68,8 @@ alles aus einer nativen Rust-App mit einer softwaregerenderten [Slint](https://s
   Filtern nach Status / Inhalt / Größe / Datum; ein virtualisiertes Raster, das auch bei tausenden Ausschnitten flüssig bleibt
   ([Rundgang](#️-die-galerie)).
 - 📤 **Teilen & Hochladen.** Windows-Teilen-Dialog, eine neue E-Mail (Simple MAPI), der System-Bildeditor
-  oder ein Bild-Hoster – Uploads sind **opt-in mit einem expliziten Einwilligungsdialog**.
+  oder ein Bild-Hoster – catbox.moe, Imgur oder **dein eigener Server** aus einer ShareX-`.sxcu`-Datei
+  ([Details](#-dein-eigener-bild-hoster)). Jeder Upload **fragt zuerst**.
 - 🌍 **23 Sprachen**, automatisch aus deinem Betriebssystem erkannt und über das `⋯`-Menü der Symbolleiste umschaltbar.
 - 🌗 **Helle / dunkle Designs**, ein fester Platz im System-Tray und **registry-freier** Start bei der Anmeldung.
 
@@ -134,7 +135,7 @@ Klicke mit der rechten Maustaste auf einen schwebenden Ausschnitt **oder** ein G
 - **OCR + Übersetzen** – das Übersetzungs-Popup öffnen
 - **Anmerken** – den oben beschriebenen Editor öffnen
 - **Teilen** – Windows-Teilen-Dialog, **E-Mail** (MAPI-Anhang), in **Editor** öffnen (Paint)
-  oder zu einem Bild-Hoster **Hochladen**
+  oder zu einem Bild-Hoster **Hochladen** ([zu welchem](#-dein-eigener-bild-hoster))
 - **Transformieren** – drehen (90° / 180°), horizontal / vertikal spiegeln
 - **Zuschneiden** (die Griffe nach innen ziehen) und **Größe ändern**
 - **Vom Bildschirm ausblenden** / **Löschen**
@@ -156,6 +157,24 @@ Eine einzige Symbolleistenzeile; alles andere ist nur einen Klick entfernt.
 - Die Statusleiste zählt, was angezeigt wird, und enthält **Sortierung** sowie die Kartengröße **S / M / L**.
 
 Fahre mit der Maus über eine Karte, um ihre Schnellaktionen zu sehen; ein Rechtsklick bietet [alles andere](#️-rechtsklick-aktionen).
+
+---
+
+## 📤 Dein eigener Bild-Hoster
+
+**`⋯` → Hochladen zu** legt fest, wohin **Hochladen** einen Ausschnitt schickt: catbox.moe (Standard, kein Konto),
+Imgur oder ein eigener Hoster. Um einen hinzuzufügen, wähle **Aus .sxcu-Datei hinzufügen…** und dann eine
+ShareX-Custom-Uploader-Datei – das Format, das Zipline, XBackBone, Chevereto und die meisten selbst gehosteten
+Bildserver ohnehin anbieten; du musst also nichts von Hand schreiben.
+
+Snipdeck sendet das Bild als Multipart-Formulardaten oder als binären Body, mit den Headern, Argumenten und
+Query-Parametern aus der Datei, und liest den Link mit `{json:…}`, `{regex:…}`, `{header:…}` oder `{response}` aus –
+auch in der `$json:…$`-Form von ShareX 12. Eine Datei, die mehr braucht (eine Eingabeaufforderung, einen Zufallswert,
+eine XML-Antwort, ein Ziel, das kein Bild-Hoster ist), wird schon beim Import mit Begründung abgelehnt, statt
+erst beim ersten Upload zu scheitern.
+
+Bevor irgendetwas gesendet wird, nennt Snipdecks eigenes Fenster den Hoster und dessen Adresse und sagt, was der
+Upload bedeutet; danach zeigt es den Link, der bereits kopiert ist.
 
 ---
 
@@ -251,8 +270,11 @@ Binärdatei eingebettet wird (keine Laufzeitabhängigkeit von gettext).
 - **OCR + Übersetzen fragt zuerst.** Beim ersten Mal erklärt es, dass der per OCR erkannte
   *Text* – niemals das Bild – an Google Übersetzer geht, und wartet auf dein Ja.
   Der Text wird im Request-Body gesendet, nicht in der URL.
-- **Uploads sind opt-in.** Nichts verlässt deinen Rechner ohne einen expliziten Einwilligungsdialog, der
-  das Ziel klar benennt. Lade keine sensiblen Inhalte zu einem per Link öffentlich zugänglichen Hoster hoch.
+- **Uploads fragen zuerst, jedes Mal.** Nichts verlässt deinen Rechner, bevor du **Hochladen** in einem Fenster
+  drückst, das den Hoster und seine Adresse nennt und sagt, was das bedeutet: Jeder mit dem Link kann das Bild
+  öffnen, ein catbox-Upload lässt sich nicht löschen, ein einfacher `http://`-Server sendet es unverschlüsselt.
+  Lade keine sensiblen Inhalte zu einem per Link öffentlich zugänglichen Hoster hoch. API-Schlüssel aus einer
+  importierten `.sxcu`-Datei werden in `settings.json` gespeichert, so wie ShareX sie speichert.
 - **Übergabekopien bleiben privat.** Bilder, die an ein Mailprogramm oder einen Editor übergeben
   werden, landen in einem Ordner, den nur du lesen kannst (`$XDG_RUNTIME_DIR` unter Linux,
   `%TEMP%\Snipdeck` unter Windows), und werden danach entfernt.
@@ -356,7 +378,8 @@ Datei direkt und starte Snipdeck dann neu.
 | --- | --- | --- |
 | `language` | `"auto"` | UI-Sprachcode oder `"auto"`, um dem Betriebssystem zu folgen |
 | `dark_theme` | `true` | Helle oder dunkle Oberfläche |
-| `upload_service` | `"catbox"` | Bild-Hoster für *Hochladen*: `"catbox"` (kein Schlüssel) oder `"imgur"` |
+| `upload_service` | `"catbox"` | Bild-Hoster für *Hochladen*: `"catbox"` (kein Schlüssel), `"imgur"` oder `"custom:<name>"`; einstellbar über `⋯` → Hochladen zu |
+| `upload_hosts` | `[]` | Aus ShareX-`.sxcu`-Dateien importierte Hoster, mit den Feldnamen von ShareX |
 | `imgur_client_id` | `""` | Imgur-Client-ID, nur erforderlich, wenn `upload_service` `"imgur"` ist |
 | `translate_target` | `"en"` | Standard-Zielsprachcode für die OCR-Übersetzung |
 | `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Schnellauswahl-Sprachen im Übersetzungs-Popup |
@@ -390,6 +413,7 @@ Threads und reichen Ergebnisse über Kanäle zurück, die einmal pro Tick geleer
 | `src/ocr.rs` | `Windows.Media.Ocr`-Wrapper (auf einem Worker-Thread) |
 | `src/translate.rs`, `src/translate_popup.rs` | OCR-Übersetzungs-Popup |
 | `src/share.rs`, `src/upload.rs` | Teilen-Dialog / MAPI-Mail / Editor / Bild-Hoster-Upload |
+| `src/sxcu.rs`, `src/upload_window.rs`, `ui/upload.slint` | ShareX-Custom-Uploader; das Fenster für Upload-Einwilligung / -Fortschritt / -Ergebnis |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Tray-Symbol, Start bei der Anmeldung, Single-Instance-Schutz |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Galerie-Persistenz (SQLite + FTS), Einstellungen, Pfade |
 | `src/image_files.rs`, `src/atomic_file.rs` | Ausschnittbilder auf der Festplatte: verlustfreies WebP, atomare Schreibvorgänge |

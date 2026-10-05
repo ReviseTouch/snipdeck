@@ -68,7 +68,8 @@ todo desde una aplicación nativa en Rust con una interfaz [Slint](https://slint
   filtra por estado / contenido / tamaño / fecha; una cuadrícula virtualizada que se mantiene fluida con miles de recortes
   ([recorrido](#️-la-galería)).
 - 📤 **Compartir y subir.** Hoja de compartir de Windows, un nuevo correo electrónico (Simple MAPI), el editor de imágenes del sistema,
-  o un alojamiento de imágenes: las subidas son **opcionales y con un diálogo de consentimiento explícito**.
+  o un alojamiento de imágenes: catbox.moe, Imgur o **tu propio servidor** a partir de un archivo `.sxcu` de ShareX
+  ([detalles](#-tu-propio-alojamiento-de-imágenes)). Cada subida **pregunta antes**.
 - 🌍 **23 idiomas**, detectados automáticamente desde tu sistema operativo y conmutables desde el menú `⋯` de la barra de herramientas.
 - 🌗 **Temas claro / oscuro**, una base en la bandeja del sistema y un arranque automático al iniciar sesión **sin registro**.
 
@@ -134,7 +135,7 @@ Haz clic derecho en un recorte flotante **o** en una miniatura de la galería:
 - **OCR + Traducir**: abre la ventana emergente de traducción
 - **Anotar**: abre el editor anterior
 - **Compartir**: hoja de compartir de Windows, **Correo** (adjunto MAPI), abrir en el **editor** (Paint),
-  o **Subir** a un alojamiento de imágenes
+  o **Subir** a un alojamiento de imágenes ([a cuál](#-tu-propio-alojamiento-de-imágenes))
 - **Transformar**: rotar (90° / 180°), voltear horizontal / vertical
 - **Recortar** (arrastra los tiradores hacia dentro) y **Redimensionar**
 - **Ocultar de la pantalla** / **Eliminar**
@@ -155,6 +156,24 @@ Una sola fila en la barra de herramientas; todo lo demás está a un clic.
 - La barra de estado cuenta lo que se muestra y contiene **Ordenar** y el tamaño de tarjeta **S / M / L**.
 
 Pasa el cursor sobre una tarjeta para ver sus acciones rápidas; haz clic derecho en ella para [todo lo demás](#️-acciones-con-clic-derecho).
+
+---
+
+## 📤 Tu propio alojamiento de imágenes
+
+**`⋯` → Subir a** elige adónde envía **Subir** un recorte: catbox.moe (el predeterminado, sin cuenta),
+Imgur o un alojamiento propio. Para añadir uno, elige **Añadir desde un archivo .sxcu…** y selecciona un archivo
+de subida personalizada de ShareX: el formato que ya ofrecen Zipline, XBackBone, Chevereto y la mayoría de los
+servidores de imágenes autoalojados, así que no hay nada que escribir a mano.
+
+Snipdeck envía la imagen como datos de formulario multipart o como cuerpo binario, con los encabezados, argumentos
+y parámetros de consulta del archivo, y lee el enlace con `{json:…}`, `{regex:…}`, `{header:…}` o `{response}`,
+también en la forma `$json:…$` de ShareX 12. Un archivo que necesita más (una petición de datos, un valor aleatorio,
+una respuesta XML, un destino que no es un alojamiento de imágenes) se rechaza al importarlo, indicando el motivo,
+en lugar de fallar en la primera subida.
+
+Antes de enviar nada, la propia ventana de Snipdeck indica el alojamiento y su dirección y explica lo que significa
+la subida; al terminar, muestra el enlace y ya lo ha copiado.
 
 ---
 
@@ -251,9 +270,12 @@ binario en tiempo de compilación (sin dependencia de gettext en tiempo de ejecu
 - **OCR + Traducir pregunta primero.** La primera vez explica que el *texto* reconocido
   por OCR —nunca la imagen— se envía a Google Traductor, y espera tu confirmación.
   El texto se envía en el cuerpo de la solicitud, no en la URL.
-- **Las subidas son opcionales.** Nada sale de tu equipo sin un diálogo de
-  consentimiento explícito que detalla el destino. No subas contenido sensible
-  a un alojamiento público mediante enlace.
+- **Las subidas preguntan antes, siempre.** Nada sale de tu equipo hasta que pulsas
+  **Subir** en una ventana que indica el alojamiento y su dirección y explica lo que
+  eso significa: cualquiera con el enlace puede abrir la imagen, una subida a catbox
+  no se puede eliminar, un servidor `http://` simple la envía sin cifrar. No subas
+  contenido sensible a un alojamiento público mediante enlace. Las claves de API de un
+  archivo `.sxcu` importado se guardan en `settings.json`, igual que las guarda ShareX.
 - **Las copias de traspaso siguen siendo privadas.** Las imágenes que se pasan a un
   cliente de correo o a un editor van a una carpeta que solo tú puedes leer
   (`$XDG_RUNTIME_DIR` en Linux, `%TEMP%\Snipdeck` en Windows) y se eliminan después.
@@ -357,7 +379,8 @@ archivo directamente y luego reinicia Snipdeck.
 | --- | --- | --- |
 | `language` | `"auto"` | Código de idioma de la interfaz, o `"auto"` para seguir al sistema operativo |
 | `dark_theme` | `true` | Tema claro u oscuro |
-| `upload_service` | `"catbox"` | Alojamiento de imágenes para *Subir*: `"catbox"` (sin clave) o `"imgur"` |
+| `upload_service` | `"catbox"` | Alojamiento de imágenes para *Subir*: `"catbox"` (sin clave), `"imgur"` o `"custom:<name>"`; se elige desde `⋯` → Subir a |
+| `upload_hosts` | `[]` | Alojamientos importados de archivos `.sxcu` de ShareX, con los nombres de campo del propio ShareX |
 | `imgur_client_id` | `""` | Client-ID de Imgur, requerido solo cuando `upload_service` es `"imgur"` |
 | `translate_target` | `"en"` | Código de idioma de destino predeterminado para la traducción con OCR |
 | `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Idiomas de selección rápida en la ventana emergente de traducción |
@@ -391,6 +414,7 @@ hilos y devuelven los resultados a través de canales, vaciados una vez por tick
 | `src/ocr.rs` | Envoltorio de `Windows.Media.Ocr` (en un hilo de trabajo) |
 | `src/translate.rs`, `src/translate_popup.rs` | Ventana emergente de traducción con OCR |
 | `src/share.rs`, `src/upload.rs` | Hoja de compartir / correo MAPI / editor / subida a alojamiento de imágenes |
+| `src/sxcu.rs`, `src/upload_window.rs`, `ui/upload.slint` | Subidas personalizadas de ShareX; la ventana de consentimiento / progreso / resultado de la subida |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Icono de la bandeja, arranque al iniciar sesión, protección de instancia única |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Persistencia de la galería (SQLite + FTS), ajustes, rutas |
 | `src/image_files.rs`, `src/atomic_file.rs` | Imágenes de los recortes en disco: WebP sin pérdida, escrituras atómicas |

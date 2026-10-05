@@ -68,7 +68,8 @@ le tout depuis une application Rust native dotée d'une interface [Slint](https:
   filtrage par statut / contenu / taille / date ; une grille virtualisée qui reste fluide même avec des milliers de captures
   ([visite guidée](#️-la-galerie)).
 - 📤 **Partage et envoi.** Volet de partage Windows, un nouvel e-mail (Simple MAPI), l'éditeur d'images du système,
-  ou un hébergeur d'images — les envois sont **facultatifs avec une boîte de dialogue de consentement explicite**.
+  ou un hébergeur d'images — catbox.moe, Imgur ou **votre propre serveur** à partir d'un fichier ShareX `.sxcu`
+  ([détails](#-votre-propre-hébergeur-dimages)). Chaque envoi **demande d'abord**.
 - 🌍 **23 langues**, détectées automatiquement depuis votre système d'exploitation et commutables depuis le menu `⋯` de la barre d'outils.
 - 🌗 **Thèmes clair / sombre**, un accueil dans la zone de notification, et un lancement au démarrage **sans registre**.
 
@@ -134,7 +135,7 @@ Faites un clic droit sur une capture flottante **ou** une vignette de la galerie
 - **OCR + Traduire** — ouvre la fenêtre de traduction
 - **Annoter** — ouvre l'éditeur ci-dessus
 - **Partager** — volet de partage Windows, **E-mail** (pièce jointe MAPI), ouvrir dans l'**éditeur** (Paint),
-  ou **Téléverser** vers un hébergeur d'images
+  ou **Téléverser** vers un hébergeur d'images ([lequel](#-votre-propre-hébergeur-dimages))
 - **Transformer** — pivoter (90° / 180°), retourner horizontalement / verticalement
 - **Rogner** (faites glisser les poignées vers l'intérieur) et **Redimensionner**
 - **Masquer de l'écran** / **Supprimer**
@@ -156,6 +157,24 @@ Une seule rangée de barre d'outils ; tout le reste est à un clic.
 - La barre d'état compte ce qui est affiché et contient **Trier** ainsi que la taille des cartes **S / M / L**.
 
 Survolez une carte pour ses actions rapides ; faites un clic droit dessus pour [tout le reste](#️-actions-du-clic-droit).
+
+---
+
+## 📤 Votre propre hébergeur d'images
+
+**`⋯` → Téléverser vers** choisit où **Téléverser** envoie une capture : catbox.moe (par défaut, sans compte),
+Imgur ou un hébergeur à vous. Pour en ajouter un, choisissez **Ajouter depuis un fichier .sxcu…** et sélectionnez
+un fichier d'envoi personnalisé ShareX — le format que Zipline, XBackBone, Chevereto et la plupart des serveurs
+d'images auto-hébergés proposent déjà ; il n'y a donc rien à écrire à la main.
+
+Snipdeck envoie l'image en données de formulaire multipart ou en corps binaire, avec les en-têtes, arguments et
+paramètres de requête du fichier, et lit le lien avec `{json:…}`, `{regex:…}`, `{header:…}` ou `{response}` —
+y compris sous la forme `$json:…$` de ShareX 12. Un fichier qui demande davantage (une invite de saisie, une valeur
+aléatoire, une réponse XML, une destination qui n'est pas un hébergeur d'images) est refusé dès l'importation, avec
+la raison, plutôt que d'échouer au premier envoi.
+
+Avant tout envoi, la fenêtre de Snipdeck elle-même nomme l'hébergeur et son adresse et explique ce que signifie
+l'envoi ; une fois terminé, elle affiche le lien, déjà copié.
 
 ---
 
@@ -252,8 +271,11 @@ binaire au moment de la compilation (aucune dépendance gettext à l'exécution)
 - **OCR + Traduire demande d'abord.** La première fois, il explique que le *texte* issu de
   l'OCR — jamais l'image — part vers Google Traduction, et attend votre accord.
   Le texte est envoyé dans le corps de la requête, pas dans l'URL.
-- **Les envois sont facultatifs.** Rien ne quitte votre machine sans une boîte de dialogue de consentement explicite qui
-  précise la destination. N'envoyez pas de contenu sensible vers un hébergeur public par lien.
+- **Les envois demandent d'abord, à chaque fois.** Rien ne quitte votre machine tant que vous n'avez pas appuyé sur
+  **Téléverser** dans une fenêtre qui nomme l'hébergeur et son adresse et explique ce que cela signifie : toute personne
+  disposant du lien peut ouvrir l'image, un envoi sur catbox ne peut pas être supprimé, un serveur en simple `http://`
+  l'envoie sans chiffrement. N'envoyez pas de contenu sensible vers un hébergeur public par lien. Les clés d'API d'un
+  fichier `.sxcu` importé sont conservées dans `settings.json`, comme ShareX les conserve.
 - **Les copies transmises restent privées.** Les images passées à un client de messagerie ou à
   un éditeur vont dans un dossier que vous seul pouvez lire (`$XDG_RUNTIME_DIR` sous Linux,
   `%TEMP%\Snipdeck` sous Windows) et sont supprimées ensuite.
@@ -357,7 +379,8 @@ fichier directement, puis redémarrez Snipdeck.
 | --- | --- | --- |
 | `language` | `"auto"` | Code de langue de l'interface, ou `"auto"` pour suivre le système d'exploitation |
 | `dark_theme` | `true` | Habillage clair ou sombre |
-| `upload_service` | `"catbox"` | Hébergeur d'images pour *Téléverser* : `"catbox"` (sans clé) ou `"imgur"` |
+| `upload_service` | `"catbox"` | Hébergeur d'images pour *Téléverser* : `"catbox"` (sans clé), `"imgur"` ou `"custom:<name>"` ; se règle depuis `⋯` → Téléverser vers |
+| `upload_hosts` | `[]` | Hébergeurs importés depuis des fichiers ShareX `.sxcu`, avec les noms de champs propres à ShareX |
 | `imgur_client_id` | `""` | Client-ID Imgur, requis uniquement lorsque `upload_service` vaut `"imgur"` |
 | `translate_target` | `"en"` | Code de langue cible par défaut pour la traduction OCR |
 | `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Langues à sélection rapide dans la fenêtre de traduction |
@@ -391,6 +414,7 @@ threads et renvoient les résultats via des canaux, vidés une fois par tick.
 | `src/ocr.rs` | Encapsulation de `Windows.Media.Ocr` (sur un thread de travail) |
 | `src/translate.rs`, `src/translate_popup.rs` | Fenêtre de traduction OCR |
 | `src/share.rs`, `src/upload.rs` | Volet de partage / courrier MAPI / éditeur / envoi vers hébergeur d'images |
+| `src/sxcu.rs`, `src/upload_window.rs`, `ui/upload.slint` | Envois personnalisés ShareX ; la fenêtre de consentement / progression / résultat de l'envoi |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Icône de zone de notification, lancement au démarrage, garde d'instance unique |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Persistance de la galerie (SQLite + FTS), paramètres, chemins |
 | `src/image_files.rs`, `src/atomic_file.rs` | Images des captures sur disque : WebP sans perte, écritures atomiques |

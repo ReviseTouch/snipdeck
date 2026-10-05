@@ -68,7 +68,8 @@ tudo a partir de um aplicativo Rust nativo com interface [Slint](https://slint.d
   filtre por status / conteúdo / tamanho / data; uma grade virtualizada que permanece fluida com milhares de recortes
   ([visita guiada](#️-a-galeria)).
 - 📤 **Compartilhar e enviar.** Painel de compartilhamento do Windows, um novo e-mail (Simple MAPI), o editor de imagens do sistema
-  ou um servidor de hospedagem de imagens — os envios são **opcionais, com uma caixa de diálogo de consentimento explícita**.
+  ou um servidor de hospedagem de imagens — catbox.moe, Imgur ou **o seu próprio servidor** a partir de um arquivo `.sxcu`
+  do ShareX ([detalhes](#-seu-próprio-servidor-de-imagens)). Todo envio **pergunta antes**.
 - 🌍 **23 idiomas**, detectados automaticamente a partir do seu sistema operacional e alternáveis pelo menu `⋯` da barra de ferramentas.
 - 🌗 **Temas claro / escuro**, uma base na bandeja do sistema e início ao fazer login **sem registro**.
 
@@ -134,7 +135,7 @@ Clique com o botão direito em um recorte flutuante **ou** em uma miniatura da g
 - **OCR + Traduzir** — abre a janela de tradução
 - **Anotar** — abre o editor acima
 - **Compartilhar** — painel de compartilhamento do Windows, **E-mail** (anexo MAPI), abrir no **editor** (Paint),
-  ou **Enviar** para um servidor de hospedagem de imagens
+  ou **Enviar** para um servidor de hospedagem de imagens ([qual](#-seu-próprio-servidor-de-imagens))
 - **Transformar** — girar (90° / 180°), inverter horizontal / vertical
 - **Recortar** (arraste as alças para dentro) e **Redimensionar**
 - **Ocultar da tela** / **Excluir**
@@ -155,6 +156,24 @@ Uma única linha na barra de ferramentas; todo o resto está a um clique.
 - A barra de status conta o que está sendo exibido e contém **Ordenar** e o tamanho dos cartões **S / M / L**.
 
 Passe o mouse sobre um cartão para ver as ações rápidas; clique nele com o botão direito para [todo o resto](#️-ações-do-botão-direito).
+
+---
+
+## 📤 Seu próprio servidor de imagens
+
+**`⋯` → Enviar para** escolhe para onde **Enviar** manda um recorte: catbox.moe (o padrão, sem conta),
+o Imgur ou um servidor seu. Para adicionar um, escolha **Adicionar de um arquivo .sxcu…** e selecione um arquivo
+de envio personalizado do ShareX — o formato que Zipline, XBackBone, Chevereto e a maioria dos servidores de
+imagens auto-hospedados já oferecem, então não há nada para escrever à mão.
+
+O Snipdeck envia a imagem como dados de formulário multipart ou como corpo binário, com os cabeçalhos, argumentos
+e parâmetros de consulta do arquivo, e lê o link com `{json:…}`, `{regex:…}`, `{header:…}` ou `{response}` —
+também na forma `$json:…$` do ShareX 12. Um arquivo que precise de mais (uma solicitação de entrada, um valor
+aleatório, uma resposta XML, um destino que não seja um servidor de imagens) é recusado já na importação, com o
+motivo, em vez de falhar no primeiro envio.
+
+Antes de qualquer envio, a própria janela do Snipdeck mostra o servidor e o seu endereço e diz o que o envio
+significa; ao terminar, mostra o link, que já foi copiado.
 
 ---
 
@@ -251,9 +270,12 @@ binário no momento da compilação (sem dependência de gettext em tempo de exe
 - **O OCR + Traduzir pergunta antes.** Na primeira vez, ele explica que o *texto*
   reconhecido por OCR — nunca a imagem — vai para o Google Tradutor, e espera o seu sim.
   O texto é enviado no corpo da requisição, não na URL.
-- **Os envios são opcionais.** Nada sai da sua máquina sem uma caixa de diálogo de
-  consentimento explícita que especifica o destino. Não envie conteúdo sensível
-  para um servidor público por link.
+- **Os envios perguntam antes, sempre.** Nada sai da sua máquina até você clicar em
+  **Enviar** em uma janela que mostra o servidor e o seu endereço e diz o que isso
+  significa: qualquer pessoa com o link pode abrir a imagem, um envio ao catbox não
+  pode ser excluído, um servidor `http://` simples a envia sem criptografia. Não envie
+  conteúdo sensível para um servidor público por link. As chaves de API de um arquivo
+  `.sxcu` importado ficam em `settings.json`, como o ShareX as guarda.
 - **As cópias repassadas continuam privadas.** As imagens passadas a um cliente de e-mail
   ou a um editor vão para uma pasta que só você pode ler (`$XDG_RUNTIME_DIR` no Linux,
   `%TEMP%\Snipdeck` no Windows) e são apagadas depois.
@@ -357,7 +379,8 @@ arquivo diretamente e, em seguida, reinicie o Snipdeck.
 | --- | --- | --- |
 | `language` | `"auto"` | Código do idioma da interface, ou `"auto"` para seguir o sistema operacional |
 | `dark_theme` | `true` | Aparência clara ou escura |
-| `upload_service` | `"catbox"` | Servidor de hospedagem de imagens para *Enviar*: `"catbox"` (sem chave) ou `"imgur"` |
+| `upload_service` | `"catbox"` | Servidor de hospedagem de imagens para *Enviar*: `"catbox"` (sem chave), `"imgur"` ou `"custom:<name>"`; definido em `⋯` → Enviar para |
+| `upload_hosts` | `[]` | Servidores importados de arquivos `.sxcu` do ShareX, com os nomes de campo do próprio ShareX |
 | `imgur_client_id` | `""` | Client-ID do Imgur, necessário apenas quando `upload_service` for `"imgur"` |
 | `translate_target` | `"en"` | Código do idioma de destino padrão para a tradução por OCR |
 | `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Idiomas de seleção rápida na janela de tradução |
@@ -391,6 +414,7 @@ threads e devolvem os resultados por canais, esvaziados uma vez por tick.
 | `src/ocr.rs` | Wrapper de `Windows.Media.Ocr` (em uma thread de trabalho) |
 | `src/translate.rs`, `src/translate_popup.rs` | Janela de tradução por OCR |
 | `src/share.rs`, `src/upload.rs` | Painel de compartilhamento / e-mail MAPI / editor / envio a servidor de imagens |
+| `src/sxcu.rs`, `src/upload_window.rs`, `ui/upload.slint` | Envios personalizados do ShareX; a janela de consentimento / progresso / resultado do envio |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Ícone da bandeja, início ao fazer login, proteção de instância única |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Persistência da galeria (SQLite + FTS), configurações, caminhos |
 | `src/image_files.rs`, `src/atomic_file.rs` | Imagens dos recortes no disco: WebP sem perdas, gravações atômicas |

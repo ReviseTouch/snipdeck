@@ -73,8 +73,8 @@ yerel bir Rust uygulamasından.
   araması; duruma / içeriğe / boyuta / tarihe göre filtreleme; binlerce snip'te bile akıcı
   kalan sanallaştırılmış bir ızgara ([tur](#️-galeri)).
 - 📤 **Paylaş & yükle.** Windows paylaşım sayfası, yeni bir e-posta (Simple MAPI), sistemin
-  görüntü düzenleyicisi veya bir görüntü barındırıcısı — yüklemeler **açık bir onay
-  penceresiyle isteğe bağlıdır.**
+  görüntü düzenleyicisi veya bir görüntü barındırıcısı — catbox.moe, Imgur ya da bir ShareX
+  `.sxcu` dosyasından **kendi sunucun** ([ayrıntılar](#-kendi-görüntü-barındırıcın)). Her yükleme **önce sorar.**
 - 🌍 **23 dil**, işletim sisteminden otomatik algılanır ve araç çubuğundaki `⋯` menüsünden
   değiştirilebilir.
 - 🌗 **Açık / koyu temalar**, sistem tepsisi yuvası ve **kayıt defteri kullanmayan**
@@ -143,7 +143,7 @@ Yüzen bir snip'e **veya** galeri küçük resmine sağ tıkla:
 - **OCR + Çevir** — çeviri penceresini aç
 - **İşaretle** — yukarıdaki editörü aç
 - **Paylaş** — Windows paylaşım sayfası, **E-posta** (MAPI eki), **düzenleyicide** aç (Paint)
-  veya bir görüntü barındırıcısına **Yükle**
+  veya bir görüntü barındırıcısına **Yükle** ([hangisine](#-kendi-görüntü-barındırıcın))
 - **Dönüştür** — döndür (90° / 180°), yatay / dikey çevir
 - **Kırp** (tutamaçları içeri sürükle) ve **Yeniden boyutlandır**
 - **Ekrandan gizle** / **Sil**
@@ -167,6 +167,24 @@ Tek bir araç çubuğu satırı; geri kalan her şey bir tık uzakta.
 
 Hızlı işlemleri için bir kartın üzerine gel; [geri kalan her şey](#️-sağ-tık-işlemleri) için
 sağ tıkla.
+
+---
+
+## 📤 Kendi görüntü barındırıcın
+
+**`⋯` → Yükleme yeri**, **Yükle**'nin bir snip'i nereye göndereceğini seçer: catbox.moe (varsayılan,
+hesap gerekmez), Imgur ya da kendi barındırıcın. Eklemek için **.sxcu dosyasından ekle…** seçeneğini
+seç ve bir ShareX özel yükleyici dosyası göster — Zipline, XBackBone, Chevereto ve kendi kendine
+barındırılan görüntü sunucularının çoğu bu biçimi zaten sunar, yani elle yazılacak bir şey yok.
+
+Snipdeck görüntüyü multipart form verisi ya da ikili gövde olarak, dosyadaki başlıklar, argümanlar
+ve sorgu parametreleriyle gönderir; bağlantıyı `{json:…}`, `{regex:…}`, `{header:…}` veya
+`{response}` ile okur — ShareX 12'nin `$json:…$` biçimiyle de. Daha fazlasını gerektiren bir dosya
+(bir giriş penceresi, rastgele bir değer, XML yanıtı, görüntü barındırıcısı olmayan bir hedef) ilk
+yüklemede başarısız olmak yerine, içe aktarırken gerekçesiyle birlikte reddedilir.
+
+Bir şey gönderilmeden önce Snipdeck'in kendi penceresi barındırıcıyı ve adresini söyler, yüklemenin
+ne anlama geldiğini açıklar; iş bitince bağlantıyı gösterir ve onu çoktan kopyalamış olur.
 
 ---
 
@@ -261,8 +279,12 @@ okunur ve derleme sırasında ikiliye gömülür (çalışma zamanında gettext 
 - **OCR + Çevir önce sorar.** İlk seferde, OCR'lanan *metnin* — asla görüntünün değil —
   Google Translate'e gideceğini açıklar ve onayını bekler. Metin URL'de değil, istek
   gövdesinde gönderilir.
-- **Yüklemeler isteğe bağlıdır.** Hedefi açıkça belirten bir onay penceresi olmadan hiçbir şey
-  makineni terk etmez. Hassas içeriği bağlantısı olana açık bir barındırıcıya yükleme.
+- **Yüklemeler her seferinde önce sorar.** Barındırıcıyı ve adresini söyleyen ve bunun ne anlama
+  geldiğini açıklayan bir pencerede **Yükle**'ye basana kadar hiçbir şey makineni terk etmez:
+  bağlantıya sahip herkes görüntüyü açabilir, catbox'a yüklenen bir şey silinemez, düz `http://`
+  kullanan bir sunucu onu şifrelemeden gönderir. Hassas içeriği bağlantısı olana açık bir
+  barındırıcıya yükleme. İçe aktarılan bir `.sxcu` dosyasındaki API anahtarları, ShareX'in yaptığı
+  gibi `settings.json` içinde saklanır.
 - **Devredilen kopyalar gizli kalır.** Bir e-posta istemcisine veya düzenleyiciye aktarılan
   görüntüler yalnızca senin okuyabildiğin bir klasöre gider (Linux'ta `$XDG_RUNTIME_DIR`,
   Windows'ta `%TEMP%\Snipdeck`) ve ardından temizlenir.
@@ -363,7 +385,8 @@ dosyayı doğrudan düzenle, sonra Snipdeck'i yeniden başlat.
 | --- | --- | --- |
 | `language` | `"auto"` | Arayüz dili kodu veya işletim sistemini izlemek için `"auto"` |
 | `dark_theme` | `true` | Açık veya koyu kabuk |
-| `upload_service` | `"catbox"` | *Yükle* için görüntü barındırıcısı: `"catbox"` (anahtarsız) veya `"imgur"` |
+| `upload_service` | `"catbox"` | *Yükle* için görüntü barındırıcısı: `"catbox"` (anahtarsız), `"imgur"` veya `"custom:<name>"`; `⋯` → Yükleme yeri menüsünden seçilir |
+| `upload_hosts` | `[]` | ShareX `.sxcu` dosyalarından içe aktarılan barındırıcılar, ShareX'in kendi alan isimleriyle |
 | `imgur_client_id` | `""` | Imgur Client-ID, yalnızca `upload_service` `"imgur"` iken gerekli |
 | `translate_target` | `"en"` | Varsayılan OCR-çeviri hedef dil kodu |
 | `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Çeviri penceresindeki hızlı seçim dilleri |
@@ -398,6 +421,7 @@ kez boşaltılır.
 | `src/ocr.rs` | `Windows.Media.Ocr` sarmalayıcısı (bir iş parçacığında) |
 | `src/translate.rs`, `src/translate_popup.rs` | OCR-çeviri penceresi |
 | `src/share.rs`, `src/upload.rs` | Paylaşım sayfası / MAPI posta / düzenleyici / görüntü barındırıcısına yükleme |
+| `src/sxcu.rs`, `src/upload_window.rs`, `ui/upload.slint` | ShareX özel yükleyicileri; yükleme onayı / ilerleme / sonuç penceresi |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Tepsi simgesi, oturum açılışında başlatma, tek örnek koruması |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Galeri kalıcılığı (SQLite + FTS), ayarlar, yollar |
 | `src/image_files.rs`, `src/atomic_file.rs` | Diskteki snip görüntüleri: kayıpsız WebP, atomik yazma |
