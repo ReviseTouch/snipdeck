@@ -16,7 +16,7 @@
 // upload is usually started from.
 
 import { Theme } from "theme.slint";
-import { ToolbarButton } from "widgets.slint";
+import { ToolbarButton, IconButton } from "widgets.slint";
 import { Glyph } from "icons.slint";
 
 component Point inherits Rectangle {
@@ -75,7 +75,11 @@ export component UploadWindow inherits Window {
     init => { Theme.dark = root.dark; }
     changed dark => { Theme.dark = root.dark; }
 
-    width: 420px;
+    // Fixed, and never more than two text buttons in a row: three side by
+    // side ("Копировать ссылку", "Открыть ссылку", "Закрыть") measured wider
+    // than the window and were cut off, and a width that followed the
+    // buttons was drawn wider than the window it got. Closing is the ×.
+    width: 440px;
     height: body.preferred-height;
     forward-focus: keys;
 
@@ -118,6 +122,10 @@ export component UploadWindow inherits Window {
                 font-weight: 600;
                 vertical-alignment: center;
                 horizontal-stretch: 1;
+            }
+            IconButton {
+                icon: "x";
+                clicked => { root.close(); }
             }
         }
 
@@ -235,9 +243,9 @@ export component UploadWindow inherits Window {
                 label: @tr("Open settings file");
                 clicked => { root.open-settings(); }
             }
-            if root.state >= 2 : ToolbarButton {
+            if root.state >= 3 : ToolbarButton {
                 label: @tr("Close");
-                primary: root.state == 2 || root.state == 4;
+                primary: root.state == 4;
                 clicked => { root.close(); }
             }
             if root.state == 3 : ToolbarButton {
