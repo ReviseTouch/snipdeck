@@ -518,7 +518,9 @@ impl AppState {
                         self.handle_region_snip(snip);
                     }
                     crate::bus_service::BusEvent::Show => {
-                        let _ = window.show();
+                        if let Err(e) = window.show() {
+                            log::warn!("could not show the main window: {e}");
+                        }
                         crate::tray::focus_main_window();
                     }
                 }

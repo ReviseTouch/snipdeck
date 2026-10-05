@@ -9,6 +9,11 @@
 //! LaunchAgent plist and Linux an XDG autostart `.desktop` entry — the
 //! native, file-based equivalents on each platform.
 
+/// Passed by every launch-at-login entry: a login start comes up in the
+/// tray, not as a window in the user's face. Launched by hand — no flag — the
+/// gallery opens as it always has.
+pub const ARG: &str = "--autostart";
+
 /// Is launch-at-login currently enabled? (Cheap filesystem check.)
 pub fn is_enabled() -> bool {
     imp::is_enabled()
@@ -19,10 +24,12 @@ pub fn set_enabled(enabled: bool) -> anyhow::Result<()> {
     imp::set_enabled(enabled)
 }
 
-/// At start-up: if launch-at-login is on, point it at this executable again.
-/// The entry records the path it was enabled from; moved or reinstalled
-/// elsewhere, the binary would otherwise stop starting at login without a
-/// word. Linux only for now — elsewhere a no-op.
+/// At start-up: if launch-at-login is on, write the entry again for this
+/// executable. The entry records the path it was enabled from; moved or
+/// reinstalled elsewhere, the binary would otherwise stop starting at login
+/// without a word. It also carries an entry written by an older build up to
+/// the current form — one without `ARG` opened the window at every login.
+/// macOS: a no-op for now.
 pub fn refresh() {
     if let Err(e) = imp::refresh() {
         log::warn!("could not refresh the launch-at-login entry: {e}");
@@ -56,8 +63,10 @@ mod imp {
         )
     }
 
-    /// The shortcut keeps its target; not refreshed here.
     pub fn refresh() -> Result<()> {
+        if is_enabled() {
+            set_enabled(true)?;
+        }
         Ok(())
     }
 
@@ -93,6 +102,8 @@ mod imp {
                 CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER)?;
             let target_w = to_wide(target.as_os_str());
             shell_link.SetPath(PCWSTR(target_w.as_ptr()))?;
+            let args_w = to_wide(std::ffi::OsStr::new(super::ARG));
+            shell_link.SetArguments(PCWSTR(args_w.as_ptr()))?;
             if let Some(dir) = workdir {
                 let dir_w = to_wide(dir.as_os_str());
                 shell_link.SetWorkingDirectory(PCWSTR(dir_w.as_ptr()))?;
@@ -156,12 +167,13 @@ mod imp {
 <dict>
     <key>Label</key><string>com.snipdeck.snipdeck</string>
     <key>ProgramArguments</key>
-    <array><string>{}</string></array>
+    <array><string>{}</string><string>{}</string></array>
     <key>RunAtLoad</key><true/>
 </dict>
 </plist>
 "#,
-            exe.display()
+            exe.display(),
+            super::ARG
         );
         std::fs::write(&path, plist)?;
         Ok(())
@@ -212,8 +224,9 @@ mod imp {
 
     fn entry(exe: &std::path::Path) -> String {
         format!(
-            "[Desktop Entry]\nType=Application\nName=Snipdeck\nExec={}\nX-GNOME-Autostart-enabled=true\nTerminal=false\n",
-            exec_arg(&exe.to_string_lossy())
+            "[Desktop Entry]\nType=Application\nName=Snipdeck\nExec={} {}\nX-GNOME-Autostart-enabled=true\nTerminal=false\n",
+            exec_arg(&exe.to_string_lossy()),
+            super::ARG
         )
     }
 
@@ -246,7 +259,13 @@ mod imp {
 
     #[cfg(test)]
     mod tests {
-        use super::exec_arg;
+        use super::{entry, exec_arg};
+
+        #[test]
+        fn a_login_start_is_marked() {
+            let e = entry(std::path::Path::new("/home/u/.local/bin/snipdeck"));
+            assert!(e.contains("\nExec=/home/u/.local/bin/snipdeck --autostart\n"), "{e}");
+        }
 
         #[test]
         fn a_plain_path_is_left_bare() {

@@ -504,6 +504,40 @@ fn main() -> Result<(), slint::PlatformError> {
         active
     });
 
-    main_window.show()?;
+    // Started at login: stay in the tray. The tray, the hotkeys, Super+Alt
+    // and a launch from the app menu (which asks this instance to show
+    // itself) all bring the window up when it is wanted.
+    if std::env::args().any(|a| a == autostart::ARG) {
+        log::info!("started at login; the window stays hidden");
+        // Wayland: shown once and hidden again before a frame is drawn. A
+        // window that has never been shown could not be shown later — the
+        // tray's and a second launch's `show()` returned Ok and nothing
+        // appeared — while one hidden after showing comes back every time.
+        // Wayland: Slint creates every window, invisible, as the loop starts,
+        // and a later `show()` only asks winit to make it visible — which
+        // winit cannot do on Wayland, so the tray and a second launch both
+        // "showed" a window that never appeared. On Wayland `hide()` destroys
+        // the window instead, and the next `show()` builds a fresh, visible
+        // one: the path the window's X button already takes. So: shown, then
+        // hidden on the following turn of the loop — in one callback the two
+        // cancel out and nothing reaches winit. Measured: the invisible window
+        // draws nothing in between, so nothing flashes.
+        #[cfg(target_os = "linux")]
+        {
+            let weak = main_window.as_weak();
+            slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+                let Some(w) = weak.upgrade() else { return };
+                let _ = w.show();
+                let weak = w.as_weak();
+                slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+                    if let Some(w) = weak.upgrade() {
+                        let _ = w.hide();
+                    }
+                });
+            });
+        }
+    } else {
+        main_window.show()?;
+    }
     slint::run_event_loop_until_quit()
 }
