@@ -43,7 +43,9 @@ mod snip;
 mod translate;
 mod translate_popup;
 mod tray;
+mod sxcu;
 mod upload;
+mod upload_window;
 mod window_env;
 #[cfg(not(target_os = "windows"))]
 mod wayland_screencast;

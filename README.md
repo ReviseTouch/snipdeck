@@ -68,7 +68,8 @@ all from a native Rust app with a software-rendered [Slint](https://slint.dev) U
   filter by status / content / size / date; a virtualized grid that stays smooth at thousands of snips
   ([tour](#️-the-gallery)).
 - 📤 **Share & upload.** Windows share sheet, a new email (Simple MAPI), the system image editor,
-  or an image host — uploads are **opt-in with an explicit consent dialog**.
+  or an image host — catbox.moe, Imgur, or **your own server** from a ShareX `.sxcu` file
+  ([details](#-your-own-image-host)). Every upload **asks first**.
 - 🌍 **23 languages**, auto-detected from your OS and switchable from the toolbar's `⋯` menu.
 - 🌗 **Light / dark themes**, a system-tray home, and **registry-free** launch-at-login.
 
@@ -134,7 +135,7 @@ Right-click a floating snip **or** a gallery thumbnail:
 - **OCR + Translate** — open the translate popup
 - **Annotate** — open the editor above
 - **Share** — Windows share sheet, **Mail** (MAPI attachment), open in **editor** (Paint),
-  or **Upload** to an image host
+  or **Upload** to an image host ([which one](#-your-own-image-host))
 - **Transform** — rotate (90° / 180°), flip horizontal / vertical
 - **Crop** (drag the handles inward) and **Resize**
 - **Hide from screen** / **Delete**
@@ -155,6 +156,24 @@ One toolbar row; everything else is a click away.
 - The status bar counts what is shown and holds **Sort** and the **S / M / L** card size.
 
 Hover a card for its quick actions; right-click it for [everything else](#️-right-click-actions).
+
+---
+
+## 📤 Your own image host
+
+**`⋯` → Upload to** picks where **Upload** sends a snip: catbox.moe (the default, no account),
+Imgur, or a host of your own. To add one, choose **Add from a .sxcu file…** and pick a ShareX
+custom-uploader file — the format Zipline, XBackBone, Chevereto and most self-hosted image
+servers already offer, so there is nothing to write by hand.
+
+Snipdeck sends the image as multipart form data or as a binary body, with the file's headers,
+arguments and query parameters, and reads the link with `{json:…}`, `{regex:…}`, `{header:…}`
+or `{response}` — ShareX 12's `$json:…$` form too. A file that needs more (a prompt, a random
+value, an XML answer, a destination that is not an image host) is refused when you import it,
+with the reason, rather than failing on the first upload.
+
+Before anything is sent, Snipdeck's own window names the host and its address and says what
+the upload means; when it is done, it shows the link and has already copied it.
 
 ---
 
@@ -251,9 +270,12 @@ binary at build time (no runtime gettext dependency).
 - **OCR + Translate asks first.** The first time, it explains that the OCR'd
   *text* — never the image — goes to Google Translate, and waits for your yes.
   The text is sent in the request body, not the URL.
-- **Uploads are opt-in.** Nothing leaves your machine without an explicit
-  consent dialog that spells out the destination. Don't upload sensitive
-  content to a public-by-link host.
+- **Uploads ask first, every time.** Nothing leaves your machine until you
+  press **Upload** in a window that names the host and its address and says
+  what that means: anyone with the link can open the image, a catbox upload
+  cannot be deleted, a plain `http://` server sends it unencrypted. Don't
+  upload sensitive content to a public-by-link host. API keys from an imported
+  `.sxcu` file are kept in `settings.json`, as ShareX keeps them.
 - **Hand-over copies stay private.** Images passed to a mail client or editor go
   to a folder only you can read (`$XDG_RUNTIME_DIR` on Linux,
   `%TEMP%\Snipdeck` on Windows) and are swept afterwards.
@@ -357,7 +379,8 @@ file directly, then restart Snipdeck.
 | --- | --- | --- |
 | `language` | `"auto"` | UI language code, or `"auto"` to follow the OS |
 | `dark_theme` | `true` | Light or dark shell |
-| `upload_service` | `"catbox"` | Image host for *Upload*: `"catbox"` (no key) or `"imgur"` |
+| `upload_service` | `"catbox"` | Image host for *Upload*: `"catbox"` (no key), `"imgur"` or `"custom:<name>"`; set from `⋯` → Upload to |
+| `upload_hosts` | `[]` | Hosts imported from ShareX `.sxcu` files, in ShareX's own field names |
 | `imgur_client_id` | `""` | Imgur Client-ID, required only when `upload_service` is `"imgur"` |
 | `translate_target` | `"en"` | Default OCR-translate target language code |
 | `translate_favs` | `["en","es","fr","de","it","pt","ru","ar"]` | Quick-pick languages in the translate popup |
@@ -391,6 +414,7 @@ threads and hand results back over channels, drained once per tick.
 | `src/ocr.rs` | `Windows.Media.Ocr` wrapper (on a worker thread) |
 | `src/translate.rs`, `src/translate_popup.rs` | OCR-translate popup |
 | `src/share.rs`, `src/upload.rs` | Share sheet / MAPI mail / editor / image-host upload |
+| `src/sxcu.rs`, `src/upload_window.rs`, `ui/upload.slint` | ShareX custom uploaders; the upload consent / progress / result window |
 | `src/tray.rs`, `src/autostart.rs`, `src/single_instance.rs` | Tray icon, launch-at-login, single-instance guard |
 | `src/snip.rs`, `src/settings.rs`, `src/paths.rs` | Gallery persistence (SQLite + FTS), settings, paths |
 | `src/image_files.rs`, `src/atomic_file.rs` | Snip images on disk: lossless WebP, atomic writes |

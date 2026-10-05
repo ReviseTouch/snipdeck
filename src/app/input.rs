@@ -218,6 +218,9 @@ impl AppState {
             }
             Action::OpenCollage => self.open_collage(window),
             Action::ShowAbout => self.show_about(window),
+            Action::PickUploadHost(i) => self.pick_upload_host(i, window),
+            Action::AddUploadHost => self.add_upload_host(),
+            Action::RemoveUploadHost => self.remove_upload_host(window),
             Action::RequestThumb(id) => {
                 self.load_thumb_into_model(id);
             }

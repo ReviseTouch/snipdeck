@@ -1,0 +1,250 @@
+// The upload window: asks before an image leaves the machine, then shows the
+// upload through to its link. One window, five states, so the answer to
+// "did it work?" appears where the question was asked.
+//
+//   0 confirm      where it goes and what that means; Cancel / Upload
+//   1 uploading    the host; Hide (the result brings the window back)
+//   2 done         the link, whether it was copied; Copy / Open / Close
+//   3 failed       the host's own reason; Close / Try again
+//   4 setup        Imgur without a Client-ID: how to get one
+//
+// Drawn by Snipdeck rather than by a native dialog: on Linux those need
+// `zenity`, and without it the consent prompt silently answered Cancel.
+//
+// The title is a marker, never shown (the window has no frame): the GNOME
+// extension raises "SnipdeckUpload" above the floating snips, where the
+// upload is usually started from.
+
+import { Theme } from "theme.slint";
+import { ToolbarButton } from "widgets.slint";
+import { Glyph } from "icons.slint";
+
+component Point inherits Rectangle {
+    in property <string> text;
+    in property <bool> warn: false;
+    HorizontalLayout {
+    spacing: 8px;
+    Rectangle {
+        width: 4px;
+        VerticalLayout {
+            padding-top: 7px;
+            alignment: start;
+            Rectangle {
+                width: 4px;
+                height: 4px;
+                border-radius: 2px;
+                background: root.warn ? Theme.danger : Theme.ink-3;
+            }
+        }
+    }
+    Text {
+        text: root.text;
+        color: root.warn ? Theme.danger : Theme.ink-2;
+        font-size: 13px;
+        wrap: word-wrap;
+        horizontal-stretch: 1;
+    }
+    }
+}
+
+export component UploadWindow inherits Window {
+    title: "SnipdeckUpload";
+    icon: @image-url("../assets/preview_256.png");
+    no-frame: true;
+    always-on-top: true;
+    background: Theme.raised;
+
+    in property <bool> dark: true;
+    in property <int> state: 0;
+    in property <string> host-name;
+    in property <string> host-domain;
+    in property <bool> unlisted: true;
+    in property <bool> permanent: false;
+    in property <bool> encrypted: true;
+    in property <string> link;
+    in property <bool> copied: true;
+    in property <string> error-text;
+    in property <string> settings-path;
+
+    callback upload();
+    callback close();
+    callback copy-link();
+    callback open-link();
+    callback open-settings();
+
+    init => { Theme.dark = root.dark; }
+    changed dark => { Theme.dark = root.dark; }
+
+    width: 420px;
+    height: body.preferred-height;
+    forward-focus: keys;
+
+    keys := FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Escape) {
+                root.close();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    // The software renderer draws no shadow, so the edge is the island's.
+    Rectangle {
+        border-width: 1px;
+        border-color: Theme.island;
+    }
+
+    body := VerticalLayout {
+        padding: 18px;
+        spacing: 12px;
+
+        HorizontalLayout {
+            spacing: 10px;
+            Glyph {
+                name: root.state == 2 ? "check" : root.state == 3 ? "x" : root.state == 4 ? "info" : "upload";
+                paint: root.state == 3 ? Theme.danger : Theme.ink-1;
+                size: 18px;
+                weight: 1.6px;
+            }
+            Text {
+                text: root.state == 0 ? @tr("Upload this snip?")
+                    : root.state == 1 ? @tr("Uploading…")
+                    : root.state == 2 ? @tr("Uploaded")
+                    : root.state == 3 ? @tr("Upload failed")
+                    : @tr("Imgur needs a Client-ID");
+                color: Theme.ink-1;
+                font-size: 16px;
+                font-weight: 600;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+        }
+
+        // Where it goes: the name, and the address in data type.
+        if root.state <= 1 || root.state == 3 : HorizontalLayout {
+            spacing: 8px;
+            Text {
+                text: root.host-name;
+                color: Theme.ink-1;
+                font-size: 13.5px;
+                font-weight: 500;
+                overflow: elide;
+            }
+            if root.host-domain != root.host-name : Text {
+                text: root.host-domain;
+                color: Theme.ink-3;
+                font-family: "monospace";
+                font-size: 11px;
+                vertical-alignment: center;
+                overflow: elide;
+                horizontal-stretch: 1;
+            }
+            Rectangle { horizontal-stretch: 1; }
+        }
+
+        if root.state == 0 : VerticalLayout {
+            spacing: 6px;
+            Point { text: @tr("Anyone with the link can open the image."); }
+            if root.unlisted : Point { text: @tr("It is not listed or searchable anywhere."); }
+            if root.permanent : Point { text: @tr("Uploaded anonymously, it cannot be deleted later."); }
+            if !root.encrypted : Point { text: @tr("The connection is not encrypted: others on the network can see the image."); warn: true; }
+            Point { text: @tr("Don't upload IDs, passwords or private messages."); }
+            Point { text: @tr("When it is done, the link is copied to the clipboard."); }
+        }
+
+        if root.state == 2 : VerticalLayout {
+            spacing: 6px;
+            Rectangle {
+                height: 30px;
+                border-radius: 7px;
+                background: Theme.fill;
+                HorizontalLayout {
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    Text {
+                        text: root.link;
+                        color: Theme.ink-1;
+                        font-family: "monospace";
+                        font-size: 12px;
+                        vertical-alignment: center;
+                        overflow: elide;
+                    }
+                }
+            }
+            Text {
+                text: root.copied ? @tr("The link is on the clipboard.") : @tr("The link could not be copied; use Copy link.");
+                color: root.copied ? Theme.ink-3 : Theme.danger;
+                font-size: 12.5px;
+                wrap: word-wrap;
+            }
+        }
+
+        if root.state == 3 : Text {
+            text: root.error-text;
+            color: Theme.ink-2;
+            font-size: 13px;
+            wrap: word-wrap;
+        }
+
+        if root.state == 4 : VerticalLayout {
+            spacing: 8px;
+            Text {
+                text: @tr("Imgur's anonymous uploads need a free Client-ID. Register an application at imgur.com → Settings → Applications (\"OAuth 2 without a callback URL\"), put its Client-ID in the settings file as \"imgur_client_id\", and restart Snipdeck.");
+                color: Theme.ink-2;
+                font-size: 13px;
+                wrap: word-wrap;
+            }
+            Text {
+                text: root.settings-path;
+                color: Theme.ink-3;
+                font-family: "monospace";
+                font-size: 11px;
+                wrap: word-wrap;
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: end;
+            if root.state == 0 : ToolbarButton {
+                label: @tr("Cancel");
+                clicked => { root.close(); }
+            }
+            if root.state == 0 : ToolbarButton {
+                icon: "upload";
+                label: @tr("Upload");
+                primary: true;
+                clicked => { root.upload(); }
+            }
+            if root.state == 1 : ToolbarButton {
+                label: @tr("Hide");
+                clicked => { root.close(); }
+            }
+            if root.state == 2 : ToolbarButton {
+                icon: "copy";
+                label: @tr("Copy link");
+                clicked => { root.copy-link(); }
+            }
+            if root.state == 2 : ToolbarButton {
+                icon: "share";
+                label: @tr("Open link");
+                clicked => { root.open-link(); }
+            }
+            if root.state == 4 : ToolbarButton {
+                label: @tr("Open settings file");
+                clicked => { root.open-settings(); }
+            }
+            if root.state >= 2 : ToolbarButton {
+                label: @tr("Close");
+                primary: root.state == 2 || root.state == 4;
+                clicked => { root.close(); }
+            }
+            if root.state == 3 : ToolbarButton {
+                label: @tr("Try again");
+                primary: true;
+                clicked => { root.upload(); }
+            }
+        }
+    }
+}

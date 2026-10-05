@@ -5467,6 +5467,7 @@ dependencies = [
  "pollster",
  "raw-window-handle",
  "rdev",
+ "regex",
  "rfd",
  "rusqlite",
  "serde",

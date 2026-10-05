@@ -7,12 +7,13 @@ import { CollageWindow, CollageCell, TrayItem } from "collage.slint";
 import { AboutWindow } from "about.slint";
 import { LoupeWindow } from "loupe.slint";
 import { ColorResultWindow } from "color_result.slint";
+import { UploadWindow } from "upload.slint";
 import { Glyph } from "icons.slint";
 import { ListView, ScrollView } from "std-widgets.slint";
 import { Theme } from "theme.slint";
 import { Tips, ToolbarButton, SplitButton, IconButton, SearchBox, FilterChip, TextButton, SizeToggle, Badge, CardAction, Popover, MenuRow, MenuSeparator, Option } from "widgets.slint";
 
-export { FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape, CollageWindow, CollageCell, TrayItem, AboutWindow, LoupeWindow, ColorResultWindow }
+export { FloatingWindow, OverlayWindow, ContextMenuWindow, TranslatePopupWindow, TransLang, AnnotateWindow, AnnoShape, CollageWindow, CollageCell, TrayItem, AboutWindow, LoupeWindow, ColorResultWindow, UploadWindow }
 
 export struct SnipItem {
     id: string,
@@ -80,6 +81,12 @@ export component MainWindow inherits Window {
     in property <int> filtered-count: 0;
     in property <string> storage-size: "0 KB";
     in property <[LangItem]> languages: [];
+    // ⋯ → Upload to: catbox, Imgur, then the imported hosts (from 2).
+    in property <[string]> upload-hosts: [];
+    in property <int> upload-host-index: 0;
+    callback pick-upload-host(int);
+    callback add-upload-host();
+    callback remove-upload-host();
     in property <string> current-language: "en";
     in property <bool> autostart-enabled: false;
     // How a snip is started here, for the hints that name it: 0 = Windows
@@ -92,13 +99,15 @@ export component MainWindow inherits Window {
     in property <string> hotkey-snip-clip: "";
     in property <string> hotkey-clip-only: "";
     property <bool> lang-open: false;
-    property <bool> any-popover: new-menu-open || more-open || filter-open || sort-open || lang-open;
+    property <bool> upload-open: false;
+    property <bool> any-popover: new-menu-open || more-open || filter-open || sort-open || lang-open || upload-open;
     function close-popovers() {
         root.new-menu-open = false;
         root.more-open = false;
         root.filter-open = false;
         root.sort-open = false;
         root.lang-open = false;
+        root.upload-open = false;
     }
     // Popovers: at most one is open at a time.
     property <bool> new-menu-open: false;
@@ -770,6 +779,12 @@ export component MainWindow inherits Window {
                 submenu: true;
                 clicked => { root.more-open = false; root.lang-open = true; }
             }
+            MenuRow {
+                text: @tr("Upload to");
+                checkable: true;
+                submenu: true;
+                clicked => { root.more-open = false; root.upload-open = true; }
+            }
             MenuSeparator { }
             MenuRow {
                 text: @tr("Clear unpinned snips");
@@ -813,6 +828,40 @@ export component MainWindow inherits Window {
                     checkable: true;
                     checked: l.code == root.current-language;
                     clicked => { root.set-language(l.code); root.lang-open = false; }
+                }
+            }
+        }
+    }
+
+    // Upload to — opened from ⋯, in the same place. Where "Upload" sends a
+    // snip; the upload window names it again before anything is sent.
+    if root.upload-open : Popover {
+        x: more-btn.absolute-position.x + more-btn.width - self.width;
+        y: more-btn.absolute-position.y + more-btn.height + 6px;
+        width: 280px;
+        height: min(root.height - self.y - 16px, upload-menu.preferred-height);
+        ScrollView {
+            width: 100%;
+            height: 100%;
+            upload-menu := VerticalLayout {
+                padding: 4px;
+                for name[i] in root.upload-hosts : MenuRow {
+                    text: name;
+                    checkable: true;
+                    checked: i == root.upload-host-index;
+                    clicked => { root.pick-upload-host(i); }
+                }
+                MenuSeparator { }
+                MenuRow {
+                    text: @tr("Add from a .sxcu file…");
+                    checkable: true;
+                    clicked => { root.close-popovers(); root.add-upload-host(); }
+                }
+                if root.upload-host-index >= 2 : MenuRow {
+                    text: @tr("Remove this host");
+                    checkable: true;
+                    danger: true;
+                    clicked => { root.close-popovers(); root.remove-upload-host(); }
                 }
             }
         }

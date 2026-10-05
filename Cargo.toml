@@ -56,6 +56,9 @@ crossbeam-channel = "0.5"
 # runtime) used by the OCR-translate feature. Runs on the same worker thread
 # the OCR already uses, so no tokio/reqwest weight is pulled in.
 ureq = { version = "2", features = ["json"] }
+# The `{regex:…}` output syntax of imported ShareX uploaders (`src/sxcu.rs`).
+# Already in the tree through other crates; no new download.
+regex = "1"
 # Pure-Rust 2D rasteriser (the resvg engine) used to FLATTEN annotations onto
 # the snip at full resolution: proper anti-aliased thick strokes, round caps/
 # joins and fills that match the live Slint `Path` preview pixel-for-pixel. No

@@ -277,40 +277,7 @@ impl AppState {
     /// the `SNIPDECK_DONATE_URL` env var, so the donation link ships in the
     /// binary ONLY and never appears in the public source.
     pub(crate) fn show_about(&mut self, _window: &MainWindow) {
-        #[cfg(target_os = "windows")]
-        fn open_url(url: &str) {
-            use windows::core::{HSTRING, PCWSTR};
-            use windows::Win32::UI::Shell::ShellExecuteW;
-            use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
-            let url = HSTRING::from(url);
-            let op = HSTRING::from("open");
-            unsafe {
-                let _ = ShellExecuteW(
-                    None,
-                    PCWSTR(op.as_ptr()),
-                    PCWSTR(url.as_ptr()),
-                    PCWSTR::null(),
-                    PCWSTR::null(),
-                    SW_SHOWNORMAL,
-                );
-            }
-        }
-        #[cfg(not(target_os = "windows"))]
-        fn open_url(url: &str) {
-            // `xdg-open` on Linux/BSD, `open` on macOS. Fire-and-forget: a
-            // desktop with no handler registered simply opens nothing, which
-            // is no worse than the no-op this replaced.
-            let opener = if cfg!(target_os = "macos") {
-                "open"
-            } else {
-                "xdg-open"
-            };
-            let mut command = std::process::Command::new(opener);
-            command.arg(url);
-            if let Err(err) = crate::share::spawn_detached(command) {
-                log::warn!("could not open {url} via {opener}: {err}");
-            }
-        }
+        use crate::share::open_url;
 
         let w = match crate::AboutWindow::new() {
             Ok(w) => w,
@@ -383,12 +350,8 @@ impl AppState {
         }
     }
 
-    /// Upload a snip to the configured image host (catbox.moe by default, or
-    /// Imgur) and copy the resulting link to the clipboard. Imgur needs a
-    /// Client-ID in settings; if it's missing, point the user at how to get one
-    /// rather than failing silently. The blocking HTTP upload runs on a worker
-    /// thread (see `crate::upload`), which also copies the link and shows a
-    /// notification when it finishes.
+    /// Upload a snip to the chosen host (⋯ → Upload to). Opens the upload
+    /// window, which asks first; nothing leaves the machine before Upload.
     fn upload_snip(&mut self, id: Uuid) {
         let Some(snip) = self.gallery.get(id) else {
             return;
@@ -400,15 +363,118 @@ impl AppState {
                 return;
             }
         };
-        // A missing Client-ID is surfaced by `upload` with a visible (topmost)
-        // notice, not just the gallery error banner — the action is usually
-        // fired from a floating snip's menu while the gallery is hidden.
-        if let Err(e) = crate::upload::upload(
-            &img,
-            &self.settings.upload_service,
-            &self.settings.imgur_client_id,
-        ) {
-            self.last_error = Some(t1("Failed to start upload: {e}", "{e}", &e.to_string()));
+        let host = crate::upload::Host::from_settings(&self.settings);
+        if let Err(e) = self.upload_ui.start(img, host, self.settings.dark_theme) {
+            self.last_error = Some(t1("Failed to open window: {e}", "{e}", &e.to_string()));
+        }
+    }
+
+    /// Fill ⋯ → Upload to: catbox, Imgur, then the imported hosts, with the
+    /// current one ticked.
+    pub(crate) fn refresh_upload_hosts(&self, window: &MainWindow) {
+        let mut names: Vec<slint::SharedString> = vec!["catbox.moe".into(), "Imgur".into()];
+        names.extend(self.settings.upload_hosts.iter().map(|u| u.display_name().into()));
+        let service = self.settings.upload_service.trim();
+        let current = if service.eq_ignore_ascii_case("imgur") {
+            1
+        } else if let Some(name) = service.strip_prefix(crate::upload::CUSTOM_PREFIX) {
+            self.settings
+                .upload_hosts
+                .iter()
+                .position(|u| u.display_name() == name)
+                .map_or(0, |i| i as i32 + 2)
+        } else {
+            0
+        };
+        window.set_upload_hosts(slint::ModelRc::new(slint::VecModel::from(names)));
+        window.set_upload_host_index(current);
+    }
+
+    pub(crate) fn pick_upload_host(&mut self, index: i32, window: &MainWindow) {
+        self.settings.upload_service = match index {
+            0 => "catbox".into(),
+            1 => "imgur".into(),
+            i => match self.settings.upload_hosts.get((i - 2).max(0) as usize) {
+                Some(up) => format!("{}{}", crate::upload::CUSTOM_PREFIX, up.display_name()),
+                None => return,
+            },
+        };
+        let _ = self.settings.save();
+        self.refresh_upload_hosts(window);
+    }
+
+    /// Remove the ticked host, if it is an imported one, and fall back to
+    /// catbox.
+    pub(crate) fn remove_upload_host(&mut self, window: &MainWindow) {
+        let Some(name) = self
+            .settings
+            .upload_service
+            .trim()
+            .strip_prefix(crate::upload::CUSTOM_PREFIX)
+            .map(str::to_string)
+        else {
+            return;
+        };
+        self.settings.upload_hosts.retain(|u| u.display_name() != name);
+        self.settings.upload_service = "catbox".into();
+        let _ = self.settings.save();
+        self.refresh_upload_hosts(window);
+    }
+
+    /// Pick a `.sxcu` file and import it. The file is read and checked on a
+    /// worker — the dialog blocks — and joins the list in
+    /// `finish_upload_host_import`.
+    pub(crate) fn add_upload_host(&mut self) {
+        let tx = self.sxcu_imports.0.clone();
+        let read = move |path: std::path::PathBuf| {
+            let result = std::fs::read_to_string(&path)
+                .map_err(|e| e.to_string())
+                .and_then(|text| crate::sxcu::Uploader::parse(&text).map_err(|e| e.to_string()));
+            let _ = tx.send(result);
+            crate::pump::wake();
+        };
+        let filter = ["sxcu", "json"];
+        // Windows: the native dialog keeps this thread's windows responsive.
+        #[cfg(target_os = "windows")]
+        if let Some(path) = rfd::FileDialog::new()
+            .add_filter("ShareX custom uploader", &filter)
+            .pick_file()
+        {
+            read(path);
+        }
+        // Elsewhere it is the desktop portal, waited on off the UI thread
+        // (see `save_snip`).
+        #[cfg(not(target_os = "windows"))]
+        {
+            let dialog = rfd::AsyncFileDialog::new().add_filter("ShareX custom uploader", &filter);
+            std::thread::spawn(move || {
+                if let Some(picked) = pollster::block_on(dialog.pick_file()) {
+                    read(picked.path().to_path_buf());
+                }
+            });
+        }
+    }
+
+    /// An imported host joins the list and becomes the one used; a host of
+    /// the same name is replaced. A refused file says why in the banner.
+    pub(crate) fn finish_upload_host_import(
+        &mut self,
+        import: Result<crate::sxcu::Uploader, String>,
+        window: &MainWindow,
+    ) {
+        match import {
+            Ok(up) => {
+                let name = up.display_name();
+                log::info!("imported upload host {name:?} ({})", up.domain());
+                self.settings.upload_hosts.retain(|u| u.display_name() != name);
+                self.settings.upload_hosts.push(up);
+                self.settings.upload_service = format!("{}{name}", crate::upload::CUSTOM_PREFIX);
+                let _ = self.settings.save();
+                self.refresh_upload_hosts(window);
+            }
+            Err(why) => {
+                self.last_error = Some(t1("Could not add the upload host: {why}", "{why}", &why));
+            }
         }
     }
 

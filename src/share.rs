@@ -52,6 +52,24 @@ pub fn open_in_editor(img: &image::RgbaImage) -> anyhow::Result<()> {
 #[cfg(not(target_os = "windows"))]
 pub use unix::spawn_detached;
 
+/// Open a link in the default browser. Fire-and-forget: a desktop with no
+/// handler opens nothing, and that is logged rather than reported.
+pub fn open_url(url: &str) {
+    #[cfg(target_os = "windows")]
+    let result = win::shell_open(url);
+    #[cfg(not(target_os = "windows"))]
+    let result = {
+        // `xdg-open` on Linux/BSD, `open` on macOS.
+        let opener = if cfg!(target_os = "macos") { "open" } else { "xdg-open" };
+        let mut command = std::process::Command::new(opener);
+        command.arg(url);
+        spawn_detached(command).map_err(anyhow::Error::from)
+    };
+    if let Err(e) = result {
+        log::warn!("could not open {url}: {e:#}");
+    }
+}
+
 #[cfg(not(target_os = "windows"))]
 mod unix {
     use anyhow::{Context, Result};

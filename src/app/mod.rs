@@ -133,6 +133,14 @@ pub struct AppState {
     /// Failures from work that finished off the UI thread (a save dialog on a
     /// worker), drained into `last_error` by `tick`.
     background_errors: (crossbeam_channel::Sender<String>, crossbeam_channel::Receiver<String>),
+    /// The upload window: consent, progress, result.
+    pub(crate) upload_ui: crate::upload_window::UploadUi,
+    /// `.sxcu` files read on a worker (the file dialog blocks), parsed or
+    /// refused, waiting to join `settings.upload_hosts`.
+    pub(crate) sxcu_imports: (
+        crossbeam_channel::Sender<SxcuImport>,
+        crossbeam_channel::Receiver<SxcuImport>,
+    ),
 
     // Decoded-thumbnail cache, bounded (LRU-ish) so total memory stays flat
     // no matter how many snips accumulate; visible cards fetch from here.
@@ -259,6 +267,8 @@ impl AppState {
             }),
             hotkey_error,
             background_errors: crossbeam_channel::unbounded(),
+            upload_ui: crate::upload_window::UploadUi::new(),
+            sxcu_imports: crossbeam_channel::unbounded(),
             thumb_cache: std::collections::HashMap::new(),
             file_sizes: std::collections::HashMap::new(),
             thumb_order: std::collections::VecDeque::new(),
@@ -334,6 +344,13 @@ impl AppState {
         });
         let p = pending.clone();
         window.on_collage_create(move || p.borrow_mut().push(Action::OpenCollage));
+        let p = pending.clone();
+        window.on_pick_upload_host(move |i| p.borrow_mut().push(Action::PickUploadHost(i)));
+        let p = pending.clone();
+        window.on_add_upload_host(move || p.borrow_mut().push(Action::AddUploadHost));
+        let p = pending.clone();
+        window.on_remove_upload_host(move || p.borrow_mut().push(Action::RemoveUploadHost));
+        self.refresh_upload_hosts(window);
         let p = pending.clone();
         window.on_pick_color(move || p.borrow_mut().push(Action::PickColor));
         let p = pending.clone();
@@ -473,6 +490,14 @@ impl AppState {
         // 2b. Failures from work that finished on a worker thread.
         if let Some(e) = self.background_errors.1.try_iter().last() {
             self.last_error = Some(e);
+        }
+
+        // 2c. The upload window's buttons and finished uploads; imported hosts.
+        let had_upload = self.upload_ui.tick();
+        let imports: Vec<_> = self.sxcu_imports.1.try_iter().collect();
+        let had_imports = !imports.is_empty();
+        for import in imports {
+            self.finish_upload_host_import(import, window);
         }
 
         // 3a. Snips converted from PNG to WebP in the background. The new
@@ -842,6 +867,8 @@ impl AppState {
         // dirty gallery counts as work so the debounced save above always
         // gets its quiet tick before the pump is allowed to sleep.
         let did_work = had_actions
+            || had_upload
+            || had_imports
             || had_events
             || had_region_snips
             || had_drain
@@ -998,6 +1025,9 @@ fn cursor_screen_pos() -> Option<(i32, i32)> {
     None
 }
 
+/// A `.sxcu` file read and checked on a worker, or why it was refused.
+pub(crate) type SxcuImport = Result<crate::sxcu::Uploader, String>;
+
 #[derive(Debug)]
 pub(crate) enum Action {
     NewSnip {
@@ -1035,6 +1065,12 @@ pub(crate) enum Action {
     OpenCollage,
     /// Open the About window (toolbar info button).
     ShowAbout,
+    /// ⋯ → Upload to: the row picked (catbox, Imgur, then imported hosts).
+    PickUploadHost(i32),
+    /// ⋯ → Upload to → Add from a .sxcu file…
+    AddUploadHost,
+    /// ⋯ → Upload to → Remove the selected imported host.
+    RemoveUploadHost,
 }
 
 fn snip_pixels(snip: &crate::snip::Snip) -> u64 {

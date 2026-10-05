@@ -1,376 +1,283 @@
-//! Upload a snip image to an image host and copy the resulting URL.
+//! Upload a snip to an image host and copy the link.
 //!
-//! The default host is **catbox.moe** — no API key, no login: the PNG is POSTed
-//! anonymously and catbox replies with a bare URL. **Imgur** is also supported
-//! via its *anonymous* upload endpoint, which needs a free "Client-ID" (no user
-//! login, no Client-Secret); register an application once at imgur.com
-//! (Settings → Applications → Register, "OAuth 2 without a callback URL") and
-//! paste the Client-ID into `settings.imgur_client_id`. The host is chosen by
-//! `settings.upload_service` ("catbox" or "imgur").
+//! Three kinds of host: **catbox.moe** (the default — anonymous, no key),
+//! **Imgur** (anonymous, needs a free Client-ID in `settings.imgur_client_id`)
+//! and any host the user imports as a ShareX custom uploader (`crate::sxcu`).
+//! The choice is `settings.upload_service`: `"catbox"`, `"imgur"`, or
+//! `"custom:<name>"` naming one of `settings.upload_hosts`.
 //!
-//! The HTTP upload is blocking, so it runs on a worker thread; on success it
-//! copies the image URL to the clipboard and pops a notification — mirroring
-//! the `share_mail` clipboard-fallback pattern. The backend is kept behind a
-//! single `upload` entry point so other hosts (0x0, a custom / self-hosted
-//! endpoint, cloud storage) can slot in later without touching the call site.
+//! Nothing here asks the user anything. The consent prompt and the result are
+//! the upload window's (`crate::upload_window`), on the UI thread; this module
+//! only knows where an image goes and how to send it. That split is the fix
+//! for a prompt that never appeared: the native dialogs this used to raise
+//! need `zenity` on Linux, and without it the consent "answer" was Cancel —
+//! nothing uploaded, nothing said.
 
-pub fn upload(img: &image::RgbaImage, service: &str, client_id: &str) -> anyhow::Result<()> {
-    imp::upload(img, service, client_id)
+use anyhow::{anyhow, Context, Result};
+use crossbeam_channel::Sender;
+use std::time::Duration;
+
+use crate::settings::Settings;
+use crate::sxcu::Uploader;
+
+/// Imgur anonymous image-upload endpoint.
+const IMGUR_ENDPOINT: &str = "https://api.imgur.com/3/image";
+/// catbox.moe anonymous upload endpoint (no API key, no login).
+const CATBOX_ENDPOINT: &str = "https://catbox.moe/user/api.php";
+/// Fixed multipart boundary. A binary PNG can't contain this ASCII token,
+/// so a constant boundary is safe and avoids pulling in an RNG just to
+/// randomise it.
+const BOUNDARY: &str = "----snipdeckImgurBoundary7e3f1a9c4d";
+
+/// Prefix of `upload_service` for an imported host.
+pub const CUSTOM_PREFIX: &str = "custom:";
+
+/// Where an upload goes.
+#[derive(Clone, Debug)]
+pub enum Host {
+    Catbox,
+    Imgur { client_id: String },
+    Custom(Box<Uploader>),
 }
 
-mod imp {
-    use anyhow::{anyhow, Context, Result};
-    use std::time::Duration;
+/// How an upload ended, sent from the worker to the UI thread.
+pub enum Outcome {
+    Done { url: String, copied: bool },
+    Failed(String),
+}
 
-    /// Imgur anonymous image-upload endpoint.
-    const IMGUR_ENDPOINT: &str = "https://api.imgur.com/3/image";
-    /// catbox.moe anonymous upload endpoint (no API key, no login).
-    const CATBOX_ENDPOINT: &str = "https://catbox.moe/user/api.php";
-    /// Fixed multipart boundary. A binary PNG can't contain this ASCII token,
-    /// so a constant boundary is safe and avoids pulling in an RNG just to
-    /// randomise it.
-    const BOUNDARY: &str = "----snipdeckImgurBoundary7e3f1a9c4d";
-
-    /// A ureq agent with connect/read/write timeouts so a stalled upload
-    /// (dropped Wi-Fi, captive portal, hung TLS handshake) can't pin a worker
-    /// thread — and a clone of the full image — forever.
-    fn http_agent() -> ureq::Agent {
-        ureq::AgentBuilder::new()
-            .timeout_connect(Duration::from_secs(10))
-            .timeout_read(Duration::from_secs(60))
-            .timeout_write(Duration::from_secs(60))
-            .build()
+impl Host {
+    /// The host `settings` picks. An unknown name or a custom host that is no
+    /// longer in the list falls back to catbox, as before.
+    pub fn from_settings(settings: &Settings) -> Host {
+        let service = settings.upload_service.trim();
+        if service.eq_ignore_ascii_case("imgur") {
+            return Host::Imgur { client_id: settings.imgur_client_id.trim().to_string() };
+        }
+        if let Some(name) = service.strip_prefix(CUSTOM_PREFIX) {
+            if let Some(up) = settings.upload_hosts.iter().find(|u| u.display_name() == name) {
+                return Host::Custom(Box::new(up.clone()));
+            }
+            log::warn!("upload host {name:?} is not in upload_hosts; using catbox");
+        }
+        Host::Catbox
     }
 
-    /// Spawn the (blocking) upload on a worker thread. On success the link is
-    /// copied to the clipboard and a notification is shown; on failure a notice
-    /// explains why. Returns immediately — never blocks the UI thread.
-    ///
-    /// `service` picks the host: "imgur" (needs a Client-ID) or anything else →
-    /// catbox.moe (the default, no key/login). A missing Imgur Client-ID is
-    /// surfaced with its own topmost notice (the action is usually fired from a
-    /// floating snip's menu while the gallery — and its error banner — is
-    /// hidden, so a banner alone would go unseen).
-    pub fn upload(img: &image::RgbaImage, service: &str, client_id: &str) -> Result<()> {
-        let use_imgur = service.eq_ignore_ascii_case("imgur");
-        // Imgur needs a Client-ID up front; fail fast with a visible notice
-        // rather than spawning a thread that can only error out.
-        if use_imgur && client_id.trim().is_empty() {
-            notify_no_client_id();
-            return Ok(());
+    pub fn name(&self) -> String {
+        match self {
+            Host::Catbox => "catbox.moe".into(),
+            Host::Imgur { .. } => "Imgur".into(),
+            Host::Custom(up) => up.display_name(),
         }
-        // Informed consent: spell out the destination + privacy implications and
-        // require an explicit OK before any bytes leave the machine. Cancel aborts.
-        //
-        // The prompt blocks until answered. On Windows MessageBoxW keeps the UI
-        // thread's messages flowing while it waits, so asking there is harmless.
-        // rfd's dialog on Linux does not, and anyone reading the consent text for
-        // more than a few seconds got GNOME's "Snipdeck is not responding" over
-        // it — so there it is asked on the worker thread instead.
-        let ask_on_worker = cfg!(not(target_os = "windows"));
-        if !ask_on_worker && !confirm_upload(use_imgur) {
-            return Ok(());
+    }
+
+    /// The address the image goes to, shown under the name.
+    pub fn domain(&self) -> String {
+        match self {
+            Host::Catbox => "catbox.moe".into(),
+            Host::Imgur { .. } => "api.imgur.com".into(),
+            Host::Custom(up) => up.domain(),
         }
-        let img = img.clone();
-        let client_id = client_id.to_string();
-        std::thread::spawn(move || {
-            if ask_on_worker && !confirm_upload(use_imgur) {
-                return;
-            }
-            let result = if use_imgur {
-                imgur_upload(&img, &client_id)
-            } else {
-                catbox_upload(&img)
-            };
-            match result {
+    }
+
+    /// Known to keep the image out of any public listing. Unknown for an
+    /// imported host, so the prompt does not promise it.
+    pub fn is_unlisted(&self) -> bool {
+        !matches!(self, Host::Custom(_))
+    }
+
+    /// An anonymous catbox upload can never be deleted by the uploader.
+    pub fn is_permanent(&self) -> bool {
+        matches!(self, Host::Catbox)
+    }
+
+    pub fn is_encrypted(&self) -> bool {
+        match self {
+            Host::Custom(up) => up.is_encrypted(),
+            _ => true,
+        }
+    }
+
+    /// Imgur without a Client-ID cannot upload at all; the window explains
+    /// how to get one instead of asking for consent.
+    pub fn needs_client_id(&self) -> bool {
+        matches!(self, Host::Imgur { client_id } if client_id.is_empty())
+    }
+}
+
+/// Upload on a worker thread. The link is copied to the clipboard there, and
+/// the outcome comes back over `done`, with the pump woken to read it.
+pub fn spawn(img: image::RgbaImage, host: Host, done: Sender<Outcome>) {
+    let _ = std::thread::Builder::new()
+        .name("upload".into())
+        .spawn(move || {
+            let result = encode_png(&img).and_then(|png| match &host {
+                Host::Catbox => catbox_upload(&png),
+                Host::Imgur { client_id } => imgur_upload(&png, client_id),
+                Host::Custom(up) => crate::sxcu::send(&http_agent(), up, &png, &file_name()),
+            });
+            let outcome = match result {
                 Ok(url) => {
                     let copied = crate::clipboard::copy_text(&url).is_ok();
-                    notify_ok(&url, copied);
+                    log::info!("uploaded to {} (link copied: {copied})", host.name());
+                    Outcome::Done { url, copied }
                 }
                 Err(e) => {
-                    log::warn!("upload failed: {e:#}");
-                    notify_err(&format!("{e}"));
+                    log::warn!("upload to {} failed: {e:#}", host.name());
+                    Outcome::Failed(format!("{e}"))
                 }
-            }
+            };
+            let _ = done.send(outcome);
+            crate::pump::wake();
         });
-        Ok(())
-    }
+}
 
-    /// POST the PNG to Imgur's anonymous endpoint and return the image URL.
-    fn imgur_upload(img: &image::RgbaImage, client_id: &str) -> Result<String> {
-        let png = encode_png(img)?;
+/// `snip-20261005-142233.png` — what the host stores, and often shows.
+fn file_name() -> String {
+    format!("snip-{}.png", chrono::Local::now().format("%Y%m%d-%H%M%S"))
+}
 
-        // Hand-rolled multipart/form-data body (one `image` part). Cheaper than
-        // base64 (no 33% bloat) and avoids adding a multipart crate.
-        let mut body = Vec::with_capacity(png.len() + 256);
-        body.extend_from_slice(
-            format!(
-                "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"image\"; \
-                 filename=\"snip.png\"\r\nContent-Type: image/png\r\n\r\n"
-            )
-            .as_bytes(),
-        );
-        body.extend_from_slice(&png);
-        body.extend_from_slice(format!("\r\n--{BOUNDARY}--\r\n").as_bytes());
+/// A ureq agent with connect/read/write timeouts so a stalled upload
+/// (dropped Wi-Fi, captive portal, hung TLS handshake) can't pin a worker
+/// thread — and a clone of the full image — forever.
+fn http_agent() -> ureq::Agent {
+    ureq::AgentBuilder::new()
+        .timeout_connect(Duration::from_secs(10))
+        .timeout_read(Duration::from_secs(60))
+        .timeout_write(Duration::from_secs(60))
+        .build()
+}
 
-        let resp = http_agent()
-            .post(IMGUR_ENDPOINT)
-            .set("Authorization", &format!("Client-ID {client_id}"))
-            .set(
-                "Content-Type",
-                &format!("multipart/form-data; boundary={BOUNDARY}"),
-            )
-            .send_bytes(&body);
-
-        let resp = match resp {
-            Ok(r) => r,
-            Err(ureq::Error::Status(403, _)) => {
-                return Err(anyhow!(
-                    "Imgur rejected the request (HTTP 403). The Client-ID may be invalid."
-                ));
-            }
-            Err(ureq::Error::Status(429, _)) => {
-                return Err(anyhow!(
-                    "Imgur quota exceeded (HTTP 429). Try again later."
-                ));
-            }
-            Err(ureq::Error::Status(code, r)) => {
-                let detail = r.into_string().unwrap_or_default();
-                return Err(anyhow!("Imgur returned an error (HTTP {code}): {detail}"));
-            }
-            Err(e) => return Err(anyhow!("Failed to connect to Imgur: {e}")),
-        };
-
-        let v: serde_json::Value = resp.into_json().context("Failed to parse Imgur response")?;
-        v.get("data")
-            .and_then(|d| d.get("link"))
-            .and_then(|l| l.as_str())
-            .map(|s| s.to_string())
-            .ok_or_else(|| anyhow!("No image link found in Imgur response"))
-    }
-
-    /// POST the PNG to catbox.moe and return the direct image URL. Anonymous
-    /// (no `userhash`); catbox replies with the bare URL as plain text.
-    fn catbox_upload(img: &image::RgbaImage) -> Result<String> {
-        let png = encode_png(img)?;
-
-        let mut body = Vec::with_capacity(png.len() + 512);
-        // Part 1: reqtype=fileupload
-        body.extend_from_slice(
-            format!(
-                "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"reqtype\"\r\n\r\n\
-                 fileupload\r\n"
-            )
-            .as_bytes(),
-        );
-        // Part 2: the file itself
-        body.extend_from_slice(
-            format!(
-                "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"fileToUpload\"; \
-                 filename=\"snip.png\"\r\nContent-Type: image/png\r\n\r\n"
-            )
-            .as_bytes(),
-        );
-        body.extend_from_slice(&png);
-        body.extend_from_slice(format!("\r\n--{BOUNDARY}--\r\n").as_bytes());
-
-        let resp = http_agent()
-            .post(CATBOX_ENDPOINT)
-            .set(
-                "Content-Type",
-                &format!("multipart/form-data; boundary={BOUNDARY}"),
-            )
-            .send_bytes(&body);
-
-        let resp = match resp {
-            Ok(r) => r,
-            Err(ureq::Error::Status(code, r)) => {
-                let detail = r.into_string().unwrap_or_default();
-                return Err(anyhow!("catbox returned an error (HTTP {code}): {detail}"));
-            }
-            Err(e) => return Err(anyhow!("Failed to connect to catbox: {e}")),
-        };
-
-        // catbox returns the bare URL as plain text (and, on failure, a short
-        // error string with HTTP 200 — so check it actually looks like a URL).
-        let url = resp.into_string().context("Failed to read catbox response")?;
-        let url = url.trim().to_string();
-        if url.starts_with("http://") || url.starts_with("https://") {
-            Ok(url)
-        } else {
-            Err(anyhow!("catbox returned an unexpected response: {url}"))
-        }
-    }
-
-    /// Encode the snip to PNG bytes in memory.
-    fn encode_png(img: &image::RgbaImage) -> Result<Vec<u8>> {
-        let mut buf = Vec::new();
-        let mut cur = std::io::Cursor::new(&mut buf);
-        image::write_buffer_with_format(
-            &mut cur,
-            img.as_raw(),
-            img.width(),
-            img.height(),
-            image::ExtendedColorType::Rgba8,
-            image::ImageFormat::Png,
+/// POST the PNG to Imgur's anonymous endpoint and return the image URL.
+fn imgur_upload(png: &[u8], client_id: &str) -> Result<String> {
+    // Hand-rolled multipart/form-data body (one `image` part). Cheaper than
+    // base64 (no 33% bloat) and avoids adding a multipart crate.
+    let mut body = Vec::with_capacity(png.len() + 256);
+    body.extend_from_slice(
+        format!(
+            "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"image\"; \
+             filename=\"snip.png\"\r\nContent-Type: image/png\r\n\r\n"
         )
-        .context("Failed to encode snip as PNG")?;
-        Ok(buf)
-    }
+        .as_bytes(),
+    );
+    body.extend_from_slice(png);
+    body.extend_from_slice(format!("\r\n--{BOUNDARY}--\r\n").as_bytes());
 
-    fn notify_ok(url: &str, copied: bool) {
-        let body = if copied {
-            crate::i18n::t1(
-                "Image uploaded.\r\nLink copied to clipboard:\r\n{url}",
-                "{url}",
-                url,
-            )
-        } else {
-            crate::i18n::t1(
-                "Image uploaded:\r\n{url}\r\n\r\n(Could not copy the link to the clipboard.)",
-                "{url}",
-                url,
-            )
-        };
-        message_box(&body, &crate::i18n::t("Snipdeck — Upload"), Level::Info);
-    }
+    let resp = http_agent()
+        .post(IMGUR_ENDPOINT)
+        .set("Authorization", &format!("Client-ID {client_id}"))
+        .set("Content-Type", &format!("multipart/form-data; boundary={BOUNDARY}"))
+        .send_bytes(&body);
 
-    fn notify_err(err: &str) {
-        message_box(
-            &crate::i18n::t1("Upload failed:\r\n{err}", "{err}", err),
-            &crate::i18n::t("Snipdeck — Upload"),
-            Level::Error,
-        );
-    }
-
-    /// Shown when no Imgur Client-ID is configured: explain how to get one (free,
-    /// no login) and exactly where to paste it. Includes the live settings path.
-    fn notify_no_client_id() {
-        let path = crate::paths::settings_file();
-        let body = crate::i18n::t1(
-            "No Imgur Client-ID configured — cannot upload.\r\n\r\n\
-             1) Get a free Client-ID:\r\n   \
-             imgur.com → Settings → Applications → Register\r\n   \
-             (\"OAuth 2 authorization without a callback URL\")\r\n\r\n\
-             2) Add it to this file:\r\n   {path}\r\n   \
-             \"imgur_client_id\": \"YOUR_CLIENT_ID_HERE\"\r\n\r\n\
-             3) Restart Snipdeck.",
-            "{path}",
-            &path.display().to_string(),
-        );
-        message_box(
-            &body,
-            &crate::i18n::t("Snipdeck — Imgur Client-ID required"),
-            Level::Info,
-        );
-    }
-
-    /// Pre-upload informed-consent prompt. Spells out the destination and the
-    /// privacy implications (public-by-link, not encrypted, no self-delete on
-    /// catbox) and requires an explicit OK. Returns true only if the user
-    /// confirmed; cancelling aborts the upload before anything is sent.
-    fn confirm_upload(use_imgur: bool) -> bool {
-        let body = if use_imgur {
-            crate::i18n::t(
-                "This image will be uploaded to the INTERNET — \"Imgur\" (anonymous).\r\n\r\n\
-                 • It will NOT appear on the Imgur home page / gallery (hidden, unlisted).\r\n\
-                 • But anyone who has the resulting link can open the image.\r\n\
-                 • The image is not encrypted.\r\n\
-                 • Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\n\
-                 On success the link is copied to your clipboard.\r\n\r\nUpload?",
-            )
-        } else {
-            crate::i18n::t(
-                "This image will be uploaded to the INTERNET — \"catbox.moe\".\r\n\r\n\
-                 • It will NOT appear in any public gallery / search (unlisted).\r\n\
-                 • But anyone who has the resulting link can open the image.\r\n\
-                 • Because it is uploaded anonymously, YOU CANNOT DELETE IT yourself later.\r\n\
-                 • The image is not encrypted.\r\n\
-                 • Do NOT upload SENSITIVE content such as IDs, passwords, or private messages.\r\n\r\n\
-                 On success the link is copied to your clipboard.\r\n\r\nUpload?",
-            )
-        };
-        confirm_box(&body, &crate::i18n::t("Snipdeck — Upload to the internet"))
-    }
-
-    /// Severity of a notice, mapped to each platform's own icon/level.
-    #[derive(Clone, Copy)]
-    enum Level {
-        Info,
-        Error,
-    }
-
-    /// Topmost OK/Cancel confirmation. Returns true on OK.
-    #[cfg(target_os = "windows")]
-    fn confirm_box(body: &str, caption: &str) -> bool {
-        use windows::core::{HSTRING, PCWSTR};
-        use windows::Win32::UI::WindowsAndMessaging::{
-            MessageBoxW, IDOK, MB_ICONWARNING, MB_OKCANCEL, MB_SETFOREGROUND, MB_TOPMOST,
-        };
-        let text = HSTRING::from(body);
-        let caption = HSTRING::from(caption);
-        let ret = unsafe {
-            MessageBoxW(
-                None,
-                PCWSTR(text.as_ptr()),
-                PCWSTR(caption.as_ptr()),
-                MB_OKCANCEL | MB_ICONWARNING | MB_SETFOREGROUND | MB_TOPMOST,
-            )
-        };
-        ret == IDOK
-    }
-
-    /// Consent prompt off Windows. Anything other than an explicit OK — Cancel,
-    /// a closed window, or a desktop with no dialog backend at all — must read
-    /// as "do not upload", so this compares against Ok rather than negating.
-    #[cfg(not(target_os = "windows"))]
-    fn confirm_box(body: &str, caption: &str) -> bool {
-        matches!(
-            rfd::MessageDialog::new()
-                .set_level(rfd::MessageLevel::Warning)
-                .set_title(caption)
-                .set_description(body)
-                .set_buttons(rfd::MessageButtons::OkCancel)
-                .show(),
-            rfd::MessageDialogResult::Ok
-        )
-    }
-
-    /// A topmost message box so the result is seen even when the gallery window
-    /// is hidden (the upload finishes on a worker thread, possibly long after
-    /// the user moved on).
-    #[cfg(target_os = "windows")]
-    fn message_box(body: &str, caption: &str, level: Level) {
-        use windows::core::{HSTRING, PCWSTR};
-        use windows::Win32::UI::WindowsAndMessaging::{
-            MessageBoxW, MB_ICONERROR, MB_ICONINFORMATION, MB_OK, MB_SETFOREGROUND, MB_TOPMOST,
-        };
-        let icon = match level {
-            Level::Info => MB_ICONINFORMATION,
-            Level::Error => MB_ICONERROR,
-        };
-        let text = HSTRING::from(body);
-        let caption = HSTRING::from(caption);
-        unsafe {
-            MessageBoxW(
-                None,
-                PCWSTR(text.as_ptr()),
-                PCWSTR(caption.as_ptr()),
-                MB_OK | icon | MB_SETFOREGROUND | MB_TOPMOST,
-            );
+    let resp = match resp {
+        Ok(r) => r,
+        Err(ureq::Error::Status(403, _)) => {
+            return Err(anyhow!("Imgur rejected the request (HTTP 403). The Client-ID may be invalid."));
         }
+        Err(ureq::Error::Status(429, _)) => {
+            return Err(anyhow!("Imgur quota exceeded (HTTP 429). Try again later."));
+        }
+        Err(ureq::Error::Status(code, r)) => {
+            let detail = r.into_string().unwrap_or_default();
+            return Err(anyhow!("Imgur returned an error (HTTP {code}): {detail}"));
+        }
+        Err(e) => return Err(anyhow!("Failed to connect to Imgur: {}", crate::sxcu::net_reason(&e))),
+    };
+
+    let v: serde_json::Value = resp.into_json().context("Failed to parse Imgur response")?;
+    v.get("data")
+        .and_then(|d| d.get("link"))
+        .and_then(|l| l.as_str())
+        .map(|s| s.to_string())
+        .ok_or_else(|| anyhow!("No image link found in Imgur response"))
+}
+
+/// POST the PNG to catbox.moe and return the direct image URL. Anonymous
+/// (no `userhash`); catbox replies with the bare URL as plain text.
+fn catbox_upload(png: &[u8]) -> Result<String> {
+    let mut body = Vec::with_capacity(png.len() + 512);
+    // Part 1: reqtype=fileupload
+    body.extend_from_slice(
+        format!(
+            "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"reqtype\"\r\n\r\n\
+             fileupload\r\n"
+        )
+        .as_bytes(),
+    );
+    // Part 2: the file itself
+    body.extend_from_slice(
+        format!(
+            "--{BOUNDARY}\r\nContent-Disposition: form-data; name=\"fileToUpload\"; \
+             filename=\"snip.png\"\r\nContent-Type: image/png\r\n\r\n"
+        )
+        .as_bytes(),
+    );
+    body.extend_from_slice(png);
+    body.extend_from_slice(format!("\r\n--{BOUNDARY}--\r\n").as_bytes());
+
+    let resp = http_agent()
+        .post(CATBOX_ENDPOINT)
+        .set("Content-Type", &format!("multipart/form-data; boundary={BOUNDARY}"))
+        .send_bytes(&body);
+
+    let resp = match resp {
+        Ok(r) => r,
+        Err(ureq::Error::Status(code, r)) => {
+            let detail = r.into_string().unwrap_or_default();
+            return Err(anyhow!("catbox returned an error (HTTP {code}): {detail}"));
+        }
+        Err(e) => return Err(anyhow!("Failed to connect to catbox: {}", crate::sxcu::net_reason(&e))),
+    };
+
+    // catbox returns the bare URL as plain text (and, on failure, a short
+    // error string with HTTP 200 — so check it actually looks like a URL).
+    let url = resp.into_string().context("Failed to read catbox response")?;
+    let url = url.trim().to_string();
+    if url.starts_with("http://") || url.starts_with("https://") {
+        Ok(url)
+    } else {
+        Err(anyhow!("catbox returned an unexpected response: {url}"))
+    }
+}
+
+/// Encode the snip to PNG bytes in memory.
+fn encode_png(img: &image::RgbaImage) -> Result<Vec<u8>> {
+    let mut buf = Vec::new();
+    let mut cur = std::io::Cursor::new(&mut buf);
+    image::write_buffer_with_format(
+        &mut cur,
+        img.as_raw(),
+        img.width(),
+        img.height(),
+        image::ExtendedColorType::Rgba8,
+        image::ImageFormat::Png,
+    )
+    .context("Failed to encode snip as PNG")?;
+    Ok(buf)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn settings(service: &str) -> Settings {
+        let mut s: Settings = serde_json::from_str("{}").unwrap();
+        s.upload_service = service.into();
+        s.upload_hosts = vec![Uploader::parse(
+            r#"{"Name":"Mine","RequestURL":"http://10.0.0.2/up","Body":"Binary"}"#,
+        )
+        .unwrap()];
+        s
     }
 
-    #[cfg(not(target_os = "windows"))]
-    fn message_box(body: &str, caption: &str, level: Level) {
-        rfd::MessageDialog::new()
-            .set_level(match level {
-                Level::Info => rfd::MessageLevel::Info,
-                Level::Error => rfd::MessageLevel::Error,
-            })
-            .set_title(caption)
-            .set_description(body)
-            .set_buttons(rfd::MessageButtons::Ok)
-            .show();
+    #[test]
+    fn the_setting_picks_the_host() {
+        assert!(matches!(Host::from_settings(&settings("catbox")), Host::Catbox));
+        assert!(Host::from_settings(&settings("imgur")).needs_client_id());
+        let custom = Host::from_settings(&settings("custom:Mine"));
+        assert_eq!(custom.name(), "Mine");
+        assert!(!custom.is_encrypted() && !custom.is_unlisted());
+        // Removed from the list since: back to the default, not a failure.
+        assert!(matches!(Host::from_settings(&settings("custom:Gone")), Host::Catbox));
     }
 }

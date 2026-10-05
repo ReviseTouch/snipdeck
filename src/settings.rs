@@ -74,10 +74,15 @@ pub struct Settings {
     /// text to Google Translate. Until then the popup asks before sending.
     pub translate_consented: bool,
     /// Which host the "Upload" action uploads to: "catbox" (default, no key /
-    /// no login), "imgur" (needs `imgur_client_id`), or "0x0". Anything
-    /// unknown falls back to catbox.
+    /// no login), "imgur" (needs `imgur_client_id`), or "custom:<name>" for
+    /// one of `upload_hosts`. Anything unknown falls back to catbox. Picked
+    /// from the gallery's ⋯ → Upload to.
     #[serde(default = "default_upload_service")]
     pub upload_service: String,
+    /// Hosts the user imported as ShareX custom uploaders (`.sxcu`), stored in
+    /// ShareX's own field names. Headers and arguments can hold API keys, in
+    /// plain text here as in ShareX's own settings.
+    pub upload_hosts: Vec<crate::sxcu::Uploader>,
     /// Imgur "Client-ID" for anonymous uploads when `upload_service` is "imgur".
     /// Empty by default; the user registers a free application at imgur.com
     /// (Settings → Applications → Register, "OAuth 2 without a callback URL")
@@ -115,6 +120,7 @@ impl Default for Settings {
             translate_favs: default_translate_favs(),
             translate_consented: false,
             upload_service: default_upload_service(),
+            upload_hosts: Vec::new(),
             imgur_client_id: default_imgur_client_id(),
             language: default_language(),
             thumb_size_index: default_thumb_size_index(),

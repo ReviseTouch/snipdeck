@@ -77,6 +77,7 @@ const ABOVE_TITLES = new Set([
     'SnipdeckContextMenu',
     'SnipdeckColorResult',
     'SnipdeckTranslate',
+    'SnipdeckUpload',
 ]);
 
 /**
