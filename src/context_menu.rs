@@ -253,7 +253,16 @@ impl ContextMenuManager {
     /// Build the spare menu window if one isn't ready. Cheap when already warm;
     /// called each tick so the cost lands off the open path (never while the
     /// user is waiting for the menu to appear).
+    ///
+    /// Not on Linux. There the spare was an unmapped toplevel that GNOME
+    /// counted as an open window: with the gallery hidden in the tray the dock
+    /// still showed Snipdeck running, for good — measured, the spare was the
+    /// only window the shell had for the app. A Wayland menu is destroyed on
+    /// every close anyway, so the spare never saved an open there.
     pub fn prewarm(&mut self) {
+        if cfg!(target_os = "linux") {
+            return;
+        }
         if self.spare.is_none() {
             if let Ok(w) = self.make_window() {
                 self.spare = Some(w);
