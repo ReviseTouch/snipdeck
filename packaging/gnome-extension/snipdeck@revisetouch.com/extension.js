@@ -588,7 +588,7 @@ export default class SnipdeckExtension extends Extension {
         // module, and on Wayland it cannot re-import one without a new
         // session — without this marker there is no way to tell a fix that
         // did not work from a fix that was never loaded.
-        log('snipdeck: enable() match=title placement=first-frame lists=switcher+overview listed-flag=on gesture=super-alt-drag');
+        log('snipdeck: enable() match=title placement=first-frame lists=switcher+overview+running listed-flag=on gesture=super-alt-drag');
 
         this._handles = [];
         this._pending = new Set();
@@ -627,6 +627,77 @@ export default class SnipdeckExtension extends Extension {
     _patchWindowLists() {
         this._patchWindowSwitcher();
         this._patchOverview();
+        this._patchRunningApps();
+    }
+
+    /**
+     * The dock, the dash and Alt+Tab's application list.
+     *
+     * Each floating snip is a real window, and the shell lists an app as
+     * running for as long as it has one: with the gallery hidden in the tray
+     * and a snip on screen, Snipdeck sat in the dock with a running dot. All
+     * three ask `Shell.AppSystem.get_running()`, so Snipdeck is left out of
+     * that answer while every window it has is a snip or one of the windows
+     * opened on a snip. The gallery open, or snips asked to be listed, and it
+     * is back.
+     */
+    _patchRunningApps() {
+        const proto = Shell.AppSystem?.prototype;
+        if (!proto?.get_running) {
+            log('snipdeck: running apps not patchable on this Shell version');
+            return;
+        }
+
+        const quiet = app => {
+            try {
+                const windows = app.get_windows();
+                // Snipdeck only: no other app's dock entry is ours to touch.
+                const ours = app.get_id() === `${WM_CLASS}.desktop` ||
+                    windows.every(w => (w.get_wm_class() ?? '').toLowerCase() === WM_CLASS);
+                if (!ours || windows.length === 0)
+                    return false;
+                // Untitled or not yet mapped counts as quiet too: a snip is
+                // created first and titled a moment later, and the hidden
+                // start builds the gallery unmapped and drops it the next
+                // turn — counted in between, each flashed the app into the
+                // dock and out again.
+                return windows.every(w => {
+                    const title = w.get_title() ?? '';
+                    const r = w.get_frame_rect();
+                    return title === '' || r.width === 0 || r.height === 0 ||
+                        this._isSnipWindow(w) || ABOVE_TITLES.has(title);
+                });
+            } catch (_) {
+                return false;
+            }
+        };
+        this._origGetRunning = proto.get_running;
+        const orig = this._origGetRunning;
+        proto.get_running = function () {
+            return orig.call(this).filter(app => !quiet(app));
+        };
+
+        // The dock redraws when an app starts or stops, and opening the
+        // gallery while snips are on screen does neither: the app was
+        // running all along. Tell it when the answer above changes.
+        const appSystem = Shell.AppSystem.get_default();
+        this._quietApps = new Map();
+        const recheck = () => {
+            for (const app of orig.call(appSystem)) {
+                const now = quiet(app);
+                const id = app.get_id();
+                if (this._quietApps.has(id) && this._quietApps.get(id) !== now)
+                    appSystem.emit('app-state-changed', app);
+                this._quietApps.set(id, now);
+            }
+        };
+        // A window joins the app unmapped and untitled, so the answer can
+        // change later than that: when it is mapped, and when it goes.
+        const tracker = Shell.WindowTracker.get_default();
+        this._handles.push([tracker, tracker.connect('tracked-windows-changed', recheck)]);
+        const wm = global.window_manager;
+        this._handles.push([wm, wm.connect('map', recheck)]);
+        this._handles.push([wm, wm.connect('destroy', recheck)]);
     }
 
     /**
@@ -728,6 +799,11 @@ export default class SnipdeckExtension extends Extension {
                 this._origIsOverviewWindow;
             this._origIsOverviewWindow = null;
         }
+        if (this._origGetRunning) {
+            Shell.AppSystem.prototype.get_running = this._origGetRunning;
+            this._origGetRunning = null;
+        }
+        this._quietApps = null;
 
         // Windows keep whatever we applied; undoing it on disable would drop
         // every snip behind the focused window, which reads as the app breaking
