@@ -222,11 +222,7 @@ PipeWire はビルド時には何も必要ありません。Wayland でのキャ
 リリース版と同じ方法で自分のビルドをインストールするには、インストーラーと同じ場所に配置します。
 
 ```bash
-mkdir -p dist/snipdeck && cp target/release/snipdeck packaging/linux/snipdeck.desktop \
-  packaging/linux/install.sh dist/snipdeck/
-cp -r packaging/gnome-extension/snipdeck@revisetouch.com dist/snipdeck/
-cp assets/preview_256.png dist/snipdeck/snipdeck.png
-dist/snipdeck/install.sh
+packaging/linux/install-from-source.sh   # builds, stages afresh, installs
 ```
 
 ---
