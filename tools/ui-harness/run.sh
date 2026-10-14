@@ -22,6 +22,10 @@
 #   WATCHER=1     fake a tray host, so the window's X hides instead of quits
 #   SECOND=n      launch a second instance n seconds in (asks to show the window)
 #   BG            flat desktop colour instead of the wallpaper, e.g. '#0d1116'
+#   SCHEME        the desktop's style: default, prefer-dark or prefer-light
+#   XKB           keyboard layout (default us; tr types ı, ş, ğ)
+#   DEMO          a command for another app to share the desktop with
+#   RECORD=1      start PipeWire, for the shell's screencast (plan step record)
 
 set -u
 
@@ -76,6 +80,10 @@ welcome-dialog-last-shown-version='999'
 
 [org/gnome/desktop/interface]
 enable-hot-corners=false
+color-scheme='${SCHEME:-default}'
+
+[org/gnome/desktop/input-sources]
+sources=[('xkb', '${XKB:-us}')]
 EOF
 if [ -n "${BG:-}" ]; then
   cat >> "$KF" <<EOF
@@ -111,6 +119,13 @@ XML
 else
   rm -f "$WORK/config/monitors.xml"
 fi
+# RECORD=1: a PipeWire daemon, which the shell's screencast service needs.
+if [ -n "${RECORD:-}" ]; then
+  pipewire > "$WORK/pipewire.log" 2>&1 &
+  sleep 0.5
+  wireplumber > "$WORK/wireplumber.log" 2>&1 &
+  sleep 1
+fi
 XDG_DATA_HOME="$WORK/data" XDG_CONFIG_HOME="$WORK/config" GSETTINGS_BACKEND=keyfile UI_DIR="$WORK" \
   gnome-shell --headless --virtual-monitor "${PW}x${PH}" --wayland-display "$D" > "$WORK/shell.log" 2>&1 &
 SH=$!
@@ -126,6 +141,12 @@ for _ in $(seq 1 40); do
     --method org.freedesktop.DBus.NameHasOwner com.revisetouch.Snipdeck 2>/dev/null | grep -q true && break
   sleep 0.25
 done
+# DEMO: another app to share the desktop with, e.g. a text editor on a file.
+if [ -n "${DEMO:-}" ]; then
+  XDG_DATA_HOME="$WORK/demodata" XDG_CONFIG_HOME="$WORK/democonfig" GSETTINGS_BACKEND=keyfile \
+    WAYLAND_DISPLAY="$D" GDK_BACKEND=wayland bash -c "$DEMO" > "$WORK/demo.log" 2>&1 &
+  sleep 2
+fi
 if [ -n "${SEEDS:-}" ]; then
   for s in $SEEDS; do gjs -m "$HERE/call.mjs" "$s" 120 120 false true >> "$WORK/app.log" 2>&1; sleep 0.3; done
 fi

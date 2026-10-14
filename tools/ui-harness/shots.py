@@ -216,8 +216,93 @@ def scene_upload(lang, theme, out):
     save(shot("upload.png"), geometry(log, "Snipdeck"), os.path.join(out, f"upload-{lang}-{theme}"), round_top=12)
 
 
+# "Keep it on top", as a video: a chart is snipped with Super+Alt+drag in an
+# image viewer, the snip is dragged aside, the text editor comes forward over
+# the viewer — and the snip stays above it while a sentence is typed.
+ONTOP_TEXT = {
+    # Short lines: the snip is dragged over the editor's right half.
+    "tr": ("Haftalık rapor — 3. çeyrek\n\nSnip’ler her hafta arttı.\n\n", "Grafik yanımda duruyor."),
+    "en": ("Weekly report — Q3\n\nSnips grew every week.\n\n", "The chart stays beside me."),
+}
+ONTOP_AREA = (270, 180, 1200, 640)  # recorded, in logical pixels
+
+
+def scene_ontop(lang, theme, out):
+    """The video: snip, drag aside, bring another window over the source."""
+    demo = os.path.join(WORK, "demo")
+    shutil.rmtree(demo, ignore_errors=True)
+    for d in ("demodata", "democonfig"):
+        shutil.rmtree(os.path.join(WORK, d), ignore_errors=True)
+    os.makedirs(demo)
+    # The editor's text has to read at the size the video is shown.
+    kf = os.path.join(WORK, "democonfig", "glib-2.0", "settings", "keyfile")
+    os.makedirs(os.path.dirname(kf))
+    open(kf, "w").write("[org/gnome/TextEditor]\nuse-system-font=false\ncustom-font='Monospace 17'\n"
+                        "restore-session=false\nshow-line-numbers=false\n")
+    body, typed = ONTOP_TEXT[lang]
+    report = os.path.join(demo, "rapor.txt" if lang == "tr" else "report.txt")
+    open(report, "w").write(body)
+    chart = os.path.join(demo, "grafik.png" if lang == "tr" else "chart.png")
+    shutil.copy(os.path.join(SEEDS, lang, "s8.png"), chart)
+    x, y, w, h = ONTOP_AREA
+    plan = [{"wait": 5000}, {"hideOverview": True},
+            {"waitFor": "Add Keyboard Shortcuts", "timeout": 9000}, {"wait": 800},
+            {"dismiss": {"win": "Add Keyboard Shortcuts", "x": 48, "y": 22}},
+            {"place": {"win": os.path.basename(report) + "*", "x": 420, "y": 200, "w": 1040, "h": 600}},
+            {"place": {"win": os.path.basename(chart) + "*", "x": 300, "y": 260, "w": 560, "h": 470, "raise": True}},
+            {"move": {"x": 1700, "y": 1050}}, {"wait": 1500},
+            {"record": {"x": x, "y": y, "w": w, "h": h, "file": "ontop"}}, {"wait": 700},
+            # Snip the chart (x 370-790, y 368-668 in the viewer).
+            {"glide": {"x": 362, "y": 360, "ms": 800}}, {"wait": 200},
+            {"keyDown": "Super_L"}, {"keyDown": "Alt_L"}, {"wait": 250},
+            {"button": {"press": True}}, {"glide": {"x": 798, "y": 676, "ms": 1100}}, {"wait": 150},
+            {"button": {"press": False}}, {"wait": 150},
+            {"keyUp": "Alt_L"}, {"keyUp": "Super_L"}, {"wait": 1100},
+            # Drag the snip aside, over the editor.
+            {"glide": {"x": 580, "y": 520, "ms": 600}}, {"wait": 150},
+            {"button": {"press": True}}, {"glide": {"x": 1225, "y": 395, "ms": 900}}, {"wait": 100},
+            {"button": {"press": False}}, {"wait": 600},
+            # The editor comes forward over the viewer; the snip stays on top.
+            # Clicked where neither the viewer (x < 860) nor the snip covers it.
+            {"glide": {"x": 1000, "y": 650, "ms": 700}}, {"wait": 150},
+            {"button": {"press": True}}, {"wait": 60}, {"button": {"press": False}}, {"wait": 700},
+            {"key": "End"}, {"type": typed}, {"wait": 1800},
+            {"stopRecord": True}, {"windows": True}]
+    xkb = "tr" if lang == "tr" else "us"
+    locale = "tr_TR.UTF-8" if lang == "tr" else "en_US.UTF-8"
+    scheme = "prefer-dark" if theme == "dark" else "prefer-light"
+    log = run(plan, RECORD=1, APP_ARGS="--autostart", XKB=xkb, BG=DESKTOP[theme],
+              DEMO=f"export ADW_DEBUG_COLOR_SCHEME={scheme} LANG={locale} LC_ALL={locale}; "
+                   f"loupe '{chart}' & gnome-text-editor --standalone '{report}'")
+    if "SnipdeckFloating" not in log:
+        raise SystemExit("ontop: no floating snip appeared — see shell.log")
+    if "dismissed \"Add Keyboard Shortcuts\"" in log and "STILL THERE" in log:
+        raise SystemExit("ontop: the shortcuts dialog stayed open")
+    encode(shot("ontop.mp4"), os.path.join(out, f"ontop-{lang}-{theme}"), trim=1.4, fade=DESKTOP[theme])
+
+
+def encode(src, base, width=1600, trim=0.0, fade=None):
+    """The web video: AV1 in WebM, an H.264 MP4 for Safari, and a poster
+    (the last frame: the snip above the editor). `trim` drops the idle start;
+    `fade` (a colour) fades in from it and out to it, so the loop restarts
+    without a jump."""
+    dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", src],
+                               capture_output=True, text=True, check=True).stdout) - trim
+    vf = f"scale={width}:-2:flags=lanczos,fps=30"
+    if fade:
+        c = "0x" + fade.lstrip("#")
+        vf += f",fade=t=in:st=0:d=0.35:color={c},fade=t=out:st={dur - 0.45:.2f}:d=0.45:color={c}"
+    ff = ["ffmpeg", "-v", "error", "-y", "-ss", f"{trim}", "-i", src]
+    subprocess.run(ff + ["-vf", vf, "-an", "-c:v", "libsvtav1", "-crf", "38", "-preset", "6",
+                         "-pix_fmt", "yuv420p", base + ".webm"], check=True)
+    subprocess.run(ff + ["-vf", vf, "-an", "-c:v", "libx264", "-crf", "27", "-preset", "slow",
+                         "-pix_fmt", "yuv420p", "-movflags", "+faststart", base + ".mp4"], check=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-sseof", "-0.5", "-i", src, "-frames:v", "1",
+                    "-vf", f"scale={width}:-2:flags=lanczos", "-quality", "90", base + ".webp"], check=True)
+
+
 SCENES = {"gallery": scene_gallery, "floating": scene_floating, "annotate": scene_annotate,
-          "collage": scene_collage, "upload": scene_upload}
+          "collage": scene_collage, "upload": scene_upload, "ontop": scene_ontop}
 
 
 def main():
