@@ -1,0 +1,17 @@
+# cargo audit (run by CI's "Dependency audit" job) reads this file.
+#
+# Every entry says why the advisory cannot reach a user, and goes when the
+# dependency that holds the old version moves on.
+
+[advisories]
+ignore = [
+    # quick-xml < 0.41: unbounded namespace allocation (0195) and quadratic
+    # duplicate-attribute checks (0194) — denial of service on hostile XML.
+    # Both copies here run only at build time and only on XML that ships
+    # inside crates: 0.30 in xcb's build script (X11 protocol definitions),
+    # 0.39 in wayland-scanner's proc-macro (Wayland protocol definitions).
+    # No quick-xml is linked into Snipdeck. Moving to 0.41 waits on xcb and
+    # wayland-scanner.
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
+]
