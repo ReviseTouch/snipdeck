@@ -1,0 +1,1 @@
+{"uuid": "uidriver@local", "name": "ui driver", "description": "Replays a plan against a headless shell (tools/ui-harness).", "shell-version": ["50", "51"]}
