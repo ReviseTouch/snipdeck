@@ -304,6 +304,7 @@ impl AppState {
             .on_close_requested(|| slint::CloseRequestResponse::HideWindow);
         w.window().set_size(slint::LogicalSize::new(480.0, 360.0));
         let _ = w.show();
+        crate::window_env::set_frame_theme(&w, true);
         self.about = Some(w);
     }
 

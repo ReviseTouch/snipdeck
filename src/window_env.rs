@@ -213,3 +213,33 @@ mod tests {
         assert_eq!(compositor_for(""), Compositor::Other);
     }
 }
+
+/// Give a framed window a dark or light title bar.
+///
+/// Slint takes the frame's colours from the desktop's light/dark preference,
+/// not from the window it frames: the annotation and collage editors, dark
+/// whatever the desktop says, wore a white title bar on a light desktop. Call
+/// after every `show()` — on Wayland a hidden window is destroyed and the next
+/// show builds a new one. A window shown during this turn of the event loop
+/// has no native window until the next turn, so it is tried again then.
+pub fn set_frame_theme<C: slint::ComponentHandle + 'static>(c: &C, dark: bool) {
+    use i_slint_backend_winit::winit::window::Theme;
+    use i_slint_backend_winit::WinitWindowAccessor;
+    let want = if dark { Theme::Dark } else { Theme::Light };
+    let apply = move |w: &slint::Window| {
+        w.with_winit_window(|native| {
+            if native.theme() != Some(want) {
+                native.set_theme(Some(want));
+            }
+        })
+        .is_some()
+    };
+    if !apply(c.window()) {
+        let weak = c.as_weak();
+        slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+            if let Some(c) = weak.upgrade() {
+                apply(c.window());
+            }
+        });
+    }
+}

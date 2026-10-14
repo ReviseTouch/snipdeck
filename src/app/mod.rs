@@ -861,6 +861,20 @@ impl AppState {
         window.set_any_floating(!!self.floating.any_shown());
         window.set_floating_in_taskbar(self.settings.floating_in_taskbar);
         window.set_dark_theme(self.settings.dark_theme);
+        // The frame follows the app's theme, not the desktop's. Slint takes
+        // the title bar's colours from the desktop preference, so a dark
+        // Snipdeck on a light desktop wore a white title bar. Set only when it
+        // differs: the window is rebuilt on every show on Wayland.
+        {
+            use i_slint_backend_winit::winit::window::Theme;
+            use i_slint_backend_winit::WinitWindowAccessor;
+            let want = if self.settings.dark_theme { Theme::Dark } else { Theme::Light };
+            window.window().with_winit_window(|w| {
+                if w.theme() != Some(want) {
+                    w.set_theme(Some(want));
+                }
+            });
+        }
 
         // Report activity so the pump keeps running through a burst of work
         // and only sleeps once things settle (plus the grace period). A
