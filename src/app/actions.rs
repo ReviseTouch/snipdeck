@@ -290,7 +290,7 @@ impl AppState {
         let donate = option_env!("SNIPDECK_DONATE_URL");
         w.set_has_donate(donate.is_some());
         w.on_open_revisetouch(|| open_url("https://revisetouch.com"));
-        w.on_open_github(|| open_url("https://github.com/hasantr/snipdeck"));
+        w.on_open_github(|| open_url("https://github.com/ReviseTouch/snipdeck"));
         if let Some(url) = donate {
             w.on_open_donate(move || open_url(url));
         }

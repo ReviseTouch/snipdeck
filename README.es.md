@@ -182,7 +182,7 @@ la subida; al terminar, muestra el enlace y ya lo ha copiado.
 ### Descarga
 
 **Windows**: consigue `snipdeck-windows-x64.exe` desde la página de
-[**Releases**](https://github.com/hasantr/snipdeck/releases). Es un único
+[**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Es un único
 ejecutable portátil, sin instalador.
 
 **Linux (x64)**: consigue `snipdeck-linux-x64.tar.gz` desde la misma página:
@@ -203,7 +203,7 @@ atajo global.
 Requisitos: [Rust](https://rustup.rs/) (estable).
 
 ```bash
-git clone https://github.com/hasantr/snipdeck.git
+git clone https://github.com/ReviseTouch/snipdeck.git
 cd snipdeck
 cargo build --release
 ```

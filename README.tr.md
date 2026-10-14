@@ -193,7 +193,7 @@ ne anlama geldiğini açıklar; iş bitince bağlantıyı gösterir ve onu çokt
 ### İndir
 
 **Windows** — `snipdeck-windows-x64.exe` dosyasını
-[**Releases**](https://github.com/hasantr/snipdeck/releases) sayfasından al. Tek bir
+[**Releases**](https://github.com/ReviseTouch/snipdeck/releases) sayfasından al. Tek bir
 taşınabilir çalıştırılabilir dosya; kurulum gerektirmez.
 
 **Linux (x64)** — `snipdeck-linux-x64.tar.gz` dosyasını aynı sayfadan al:
@@ -213,7 +213,7 @@ ve böyle bir girdi yoksa hiçbir genel kısayolu bağlamayı kabul etmez.
 Gereksinimler: [Rust](https://rustup.rs/) (stable).
 
 ```bash
-git clone https://github.com/hasantr/snipdeck.git
+git clone https://github.com/ReviseTouch/snipdeck.git
 cd snipdeck
 cargo build --release
 ```

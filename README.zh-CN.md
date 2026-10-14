@@ -178,7 +178,7 @@ Snipdeck 以 multipart 表单数据或二进制请求体发送图像，附带文
 
 ### 下载
 
-**Windows**——从 [**Releases**](https://github.com/hasantr/snipdeck/releases)
+**Windows**——从 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases)
 页面获取 `snipdeck-windows-x64.exe`。单个便携可执行文件，无需安装程序。
 
 **Linux (x64)**——从同一页面获取 `snipdeck-linux-x64.tar.gz`：
@@ -198,7 +198,7 @@ cd snipdeck-linux-x64
 要求：[Rust](https://rustup.rs/)（稳定版）。
 
 ```bash
-git clone https://github.com/hasantr/snipdeck.git
+git clone https://github.com/ReviseTouch/snipdeck.git
 cd snipdeck
 cargo build --release
 ```

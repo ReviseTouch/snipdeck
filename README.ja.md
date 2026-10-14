@@ -181,7 +181,7 @@ XML の応答、画像ホストではない送信先）は、最初のアップ�
 
 ### ダウンロード
 
-**Windows** —— [**Releases**](https://github.com/hasantr/snipdeck/releases) ページから
+**Windows** —— [**Releases**](https://github.com/ReviseTouch/snipdeck/releases) ページから
 `snipdeck-windows-x64.exe` を入手してください。インストーラー不要の、単一のポータブル実行ファイルです。
 
 **Linux (x64)** —— 同じページから `snipdeck-linux-x64.tar.gz` を入手します。
@@ -201,7 +201,7 @@ Wayland ではデスクトップポータルが、アプリの起動に使われ
 要件: [Rust](https://rustup.rs/)（stable）。
 
 ```bash
-git clone https://github.com/hasantr/snipdeck.git
+git clone https://github.com/ReviseTouch/snipdeck.git
 cd snipdeck
 cargo build --release
 ```

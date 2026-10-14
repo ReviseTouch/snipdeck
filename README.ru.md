@@ -182,7 +182,7 @@ Snipdeck отправляет изображение как данные фор�
 ### Скачать
 
 **Windows** — возьмите `snipdeck-windows-x64.exe` со страницы
-[**Releases**](https://github.com/hasantr/snipdeck/releases). Единый
+[**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Единый
 переносимый исполняемый файл, без установщика.
 
 **Linux (x64)** — возьмите `snipdeck-linux-x64.tar.gz` с той же страницы:
@@ -203,7 +203,7 @@ cd snipdeck-linux-x64
 Требования: [Rust](https://rustup.rs/) (stable).
 
 ```bash
-git clone https://github.com/hasantr/snipdeck.git
+git clone https://github.com/ReviseTouch/snipdeck.git
 cd snipdeck
 cargo build --release
 ```

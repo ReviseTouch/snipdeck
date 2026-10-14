@@ -183,7 +183,7 @@ Upload bedeutet; danach zeigt es den Link, der bereits kopiert ist.
 ### Herunterladen
 
 **Windows** – hol dir `snipdeck-windows-x64.exe` von der Seite
-[**Releases**](https://github.com/hasantr/snipdeck/releases). Eine einzelne
+[**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Eine einzelne
 portable ausführbare Datei, kein Installer.
 
 **Linux (x64)** – hol dir `snipdeck-linux-x64.tar.gz` von derselben Seite:
@@ -203,7 +203,7 @@ wurde, und ohne einen solchen weigert es sich, irgendein globales Tastenkürzel 
 Voraussetzungen: [Rust](https://rustup.rs/) (stable).
 
 ```bash
-git clone https://github.com/hasantr/snipdeck.git
+git clone https://github.com/ReviseTouch/snipdeck.git
 cd snipdeck
 cargo build --release
 ```

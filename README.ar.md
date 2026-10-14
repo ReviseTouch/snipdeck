@@ -180,7 +180,7 @@
 ### التنزيل
 
 **Windows** — احصل على `snipdeck-windows-x64.exe` من صفحة
-[**الإصدارات**](https://github.com/hasantr/snipdeck/releases). ملف تنفيذي
+[**الإصدارات**](https://github.com/ReviseTouch/snipdeck/releases). ملف تنفيذي
 محمول واحد، دون مُثبِّت.
 
 **Linux (x64)** — احصل على `snipdeck-linux-x64.tar.gz` من الصفحة نفسها:
@@ -200,7 +200,7 @@ Wayland تستمدّ بوابة سطح المكتب معرّف التطبيق م
 المتطلبات: [Rust](https://rustup.rs/) (المستقرّ).
 
 ```bash
-git clone https://github.com/hasantr/snipdeck.git
+git clone https://github.com/ReviseTouch/snipdeck.git
 cd snipdeck
 cargo build --release
 ```

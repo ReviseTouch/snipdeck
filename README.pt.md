@@ -182,7 +182,7 @@ significa; ao terminar, mostra o link, que já foi copiado.
 ### Download
 
 **Windows** — baixe o `snipdeck-windows-x64.exe` na página de
-[**Releases**](https://github.com/hasantr/snipdeck/releases). Um único
+[**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Um único
 executável portátil, sem instalador.
 
 **Linux (x64)** — baixe o `snipdeck-linux-x64.tar.gz` na mesma página:
@@ -203,7 +203,7 @@ atalho global.
 Requisitos: [Rust](https://rustup.rs/) (estável).
 
 ```bash
-git clone https://github.com/hasantr/snipdeck.git
+git clone https://github.com/ReviseTouch/snipdeck.git
 cd snipdeck
 cargo build --release
 ```
