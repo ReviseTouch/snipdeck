@@ -75,6 +75,12 @@ impl UploadUi {
             w.set_state(CONFIRM);
             self.job = Some((img, host));
         }
+        // Centred on the monitor under the pointer, as the collage editor is.
+        // A Wayland compositor centres a new window by itself and ignores
+        // this; Windows put it in the corner of the screen, over the gallery.
+        if let Some((px, py)) = crate::screen::centre_on_cursor_monitor(440.0, 300.0) {
+            w.window().set_position(slint::PhysicalPosition::new(px, py));
+        }
         w.show()?;
         w.window().request_redraw();
         Ok(())
