@@ -22,6 +22,8 @@
 #   WATCHER=1     fake a tray host, so the window's X hides instead of quits
 #   SECOND=n      launch a second instance n seconds in (asks to show the window)
 #   BG            flat desktop colour instead of the wallpaper, e.g. '#0d1116'
+#   WINE_EXE      run this Windows build under Wine instead of APP (prefix in
+#                 WINE_DIR, default /var/tmp/sdw)
 #   SCHEME        the desktop's style: default, prefer-dark or prefer-light
 #   XKB           keyboard layout (default us; tr types ı, ş, ğ)
 #   DEMO          a command for another app to share the desktop with
@@ -132,15 +134,28 @@ SH=$!
 sleep 3
 [ -n "${WATCHER:-}" ] && { gjs -m "$HERE/watcher.mjs" > /dev/null 2>&1 & sleep 0.5; }
 HX=$(grep -o 'Using public X11 display :[0-9]*' "$WORK/shell.log" | grep -o ':[0-9]*$' | head -1)
-DISPLAY="${REAL_DISPLAY:-${HX:-:99}}" XDG_DATA_HOME="$WORK/appdata" XDG_CONFIG_HOME="$WORK/appconfig" \
-  XDG_CURRENT_DESKTOP=GNOME WAYLAND_DISPLAY="$D" RUST_LOG=${RUST_LOG:-info,zbus=warn,tracing=warn} \
-  "$APP" ${APP_ARGS:-} > "$WORK/app.log" 2>&1 &
-AP=$!
-for _ in $(seq 1 40); do
-  gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
-    --method org.freedesktop.DBus.NameHasOwner com.revisetouch.Snipdeck 2>/dev/null | grep -q true && break
-  sleep 0.25
-done
+if [ -n "${WINE_EXE:-}" ]; then
+  # The Windows build under Wine, on this session's own X server (never the
+  # desktop's): its own prefix and HOME, as the machine's test notes require.
+  WINE_DIR="${WINE_DIR:-/var/tmp/sdw}"
+  # The headless shell's Xwayland has its own auth file; the inherited
+  # XAUTHORITY belongs to the desktop and is refused.
+  XA=$(ls "$XDG_RUNTIME_DIR"/.mutter-Xwaylandauth.* 2>/dev/null | head -1)
+  DISPLAY="${HX:-:99}" XAUTHORITY="$XA" HOME="$WINE_DIR/home" WINEPREFIX="$WINE_DIR/prefix" \
+    WINEDLLOVERRIDES="mscoree,mshtml=" WINEDEBUG="${WINEDEBUG:--all}" \
+    RUST_LOG=${RUST_LOG:-info} wine "$WINE_EXE" ${APP_ARGS:-} > "$WORK/app.log" 2>&1 &
+  AP=$!
+else
+  DISPLAY="${REAL_DISPLAY:-${HX:-:99}}" XDG_DATA_HOME="$WORK/appdata" XDG_CONFIG_HOME="$WORK/appconfig" \
+    XDG_CURRENT_DESKTOP=GNOME WAYLAND_DISPLAY="$D" RUST_LOG=${RUST_LOG:-info,zbus=warn,tracing=warn} \
+    "$APP" ${APP_ARGS:-} > "$WORK/app.log" 2>&1 &
+  AP=$!
+  for _ in $(seq 1 40); do
+    gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
+      --method org.freedesktop.DBus.NameHasOwner com.revisetouch.Snipdeck 2>/dev/null | grep -q true && break
+    sleep 0.25
+  done
+fi
 # DEMO: another app to share the desktop with, e.g. a text editor on a file.
 if [ -n "${DEMO:-}" ]; then
   XDG_DATA_HOME="$WORK/demodata" XDG_CONFIG_HOME="$WORK/democonfig" GSETTINGS_BACKEND=keyfile \
@@ -162,4 +177,6 @@ if [ -n "${SECOND:-}" ]; then
     XDG_CURRENT_DESKTOP=GNOME WAYLAND_DISPLAY="$D" timeout 10 "$APP" > "$WORK/app2.log" 2>&1
 fi
 for _ in $(seq 1 240); do grep -q 'ui: done\|ui: FAILED' "$WORK/shell.log" && break; sleep 0.5; done
-kill $AP 2>/dev/null; kill $SH 2>/dev/null; wait 2>/dev/null
+kill $AP 2>/dev/null
+[ -n "${WINE_EXE:-}" ] && HOME="$WINE_DIR/home" WINEPREFIX="$WINE_DIR/prefix" wineserver -k 2>/dev/null
+kill $SH 2>/dev/null; wait 2>/dev/null
