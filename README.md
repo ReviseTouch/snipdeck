@@ -62,7 +62,7 @@ all from a native Rust app with a software-rendered [Slint](https://slint.dev) U
   rounded corners and background — saved back to the gallery as a new snip.
 - 🔍 **Built-in OCR.** Every snip is OCR-indexed in the background with the OS engine
   (`Windows.Media.Ocr`) — no model download, no network, fully local.
-- 🌐 **OCR + translate.** Read a snip's text in another language inline (30+ targets, with
+- 🌐 **OCR + translate.** Read a snip's text in another language inline (29 targets, with
   favourites you can star).
 - 🗂️ **Powerful gallery.** Full-text search over OCR text, window metadata, monitor and path;
   filter by status / content / size / date; a virtualized grid that stays smooth at thousands of snips

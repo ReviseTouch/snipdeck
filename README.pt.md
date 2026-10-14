@@ -62,7 +62,7 @@ tudo a partir de um aplicativo Rust nativo com interface [Slint](https://slint.d
   com espaçamento, cantos arredondados e fundo — salva de volta na galeria como um novo recorte.
 - 🔍 **OCR integrado.** Cada recorte é indexado por OCR em segundo plano com o mecanismo do sistema operacional
   (`Windows.Media.Ocr`) — sem download de modelo, sem rede, totalmente local.
-- 🌐 **OCR + tradução.** Leia o texto de um recorte em outro idioma diretamente no app (mais de 30 idiomas de destino, com
+- 🌐 **OCR + tradução.** Leia o texto de um recorte em outro idioma diretamente no app (29 idiomas de destino, com
   favoritos que você pode marcar com estrela).
 - 🗂️ **Galeria poderosa.** Pesquisa de texto completo no texto reconhecido por OCR, metadados da janela, monitor e caminho;
   filtre por status / conteúdo / tamanho / data; uma grade virtualizada que permanece fluida com milhares de recortes

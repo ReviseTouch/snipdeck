@@ -62,7 +62,7 @@ le tout depuis une application Rust native dotée d'une interface [Slint](https:
   avec espacement, coins arrondis et arrière-plan — enregistrée dans la galerie comme une nouvelle capture.
 - 🔍 **OCR intégré.** Chaque capture est indexée par OCR en arrière-plan grâce au moteur du système d'exploitation
   (`Windows.Media.Ocr`) — aucun téléchargement de modèle, aucun réseau, entièrement local.
-- 🌐 **OCR + traduction.** Lisez le texte d'une capture dans une autre langue directement sur place (plus de 30 cibles, avec
+- 🌐 **OCR + traduction.** Lisez le texte d'une capture dans une autre langue directement sur place (29 cibles, avec
   des favoris que vous pouvez marquer d'une étoile).
 - 🗂️ **Galerie puissante.** Recherche en texte intégral sur le texte OCR, les métadonnées de fenêtre, le moniteur et le chemin ;
   filtrage par statut / contenu / taille / date ; une grille virtualisée qui reste fluide même avec des milliers de captures

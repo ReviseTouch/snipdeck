@@ -62,7 +62,7 @@ todo desde una aplicación nativa en Rust con una interfaz [Slint](https://slint
   con espacio, esquinas redondeadas y fondo), que se guarda en la galería como un recorte nuevo.
 - 🔍 **OCR integrado.** Cada recorte se indexa con OCR en segundo plano mediante el motor del sistema operativo
   (`Windows.Media.Ocr`): sin descarga de modelos, sin red, totalmente local.
-- 🌐 **OCR + traducción.** Lee el texto de un recorte en otro idioma de forma integrada (más de 30 destinos, con
+- 🌐 **OCR + traducción.** Lee el texto de un recorte en otro idioma de forma integrada (29 destinos, con
   favoritos que puedes marcar con una estrella).
 - 🗂️ **Galería potente.** Búsqueda de texto completo sobre el texto OCR, los metadatos de la ventana, el monitor y la ruta;
   filtra por estado / contenido / tamaño / fecha; una cuadrícula virtualizada que se mantiene fluida con miles de recortes

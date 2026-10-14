@@ -62,7 +62,7 @@ alles aus einer nativen Rust-App mit einer softwaregerenderten [Slint](https://s
   Abstand, abgerundeten Ecken und Hintergrund –, das als neuer Ausschnitt zurück in die Galerie gespeichert wird.
 - 🔍 **Integrierte OCR.** Jeder Ausschnitt wird im Hintergrund mit der Betriebssystem-Engine OCR-indexiert
   (`Windows.Media.Ocr`) – kein Modell-Download, kein Netzwerk, vollständig lokal.
-- 🌐 **OCR + Übersetzen.** Lies den Text eines Ausschnitts inline in einer anderen Sprache (30+ Zielsprachen, mit
+- 🌐 **OCR + Übersetzen.** Lies den Text eines Ausschnitts inline in einer anderen Sprache (29 Zielsprachen, mit
   Favoriten, die du markieren kannst).
 - 🗂️ **Leistungsstarke Galerie.** Volltextsuche über OCR-Text, Fenster-Metadaten, Monitor und Pfad;
   Filtern nach Status / Inhalt / Größe / Datum; ein virtualisiertes Raster, das auch bei tausenden Ausschnitten flüssig bleibt

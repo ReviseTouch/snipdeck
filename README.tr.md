@@ -67,7 +67,7 @@ yerel bir Rust uygulamasından.
   snip olarak kaydedilir.
 - 🔍 **Dahili OCR.** Her snip, işletim sistemi motoruyla (`Windows.Media.Ocr`) arka planda
   OCR'lanıp dizinlenir — model indirme yok, ağ yok, tamamen yerel.
-- 🌐 **OCR + çeviri.** Bir snip'in metnini satır içinde başka bir dilde oku (30+ hedef,
+- 🌐 **OCR + çeviri.** Bir snip'in metnini satır içinde başka bir dilde oku (29 hedef,
   yıldızlayabileceğin favorilerle).
 - 🗂️ **Güçlü galeri.** OCR metni, pencere meta verileri, monitör ve yol üzerinde tam metin
   araması; duruma / içeriğe / boyuta / tarihe göre filtreleme; binlerce snip'te bile akıcı
