@@ -41,6 +41,7 @@
  */
 
 import Clutter from 'gi://Clutter';
+import Cogl from 'gi://Cogl';
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
@@ -517,6 +518,37 @@ class SnipGesture {
         return {l, t, r, b, px, py};
     }
 
+    /**
+     * The w x h region at (x, y) of `texture`, drawn over opaque black into a
+     * texture of its own: every pixel ends fully opaque, with the colour the
+     * screen showed. The frame's pixels are premultiplied, so "over black"
+     * keeps them as they are and only fixes the alpha. Null if Cogl refuses,
+     * and the caller cuts from the frame as before.
+     */
+    _flatten(texture, x, y, w, h) {
+        try {
+            const ctx = global.stage.context.get_backend().get_cogl_context();
+            const target = Cogl.Texture2D.new_with_size(ctx, w, h);
+            const fb = Cogl.Offscreen.new_with_texture(target);
+            fb.allocate();
+            fb.clear4f(Cogl.BufferBit.COLOR, 0, 0, 0, 1);
+            const pipeline = Cogl.Pipeline.new(ctx);
+            pipeline.set_layer_texture(0, texture);
+            pipeline.set_blend('RGBA = ADD(SRC_COLOR, DST_COLOR*(1-SRC_COLOR[A]))');
+            const tw = texture.get_width();
+            const th = texture.get_height();
+            fb.draw_textured_rectangle(pipeline, -1, 1, 1, -1,
+                x / tw, y / th, (x + w) / tw, (y + h) / th);
+            // Cogl batches the draw; the PNG encoder reads the texture
+            // directly and would find it empty.
+            fb.finish();
+            return target;
+        } catch (e) {
+            logError(e, 'snipdeck: could not flatten the snip; using the frame as is');
+            return null;
+        }
+    }
+
     /** Cut the region out of the frame, encode it, and send it to the app. */
     async _deliver(drag, region) {
         const result = await drag.shot;
@@ -534,9 +566,15 @@ class SnipGesture {
         const w = Math.min(Math.round(region.r * scale), texture.get_width()) - x;
         const h = Math.min(Math.round(region.b * scale), texture.get_height()) - y;
 
+        // Over an opaque ground first. Some windows' buffers carry an alpha
+        // channel the compositor ignores on screen (the window is declared
+        // opaque) but the stage paint copies; turned into a PNG, those
+        // pixels came out transparent with their colour discarded — snips of
+        // such windows were white, grey or see-through.
+        const opaque = this._flatten(texture, x, y, w, h);
         const stream = Gio.MemoryOutputStream.new_resizable();
         await Shell.Screenshot.composite_to_stream(
-            texture, x, y, w, h, scale, null, 0, 0, 1, stream);
+            opaque ?? texture, opaque ? 0 : x, opaque ? 0 : y, w, h, scale, null, 0, 0, 1, stream);
         stream.close(null);
 
         const png = GLib.Variant.new_from_bytes(
