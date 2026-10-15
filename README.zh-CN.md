@@ -181,17 +181,27 @@ Snipdeck 以 multipart 表单数据或二进制请求体发送图像，附带文
 **Windows**——从 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases)
 页面获取 `snipdeck-windows-x64.exe`。单个便携可执行文件，无需安装程序。
 
-**Linux (x64)**——从同一页面获取 `snipdeck-linux-x64.tar.gz`：
+**Linux (x64)**——从同一页面获取适合你发行版的软件包：
+
+```bash
+sudo apt install ./snipdeck_*_amd64.deb      # Debian, Ubuntu, Mint
+sudo dnf install ./snipdeck-*.x86_64.rpm     # Fedora, RHEL, Rocky
+sudo zypper install ./snipdeck-*.x86_64.rpm  # openSUSE
+```
+
+或者，在任何发行版上都无需 root 的 tarball：
 
 ```bash
 tar xzf snipdeck-linux-x64.tar.gz
 cd snipdeck-linux-x64
-./install.sh          # into ~/.local, no root; --uninstall reverses it
+./install.sh          # into ~/.local; --uninstall reverses it
 ```
 
-然后从应用程序菜单启动它。这并非风格偏好：在 Wayland 上，桌面门户会根据
-启动应用时所用的 `.desktop` 条目推导应用 ID，没有它就会拒绝绑定任何全局
-快捷键。
+这些软件包可在任何带有 glibc 2.30 或更高版本的发行版上运行——Debian 11、Ubuntu 20.04、
+RHEL 9 及之后的所有版本——并已在 Debian 12 和 13、Ubuntu 22.04 和 24.04、Fedora、Rocky 9、
+openSUSE Leap 15.6 和 Tumbleweed 上完成安装和启动（`packaging/linux/test-install.sh`）。
+在 GNOME 和 KDE Plasma 上，它们还会安装 Snipdeck 的桌面助手（见下文），Snipdeck 会在首次启动时
+启用它；GNOME 会在下次登录时加载新安装的扩展。
 
 ### 从源码构建
 
@@ -281,21 +291,26 @@ Snipdeck 已完全本地化。首次启动时它会根据操作系统区域设�
 - [x] **Linux / GNOME**（Wayland）——借助随附的 Shell 扩展：用 `Super`+`Alt`+拖动
       或热键截图，截图放置在截取处并保持置顶，
       OCR，取色器
-- [~] **Linux / 其他桌面**——通过热键和工具栏截图，
-      OCR，取色器（经由桌面门户）。GNOME 之外没有
-      修饰键+拖动手势：它需要全局指针钩子，而 Linux 只能通过读取
-      `/dev/input` 来提供——这相当于一个系统级键盘记录器，
-      Snipdeck 不会要求你启用。在 Wayland 上，没有该扩展时
-      无法定位窗口，也无法始终置顶（见下文）
+- [x] **Linux / KDE Plasma**（Wayland）——借助随附的 KWin 脚本：截图放置在截取处并保持置顶；
+      通过热键和工具栏截图，OCR，取色器
+- [x] **Linux / X11**（Xfce、MATE、Cinnamon、Xorg 上的 GNOME……）——全部功能，
+      截图由窗口管理器保持置顶
+- [~] **Linux / wlroots**（sway、Hyprland、river）——通过热键和工具栏截图，
+      OCR，取色器；截图既不会放置在截取处，也不会保持置顶（见下文）
+
 - [ ] **macOS**——即将推出
 - [ ] 应用内设置窗口
 - [ ] 更多标注工具（模糊 / 像素化、带编号的步骤标记、移动/编辑形状）
 
+GNOME 之外没有修饰键+拖动手势：它需要全局指针钩子，而 Linux 只能通过读取
+`/dev/input` 来提供——这相当于一个系统级键盘记录器，Snipdeck 不会要求你启用。
+
 ### 在 Linux 上运行
 
-安装后请**从应用程序菜单启动**，而不是从终端启动。
-全局快捷键要经过桌面门户，而门户会拒绝来自没有应用 ID 的客户端的会话；
-未沙盒化的应用只有在桌面通过 `.desktop` 条目启动它时才会获得应用 ID——参见 `packaging/linux/snipdeck.desktop`。
+在 Wayland 上，全局快捷键要经过桌面门户，而门户会拒绝来自没有应用 ID 的客户端的会话。
+从应用程序菜单启动时，Snipdeck 拥有应用 ID（`com.revisetouch.Snipdeck`，即其桌面条目的名称）；
+从终端启动时，它会自行注册同一个 ID，这需要 xdg-desktop-portal 1.19 或更高版本——
+若门户版本较旧，请从菜单启动。
 
 运行时依赖：`libayatana-appindicator`（托盘）、`xdg-utils`（分享），
 以及 `tesseract` 和你需要的语言数据（OCR——可选；没有它时 OCR 会被跳过，
@@ -307,9 +322,13 @@ Snipdeck 已完全本地化。首次启动时它会根据操作系统区域设�
 悬浮在其他应用之上，并且会出现在窗口列表中。其他一切——区域截图、冻屏覆盖层、
 全局快捷键、OCR、拖动、右键菜单——都能正常工作。
 
-KDE 和 wlroots 系合成器（sway、Hyprland、river、COSMIC）提供
-`wlr-layer-shell`，恰好能实现这三点；Snipdeck 目前尚未使用它。
-GNOME/Mutter 则拒绝实现它。
+**在 KDE Plasma 上，一个 KWin 脚本起到同样的作用**（`packaging/kwin-script/`）：
+它让截图保持在其他窗口之上，将它们放到截取时的位置，在所有桌面上显示，并让它们不出现在任务栏中。
+无需重新登录即可加载。
+
+在 wlroots 系合成器（sway、Hyprland、river）上，目前还没有任何机制能做到这一点：截图会出现在
+合成器安排的位置，也不会保持置顶。可以在合成器自身的配置中添加窗口规则让它们浮动——
+它们的标题为 `SnipdeckFloating …`。
 
 **在 GNOME 上，一个 Shell 扩展弥补了这一缺口。** 客户端做不到的事，
 运行在 GNOME Shell 内部的代码可以做到。因此，`install.sh` 在检测到

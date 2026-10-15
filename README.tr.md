@@ -196,17 +196,28 @@ ne anlama geldiğini açıklar; iş bitince bağlantıyı gösterir ve onu çokt
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases) sayfasından al. Tek bir
 taşınabilir çalıştırılabilir dosya; kurulum gerektirmez.
 
-**Linux (x64)** — `snipdeck-linux-x64.tar.gz` dosyasını aynı sayfadan al:
+**Linux (x64)** — aynı sayfadan, dağıtımına uygun paketi al:
+
+```bash
+sudo apt install ./snipdeck_*_amd64.deb      # Debian, Ubuntu, Mint
+sudo dnf install ./snipdeck-*.x86_64.rpm     # Fedora, RHEL, Rocky
+sudo zypper install ./snipdeck-*.x86_64.rpm  # openSUSE
+```
+
+ya da, herhangi bir dağıtımda ve root gerektirmeden, tarball arşivini:
 
 ```bash
 tar xzf snipdeck-linux-x64.tar.gz
 cd snipdeck-linux-x64
-./install.sh          # into ~/.local, no root; --uninstall reverses it
+./install.sh          # into ~/.local; --uninstall reverses it
 ```
 
-Ardından uygulamayı uygulamalar menünden başlat. Bu bir tarz tercihi değil: Wayland'de
-masaüstü portalı, uygulama kimliğini uygulamanın başlatıldığı `.desktop` girdisinden türetir
-ve böyle bir girdi yoksa hiçbir genel kısayolu bağlamayı kabul etmez.
+Paketler glibc 2.30 veya üstüne sahip her dağıtımda çalışır — Debian 11, Ubuntu 20.04,
+RHEL 9 ve bunlardan yeni olan her şey — ve Debian 12 ile 13, Ubuntu 22.04 ile 24.04,
+Fedora, Rocky 9, openSUSE Leap 15.6 ve Tumbleweed üzerinde kurulup başlatıldı
+(`packaging/linux/test-install.sh`). GNOME ve KDE Plasma'da Snipdeck'in masaüstü
+yardımcısını da (aşağıda) kurarlar; Snipdeck bunu ilk açılışında etkinleştirir. GNOME yeni
+kurulan bir uzantıyı bir sonraki oturum açılışında yükler.
 
 ### Kaynaktan derle
 
@@ -299,22 +310,30 @@ okunur ve derleme sırasında ikiliye gömülür (çalışma zamanında gettext 
 - [x] **Linux / GNOME** (Wayland) — birlikte gelen kabuk uzantısıyla: `Super`+`Alt`+sürükle
       veya kısayol tuşlarıyla yakalama, yakalandıkları yere yerleştirilip üstte tutulan
       snip'ler, OCR, renk seçici
-- [~] **Linux / diğer masaüstleri** — kısayol tuşlarından ve araç çubuğundan yakalama,
-      OCR, renk seçici (masaüstü portalı üzerinden). GNOME dışında değiştirici+sürükle
-      hareketi yok: bunun için genel bir işaretçi kancası gerekir ve Linux bunu yalnızca
-      `/dev/input` okunarak verir — Snipdeck'in senden etkinleştirmeni istemeyeceği, sistem
-      genelinde bir tuş kaydedici. Wayland'de uzantı olmadan yerleştirme ve her zaman üstte
-      tutma eksiktir (aşağıya bak)
+- [x] **Linux / KDE Plasma** (Wayland) — birlikte gelen KWin betiğiyle: yakalandıkları
+      yere yerleştirilip üstte tutulan snip'ler; kısayol tuşlarından ve araç çubuğundan
+      yakalama, OCR, renk seçici
+- [x] **Linux / X11** (Xfce, MATE, Cinnamon, Xorg üzerinde GNOME…) — her şey; snip'ler
+      pencere yöneticisi tarafından üstte tutulur
+- [~] **Linux / wlroots** (sway, Hyprland, river) — kısayol tuşlarından ve araç çubuğundan
+      yakalama, OCR, renk seçici; snip'ler ne yerleştirilir ne de üstte tutulur (aşağıya
+      bak)
+
 - [ ] **macOS** — yolda
 - [ ] Uygulama içi ayarlar penceresi
 - [ ] Daha fazla işaretleme aracı (bulanıklaştır / pikselleştir, numaralı adım rozetleri, şekil taşıma/düzenleme)
 
+GNOME dışında değiştirici+sürükle hareketi yok: bunun için genel bir işaretçi kancası
+gerekir ve Linux bunu yalnızca `/dev/input` okunarak verir — Snipdeck'in senden
+etkinleştirmeni istemeyeceği, sistem genelinde bir tuş kaydedici.
+
 ### Linux'ta çalıştırma
 
-Uygulamayı kur ve bir terminalden değil, **uygulamalar menüsünden başlat**. Genel kısayollar
-masaüstü portalı üzerinden geçer; portal, uygulama kimliği olmayan bir istemcinin oturumunu
-reddeder ve korumalı alan (sandbox) dışında çalışan bir uygulama bu kimliği yalnızca masaüstü
-onu bir `.desktop` girdisinden başlattığında alır — bkz. `packaging/linux/snipdeck.desktop`.
+Wayland'de genel kısayollar masaüstü portalı üzerinden geçer; portal, uygulama kimliği
+olmayan bir istemcinin oturumunu reddeder. Uygulamalar menüsünden başlatılan Snipdeck'in
+bir kimliği vardır (`com.revisetouch.Snipdeck`, masaüstü girdisinin adı); terminalden
+başlatıldığında aynı kimliği kendisi kaydeder, bu da xdg-desktop-portal 1.19 veya üstünü
+gerektirir — daha eski bir portalda menüyü kullan.
 
 Çalışma zamanı bağımlılıkları: `libayatana-appindicator` (tepsi), `xdg-utils` (paylaşım) ve
 `tesseract` ile istediğin dil verileri (OCR — isteğe bağlı; yoksa OCR hata vermek yerine
@@ -327,9 +346,14 @@ yakalandığı bölgenin üstünde değil, bileştirici onu nereye koyarsa orada
 uygulamaların üstünde yüzemez ve pencere listesinde görünür. Geri kalan her şey — bölge
 yakalama, dondurma katmanı, genel kısayollar, OCR, sürükleme, sağ tık menüsü — çalışır.
 
-KDE ve wlroots tabanlı bileştiriciler (sway, Hyprland, river, COSMIC), tam olarak bu üçünü
-sağlayan `wlr-layer-shell`'i sunar; Snipdeck henüz bunu kullanmıyor. GNOME/Mutter ise bunu
-uygulamayı reddetti.
+**KDE Plasma'da aynı işi bir KWin betiği yapar** (`packaging/kwin-script/`): snip'leri
+diğer pencerelerin üstünde tutar, yakalandıkları yere yerleştirir, her masaüstüne koyar ve
+görev çubuğunun dışında tutar. Yeni bir oturum açmadan yüklenir.
+
+wlroots tabanlı bileştiricilerde (sway, Hyprland, river) bunu henüz hiçbir şey yapmıyor:
+snip'ler bileştirici onları nereye koyarsa orada açılır ve üstte kalmaz. Bileştiricinin
+kendi yapılandırmasındaki bir pencere kuralı onları yüzer hale getirebilir — başlıkları
+`SnipdeckFloating …` biçimindedir.
 
 **GNOME'da açığı bir kabuk uzantısı kapatır.** Bir istemcinin yapamadığını, GNOME Shell'in
 içinde çalışan kod yapabilir. Bu yüzden `install.sh`, bir GNOME oturumu algıladığında

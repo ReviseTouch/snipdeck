@@ -186,18 +186,29 @@ l'envoi ; une fois terminé, elle affiche le lien, déjà copié.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Un unique
 exécutable portable, sans installateur.
 
-**Linux (x64)** — récupérez `snipdeck-linux-x64.tar.gz` depuis la même page :
+**Linux (x64)** — depuis la même page, le paquet de votre distribution :
+
+```bash
+sudo apt install ./snipdeck_*_amd64.deb      # Debian, Ubuntu, Mint
+sudo dnf install ./snipdeck-*.x86_64.rpm     # Fedora, RHEL, Rocky
+sudo zypper install ./snipdeck-*.x86_64.rpm  # openSUSE
+```
+
+ou bien, sur n'importe quelle distribution et sans root, l'archive tar :
 
 ```bash
 tar xzf snipdeck-linux-x64.tar.gz
 cd snipdeck-linux-x64
-./install.sh          # into ~/.local, no root; --uninstall reverses it
+./install.sh          # into ~/.local; --uninstall reverses it
 ```
 
-Lancez-le ensuite depuis votre menu d'applications. Ce n'est pas une question de goût : sous
-Wayland, le portail du bureau déduit l'identifiant d'application de l'entrée `.desktop` par
-laquelle l'application a été lancée, et sans elle il refuse d'associer le moindre raccourci
-global.
+Les paquets fonctionnent sur toute distribution dotée de glibc 2.30 ou ultérieure — Debian
+11, Ubuntu 20.04, RHEL 9 et tout ce qui est plus récent — et ont été installés et lancés
+sur Debian 12 et 13, Ubuntu 22.04 et 24.04, Fedora, Rocky 9, openSUSE Leap 15.6 et
+Tumbleweed (`packaging/linux/test-install.sh`). Sous GNOME et KDE Plasma, ils installent
+aussi l'assistant de bureau de Snipdeck (voir ci-dessous), que Snipdeck active à son
+premier démarrage ; GNOME charge une extension nouvellement installée à la connexion
+suivante.
 
 ### Compilation depuis les sources
 
@@ -290,22 +301,31 @@ binaire au moment de la compilation (aucune dépendance gettext à l'exécution)
 - [x] **Linux / GNOME** (Wayland) — avec l'extension shell fournie : capture
       avec `Super`+`Alt`+glisser ou les raccourcis, captures placées là où elles ont été
       prises et maintenues au premier plan, OCR, le sélecteur de couleur
-- [~] **Linux / autres bureaux** — capture depuis les raccourcis et la barre d'outils,
-      OCR, le sélecteur de couleur (via le portail du bureau). Il n'y a pas de geste
-      modificateur+glisser en dehors de GNOME : il faudrait un hook global du pointeur, que
-      Linux n'accorde qu'en lisant `/dev/input` — un enregistreur de frappe à l'échelle du
-      système que Snipdeck ne vous demandera pas d'activer. Sous Wayland, le placement et le
-      maintien au premier plan manquent sans l'extension (voir ci-dessous)
+- [x] **Linux / KDE Plasma** (Wayland) — avec le script KWin fourni : captures placées là
+      où elles ont été prises et maintenues au premier plan ; capture depuis les
+      raccourcis et la barre d'outils, OCR, le sélecteur de couleur
+- [x] **Linux / X11** (Xfce, MATE, Cinnamon, GNOME sous Xorg…) — tout, les captures étant
+      maintenues au premier plan par le gestionnaire de fenêtres
+- [~] **Linux / wlroots** (sway, Hyprland, river) — capture depuis les raccourcis et la
+      barre d'outils, OCR, le sélecteur de couleur ; les captures ne sont ni placées ni
+      maintenues au premier plan (voir ci-dessous)
+
 - [ ] **macOS** — en chemin
 - [ ] Fenêtre de paramètres dans l'application
 - [ ] Plus d'outils d'annotation (flou / pixelisation, badges d'étapes numérotés, déplacer/modifier des formes)
 
+Il n'y a pas de geste modificateur+glisser en dehors de GNOME : il faudrait un hook global
+du pointeur, que Linux n'accorde qu'en lisant `/dev/input` — un enregistreur de frappe à
+l'échelle du système que Snipdeck ne vous demandera pas d'activer.
+
 ### Exécution sous Linux
 
-Installez-le et **lancez-le depuis le menu d'applications**, pas depuis un terminal.
-Les raccourcis globaux passent par le portail du bureau, qui refuse une session venant d'un
-client sans identifiant d'application, et une application hors bac à sable n'en obtient un que
-lorsque le bureau la lance depuis une entrée `.desktop` — voir `packaging/linux/snipdeck.desktop`.
+Sous Wayland, les raccourcis globaux passent par le portail du bureau, qui refuse une
+session venant d'un client sans identifiant d'application. Lancé depuis le menu
+d'applications, Snipdeck en a un (`com.revisetouch.Snipdeck`, le nom de son entrée de
+bureau) ; démarré depuis un terminal, il enregistre lui-même ce même identifiant, ce qui
+exige xdg-desktop-portal 1.19 ou ultérieur — avec un portail plus ancien, passez par le
+menu.
 
 Dépendances d'exécution : `libayatana-appindicator` (zone de notification), `xdg-utils`
 (partage), et `tesseract` avec les données de langue souhaitées (OCR — facultatif ; sans lui,
@@ -319,9 +339,15 @@ elle ne peut pas flotter au-dessus des autres applications, et elle apparaît da
 fenêtres. Tout le reste — capture de zone, superposition figée, raccourcis globaux, OCR,
 déplacement, menu contextuel — fonctionne.
 
-KDE et les compositeurs wlroots (sway, Hyprland, river, COSMIC) exposent
-`wlr-layer-shell`, qui accorde exactement ces trois pouvoirs ; Snipdeck ne l'utilise pas
-encore. GNOME/Mutter a refusé de l'implémenter.
+**Sous KDE Plasma, un script KWin fait de même** (`packaging/kwin-script/`) : il garde les
+captures au-dessus des autres fenêtres, les place là où elles ont été prises, les affiche
+sur tous les bureaux et les tient hors de la barre des tâches. Il se charge sans nouvelle
+connexion.
+
+Sur les compositeurs wlroots (sway, Hyprland, river), rien ne le fait encore : les
+captures s'ouvrent là où le compositeur les place et ne restent pas au premier plan. Une
+règle de fenêtre dans la configuration du compositeur lui-même peut les rendre flottantes
+— leur titre est `SnipdeckFloating …`.
 
 **Sous GNOME, une extension shell comble le manque.** Ce qu'un client n'a pas le droit de
 faire, du code exécuté à l'intérieur de GNOME Shell le peut. `install.sh` installe donc aussi

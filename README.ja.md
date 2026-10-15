@@ -184,17 +184,28 @@ XML の応答、画像ホストではない送信先）は、最初のアップ�
 **Windows** —— [**Releases**](https://github.com/ReviseTouch/snipdeck/releases) ページから
 `snipdeck-windows-x64.exe` を入手してください。インストーラー不要の、単一のポータブル実行ファイルです。
 
-**Linux (x64)** —— 同じページから `snipdeck-linux-x64.tar.gz` を入手します。
+**Linux (x64)** —— 同じページから、お使いのディストリビューション向けのパッケージを入手します。
+
+```bash
+sudo apt install ./snipdeck_*_amd64.deb      # Debian, Ubuntu, Mint
+sudo dnf install ./snipdeck-*.x86_64.rpm     # Fedora, RHEL, Rocky
+sudo zypper install ./snipdeck-*.x86_64.rpm  # openSUSE
+```
+
+または、どのディストリビューションでも root なしで使える tarball を使います。
 
 ```bash
 tar xzf snipdeck-linux-x64.tar.gz
 cd snipdeck-linux-x64
-./install.sh          # into ~/.local, no root; --uninstall reverses it
+./install.sh          # into ~/.local; --uninstall reverses it
 ```
 
-その後、アプリケーションメニューから起動してください。これは好みの問題ではありません。
-Wayland ではデスクトップポータルが、アプリの起動に使われた `.desktop` エントリーから
-アプリケーション ID を導き出すため、それがないとグローバルショートカットを一切登録してくれません。
+パッケージは glibc 2.30 以降を備えたあらゆるディストリビューションで動作します —— Debian 11、
+Ubuntu 20.04、RHEL 9 およびそれ以降のすべてです。Debian 12 と 13、Ubuntu 22.04 と 24.04、Fedora、
+Rocky 9、openSUSE Leap 15.6 と Tumbleweed で、インストールと起動を確認済みです
+（`packaging/linux/test-install.sh`）。GNOME と KDE Plasma では Snipdeck のデスクトップヘルパー（後述）も
+インストールされ、Snipdeck は初回起動時にそれを有効にします。GNOME は新しくインストールされた拡張機能を
+次回のログイン時に読み込みます。
 
 ### ソースからビルド
 
@@ -286,22 +297,27 @@ Snipdeck は完全にローカライズされています。初回起動時に O
 - [x] **Linux / GNOME**（Wayland）—— 同梱のシェル拡張機能により: `Super`+`Alt`+ドラッグ
       またはホットキーでのキャプチャ、キャプチャした位置へのスニップ配置と最前面表示、
       OCR、カラーピッカー
-- [~] **Linux / その他のデスクトップ** —— ホットキーとツールバーからのキャプチャ、
-      OCR、カラーピッカー（デスクトップポータル経由）。GNOME 以外には
-      修飾キー＋ドラッグのジェスチャーはありません。それにはグローバルなポインターフックが必要で、
-      Linux では `/dev/input` を読むことでしか得られません —— つまりシステム全体のキーロガーであり、
-      Snipdeck がそれを有効にするよう求めることはありません。Wayland では、拡張機能なしだと
-      配置と常に最前面表示が欠けます（下記参照）
+- [x] **Linux / KDE Plasma**（Wayland）—— 同梱の KWin スクリプトにより: キャプチャした位置への
+      スニップ配置と最前面表示。ホットキーとツールバーからのキャプチャ、OCR、カラーピッカー
+- [x] **Linux / X11**（Xfce、MATE、Cinnamon、Xorg 上の GNOME…）—— すべて。スニップは
+      ウィンドウマネージャーが最前面に保ちます
+- [~] **Linux / wlroots**（sway、Hyprland、river）—— ホットキーとツールバーからのキャプチャ、OCR、
+      カラーピッカー。スニップは配置も最前面表示もされません（下記参照）
+
 - [ ] **macOS** —— 開発中
 - [ ] アプリ内設定ウィンドウ
 - [ ] さらなる注釈ツール（ぼかし / モザイク、番号付きステップバッジ、図形の移動 / 編集）
 
+GNOME 以外には修飾キー＋ドラッグのジェスチャーはありません。それにはグローバルなポインターフックが必要で、
+Linux では `/dev/input` を読むことでしか得られません —— つまりシステム全体のキーロガーであり、
+Snipdeck がそれを有効にするよう求めることはありません。
+
 ### Linux での実行
 
-インストールしたら、ターミナルからではなく**アプリケーションメニューから起動してください**。
-グローバルショートカットはデスクトップポータルを経由しますが、ポータルはアプリケーション ID を
-持たないクライアントからのセッションを拒否します。サンドボックス化されていないアプリが ID を得られるのは、
-デスクトップが `.desktop` エントリーから起動したときだけです —— `packaging/linux/snipdeck.desktop` を参照してください。
+Wayland ではグローバルショートカットはデスクトップポータルを経由しますが、ポータルはアプリケーション ID を
+持たないクライアントからのセッションを拒否します。アプリケーションメニューから起動した Snipdeck は ID を持っています
+（`com.revisetouch.Snipdeck`、デスクトップエントリーの名前）。ターミナルから起動した場合は同じ ID を自分で登録しますが、
+それには xdg-desktop-portal 1.19 以降が必要です —— それより古いポータルでは、メニューから起動してください。
 
 実行時の依存関係: `libayatana-appindicator`（トレイ）、`xdg-utils`（共有）、
 そして `tesseract` と必要な言語データ（OCR —— 任意。ない場合、OCR は
@@ -314,9 +330,13 @@ Snipdeck は完全にローカライズされています。初回起動時に O
 ウィンドウ一覧にも表示されます。それ以外のすべて —— 範囲キャプチャ、フリーズオーバーレイ、
 グローバルショートカット、OCR、ドラッグ、コンテキストメニュー —— は動作します。
 
-KDE と wlroots 系コンポジター（sway、Hyprland、river、COSMIC）は、まさにこの 3 つを可能にする
-`wlr-layer-shell` を提供していますが、Snipdeck はまだ使っていません。
-GNOME/Mutter はその実装を見送っています。
+**KDE Plasma では、KWin スクリプトが同じことをします**（`packaging/kwin-script/`）。
+スニップを他のウィンドウより前面に保ち、キャプチャした位置に配置し、すべてのデスクトップに表示し、
+タスクバーに出さないようにします。再ログインなしで読み込まれます。
+
+wlroots 系コンポジター（sway、Hyprland、river）では、まだこれを行うものがありません。スニップは
+コンポジターが決めた場所に開き、最前面にも留まりません。コンポジター自身の設定にウィンドウルールを書けば
+フローティングにできます —— ウィンドウタイトルは `SnipdeckFloating …` です。
 
 **GNOME では、シェル拡張機能がこの溝を埋めます。** クライアントにできないことも、
 GNOME Shell の内部で動くコードならできます。そのため `install.sh` は GNOME セッションを検出すると、

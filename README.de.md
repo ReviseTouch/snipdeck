@@ -186,17 +186,28 @@ Upload bedeutet; danach zeigt es den Link, der bereits kopiert ist.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Eine einzelne
 portable ausführbare Datei, kein Installer.
 
-**Linux (x64)** – hol dir `snipdeck-linux-x64.tar.gz` von derselben Seite:
+**Linux (x64)** – von derselben Seite das Paket für deine Distribution:
+
+```bash
+sudo apt install ./snipdeck_*_amd64.deb      # Debian, Ubuntu, Mint
+sudo dnf install ./snipdeck-*.x86_64.rpm     # Fedora, RHEL, Rocky
+sudo zypper install ./snipdeck-*.x86_64.rpm  # openSUSE
+```
+
+oder, auf jeder Distribution und ohne Root-Rechte, das Tarball-Archiv:
 
 ```bash
 tar xzf snipdeck-linux-x64.tar.gz
 cd snipdeck-linux-x64
-./install.sh          # into ~/.local, no root; --uninstall reverses it
+./install.sh          # into ~/.local; --uninstall reverses it
 ```
 
-Starte es danach über dein Anwendungsmenü. Das ist keine Stilfrage: Unter Wayland leitet
-das Desktop-Portal die Anwendungs-ID aus dem `.desktop`-Eintrag ab, über den die App gestartet
-wurde, und ohne einen solchen weigert es sich, irgendein globales Tastenkürzel zu binden.
+Die Pakete laufen auf jeder Distribution mit glibc 2.30 oder neuer – Debian 11, Ubuntu
+20.04, RHEL 9 und alles Neuere – und wurden auf Debian 12 und 13, Ubuntu 22.04 und 24.04,
+Fedora, Rocky 9, openSUSE Leap 15.6 und Tumbleweed installiert und gestartet
+(`packaging/linux/test-install.sh`). Unter GNOME und KDE Plasma installieren sie außerdem
+Snipdecks Desktop-Helfer (siehe unten), den Snipdeck beim ersten Start einschaltet; GNOME
+lädt eine neu installierte Erweiterung bei der nächsten Anmeldung.
 
 ### Aus dem Quellcode erstellen
 
@@ -289,22 +300,30 @@ Binärdatei eingebettet wird (keine Laufzeitabhängigkeit von gettext).
 - [x] **Linux / GNOME** (Wayland) – mit der mitgelieferten Shell-Erweiterung: Erfassen
       mit `Super`+`Alt`+Ziehen oder den Tastenkürzeln, Ausschnitte erscheinen dort, wo sie
       erfasst wurden, und bleiben im Vordergrund, OCR, die Farbauswahl
-- [~] **Linux / andere Desktops** – Erfassen über die Tastenkürzel und die Symbolleiste,
-      OCR, die Farbauswahl (über das Desktop-Portal). Außerhalb von GNOME gibt es keine
-      Modifikator+Ziehen-Geste: Sie bräuchte einen globalen Zeiger-Hook, den Linux nur durch
-      Lesen von `/dev/input` gewährt – ein systemweiter Keylogger, um dessen Aktivierung
-      Snipdeck dich nicht bitten wird. Unter Wayland fehlen ohne die Erweiterung Platzierung und
-      Immer-im-Vordergrund (siehe unten)
+- [x] **Linux / KDE Plasma** (Wayland) – mit dem mitgelieferten KWin-Skript: Ausschnitte
+      erscheinen dort, wo sie erfasst wurden, und bleiben im Vordergrund; Erfassen über
+      die Tastenkürzel und die Symbolleiste, OCR, die Farbauswahl
+- [x] **Linux / X11** (Xfce, MATE, Cinnamon, GNOME unter Xorg…) – alles, Ausschnitte
+      werden vom Fenstermanager im Vordergrund gehalten
+- [~] **Linux / wlroots** (sway, Hyprland, river) – Erfassen über die Tastenkürzel und die
+      Symbolleiste, OCR, die Farbauswahl; Ausschnitte werden weder platziert noch im
+      Vordergrund gehalten (siehe unten)
+
 - [ ] **macOS** – in Arbeit
 - [ ] In-App-Einstellungsfenster
 - [ ] Mehr Anmerkungswerkzeuge (Weichzeichnen / Verpixeln, nummerierte Schritt-Badges, Formen verschieben/bearbeiten)
 
+Außerhalb von GNOME gibt es keine Modifikator+Ziehen-Geste: Sie bräuchte einen globalen
+Zeiger-Hook, den Linux nur durch Lesen von `/dev/input` gewährt – ein systemweiter
+Keylogger, um dessen Aktivierung Snipdeck dich nicht bitten wird.
+
 ### Unter Linux ausführen
 
-Installiere es und **starte es über das Anwendungsmenü**, nicht aus einem Terminal.
-Globale Tastenkürzel laufen über das Desktop-Portal, das eine Sitzung von einem Client ohne
-Anwendungs-ID ablehnt, und eine App ohne Sandbox bekommt eine solche ID nur, wenn der Desktop
-sie über einen `.desktop`-Eintrag startet – siehe `packaging/linux/snipdeck.desktop`.
+Globale Tastenkürzel laufen unter Wayland über das Desktop-Portal, das eine Sitzung von
+einem Client ohne Anwendungs-ID ablehnt. Über das Anwendungsmenü gestartet, hat Snipdeck
+eine (`com.revisetouch.Snipdeck`, der Name seines Desktop-Eintrags); aus einem Terminal
+gestartet, registriert es dieselbe ID selbst, was xdg-desktop-portal 1.19 oder neuer
+voraussetzt – bei einem älteren Portal nimm das Menü.
 
 Laufzeitabhängigkeiten: `libayatana-appindicator` (Tray), `xdg-utils` (Teilen) und
 `tesseract` samt den gewünschten Sprachdaten (OCR – optional; ohne es wird OCR übersprungen,
@@ -318,9 +337,15 @@ wurde; er kann nicht über anderen Anwendungen schweben, und er erscheint in der
 Alles andere – Bereichserfassung, das Einfrier-Overlay, globale Tastenkürzel, OCR, Ziehen, das
 Kontextmenü – funktioniert.
 
-KDE und die wlroots-Compositoren (sway, Hyprland, river, COSMIC) bieten
-`wlr-layer-shell` an, das genau diese drei Dinge gewährt; Snipdeck nutzt es noch nicht.
-GNOME/Mutter hat es abgelehnt, es zu implementieren.
+**Unter KDE Plasma erledigt ein KWin-Skript dasselbe** (`packaging/kwin-script/`): Es hält
+Ausschnitte über anderen Fenstern, platziert sie dort, wo sie erfasst wurden, legt sie auf
+jede Arbeitsfläche und hält sie aus der Fensterleiste heraus. Es wird ohne erneute
+Anmeldung geladen.
+
+Auf den wlroots-Compositoren (sway, Hyprland, river) leistet das bisher nichts:
+Ausschnitte öffnen sich dort, wo der Compositor sie hinsetzt, und bleiben nicht im
+Vordergrund. Eine Fensterregel in der Konfiguration des Compositors selbst kann sie
+schwebend machen – ihr Titel lautet `SnipdeckFloating …`.
 
 **Unter GNOME schließt eine Shell-Erweiterung die Lücke.** Was ein Client nicht darf, darf
 Code, der innerhalb der GNOME Shell läuft. `install.sh` installiert daher zusätzlich

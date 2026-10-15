@@ -185,18 +185,28 @@ the upload means; when it is done, it shows the link and has already copied it.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases) page. A single
 portable executable, no installer.
 
-**Linux (x64)** — grab `snipdeck-linux-x64.tar.gz` from the same page:
+**Linux (x64)** — from the same page, the package for your distribution:
+
+```bash
+sudo apt install ./snipdeck_*_amd64.deb      # Debian, Ubuntu, Mint
+sudo dnf install ./snipdeck-*.x86_64.rpm     # Fedora, RHEL, Rocky
+sudo zypper install ./snipdeck-*.x86_64.rpm  # openSUSE
+```
+
+or, on any distribution and without root, the tarball:
 
 ```bash
 tar xzf snipdeck-linux-x64.tar.gz
 cd snipdeck-linux-x64
-./install.sh          # into ~/.local, no root; --uninstall reverses it
+./install.sh          # into ~/.local; --uninstall reverses it
 ```
 
-Then launch it from your applications menu. That is not a style preference: on
-Wayland the desktop portal derives the application id from the `.desktop` entry
-the app was launched through, and without one it refuses to bind any global
-shortcut.
+The packages run on any distribution with glibc 2.30 or later — Debian 11,
+Ubuntu 20.04, RHEL 9 and everything newer — and were installed and started on
+Debian 12 and 13, Ubuntu 22.04 and 24.04, Fedora, Rocky 9, openSUSE Leap 15.6
+and Tumbleweed (`packaging/linux/test-install.sh`). On GNOME and KDE Plasma
+they also install Snipdeck's desktop helper (below), which Snipdeck turns on at
+its first start; GNOME loads a newly installed extension at the next login.
 
 ### Build from source
 
@@ -290,22 +300,30 @@ binary at build time (no runtime gettext dependency).
 - [x] **Linux / GNOME** (Wayland) — with the bundled shell extension: capture
       with `Super`+`Alt`+drag or the hotkeys, snips placed where captured and kept
       on top, OCR, the colour picker
-- [~] **Linux / other desktops** — capture from the hotkeys and the toolbar,
-      OCR, the colour picker (through the desktop portal). There is no
-      modifier+drag gesture outside GNOME: it needs a global pointer hook, which
-      Linux grants only by reading `/dev/input` — a system-wide keylogger
-      Snipdeck will not ask you to enable. On Wayland, placement and
-      always-on-top are missing without the extension (see below)
+- [x] **Linux / KDE Plasma** (Wayland) — with the bundled KWin script: snips
+      placed where captured and kept on top; capture from the hotkeys and the
+      toolbar, OCR, the colour picker
+- [x] **Linux / X11** (Xfce, MATE, Cinnamon, GNOME on Xorg…) — everything,
+      snips kept on top by the window manager
+- [~] **Linux / wlroots** (sway, Hyprland, river) — capture from the hotkeys
+      and the toolbar, OCR, the colour picker; snips are neither placed nor
+      kept on top (see below)
+
 - [ ] **macOS** — on the way
 - [ ] In-app settings window
 - [ ] More annotation tools (blur / pixelate, numbered step badges, move/edit shapes)
 
+There is no modifier+drag gesture outside GNOME: it needs a global pointer
+hook, which Linux grants only by reading `/dev/input` — a system-wide keylogger
+Snipdeck will not ask you to enable.
+
 ### Running on Linux
 
-Install it and **launch it from the applications menu**, not from a terminal.
-Global shortcuts go through the desktop portal, which refuses a session from a
-client with no application id, and an unsandboxed app only gets one when the
-desktop launches it from a `.desktop` entry — see `packaging/linux/snipdeck.desktop`.
+Global shortcuts on Wayland go through the desktop portal, which refuses a
+session from a client with no application id. Launched from the applications
+menu, Snipdeck has one (`com.revisetouch.Snipdeck`, the name of its desktop
+entry); started from a terminal it registers the same id itself, which needs
+xdg-desktop-portal 1.19 or later — on an older portal, use the menu.
 
 Runtime dependencies: `libayatana-appindicator` (tray), `xdg-utils` (sharing),
 and `tesseract` plus the language data you want (OCR — optional; without it OCR
@@ -319,9 +337,15 @@ float above other applications, and it appears in the window list. Everything
 else — region capture, the freeze overlay, global shortcuts, OCR, dragging, the
 context menu — works.
 
-KDE and the wlroots compositors (sway, Hyprland, river, COSMIC) expose
-`wlr-layer-shell`, which grants exactly those three; Snipdeck does not use it
-yet. GNOME/Mutter has declined to implement it.
+**On KDE Plasma, a KWin script does the same** (`packaging/kwin-script/`):
+it keeps snips above other windows, places them where they were captured, puts
+them on every desktop and keeps them out of the taskbar. It loads without a
+new login.
+
+On the wlroots compositors (sway, Hyprland, river) nothing does this yet: snips
+open where the compositor puts them and do not stay on top. A window rule in
+the compositor's own configuration can float them — they are titled
+`SnipdeckFloating …`.
 
 **On GNOME, a shell extension closes the gap.** What a client may not do, code
 running inside GNOME Shell may. `install.sh` therefore also installs

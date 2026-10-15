@@ -185,18 +185,28 @@ la subida; al terminar, muestra el enlace y ya lo ha copiado.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Es un único
 ejecutable portátil, sin instalador.
 
-**Linux (x64)**: consigue `snipdeck-linux-x64.tar.gz` desde la misma página:
+**Linux (x64)**: desde la misma página, el paquete para tu distribución:
+
+```bash
+sudo apt install ./snipdeck_*_amd64.deb      # Debian, Ubuntu, Mint
+sudo dnf install ./snipdeck-*.x86_64.rpm     # Fedora, RHEL, Rocky
+sudo zypper install ./snipdeck-*.x86_64.rpm  # openSUSE
+```
+
+o bien, en cualquier distribución y sin root, el tarball:
 
 ```bash
 tar xzf snipdeck-linux-x64.tar.gz
 cd snipdeck-linux-x64
-./install.sh          # into ~/.local, no root; --uninstall reverses it
+./install.sh          # into ~/.local; --uninstall reverses it
 ```
 
-Después, ábrelo desde el menú de aplicaciones. No es una cuestión de gusto: en
-Wayland, el portal del escritorio obtiene el identificador de la aplicación de la
-entrada `.desktop` con la que se abrió, y sin ella se niega a vincular ningún
-atajo global.
+Los paquetes funcionan en cualquier distribución con glibc 2.30 o posterior (Debian 11,
+Ubuntu 20.04, RHEL 9 y todo lo más reciente) y se han instalado y abierto en Debian 12 y
+13, Ubuntu 22.04 y 24.04, Fedora, Rocky 9, openSUSE Leap 15.6 y Tumbleweed
+(`packaging/linux/test-install.sh`). En GNOME y KDE Plasma también instalan el asistente
+de escritorio de Snipdeck (ver más abajo), que Snipdeck activa en su primer arranque;
+GNOME carga una extensión recién instalada en el siguiente inicio de sesión.
 
 ### Compilar desde el código fuente
 
@@ -290,22 +300,30 @@ binario en tiempo de compilación (sin dependencia de gettext en tiempo de ejecu
 - [x] **Linux / GNOME** (Wayland) — con la extensión de GNOME Shell incluida: captura
       con `Super`+`Alt`+arrastre o con los atajos, recortes colocados donde se capturaron y
       mantenidos por encima, OCR, el selector de color
-- [~] **Linux / otros escritorios** — captura desde los atajos y la barra de herramientas,
-      OCR, el selector de color (a través del portal del escritorio). Fuera de GNOME no hay
-      gesto de modificador + arrastre: requiere un hook global del puntero, que
-      Linux solo concede leyendo `/dev/input`, es decir, un keylogger de todo el sistema
-      que Snipdeck no te pedirá que actives. En Wayland, sin la extensión faltan la
-      colocación y el «siempre encima» (ver más abajo)
+- [x] **Linux / KDE Plasma** (Wayland) — con el script de KWin incluido: recortes
+      colocados donde se capturaron y mantenidos por encima; captura desde los atajos y la
+      barra de herramientas, OCR, el selector de color
+- [x] **Linux / X11** (Xfce, MATE, Cinnamon, GNOME en Xorg…) — todo, con los recortes
+      mantenidos por encima por el gestor de ventanas
+- [~] **Linux / wlroots** (sway, Hyprland, river) — captura desde los atajos y la barra de
+      herramientas, OCR, el selector de color; los recortes ni se colocan ni se mantienen
+      por encima (ver más abajo)
+
 - [ ] **macOS** — en camino
 - [ ] Ventana de ajustes dentro de la aplicación
 - [ ] Más herramientas de anotación (desenfoque / pixelado, insignias numeradas de pasos, mover/editar formas)
 
+Fuera de GNOME no hay gesto de modificador + arrastre: requiere un hook global del
+puntero, que Linux solo concede leyendo `/dev/input`, es decir, un keylogger de todo el
+sistema que Snipdeck no te pedirá que actives.
+
 ### Uso en Linux
 
-Instálalo y **ábrelo desde el menú de aplicaciones**, no desde una terminal.
-Los atajos globales pasan por el portal del escritorio, que rechaza la sesión de un
-cliente sin identificador de aplicación, y una aplicación sin sandbox solo obtiene uno cuando el
-escritorio la abre desde una entrada `.desktop` (consulta `packaging/linux/snipdeck.desktop`).
+En Wayland, los atajos globales pasan por el portal del escritorio, que rechaza la sesión
+de un cliente sin identificador de aplicación. Abierto desde el menú de aplicaciones,
+Snipdeck tiene uno (`com.revisetouch.Snipdeck`, el nombre de su entrada de escritorio);
+iniciado desde una terminal, registra él mismo ese identificador, lo que requiere
+xdg-desktop-portal 1.19 o posterior; con un portal más antiguo, usa el menú.
 
 Dependencias en tiempo de ejecución: `libayatana-appindicator` (bandeja), `xdg-utils` (compartir)
 y `tesseract` junto con los datos de idioma que quieras (OCR, opcional: sin él, el OCR
@@ -319,9 +337,15 @@ no puede flotar por encima de otras aplicaciones y aparece en la lista de ventan
 lo demás funciona: la captura de regiones, la superposición congelada, los atajos globales,
 el OCR, el arrastre y el menú contextual.
 
-KDE y los compositores wlroots (sway, Hyprland, river, COSMIC) exponen
-`wlr-layer-shell`, que concede exactamente esas tres cosas; Snipdeck aún no lo
-usa. GNOME/Mutter ha rechazado implementarlo.
+**En KDE Plasma, un script de KWin hace lo mismo** (`packaging/kwin-script/`): mantiene
+los recortes por encima de las demás ventanas, los coloca donde se capturaron, los muestra
+en todos los escritorios y los saca de la barra de tareas. Se carga sin volver a iniciar
+sesión.
+
+En los compositores wlroots (sway, Hyprland, river) todavía no hay nada que lo haga: los
+recortes se abren donde los pone el compositor y no se mantienen por encima. Una regla de
+ventana en la propia configuración del compositor puede hacerlos flotantes: su título es
+`SnipdeckFloating …`.
 
 **En GNOME, una extensión de shell cubre ese hueco.** Lo que un cliente no puede hacer
 sí puede hacerlo el código que se ejecuta dentro de GNOME Shell. Por eso `install.sh` también instala

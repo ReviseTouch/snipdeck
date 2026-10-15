@@ -138,29 +138,42 @@ jobs:
       - name: Run tests
         run: cargo test --release
 
-      # A tarball rather than a bare binary: the .desktop entry has to be
-      # installed for global shortcuts to work at all on Wayland (the portal
-      # derives the application id from it), so shipping the binary alone would
-      # hand people a build whose shortcuts silently do nothing. The GNOME Shell
-      # extension rides along for the same reason — on GNOME Wayland it is what
-      # places snips and keeps them on top, and install.sh only installs what it
-      # finds beside itself.
-      - name: Stage artifact
+  # The released Linux build: compiled in the Debian 11 image
+  # (packaging/linux/Containerfile.release) for a glibc 2.30 floor, lower than
+  # this runner's 2.35, then packaged as .deb, .rpm and the tarball install.sh
+  # installs from. The tarball rather than a bare binary: the desktop entry is
+  # the application id the portal needs for global shortcuts, and the GNOME
+  # extension and KWin script ride along, as install.sh only installs what it
+  # finds beside itself.
+  linux-release:
+    name: Linux x64 packages
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # master, 2026-10-01
+        with:
+          toolchain: stable
+
+      - name: Install packaging tools
         run: |
-          mkdir -p dist/snipdeck-linux-x64
-          cp target/release/snipdeck dist/snipdeck-linux-x64/
-          cp packaging/linux/snipdeck.desktop dist/snipdeck-linux-x64/
-          cp packaging/linux/install.sh dist/snipdeck-linux-x64/
-          cp assets/preview_256.png dist/snipdeck-linux-x64/snipdeck.png
-          cp -r packaging/gnome-extension/snipdeck@revisetouch.com dist/snipdeck-linux-x64/
-          chmod +x dist/snipdeck-linux-x64/install.sh
-          tar -C dist -czf dist/snipdeck-linux-x64.tar.gz snipdeck-linux-x64
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends podman imagemagick binutils
+          cargo install --locked cargo-deb cargo-generate-rpm
+
+      - name: Build in the Debian 11 image and package
+        run: |
+          packaging/linux/build-release.sh
+          # Flat, so the release job finds them at the top of its download.
+          mkdir -p out
+          cp dist/*/snipdeck-linux-x64.tar.gz dist/*/*.deb dist/*/*.rpm out/
 
       - name: Upload build artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: snipdeck-linux-x64
-          path: dist/snipdeck-linux-x64.tar.gz
+          path: out/*
           if-no-files-found: error
 
   # Known vulnerabilities in the dependency tree. Reported, not gating: an
@@ -187,7 +200,7 @@ jobs:
   release:
     name: Publish release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [windows, linux]
+    needs: [windows, linux, linux-release]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -200,7 +213,7 @@ jobs:
 
       - name: Checksums
         working-directory: dist
-        run: sha256sum snipdeck-windows-x64.exe snipdeck-linux-x64.tar.gz | tee SHA256SUMS
+        run: sha256sum snipdeck-windows-x64.exe snipdeck-linux-x64.tar.gz *.deb *.rpm | tee SHA256SUMS
 
       - name: Attach to GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
@@ -208,5 +221,7 @@ jobs:
           files: |
             dist/snipdeck-windows-x64.exe
             dist/snipdeck-linux-x64.tar.gz
+            dist/*.deb
+            dist/*.rpm
             dist/SHA256SUMS
           fail_on_unmatched_files: true
