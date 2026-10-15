@@ -123,6 +123,7 @@ struct Lib {
         unsafe extern "C" fn(*mut c_void, *mut SpaHook, *const StreamEvents, *mut c_void),
     stream_connect:
         unsafe extern "C" fn(*mut c_void, u32, u32, u32, *mut *const c_void, u32) -> c_int,
+    stream_update_params: unsafe extern "C" fn(*mut c_void, *mut *const c_void, u32) -> c_int,
     stream_dequeue_buffer: unsafe extern "C" fn(*mut c_void) -> *mut PwBuffer,
     stream_queue_buffer: unsafe extern "C" fn(*mut c_void, *mut PwBuffer) -> c_int,
     stream_destroy: unsafe extern "C" fn(*mut c_void),
@@ -166,6 +167,7 @@ impl Lib {
             stream_new: sym!("pw_stream_new"),
             stream_add_listener: sym!("pw_stream_add_listener"),
             stream_connect: sym!("pw_stream_connect"),
+            stream_update_params: sym!("pw_stream_update_params"),
             stream_dequeue_buffer: sym!("pw_stream_dequeue_buffer"),
             stream_queue_buffer: sym!("pw_stream_queue_buffer"),
             stream_destroy: sym!("pw_stream_destroy"),
@@ -451,6 +453,16 @@ unsafe extern "C" fn on_param_changed(data: *mut c_void, id: u32, param: *const 
     if let Some(format) = parse_video_format(bytes) {
         log::debug!("screencast format: {}x{} format {}", format.width, format.height, format.format);
         state.format = Some(format);
+        // Buffers in memory, not on the GPU. Left unsaid, the wlroots portal
+        // (sway) handed over DMA-BUFs, mapped as if they were plain memory,
+        // and reading the first row killed the app with SIGSEGV. GNOME and
+        // KDE happened to choose memory on their own.
+        let pod = buffers_pod();
+        let mut params = [pod.as_ptr().cast::<c_void>()];
+        let rc = (state.lib.stream_update_params)(state.stream, params.as_mut_ptr(), 1);
+        if rc < 0 {
+            log::debug!("screencast: asking for memory buffers failed ({rc})");
+        }
     }
 }
 
@@ -489,14 +501,52 @@ unsafe fn read_frame(buffer: &SpaBuffer, format: Option<VideoFormat>) -> Option<
     if data.data.is_null() || data.chunk.is_null() {
         return None;
     }
+    // Memory only: a DMA-BUF's mapping is not something to read row by row
+    // (see `on_param_changed`), and a frame missed is better than a crash.
+    if !matches!(data.type_, SPA_DATA_MEM_PTR | SPA_DATA_MEM_FD) {
+        log::debug!("screencast: skipping a buffer of type {}", data.type_);
+        return None;
+    }
     let chunk = &*data.chunk;
     // A zero-size chunk is the compositor saying "nothing new"; it is not a
     // frame, and treating it as one is how a capture comes back blank.
     if chunk.size == 0 {
         return None;
     }
+    log::debug!(
+        "screencast buffer: type {} flags {:#x} fd {} mapoffset {} maxsize {} data {:p} chunk offset {} size {} stride {} flags {:#x}",
+        data.type_, data.flags, data.fd, data.mapoffset, data.maxsize, data.data,
+        chunk.offset, chunk.size, chunk.stride, chunk.flags
+    );
     let maxsize = data.maxsize as usize;
     let offset = (chunk.offset as usize).checked_rem(maxsize).unwrap_or(0);
+    // PipeWire maps a buffer with the access its flags grant, and the wlroots
+    // portal (sway) marks its memfds mappable but not readable: the mapping
+    // was PROT_NONE and the first pixel read was a SIGSEGV. Such a buffer is
+    // mapped again here, read-only, from its fd.
+    if data.flags & SPA_DATA_FLAG_READABLE == 0 {
+        if data.type_ != SPA_DATA_MEM_FD || data.fd < 0 {
+            log::debug!("screencast: buffer is not readable");
+            return None;
+        }
+        let len = data.mapoffset as usize + maxsize;
+        let map = libc::mmap(
+            null_mut(),
+            len,
+            libc::PROT_READ,
+            libc::MAP_SHARED,
+            data.fd as c_int,
+            0,
+        );
+        if map == libc::MAP_FAILED {
+            log::debug!("screencast: mapping the buffer failed");
+            return None;
+        }
+        let base = map.cast::<u8>().add(data.mapoffset as usize + offset);
+        let frame = convert(std::slice::from_raw_parts(base, maxsize - offset), chunk.stride, format);
+        libc::munmap(map, len);
+        return frame;
+    }
     let src = std::slice::from_raw_parts(data.data.cast::<u8>().add(offset), maxsize - offset);
     convert(src, chunk.stride, format)
 }
@@ -541,6 +591,13 @@ fn convert(src: &[u8], stride: i32, format: VideoFormat) -> Option<Frame> {
 // ---- SPA POD ---------------------------------------------------------------
 
 const SPA_TYPE_ID: u32 = 3;
+const SPA_TYPE_INT: u32 = 4;
+const SPA_TYPE_OBJECT_PARAM_BUFFERS: u32 = 0x40004;
+const SPA_PARAM_BUFFERS: u32 = 5;
+const PARAM_BUFFERS_DATA_TYPE: u32 = 6;
+const SPA_DATA_MEM_PTR: u32 = 1;
+const SPA_DATA_MEM_FD: u32 = 2;
+const SPA_DATA_FLAG_READABLE: u32 = 1 << 0;
 const SPA_TYPE_RECTANGLE: u32 = 10;
 const SPA_TYPE_FRACTION: u32 = 11;
 const SPA_TYPE_OBJECT: u32 = 15;
@@ -593,6 +650,15 @@ impl PodWriter {
         self.pad();
     }
 
+    fn prop_int(&mut self, key: u32, v: u32) {
+        self.u32(key);
+        self.u32(0);
+        self.u32(4);
+        self.u32(SPA_TYPE_INT);
+        self.u32(v);
+        self.pad();
+    }
+
     /// A choice property: `values` are the choice's values in order (for an
     /// enum the default first, then the alternatives; for a range default,
     /// min, max), each `child_size` bytes of `child_type`.
@@ -628,6 +694,13 @@ impl PodWriter {
             .map(|c| u64::from_ne_bytes(c.try_into().expect("8 bytes")))
             .collect()
     }
+}
+
+/// The buffers this capture can read: in memory, by pointer or by fd.
+fn buffers_pod() -> Vec<u64> {
+    PodWriter::object(SPA_TYPE_OBJECT_PARAM_BUFFERS, SPA_PARAM_BUFFERS, |w| {
+        w.prop_int(PARAM_BUFFERS_DATA_TYPE, (1 << SPA_DATA_MEM_PTR) | (1 << SPA_DATA_MEM_FD));
+    })
 }
 
 /// The formats this capture can take: raw video, 32-bit RGB in either order,
@@ -718,6 +791,18 @@ mod tests {
 
     fn bytes(words: &[u64]) -> Vec<u8> {
         words.iter().flat_map(|w| w.to_ne_bytes()).collect()
+    }
+
+    #[test]
+    fn the_buffers_pod_asks_for_memory_only() {
+        let b = bytes(&buffers_pod());
+        let word = |i: usize| u32::from_ne_bytes(b[i * 4..i * 4 + 4].try_into().unwrap());
+        // Object of 32 body bytes: type, id, then one Int property.
+        assert_eq!(b.len(), 40);
+        assert_eq!((word(0), word(1)), (32, SPA_TYPE_OBJECT));
+        assert_eq!((word(2), word(3)), (SPA_TYPE_OBJECT_PARAM_BUFFERS, SPA_PARAM_BUFFERS));
+        assert_eq!((word(4), word(6), word(7)), (PARAM_BUFFERS_DATA_TYPE, 4, SPA_TYPE_INT));
+        assert_eq!(word(8), 0b110);
     }
 
     #[test]
