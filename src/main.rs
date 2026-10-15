@@ -178,7 +178,32 @@ fn main() -> Result<(), slint::PlatformError> {
     // under XWayland — the app came up invisible with only a tray icon.
     #[cfg(not(target_os = "windows"))]
     {
-        match i_slint_backend_winit::Backend::new_with_renderer_by_name(Some("femtovg")) {
+        // The launcher's startup token, handed to the first window. Started
+        // from the applications menu, the shell waits for the app to redeem
+        // XDG_ACTIVATION_TOKEN (DESKTOP_STARTUP_ID on X11) with a window, and
+        // until it does — or gives up, half a minute later — the pointer
+        // spins and Ubuntu's dock leaves the app out. winit redeems a token
+        // only when the window is built with it, and Slint builds windows
+        // itself, so it goes in through the attributes hook. Taken out of the
+        // environment as well: a URL or an editor opened from Snipdeck must
+        // not present it again.
+        use i_slint_backend_winit::winit::platform::startup_notify::WindowAttributesExtStartupNotify;
+        use i_slint_backend_winit::winit::window::ActivationToken;
+        let token = std::env::var("XDG_ACTIVATION_TOKEN")
+            .or_else(|_| std::env::var("DESKTOP_STARTUP_ID"))
+            .ok()
+            .filter(|t| !t.is_empty());
+        std::env::remove_var("XDG_ACTIVATION_TOKEN");
+        std::env::remove_var("DESKTOP_STARTUP_ID");
+        let token = std::cell::Cell::new(token);
+        let backend = i_slint_backend_winit::Backend::builder()
+            .with_renderer_name("femtovg")
+            .with_window_attributes_hook(move |attrs| match token.take() {
+                Some(t) => attrs.with_activation_token(ActivationToken::from_raw(t)),
+                None => attrs,
+            })
+            .build();
+        match backend {
             Ok(backend) => match slint::platform::set_platform(Box::new(backend)) {
                 Ok(()) => log::info!("winit-femtovg backend installed via set_platform"),
                 Err(e) => log::warn!("set_platform failed ({e:?}); using the default backend"),
@@ -268,6 +293,16 @@ fn main() -> Result<(), slint::PlatformError> {
     };
 
     let main_window = MainWindow::new()?;
+    // Created at its own size, main.slint's preferred 1100×700, rather than
+    // at winit's 800×600 and resized a moment later. With software OpenGL on
+    // X11 (Mesa without DRI — a virtual machine, a machine without a GPU
+    // driver) the surface kept the size it was created with: Xfce showed an
+    // 800×600 corner of the gallery, toolbar cut off, the rest of the window
+    // see-through. Sized up front, the window is never resized before its
+    // first frame — the floating snips do the same, for placement.
+    main_window
+        .window()
+        .set_size(slint::LogicalSize::new(1100.0, 700.0));
 
     // Select the bundled Slint UI translation AFTER the window exists. Selecting
     // it earlier (before the backend is initialized) does not reach the first
