@@ -675,3 +675,9 @@ msgstr "Tidak dapat menghubungi {host}: {e}"
 
 msgid "Could not add the upload host: {why}"
 msgstr "Gagal menambahkan host unggahan: {why}"
+
+msgid "Imgur refused the Client-ID (HTTP 403)."
+msgstr "Imgur menolak Client-ID (HTTP 403)."
+
+msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
+msgstr "Batas unggahan Imgur tercapai (HTTP 429). Coba lagi nanti."

@@ -680,3 +680,9 @@ msgstr "{host} ist nicht erreichbar: {e}"
 
 msgid "Could not add the upload host: {why}"
 msgstr "Upload-Hoster konnte nicht hinzugefügt werden: {why}"
+
+msgid "Imgur refused the Client-ID (HTTP 403)."
+msgstr "Imgur hat die Client-ID abgelehnt (HTTP 403)."
+
+msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
+msgstr "Das Upload-Limit von Imgur ist erreicht (HTTP 429). Versuchen Sie es später erneut."

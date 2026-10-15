@@ -681,3 +681,9 @@ msgstr "{host} sunucusuna ulaşılamadı: {e}"
 
 msgid "Could not add the upload host: {why}"
 msgstr "Yükleme barındırıcısı eklenemedi: {why}"
+
+msgid "Imgur refused the Client-ID (HTTP 403)."
+msgstr "Imgur, Client-ID'yi reddetti (HTTP 403)."
+
+msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
+msgstr "Imgur yükleme sınırına ulaşıldı (HTTP 429). Daha sonra yeniden deneyin."

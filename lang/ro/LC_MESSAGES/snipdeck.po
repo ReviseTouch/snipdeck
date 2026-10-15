@@ -675,3 +675,9 @@ msgstr "Nu s-a putut contacta {host}: {e}"
 
 msgid "Could not add the upload host: {why}"
 msgstr "Serviciul de încărcare nu a putut fi adăugat: {why}"
+
+msgid "Imgur refused the Client-ID (HTTP 403)."
+msgstr "Imgur a respins Client-ID-ul (HTTP 403)."
+
+msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
+msgstr "Limita de încărcări Imgur a fost atinsă (HTTP 429). Încercați din nou mai târziu."

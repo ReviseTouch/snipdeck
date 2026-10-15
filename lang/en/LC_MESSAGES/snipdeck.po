@@ -21,3 +21,9 @@ msgstr "draw"
 
 msgid "Thumbnail size — Small / Medium / Large"
 msgstr "Thumbnail size — Small / Medium / Large"
+
+msgid "Imgur refused the Client-ID (HTTP 403)."
+msgstr ""
+
+msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
+msgstr ""

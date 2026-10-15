@@ -675,3 +675,9 @@ msgstr "دسترسی به {host} ممکن نشد: {e}"
 
 msgid "Could not add the upload host: {why}"
 msgstr "افزودن میزبان بارگذاری ممکن نشد: {why}"
+
+msgid "Imgur refused the Client-ID (HTTP 403)."
+msgstr "Imgur شناسه Client-ID را نپذیرفت (HTTP 403)."
+
+msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
+msgstr "سقف بارگذاری Imgur پر شده است (HTTP 429). بعداً دوباره امتحان کنید."

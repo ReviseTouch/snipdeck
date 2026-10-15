@@ -172,24 +172,37 @@ fn imgur_upload(png: &[u8], client_id: &str) -> Result<String> {
     let resp = match resp {
         Ok(r) => r,
         Err(ureq::Error::Status(403, _)) => {
-            return Err(anyhow!("Imgur rejected the request (HTTP 403). The Client-ID may be invalid."));
+            return Err(anyhow!(crate::i18n::t("Imgur refused the Client-ID (HTTP 403).")));
         }
         Err(ureq::Error::Status(429, _)) => {
-            return Err(anyhow!("Imgur quota exceeded (HTTP 429). Try again later."));
+            return Err(anyhow!(crate::i18n::t(
+                "Imgur's upload limit is reached (HTTP 429). Try again later."
+            )));
         }
         Err(ureq::Error::Status(code, r)) => {
             let detail = r.into_string().unwrap_or_default();
-            return Err(anyhow!("Imgur returned an error (HTTP {code}): {detail}"));
+            return Err(anyhow!("HTTP {code}: {}", detail.trim()));
         }
-        Err(e) => return Err(anyhow!("Failed to connect to Imgur: {}", crate::sxcu::net_reason(&e))),
+        Err(e) => return Err(unreachable_host("api.imgur.com", &e)),
     };
 
-    let v: serde_json::Value = resp.into_json().context("Failed to parse Imgur response")?;
-    v.get("data")
-        .and_then(|d| d.get("link"))
-        .and_then(|l| l.as_str())
-        .map(|s| s.to_string())
-        .ok_or_else(|| anyhow!("No image link found in Imgur response"))
+    let text = resp.into_string().unwrap_or_default();
+    serde_json::from_str::<serde_json::Value>(&text)
+        .ok()
+        .and_then(|v| v.get("data")?.get("link")?.as_str().map(str::to_string))
+        .ok_or_else(|| no_link(&text))
+}
+
+/// The custom uploaders' wording, in the user's language: the built-in
+/// hosts said these in English whatever the language was.
+fn unreachable_host(host: &str, e: &ureq::Error) -> anyhow::Error {
+    anyhow!(crate::i18n::t1("Could not reach {host}: {e}", "{host}", host)
+        .replace("{e}", &crate::sxcu::net_reason(e)))
+}
+
+fn no_link(answer: &str) -> anyhow::Error {
+    let answer: String = answer.trim().chars().take(200).collect();
+    anyhow!(crate::i18n::t1("The host answered without a link: {answer}", "{answer}", &answer))
 }
 
 /// POST the PNG to catbox.moe and return the direct image URL. Anonymous
@@ -224,19 +237,19 @@ fn catbox_upload(png: &[u8]) -> Result<String> {
         Ok(r) => r,
         Err(ureq::Error::Status(code, r)) => {
             let detail = r.into_string().unwrap_or_default();
-            return Err(anyhow!("catbox returned an error (HTTP {code}): {detail}"));
+            return Err(anyhow!("HTTP {code}: {}", detail.trim()));
         }
-        Err(e) => return Err(anyhow!("Failed to connect to catbox: {}", crate::sxcu::net_reason(&e))),
+        Err(e) => return Err(unreachable_host("catbox.moe", &e)),
     };
 
     // catbox returns the bare URL as plain text (and, on failure, a short
     // error string with HTTP 200 — so check it actually looks like a URL).
-    let url = resp.into_string().context("Failed to read catbox response")?;
+    let url = resp.into_string().unwrap_or_default();
     let url = url.trim().to_string();
     if url.starts_with("http://") || url.starts_with("https://") {
         Ok(url)
     } else {
-        Err(anyhow!("catbox returned an unexpected response: {url}"))
+        Err(no_link(&url))
     }
 }
 

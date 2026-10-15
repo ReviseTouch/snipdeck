@@ -675,3 +675,9 @@ msgstr "{host} に接続できませんでした: {e}"
 
 msgid "Could not add the upload host: {why}"
 msgstr "アップロード先ホストを追加できませんでした: {why}"
+
+msgid "Imgur refused the Client-ID (HTTP 403)."
+msgstr "Imgur が Client-ID を拒否しました (HTTP 403)。"
+
+msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
+msgstr "Imgur のアップロード上限に達しました (HTTP 429)。しばらくしてから再試行してください。"
