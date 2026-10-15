@@ -1,6 +1,6 @@
 [package]
 name = "snipdeck"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "A fast screen-snipping deck for Windows and Linux: capture regions, keep floating snips on screen, OCR-index, search, and manage hundreds of screenshots."
 authors = ["Hasan Salihoğlu <hsn.salihoglu@gmail.com>"]
