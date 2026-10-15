@@ -320,7 +320,7 @@ impl AppState {
 
         let p = pending.clone();
         window.on_new_snip(move || {
-            p.borrow_mut().push(Action::NewSnip {
+            push_action(&p, Action::NewSnip {
                 to_clip: false,
                 keep_float: true,
                 to_gallery: true,
@@ -328,7 +328,7 @@ impl AppState {
         });
         let p = pending.clone();
         window.on_new_snip_clip(move || {
-            p.borrow_mut().push(Action::NewSnip {
+            push_action(&p, Action::NewSnip {
                 to_clip: true,
                 keep_float: true,
                 to_gallery: true,
@@ -336,35 +336,35 @@ impl AppState {
         });
         let p = pending.clone();
         window.on_new_snip_clip_only(move || {
-            p.borrow_mut().push(Action::NewSnip {
+            push_action(&p, Action::NewSnip {
                 to_clip: true,
                 keep_float: false,
                 to_gallery: false,
             })
         });
         let p = pending.clone();
-        window.on_collage_create(move || p.borrow_mut().push(Action::OpenCollage));
+        window.on_collage_create(move || push_action(&p, Action::OpenCollage));
         let p = pending.clone();
-        window.on_pick_upload_host(move |i| p.borrow_mut().push(Action::PickUploadHost(i)));
+        window.on_pick_upload_host(move |i| push_action(&p, Action::PickUploadHost(i)));
         let p = pending.clone();
-        window.on_add_upload_host(move || p.borrow_mut().push(Action::AddUploadHost));
+        window.on_add_upload_host(move || push_action(&p, Action::AddUploadHost));
         let p = pending.clone();
-        window.on_remove_upload_host(move || p.borrow_mut().push(Action::RemoveUploadHost));
+        window.on_remove_upload_host(move || push_action(&p, Action::RemoveUploadHost));
         self.refresh_upload_hosts(window);
         let p = pending.clone();
-        window.on_pick_color(move || p.borrow_mut().push(Action::PickColor));
+        window.on_pick_color(move || push_action(&p, Action::PickColor));
         let p = pending.clone();
-        window.on_toggle_all_visibility(move || p.borrow_mut().push(Action::ToggleAllVisibility));
+        window.on_toggle_all_visibility(move || push_action(&p, Action::ToggleAllVisibility));
         let p = pending.clone();
         window.on_toggle_floating_in_taskbar(move || {
-            p.borrow_mut().push(Action::ToggleFloatingInTaskbar)
+            push_action(&p, Action::ToggleFloatingInTaskbar)
         });
         let p = pending.clone();
-        window.on_clear_unpinned(move || p.borrow_mut().push(Action::ClearUnpinned));
+        window.on_clear_unpinned(move || push_action(&p, Action::ClearUnpinned));
         let p = pending.clone();
-        window.on_clear_all(move || p.borrow_mut().push(Action::ClearAll));
+        window.on_clear_all(move || push_action(&p, Action::ClearAll));
         let p = pending.clone();
-        window.on_toggle_autostart(move || p.borrow_mut().push(Action::ToggleAutostart));
+        window.on_toggle_autostart(move || push_action(&p, Action::ToggleAutostart));
         window.set_autostart_enabled(crate::autostart::is_enabled());
         window.set_hotkey_snip(crate::hotkeys::display(&self.settings.hotkey_snip).into());
         window.set_hotkey_snip_clip(crate::hotkeys::display(&self.settings.hotkey_snip_clip).into());
@@ -379,9 +379,9 @@ impl AppState {
             2
         });
         let p = pending.clone();
-        window.on_toggle_theme(move || p.borrow_mut().push(Action::ToggleTheme));
+        window.on_toggle_theme(move || push_action(&p, Action::ToggleTheme));
         let p = pending.clone();
-        window.on_show_about(move || p.borrow_mut().push(Action::ShowAbout));
+        window.on_show_about(move || push_action(&p, Action::ShowAbout));
         // Populate the toolbar language menu and reflect the active language.
         let langs: Vec<LangItem> = crate::i18n::LANGUAGES
             .iter()
@@ -394,52 +394,52 @@ impl AppState {
         window.set_current_language(SharedString::from(crate::i18n::current()));
         let p = pending.clone();
         window.on_set_language(move |code| {
-            p.borrow_mut().push(Action::SetLanguage(code.to_string()))
+            push_action(&p, Action::SetLanguage(code.to_string()))
         });
         let p = pending.clone();
-        window.on_snip_copy(move |id| p.borrow_mut().push(Action::Copy(uuid_from(&id))));
+        window.on_snip_copy(move |id| push_action(&p, Action::Copy(uuid_from(&id))));
         let p = pending.clone();
-        window.on_snip_save(move |id| p.borrow_mut().push(Action::Save(uuid_from(&id))));
+        window.on_snip_save(move |id| push_action(&p, Action::Save(uuid_from(&id))));
         let p = pending.clone();
-        window.on_snip_toggle_pin(move |id| p.borrow_mut().push(Action::TogglePin(uuid_from(&id))));
+        window.on_snip_toggle_pin(move |id| push_action(&p, Action::TogglePin(uuid_from(&id))));
         let p = pending.clone();
-        window.on_snip_delete(move |id| p.borrow_mut().push(Action::Delete(uuid_from(&id))));
+        window.on_snip_delete(move |id| push_action(&p, Action::Delete(uuid_from(&id))));
         let p = pending.clone();
-        window.on_snip_clicked(move |id| p.borrow_mut().push(Action::SnipClicked(uuid_from(&id))));
+        window.on_snip_clicked(move |id| push_action(&p, Action::SnipClicked(uuid_from(&id))));
         let p = pending.clone();
         window.on_snip_context_menu(move |id| {
-            p.borrow_mut().push(Action::SnipContextMenu(uuid_from(&id)))
+            push_action(&p, Action::SnipContextMenu(uuid_from(&id)))
         });
         let p = pending.clone();
         window
-            .on_search_changed(move |s| p.borrow_mut().push(Action::SearchChanged(s.to_string())));
+            .on_search_changed(move |s| push_action(&p, Action::SearchChanged(s.to_string())));
         let p = pending.clone();
         window.on_status_filter_changed(move |idx| {
-            p.borrow_mut().push(Action::StatusFilterChanged(idx))
+            push_action(&p, Action::StatusFilterChanged(idx))
         });
         let p = pending.clone();
         window.on_content_filter_changed(move |idx| {
-            p.borrow_mut().push(Action::ContentFilterChanged(idx))
+            push_action(&p, Action::ContentFilterChanged(idx))
         });
         let p = pending.clone();
         window
-            .on_size_filter_changed(move |idx| p.borrow_mut().push(Action::SizeFilterChanged(idx)));
+            .on_size_filter_changed(move |idx| push_action(&p, Action::SizeFilterChanged(idx)));
         let p = pending.clone();
         window
-            .on_date_filter_changed(move |idx| p.borrow_mut().push(Action::DateFilterChanged(idx)));
+            .on_date_filter_changed(move |idx| push_action(&p, Action::DateFilterChanged(idx)));
         let p = pending.clone();
-        window.on_sort_changed(move |idx| p.borrow_mut().push(Action::SortChanged(idx)));
+        window.on_sort_changed(move |idx| push_action(&p, Action::SortChanged(idx)));
         // Reflect the persisted card size and persist any later change.
         window.set_thumb_size_index(self.settings.thumb_size_index);
         let p = pending.clone();
-        window.on_thumb_size_changed(move |idx| p.borrow_mut().push(Action::ThumbSizeChanged(idx)));
+        window.on_thumb_size_changed(move |idx| push_action(&p, Action::ThumbSizeChanged(idx)));
         let p = pending.clone();
-        window.on_reset_filters(move || p.borrow_mut().push(Action::ResetFilters));
+        window.on_reset_filters(move || push_action(&p, Action::ResetFilters));
         let p = pending.clone();
-        window.on_close_error(move || p.borrow_mut().push(Action::CloseError));
+        window.on_close_error(move || push_action(&p, Action::CloseError));
         let p = pending.clone();
         window
-            .on_request_thumb(move |id| p.borrow_mut().push(Action::RequestThumb(uuid_from(&id))));
+            .on_request_thumb(move |id| push_action(&p, Action::RequestThumb(uuid_from(&id))));
         // Note: `on_gallery_cols_changed` is wired in `main` against the
         // shared state so it can re-chunk synchronously — the timer-driven
         // tick is frozen during a live window-resize (Win32 modal loop), so a
@@ -935,10 +935,13 @@ impl AppState {
         // floating windows, OCR, the colour picker, the PNG converter. What
         // Linux lacked was a way to tell the main window was on screen; Slint
         // knows, and `tick` records it.
+        // Off Windows the gallery on screen is no reason either: every one of
+        // its callbacks wakes the pump (`push_action`). Windows keeps it, for
+        // the restore-from-tray redraw that runs off the pump (see main.rs).
         #[cfg(target_os = "windows")]
         let main_shown = crate::tray::is_main_window_shown();
         #[cfg(not(target_os = "windows"))]
-        let main_shown = self.main_visible;
+        let main_shown = false;
         {
             main_shown
                 || crate::mouse_trigger::snip_in_progress()
@@ -1140,6 +1143,18 @@ fn storage_size_text(
 thread_local! {
     static ACTION_QUEUE: std::cell::RefCell<Option<Rc<std::cell::RefCell<Vec<Action>>>>> =
         std::cell::RefCell::new(None);
+}
+
+/// Queue an action from a main-window callback and wake the pump.
+///
+/// The pump sleeps whenever nothing is happening, the gallery on screen
+/// included; a click queues its action and wakes it. It used to stay awake
+/// for as long as the gallery was shown — 125 ticks a second with the window
+/// merely open — because these callbacks only queued, and nothing else
+/// would have run them.
+fn push_action(pending: &Rc<std::cell::RefCell<Vec<Action>>>, action: Action) {
+    pending.borrow_mut().push(action);
+    crate::pump::wake();
 }
 
 /// Queue an action from outside the UI callbacks — the tray, in practice.

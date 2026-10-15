@@ -321,30 +321,29 @@ mod linux {
             exit.id().clone(),
         );
 
-        // Clicks land on tray-icon's own global channel. Forward them onto the
-        // service channel from inside the GTK loop, then wake the pump — it
-        // parks the main thread when idle and would otherwise not drain these
-        // until some unrelated event woke it (see pump.rs).
-        gtk::glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
-            while let Ok(event) = MenuEvent::receiver().try_recv() {
-                let cmd = if event.id == show_id {
-                    Some(TrayCommand::Show)
-                } else if event.id == new_id {
-                    Some(TrayCommand::NewSnip)
-                } else if event.id == autostart_id {
-                    Some(TrayCommand::ToggleAutostart)
-                } else if event.id == exit_id {
-                    Some(TrayCommand::Exit)
-                } else {
-                    None
-                };
-                if let Some(cmd) = cmd {
-                    let _ = tx.send(cmd);
-                    crate::pump::wake();
-                }
+        // Clicks arrive through tray-icon's event handler, called on the GTK
+        // thread the moment a menu item is chosen: forward each onto the
+        // service channel and wake the pump, which parks the main thread
+        // when idle (see pump.rs). This replaced a 100 ms GTK timeout that
+        // polled the channel, which woke the process ten times a second
+        // while it sat in the tray with nothing to do.
+        MenuEvent::set_event_handler(Some(move |event: MenuEvent| {
+            let cmd = if event.id == show_id {
+                Some(TrayCommand::Show)
+            } else if event.id == new_id {
+                Some(TrayCommand::NewSnip)
+            } else if event.id == autostart_id {
+                Some(TrayCommand::ToggleAutostart)
+            } else if event.id == exit_id {
+                Some(TrayCommand::Exit)
+            } else {
+                None
+            };
+            if let Some(cmd) = cmd {
+                let _ = tx.send(cmd);
+                crate::pump::wake();
             }
-            gtk::glib::ControlFlow::Continue
-        });
+        }));
 
         gtk::main();
     }
