@@ -196,6 +196,7 @@ type CastSession = ashpd::desktop::Session<ashpd::desktop::screencast::Screencas
 async fn negotiate() -> anyhow::Result<(CastSession, std::os::fd::OwnedFd, u32, (i32, i32))> {
     use ashpd::desktop::screencast::Screencast;
 
+    crate::portal_hotkeys::register_app_id().await;
     let proxy = Screencast::new().await.context("opening the ScreenCast portal")?;
     let session = proxy
         .create_session(Default::default())

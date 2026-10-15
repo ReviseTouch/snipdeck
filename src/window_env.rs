@@ -276,3 +276,102 @@ pub fn keep_above<C: slint::ComponentHandle + 'static>(c: &C) {
         }
     });
 }
+
+/// Keep a just-shown snip out of the taskbar and the pager on X11, unless the
+/// user asked for snips to be listed. Call after `show()`, as `keep_above`.
+///
+/// winit sets no `_NET_WM_STATE_SKIP_TASKBAR` on X11, so every snip was a
+/// taskbar button on Xfce and on GNOME's X11 session. The state is asked for
+/// the way EWMH says: a client message to the root window, once the window is
+/// mapped. Snipdeck's own connection sends it — winit's is not reachable.
+#[cfg(target_os = "linux")]
+pub fn x11_skip_taskbar<C: slint::ComponentHandle + 'static>(c: &C) {
+    if !matches!(caps().backend, Backend::X11 | Backend::Unknown) {
+        return;
+    }
+    let apply = |w: &slint::Window| {
+        if let Some(xid) = x11_window_id(w) {
+            if let Err(e) = x11::skip_taskbar(xid) {
+                log::debug!("could not keep window {xid:#x} out of the taskbar: {e}");
+            }
+        }
+    };
+    apply(c.window());
+    let weak = c.as_weak();
+    slint::Timer::single_shot(std::time::Duration::from_millis(50), move || {
+        if let Some(c) = weak.upgrade() {
+            apply(c.window());
+        }
+    });
+}
+
+#[cfg(target_os = "linux")]
+fn x11_window_id(w: &slint::Window) -> Option<u32> {
+    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+    let handle = w.window_handle();
+    match handle.window_handle().ok()?.as_raw() {
+        RawWindowHandle::Xlib(h) => u32::try_from(h.window).ok(),
+        RawWindowHandle::Xcb(h) => Some(h.window.get()),
+        _ => None,
+    }
+}
+
+#[cfg(target_os = "linux")]
+mod x11 {
+    use std::sync::OnceLock;
+    use x11rb::connection::Connection;
+    use x11rb::protocol::xproto::{
+        ClientMessageEvent, ConnectionExt, EventMask, Window,
+    };
+    use x11rb::rust_connection::RustConnection;
+
+    struct Conn {
+        conn: RustConnection,
+        root: Window,
+        state: u32,
+        skip_taskbar: u32,
+        skip_pager: u32,
+    }
+
+    /// One connection for the life of the process, opened on first use.
+    fn conn() -> Option<&'static Conn> {
+        static CONN: OnceLock<Option<Conn>> = OnceLock::new();
+        CONN.get_or_init(|| {
+            let open = || -> Result<Conn, Box<dyn std::error::Error>> {
+                let (conn, screen) = x11rb::connect(None)?;
+                let root = conn.setup().roots[screen].root;
+                let atom = |name: &str| -> Result<u32, Box<dyn std::error::Error>> {
+                    Ok(conn.intern_atom(false, name.as_bytes())?.reply()?.atom)
+                };
+                Ok(Conn {
+                    state: atom("_NET_WM_STATE")?,
+                    skip_taskbar: atom("_NET_WM_STATE_SKIP_TASKBAR")?,
+                    skip_pager: atom("_NET_WM_STATE_SKIP_PAGER")?,
+                    root,
+                    conn,
+                })
+            };
+            open().map_err(|e| log::debug!("no X11 connection of our own: {e}")).ok()
+        })
+        .as_ref()
+    }
+
+    pub fn skip_taskbar(window: Window) -> Result<(), Box<dyn std::error::Error>> {
+        let Some(c) = conn() else { return Ok(()) };
+        // _NET_WM_STATE_ADD, two properties, source indication "application".
+        let event = ClientMessageEvent::new(
+            32,
+            window,
+            c.state,
+            [1, c.skip_taskbar, c.skip_pager, 1, 0],
+        );
+        c.conn.send_event(
+            false,
+            c.root,
+            EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
+            event,
+        )?;
+        c.conn.flush()?;
+        Ok(())
+    }
+}

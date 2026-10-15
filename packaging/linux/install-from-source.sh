@@ -23,9 +23,10 @@ ${CARGO:-cargo} build --release --manifest-path "$ROOT/Cargo.toml"
 
 rm -rf "$STAGE"
 mkdir -p "$STAGE"
-cp "$ROOT/target/release/snipdeck" "$ROOT/packaging/linux/snipdeck.desktop" \
+cp "$ROOT/target/release/snipdeck" "$ROOT/packaging/linux/com.revisetouch.Snipdeck.desktop" \
    "$ROOT/packaging/linux/install.sh" "$STAGE/"
 cp "$ROOT/assets/preview_256.png" "$STAGE/snipdeck.png"
 cp -r "$ROOT/packaging/gnome-extension/$EXT_UUID" "$STAGE/"
+cp -r "$ROOT/packaging/kwin-script" "$STAGE/kwin-script"
 
 exec "$STAGE/install.sh" "$@"

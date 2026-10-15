@@ -58,6 +58,7 @@ impl ColorPicker {
             .name("portal-color".into())
             .spawn(move || {
                 let picked = pollster::block_on(async {
+                    crate::portal_hotkeys::register_app_id().await;
                     ashpd::desktop::Color::pick().send().await?.response()
                 });
                 let to_u8 = |v: f64| (v.clamp(0.0, 1.0) * 255.0).round() as u8;

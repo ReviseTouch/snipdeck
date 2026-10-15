@@ -148,6 +148,10 @@ libc = "0.2"
 # dependency to document — it is a released artifact that does not run.
 tray-icon = { version = "0.24", default-features = false, features = ["gtk"] }
 gtk = "0.18"
+# Keeping snips out of the taskbar on X11 (window_env::x11_skip_taskbar):
+# winit has no setting for _NET_WM_STATE_SKIP_TASKBAR there. Already in the
+# tree through winit, so nothing new is built.
+x11rb = "0.13"
 # Wayland global shortcuts (see src/portal_hotkeys.rs).
 #
 # 0.13, NOT the 0.8 that rfd drags in. xdg-desktop-portal returns the
@@ -164,6 +168,11 @@ gtk = "0.18"
 ashpd = { version = "0.13", default-features = false, features = [
     "async-io",
     "global_shortcuts",
+    # The gallery as the shortcut dialog's parent (portal_hotkeys::offer_parent):
+    # on Wayland the window is exported through xdg-foreign. wayland-client and
+    # friends are the versions winit already uses.
+    "raw_handle",
+    "wayland",
     "screencast",
     # The colour picker: org.freedesktop.portal.Screenshot.PickColor, the
     # only way to read a pixel off a Wayland screen (see loupe.rs).
@@ -238,20 +247,23 @@ extended-description = """\
 Snipdeck captures a region of the screen and keeps it on screen as a \
 floating window, recognises its text on the device, and keeps every snip in \
 a searchable gallery with annotation, collage and opt-in upload. On GNOME \
-its shell extension places snips where they were captured, keeps them above \
-other windows and adds Super+Alt+drag capture: enable it once with \
-`gnome-extensions enable snipdeck@revisetouch.com`, then log out and back in."""
+its shell extension, and on KDE Plasma its KWin script, place snips where \
+they were captured and keep them above other windows; Snipdeck turns them \
+on at its first start. GNOME loads a newly installed extension at the next \
+login."""
 depends = "libc6 (>= 2.30), libgcc-s1, libgtk-3-0, libxcb1, libdbus-1-3, libfontconfig1"
 recommends = "libayatana-appindicator3-1, libwayland-client0, libwayland-egl1, libegl1, libxkbcommon0, libpipewire-0.3-0, xdg-desktop-portal, xdg-utils, tesseract-ocr"
 suggests = "gnome-shell-extension-appindicator"
 assets = [
     ["target/package/snipdeck", "usr/bin/", "755"],
-    ["target/package/snipdeck.desktop", "usr/share/applications/snipdeck.desktop", "644"],
+    ["target/package/com.revisetouch.Snipdeck.desktop", "usr/share/applications/com.revisetouch.Snipdeck.desktop", "644"],
     ["target/package/icons/snipdeck-48.png", "usr/share/icons/hicolor/48x48/apps/snipdeck.png", "644"],
     ["target/package/icons/snipdeck-128.png", "usr/share/icons/hicolor/128x128/apps/snipdeck.png", "644"],
     ["target/package/icons/snipdeck-256.png", "usr/share/icons/hicolor/256x256/apps/snipdeck.png", "644"],
     ["target/package/snipdeck@revisetouch.com/extension.js", "usr/share/gnome-shell/extensions/snipdeck@revisetouch.com/extension.js", "644"],
     ["target/package/snipdeck@revisetouch.com/metadata.json", "usr/share/gnome-shell/extensions/snipdeck@revisetouch.com/metadata.json", "644"],
+    ["target/package/kwin/metadata.json", "usr/share/kwin/scripts/snipdeck/metadata.json", "644"],
+    ["target/package/kwin/contents/code/main.js", "usr/share/kwin/scripts/snipdeck/contents/code/main.js", "644"],
     ["README.md", "usr/share/doc/snipdeck/README.md", "644"],
 ]
 
@@ -262,12 +274,14 @@ summary = "Screen snipping with floating snips, on-device OCR and a searchable g
 auto-req = "disabled"
 assets = [
     { source = "target/package/snipdeck", dest = "/usr/bin/snipdeck", mode = "755" },
-    { source = "target/package/snipdeck.desktop", dest = "/usr/share/applications/snipdeck.desktop", mode = "644" },
+    { source = "target/package/com.revisetouch.Snipdeck.desktop", dest = "/usr/share/applications/com.revisetouch.Snipdeck.desktop", mode = "644" },
     { source = "target/package/icons/snipdeck-48.png", dest = "/usr/share/icons/hicolor/48x48/apps/snipdeck.png", mode = "644" },
     { source = "target/package/icons/snipdeck-128.png", dest = "/usr/share/icons/hicolor/128x128/apps/snipdeck.png", mode = "644" },
     { source = "target/package/icons/snipdeck-256.png", dest = "/usr/share/icons/hicolor/256x256/apps/snipdeck.png", mode = "644" },
     { source = "target/package/snipdeck@revisetouch.com/extension.js", dest = "/usr/share/gnome-shell/extensions/snipdeck@revisetouch.com/extension.js", mode = "644" },
     { source = "target/package/snipdeck@revisetouch.com/metadata.json", dest = "/usr/share/gnome-shell/extensions/snipdeck@revisetouch.com/metadata.json", mode = "644" },
+    { source = "target/package/kwin/metadata.json", dest = "/usr/share/kwin/scripts/snipdeck/metadata.json", mode = "644" },
+    { source = "target/package/kwin/contents/code/main.js", dest = "/usr/share/kwin/scripts/snipdeck/contents/code/main.js", mode = "644" },
     { source = "README.md", dest = "/usr/share/doc/snipdeck/README.md", mode = "644", doc = true },
     { source = "LICENSE", dest = "/usr/share/licenses/snipdeck/LICENSE", mode = "644" },
 ]

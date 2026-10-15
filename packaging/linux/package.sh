@@ -44,11 +44,16 @@ rm -rf "$stage"
 install -d "$stage/icons" "$stage/$ext"
 install -m755 "$bin" "$stage/snipdeck"
 install -m644 packaging/gnome-extension/$ext/extension.js packaging/gnome-extension/$ext/metadata.json "$stage/$ext/"
+install -d "$stage/kwin/contents/code"
+install -m644 packaging/kwin-script/snipdeck/metadata.json "$stage/kwin/"
+install -m644 packaging/kwin-script/snipdeck/contents/code/main.js "$stage/kwin/contents/code/"
 # A package puts the binary on PATH; the tarball's install.sh rewrites Exec
 # for ~/.local/bin itself.
-sed 's|^Exec=.*|Exec=snipdeck|' packaging/linux/snipdeck.desktop > "$stage/snipdeck.desktop"
+sed 's|^Exec=.*|Exec=snipdeck|' packaging/linux/com.revisetouch.Snipdeck.desktop > "$stage/com.revisetouch.Snipdeck.desktop"
+# ImageMagick 7 is `magick`; 6, as on Ubuntu 22.04, `convert`.
+im=$(command -v magick || command -v convert) || { echo "ImageMagick is not installed" >&2; exit 1; }
 for size in 48 128 256; do
-    magick assets/preview_256.png -resize "${size}x${size}" "$stage/icons/snipdeck-$size.png"
+    "$im" assets/preview_256.png -resize "${size}x${size}" "$stage/icons/snipdeck-$size.png"
 done
 
 # The tarball: the layout install.sh expects beside it.
@@ -56,9 +61,10 @@ tar_dir=target/package-tar/snipdeck-linux-x64
 rm -rf target/package-tar && mkdir -p "$tar_dir"
 install -m755 "$bin" "$tar_dir/snipdeck"
 install -m755 packaging/linux/install.sh "$tar_dir/"
-install -m644 packaging/linux/snipdeck.desktop "$tar_dir/"
+install -m644 packaging/linux/com.revisetouch.Snipdeck.desktop "$tar_dir/"
 install -m644 assets/preview_256.png "$tar_dir/snipdeck.png"
 cp -r packaging/gnome-extension/$ext "$tar_dir/"
+cp -r packaging/kwin-script "$tar_dir/kwin-script"
 tar -C target/package-tar -czf "$out/snipdeck-linux-x64.tar.gz" snipdeck-linux-x64
 
 cargo deb --no-build --no-strip --output "$out/" >/dev/null

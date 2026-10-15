@@ -15,6 +15,22 @@ pub enum HotkeyAction {
     Gallery,
 }
 
+impl HotkeyAction {
+    /// The action by its command-line name, `snipdeck --action <name>`: the
+    /// portal's shortcut ids, so a key is called the same thing everywhere.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+    pub fn from_name(name: &str) -> Option<Self> {
+        Some(match name {
+            "snip" => Self::Snip,
+            "snip-to-clipboard" => Self::SnipToClipboard,
+            "clipboard-only" => Self::ClipboardOnly,
+            "toggle-visibility" => Self::ToggleVisibility,
+            "gallery" => Self::Gallery,
+            _ => return None,
+        })
+    }
+}
+
 pub struct HotkeyService {
     backend: Backend,
 }

@@ -46,6 +46,8 @@ pub enum BusEvent {
     RegionSnip(RegionSnip),
     /// Bring the main window back (a second launch asked).
     Show,
+    /// A shortcut's action, asked by `snipdeck --action <name>`.
+    Hotkey(crate::hotkeys::HotkeyAction),
 }
 
 pub struct RegionSnip {
@@ -109,6 +111,19 @@ impl Service {
         log::info!("asked over the bus to show the main window");
         self.deliver(BusEvent::Show)
     }
+
+    /// Do what a global shortcut does: "snip", "snip-to-clipboard",
+    /// "clipboard-only", "toggle-visibility" or "gallery".
+    ///
+    /// For the desktops whose portal has no global shortcuts — sway, river and
+    /// the other wlroots compositors — where a key is bound in the
+    /// compositor's own configuration to `snipdeck --action snip`.
+    async fn activate(&self, action: String) -> zbus::fdo::Result<()> {
+        let hotkey = crate::hotkeys::HotkeyAction::from_name(&action)
+            .ok_or_else(|| zbus::fdo::Error::InvalidArgs(format!("no action {action:?}")))?;
+        log::info!("asked over the bus for {action}");
+        self.deliver(BusEvent::Hotkey(hotkey))
+    }
 }
 
 /// Claim the bus name and start serving.
@@ -147,15 +162,32 @@ pub fn start() -> Receiver<BusEvent> {
 /// it answered. Bounded, so a running instance that has hung cannot hang the
 /// launch that is about to exit anyway.
 pub fn show_running_instance() -> bool {
+    call_running("Show", None)
+}
+
+/// Ask the running Snipdeck for a shortcut's action; false if none answered.
+pub fn activate_running_instance(action: &str) -> bool {
+    call_running("Activate", Some(action.to_string()))
+}
+
+fn call_running(method: &'static str, arg: Option<String>) -> bool {
     let (tx, rx) = crossbeam_channel::bounded(1);
     let _ = std::thread::Builder::new()
-        .name("bus-show".into())
+        .name("bus-call".into())
         .spawn(move || {
             let answered = pollster::block_on(async {
                 let conn = zbus::Connection::session().await.ok()?;
-                conn.call_method(Some(BUS_NAME), OBJECT_PATH, Some(BUS_INTERFACE), "Show", &())
-                    .await
-                    .ok()
+                let call = match &arg {
+                    Some(a) => {
+                        conn.call_method(Some(BUS_NAME), OBJECT_PATH, Some(BUS_INTERFACE), method, &(a,))
+                            .await
+                    }
+                    None => {
+                        conn.call_method(Some(BUS_NAME), OBJECT_PATH, Some(BUS_INTERFACE), method, &())
+                            .await
+                    }
+                };
+                call.map_err(|e| log::warn!("{method} on the running Snipdeck failed: {e}")).ok()
             })
             .is_some();
             let _ = tx.send(answered);

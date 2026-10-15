@@ -71,7 +71,7 @@ for uuid in ("uidriver@local", "snipdeck@revisetouch.com"):
     json.dump(m, open(p, "w"))
 EOF
 # The desktop entry groups Snipdeck's windows under one app, as installed.
-sed "s|^Exec=.*|Exec=$APP|" "$ROOT/packaging/linux/snipdeck.desktop" > "$WORK/data/applications/snipdeck.desktop"
+sed "s|^Exec=.*|Exec=$APP|" "$ROOT/packaging/linux/com.revisetouch.Snipdeck.desktop" > "$WORK/data/applications/com.revisetouch.Snipdeck.desktop"
 # BG: a flat desktop colour instead of the wallpaper, e.g. BG='#0d1116'.
 KF="$WORK/config/glib-2.0/settings/keyfile"
 cat > "$KF" <<EOF
@@ -148,7 +148,7 @@ if [ -n "${WINE_EXE:-}" ]; then
 else
   DISPLAY="${REAL_DISPLAY:-${HX:-:99}}" XDG_DATA_HOME="$WORK/appdata" XDG_CONFIG_HOME="$WORK/appconfig" \
     XDG_CURRENT_DESKTOP=GNOME WAYLAND_DISPLAY="$D" RUST_LOG=${RUST_LOG:-info,zbus=warn,tracing=warn} \
-    "$APP" ${APP_ARGS:-} > "$WORK/app.log" 2>&1 &
+    SNIPDECK_NO_DESKTOP_HELPER=1 "$APP" ${APP_ARGS:-} > "$WORK/app.log" 2>&1 &
   AP=$!
   for _ in $(seq 1 40); do
     gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
@@ -174,7 +174,7 @@ fi
 if [ -n "${SECOND:-}" ]; then
   sleep "${SECOND}"
   DISPLAY="${REAL_DISPLAY:-${HX:-:99}}" XDG_DATA_HOME="$WORK/appdata" XDG_CONFIG_HOME="$WORK/appconfig" \
-    XDG_CURRENT_DESKTOP=GNOME WAYLAND_DISPLAY="$D" timeout 10 "$APP" > "$WORK/app2.log" 2>&1
+    XDG_CURRENT_DESKTOP=GNOME WAYLAND_DISPLAY="$D" SNIPDECK_NO_DESKTOP_HELPER=1 timeout 10 "$APP" > "$WORK/app2.log" 2>&1
 fi
 for _ in $(seq 1 240); do grep -q 'ui: done\|ui: FAILED' "$WORK/shell.log" && break; sleep 0.5; done
 kill $AP 2>/dev/null

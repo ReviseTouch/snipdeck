@@ -32,6 +32,9 @@ mod pipewire_dl;
 #[cfg(target_os = "linux")]
 mod portal_hotkeys;
 mod pump;
+/// Enables the GNOME extension or the KWin script a package installed.
+#[cfg(target_os = "linux")]
+mod desktop_helper;
 mod screen;
 mod settings;
 #[cfg(test)]
@@ -102,6 +105,29 @@ fn install_crash_log() {
         }
         previous(info);
     }));
+}
+
+/// The application id: the desktop entry's basename
+/// (`com.revisetouch.Snipdeck.desktop`), the Wayland app id and X11 class of
+/// every window, and the id the desktop portal files permissions under.
+///
+/// Reverse-DNS because the portal insists on it. An unsandboxed app gets an
+/// id from the portal only when the desktop launched it from a desktop entry;
+/// started from a terminal it has none, and the portal refused global
+/// shortcuts outright ("An app id is required"). It can register one itself
+/// (`portal_hotkeys::register_app_id`) — but only a dotted id, which
+/// `snipdeck` was not.
+#[cfg_attr(target_os = "windows", allow(dead_code))]
+pub const APP_ID: &str = "com.revisetouch.Snipdeck";
+
+/// `--action <name>`: do what that global shortcut does, in the running
+/// Snipdeck. The names are `hotkeys::HotkeyAction::from_name`'s. Started with
+/// no Snipdeck running, the app starts and the action is dropped — the first
+/// key press opens it.
+#[cfg(target_os = "linux")]
+fn action_arg() -> Option<String> {
+    let mut args = std::env::args().skip_while(|a| a != "--action").skip(1);
+    args.next()
 }
 
 fn main() -> Result<(), slint::PlatformError> {
@@ -219,7 +245,7 @@ fn main() -> Result<(), slint::PlatformError> {
     //
     // Slint sends `xdg_toplevel.set_app_id` ONLY when this has been set; leave it
     // alone and every Snipdeck window reaches the compositor anonymous. What this
-    // buys is the shell tying our windows to snipdeck.desktop — the icon, the
+    // buys is the shell tying our windows to the desktop entry — the icon, the
     // window list, the application switcher entry.
     //
     // NOT what identifies a snip to the shell extension: that is the window
@@ -227,11 +253,11 @@ fn main() -> Result<(), slint::PlatformError> {
     // a Wayland toplevel need not have one, so matching on it there is a gate
     // that may never open. See packaging/gnome-extension.
     //
-    // The string has to stay "snipdeck", matching snipdeck.desktop's basename and
-    // its StartupWMClass, or the association breaks.
+    // It has to match the desktop entry's basename and its StartupWMClass, or
+    // the association breaks — see APP_ID.
     #[cfg(not(target_os = "windows"))]
-    match slint::set_xdg_app_id("snipdeck") {
-        Ok(()) => log::info!("xdg app id set to \"snipdeck\""),
+    match slint::set_xdg_app_id(APP_ID) {
+        Ok(()) => log::info!("xdg app id set to \"{APP_ID}\""),
         Err(e) => log::warn!(
             "could not set the xdg app id ({e:?}); the GNOME extension will not see our windows"
         ),
@@ -257,8 +283,18 @@ fn main() -> Result<(), slint::PlatformError> {
         // — hidden, with no tray to bring it back. Ask the running one to show
         // it rather than exiting without a word.
         #[cfg(target_os = "linux")]
-        if bus_service::show_running_instance() {
-            log::info!("asked the running instance to show its window");
+        match action_arg() {
+            Some(action) => {
+                if !bus_service::activate_running_instance(&action) {
+                    eprintln!("snipdeck: the running Snipdeck did not take --action {action}");
+                    std::process::exit(1);
+                }
+            }
+            None => {
+                if bus_service::show_running_instance() {
+                    log::info!("asked the running instance to show its window");
+                }
+            }
         }
         return Ok(());
     }
@@ -282,6 +318,12 @@ fn main() -> Result<(), slint::PlatformError> {
     atomic_file::sweep(&paths::images_dir());
     atomic_file::sweep(&paths::thumbs_dir());
     autostart::refresh();
+    // SNIPDECK_NO_DESKTOP_HELPER: tests and the screenshot harness run the
+    // app against a desktop whose settings are not theirs to change.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("SNIPDECK_NO_DESKTOP_HELPER").is_none() {
+        desktop_helper::spawn();
+    }
 
     // Resolve the UI language from settings + OS locale and apply it to the
     // Rust-side catalog now (used by any early `i18n::t()` strings).
@@ -575,6 +617,9 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     } else {
         main_window.show()?;
+        // The shortcut consent dialog, if the portal shows one, opens on it.
+        #[cfg(target_os = "linux")]
+        portal_hotkeys::offer_parent(&main_window);
     }
     slint::run_event_loop_until_quit()
 }

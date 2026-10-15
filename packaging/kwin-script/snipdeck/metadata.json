@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Authors": [{ "Name": "ReviseTouch" }],
+        "Description": "Keeps Snipdeck's floating snips above other windows, where they were captured, on every desktop.",
+        "Id": "snipdeck",
+        "License": "MIT",
+        "Name": "Snipdeck",
+        "Version": "1",
+        "Website": "https://github.com/ReviseTouch/snipdeck"
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js"
+}

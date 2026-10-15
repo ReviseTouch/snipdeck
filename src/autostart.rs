@@ -185,18 +185,48 @@ mod imp {
     use anyhow::{anyhow, Result};
     use std::path::PathBuf;
 
-    fn desktop_path() -> Option<PathBuf> {
+    fn autostart_dir() -> Option<PathBuf> {
         let dir = std::env::var_os("XDG_CONFIG_HOME")
             .map(PathBuf::from)
             .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
-        Some(dir.join("autostart").join("snipdeck.desktop"))
+        Some(dir.join("autostart"))
+    }
+
+    /// Named after the application id: GNOME and KDE start an autostart entry
+    /// in a scope named after the file, and that name is the id the portal
+    /// gives the app.
+    fn desktop_path() -> Option<PathBuf> {
+        Some(autostart_dir()?.join(format!("{}.desktop", crate::APP_ID)))
+    }
+
+    /// The entry's name before the application id was reverse-DNS.
+    fn old_desktop_path() -> Option<PathBuf> {
+        Some(autostart_dir()?.join("snipdeck.desktop"))
+    }
+
+    /// An entry under the old name becomes one under the new: "Launch at
+    /// login" stays on, and a login does not start Snipdeck twice.
+    fn migrate() {
+        let (Some(old), Some(new)) = (old_desktop_path(), desktop_path()) else { return };
+        if old.exists() {
+            let moved = if new.exists() {
+                std::fs::remove_file(&old)
+            } else {
+                std::fs::rename(&old, &new)
+            };
+            if let Err(e) = moved {
+                log::warn!("could not move the old launch-at-login entry: {e}");
+            }
+        }
     }
 
     pub fn is_enabled() -> bool {
+        migrate();
         desktop_path().map(|p| p.exists()).unwrap_or(false)
     }
 
     pub fn set_enabled(enabled: bool) -> Result<()> {
+        migrate();
         let path = desktop_path().ok_or_else(|| anyhow!("config directory not found"))?;
         if !enabled {
             if path.exists() {
@@ -212,6 +242,7 @@ mod imp {
     }
 
     pub fn refresh() -> Result<()> {
+        migrate();
         let Some(path) = desktop_path() else { return Ok(()) };
         let Ok(current) = std::fs::read_to_string(&path) else { return Ok(()) };
         let wanted = entry(&std::env::current_exe()?);
@@ -224,7 +255,7 @@ mod imp {
 
     fn entry(exe: &std::path::Path) -> String {
         format!(
-            "[Desktop Entry]\nType=Application\nName=Snipdeck\nExec={} {}\nX-GNOME-Autostart-enabled=true\nTerminal=false\n",
+            "[Desktop Entry]\nType=Application\nName=Snipdeck\nIcon=snipdeck\nExec={} {}\nX-GNOME-Autostart-enabled=true\nTerminal=false\n",
             exec_arg(&exe.to_string_lossy()),
             super::ARG
         )

@@ -43,6 +43,75 @@ const ID_CLIP_ONLY: &str = "clipboard-only";
 const ID_TOGGLE: &str = "toggle-visibility";
 const ID_GALLERY: &str = "gallery";
 
+/// Tell the desktop portal who is calling, before any other portal call.
+///
+/// The portal names an unsandboxed app after the desktop entry it was
+/// launched from, and one started any other way — from a terminal, a script,
+/// a file manager — has no name and is refused global shortcuts. The host
+/// registry (xdg-desktop-portal 1.19 and later) lets the app give its own;
+/// it has to come first on the connection, so every portal user calls this
+/// before anything else. Older portals do not have the registry, and a second
+/// registration is refused: neither is worth more than a debug line.
+pub async fn register_app_id() {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static DONE: AtomicBool = AtomicBool::new(false);
+    if DONE.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    let result = match ashpd::AppID::try_from(crate::APP_ID) {
+        Ok(id) => ashpd::register_host_app(id).await,
+        Err(e) => Err(e),
+    };
+    match result {
+        Ok(()) => log::info!("portal: registered as {}", crate::APP_ID),
+        Err(e) => log::debug!("portal: could not register the app id: {e}"),
+    }
+}
+
+/// The gallery window, handed to the hotkey thread as the parent of the
+/// portal's consent dialog.
+///
+/// Without a parent the dialog is a window of the portal's own process, and
+/// KDE's focus-stealing prevention opened it behind the gallery that had just
+/// been activated: the shortcuts waited on a dialog nobody could see. With
+/// one, the desktop stacks the dialog on the gallery.
+struct Parent(
+    raw_window_handle::RawWindowHandle,
+    Option<raw_window_handle::RawDisplayHandle>,
+);
+// SAFETY: the handles are plain ids and pointers to the window's native
+// objects, read on the hotkey thread only to build the portal's window
+// identifier, while the gallery that owns them is on screen.
+unsafe impl Send for Parent {}
+
+fn parent_channel() -> &'static (Sender<Parent>, Receiver<Parent>) {
+    static CHANNEL: std::sync::OnceLock<(Sender<Parent>, Receiver<Parent>)> =
+        std::sync::OnceLock::new();
+    CHANNEL.get_or_init(|| crossbeam_channel::bounded(1))
+}
+
+/// Offer `window` as the consent dialog's parent. Call once it is shown; a
+/// window not yet created on this turn of the event loop is tried on the next.
+/// Offers after the first are dropped.
+pub fn offer_parent<C: slint::ComponentHandle + 'static>(c: &C) {
+    let offer = |w: &slint::Window| -> bool {
+        use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
+        let handle = w.window_handle();
+        let Ok(window) = handle.window_handle() else { return false };
+        let display = handle.display_handle().ok().map(|d| d.as_raw());
+        let _ = parent_channel().0.try_send(Parent(window.as_raw(), display));
+        true
+    };
+    if !offer(c.window()) {
+        let weak = c.as_weak();
+        slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+            if let Some(c) = weak.upgrade() {
+                offer(c.window());
+            }
+        });
+    }
+}
+
 /// Should we prefer the portal over the X11 backend?
 ///
 /// Wayland is the deciding factor, not the desktop: an X11 session keeps the
@@ -150,6 +219,7 @@ async fn run(
     };
     use ashpd::desktop::CreateSessionOptions;
 
+    register_app_id().await;
     let shortcuts = GlobalShortcuts::new()
         .await
         .context("connecting to org.freedesktop.portal.GlobalShortcuts")?;
@@ -173,11 +243,22 @@ async fn run(
         .await
         .context("subscribing to shortcut activations")?;
 
-    // No parent window: the bind happens at startup, long before there is a
-    // window worth parenting the portal dialog to.
     // The session exists and the signal stream is live: that is as much as the
     // caller can usefully wait for. Release it before the consent dialog.
     let _ = ready_tx.send(Ok(()));
+
+    // The gallery as the dialog's parent, if it comes up soon. Started hidden
+    // at login there is no gallery, and the dialog goes without one.
+    let parent = parent_channel()
+        .1
+        .recv_timeout(std::time::Duration::from_secs(3))
+        .ok();
+    let identifier = match &parent {
+        Some(Parent(window, display)) => {
+            ashpd::WindowIdentifier::from_raw_handle(window, display.as_ref()).await
+        }
+        None => None,
+    };
 
     // Blocks until the user answers the portal's dialog — seconds, or never.
     // A refusal is not an error worth tearing anything down: the app keeps
@@ -187,7 +268,7 @@ async fn run(
         .bind_shortcuts(
             &session,
             &new_shortcuts,
-            None,
+            identifier.as_ref(),
             BindShortcutsOptions::default(),
         )
         .await

@@ -548,6 +548,9 @@ impl AppState {
                         }
                         crate::tray::focus_main_window();
                     }
+                    crate::bus_service::BusEvent::Hotkey(action) => {
+                        self.handle_hotkey(action, window);
+                    }
                 }
             }
             any_snip

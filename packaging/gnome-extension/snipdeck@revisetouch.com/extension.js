@@ -59,8 +59,13 @@ Gio._promisify(Shell.Screenshot.prototype, 'screenshot_stage_to_content');
 Gio._promisify(Shell.Screenshot, 'composite_to_stream');
 Gio._promisify(Gio.DBusConnection.prototype, 'call');
 
-/** WM_CLASS of every Snipdeck window. */
-const WM_CLASS = 'snipdeck';
+/**
+ * WM_CLASS of every Snipdeck window, lower-cased: the application id, and the
+ * bare name it had before — a running older Snipdeck is still recognised.
+ */
+const WM_CLASSES = new Set(['com.revisetouch.snipdeck', 'snipdeck']);
+/** Desktop entries the shell may have tied Snipdeck's windows to. */
+const APP_IDS = new Set(['com.revisetouch.Snipdeck.desktop', 'snipdeck.desktop']);
 
 /** Title prefix that marks a floating snip, as opposed to the gallery window. */
 const SNIP_TITLE = 'SnipdeckFloating';
@@ -652,8 +657,8 @@ export default class SnipdeckExtension extends Extension {
             try {
                 const windows = app.get_windows();
                 // Snipdeck only: no other app's dock entry is ours to touch.
-                const ours = app.get_id() === `${WM_CLASS}.desktop` ||
-                    windows.every(w => (w.get_wm_class() ?? '').toLowerCase() === WM_CLASS);
+                const ours = APP_IDS.has(app.get_id()) ||
+                    windows.every(w => WM_CLASSES.has((w.get_wm_class() ?? '').toLowerCase()));
                 if (!ours || windows.length === 0)
                     return false;
                 // Untitled or not yet mapped counts as quiet too: a snip is
@@ -880,7 +885,7 @@ export default class SnipdeckExtension extends Extension {
             if ((window.get_title() ?? '').startsWith(SNIP_TITLE))
                 return true;
             const wmClass = window.get_wm_class();
-            return !!wmClass && wmClass.toLowerCase() === WM_CLASS;
+            return !!wmClass && WM_CLASSES.has(wmClass.toLowerCase());
         } catch (_) {
             return false;
         }

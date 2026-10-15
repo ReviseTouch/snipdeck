@@ -6,11 +6,8 @@
 #
 # The .desktop entry is not decoration. On Wayland, global shortcuts go through
 # xdg-desktop-portal, which since 1.21 refuses a session from a client with no
-# application id — and an unsandboxed app only gets one when the desktop
-# launched it from a .desktop entry (the portal reads it out of the systemd
-# scope name). Start the binary straight from a terminal and every shortcut
-# silently fails to bind. So: install this, then launch Snipdeck from your
-# applications menu.
+# application id, and the id it accepts is this entry's name. See the note at
+# the end of com.revisetouch.Snipdeck.desktop.
 
 set -eu
 
@@ -19,11 +16,39 @@ APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 ICON_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/256x256/apps"
 EXT_UUID="snipdeck@revisetouch.com"
 EXT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$EXT_UUID"
+KWIN_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/kwin/scripts/snipdeck"
 SRC="$(cd "$(dirname "$0")" && pwd)"
+DESKTOP=com.revisetouch.Snipdeck.desktop
+# The names this entry had before: removed on install and uninstall, or a
+# menu would list Snipdeck twice and a login would start it twice.
+OLD_DESKTOP=snipdeck.desktop
 
-# Is this a GNOME session? Only there is the shell extension worth installing —
-# every other desktop either grants the window control outright (X11) or offers
-# wlr-layer-shell (KDE, wlroots), and would just be left with dead files.
+is_kde() {
+    case ":${XDG_CURRENT_DESKTOP:-}:" in
+    *:KDE:*) return 0 ;;
+    esac
+    return 1
+}
+
+# KWin loads scripts when told to reconfigure; no need to log out.
+kwin_reconfigure() {
+    dbus-send --session --type=method_call --dest=org.kde.KWin /KWin org.kde.KWin.reconfigure \
+        >/dev/null 2>&1 || true
+}
+
+kwin_enable() {
+    for tool in kwriteconfig6 kwriteconfig5; do
+        if command -v "$tool" >/dev/null 2>&1; then
+            "$tool" --file kwinrc --group Plugins --key snipdeckEnabled "$1"
+            kwin_reconfigure
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Is this a GNOME session? Only there is the shell extension worth installing,
+# as the KWin script only on KDE; anywhere else they would be dead files.
 is_gnome() {
     case ":${XDG_CURRENT_DESKTOP:-}:" in
     *:GNOME:* | *GNOME-*) return 0 ;;
@@ -34,13 +59,19 @@ is_gnome() {
 if [ "${1:-}" = "--uninstall" ]; then
     # The login autostart entry too, if "Launch at login" was on: left behind,
     # it ran a binary that no longer exists at every login.
-    rm -f "$BIN_DIR/snipdeck" "$APP_DIR/snipdeck.desktop" "$ICON_DIR/snipdeck.png" \
-        "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/snipdeck.desktop"
+    rm -f "$BIN_DIR/snipdeck" "$APP_DIR/$DESKTOP" "$APP_DIR/$OLD_DESKTOP" "$ICON_DIR/snipdeck.png" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/$DESKTOP" \
+        "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/$OLD_DESKTOP"
     command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APP_DIR" || true
     if [ -d "$EXT_DIR" ]; then
         command -v gnome-extensions >/dev/null 2>&1 && gnome-extensions disable "$EXT_UUID" 2>/dev/null || true
         rm -rf "$EXT_DIR"
         echo "GNOME Shell extension removed (log out and back in to unload it)."
+    fi
+    if [ -d "$KWIN_DIR" ]; then
+        rm -rf "$KWIN_DIR"
+        kwin_reconfigure
+        echo "KWin script removed."
     fi
     echo "Snipdeck removed. Your snips in ~/.local/share/Snipdeck were left alone."
     exit 0
@@ -51,10 +82,11 @@ mkdir -p "$BIN_DIR" "$APP_DIR" "$ICON_DIR"
 install -m 755 "$SRC/snipdeck" "$BIN_DIR/snipdeck"
 [ -f "$SRC/snipdeck.png" ] && install -m 644 "$SRC/snipdeck.png" "$ICON_DIR/snipdeck.png"
 
-# Point Exec at the installed binary. The *filename* is what the portal turns
-# into the application id, so it has to stay snipdeck.desktop.
-sed "s|^Exec=.*|Exec=$BIN_DIR/snipdeck|" "$SRC/snipdeck.desktop" > "$APP_DIR/snipdeck.desktop"
-chmod 644 "$APP_DIR/snipdeck.desktop"
+# Point Exec at the installed binary. The *filename* is the application id,
+# so it keeps the name it has here.
+rm -f "$APP_DIR/$OLD_DESKTOP"
+sed "s|^Exec=.*|Exec=$BIN_DIR/snipdeck|" "$SRC/$DESKTOP" > "$APP_DIR/$DESKTOP"
+chmod 644 "$APP_DIR/$DESKTOP"
 
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APP_DIR" || true
 
@@ -73,14 +105,24 @@ if [ -d "$SRC/$EXT_UUID" ] && is_gnome; then
     EXT_INSTALLED=yes
 fi
 
+# The KWin script: the same job on KDE Plasma. A Wayland client cannot keep
+# a window above the others there either; a KWin script can, and loads at once.
+KWIN_INSTALLED=no
+if [ -d "$SRC/kwin-script/snipdeck" ] && is_kde; then
+    mkdir -p "$KWIN_DIR/contents/code"
+    install -m 644 "$SRC/kwin-script/snipdeck/metadata.json" "$KWIN_DIR/"
+    install -m 644 "$SRC/kwin-script/snipdeck/contents/code/main.js" "$KWIN_DIR/contents/code/"
+    kwin_enable true && KWIN_INSTALLED=yes
+fi
+
 echo "Snipdeck installed to $BIN_DIR/snipdeck"
 echo
 
 case "${XDG_SESSION_TYPE:-}" in
 wayland)
     echo "Wayland session detected."
-    echo "  * Launch Snipdeck from the applications menu, NOT from a terminal —"
-    echo "    global shortcuts will not bind otherwise."
+    echo "  * Launch Snipdeck from the applications menu. From a terminal, global"
+    echo "    shortcuts need xdg-desktop-portal 1.19 or later."
     echo "  * The first shortcut binding shows a system dialog; approve it once."
     ;;
 esac
@@ -100,6 +142,8 @@ if [ "$EXT_INSTALLED" = yes ]; then
         echo "    Press Alt+F2, type 'r' and hit Enter to load it now."
         ;;
     esac
+elif [ "$KWIN_INSTALLED" = yes ]; then
+    echo "  * KWin script installed and enabled: snips stay above other windows."
 elif [ -d "$SRC/$EXT_UUID" ]; then
     echo "  * GNOME Shell extension NOT installed: this is not a GNOME session,"
     echo "    and it is only needed there."
