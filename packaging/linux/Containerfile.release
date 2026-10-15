@@ -1,0 +1,45 @@
+# The build image for Snipdeck's Linux release: an old glibc, and the -dev
+# packages the build needs.
+#
+# A binary's glibc floor is set by the machine that built it. Built on a
+# current distribution it would not start on Ubuntu 22.04 or Debian 12;
+# Debian 11 (glibc 2.31) is old enough for every distribution still getting
+# security updates. Only the libc it links against changes — not the build.
+#
+# Used by packaging/linux/build-release.sh:
+#
+#   podman build -f packaging/linux/Containerfile.release -t snipdeck-release .
+ARG BASE=docker.io/library/rust:1-bullseye
+FROM ${BASE}
+
+# The CI's list (.github/workflows/release.yml, Linux job), on Debian 11,
+# less the GL and EGL headers: glutin and glow load both at run time, and
+# Debian 11's archive no longer serves its Mesa -dev packages. PipeWire is
+# loaded at run time too.
+# Debian 11 left security support in August 2026 and its security updates
+# moved to archive.debian.org: the live security index still names packages
+# its pool no longer holds (404). The main archive is still on the mirrors,
+# and not yet complete on archive.debian.org — so main from the mirror,
+# security from the archive.
+RUN printf '%s\n' \
+        'deb http://deb.debian.org/debian bullseye main' \
+        'deb http://deb.debian.org/debian bullseye-updates main' \
+        'deb http://archive.debian.org/debian-security bullseye-security main' \
+        > /etc/apt/sources.list \
+    && rm -f /etc/apt/sources.list.d/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        pkg-config \
+        libgtk-3-dev \
+        libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+        libxcb-randr0-dev libxrandr-dev \
+        libxkbcommon-dev libwayland-dev \
+        libayatana-appindicator3-dev \
+        libfontconfig1-dev libdbus-1-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# The source is mounted read-only at /src; the target directory and the cargo
+# caches come from the host, so a second build is incremental.
+ENV CARGO_HOME=/cargo CARGO_TARGET_DIR=/target
+RUN mkdir -p /cargo /target && chmod 1777 /cargo /target
+WORKDIR /src

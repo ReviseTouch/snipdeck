@@ -218,3 +218,73 @@ strip = true
 
 [profile.dev]
 opt-level = 1
+
+# ---- Linux packages (packaging/linux/package.sh) --------------------------
+#
+# Assets come from target/package, staged by package.sh from the binary built
+# in the Debian 11 image (glibc 2.31; the binary asks for 2.30 at most).
+# Dependencies were read off that binary's NEEDED entries, not guessed: GTK 3
+# (the tray menu and GLib), libxcb, libdbus and fontconfig are linked. Wayland,
+# EGL/GL, PipeWire and the AppIndicator library are loaded at run time, so they
+# are recommendations: Snipdeck starts without them and says what is missing.
+
+[package.metadata.deb]
+maintainer = "ReviseTouch <info@revisetouch.com>"
+copyright = "2026 Hasan Salihoğlu"
+license-file = ["LICENSE", "0"]
+section = "graphics"
+priority = "optional"
+extended-description = """\
+Snipdeck captures a region of the screen and keeps it on screen as a \
+floating window, recognises its text on the device, and keeps every snip in \
+a searchable gallery with annotation, collage and opt-in upload. On GNOME \
+its shell extension places snips where they were captured, keeps them above \
+other windows and adds Super+Alt+drag capture: enable it once with \
+`gnome-extensions enable snipdeck@revisetouch.com`, then log out and back in."""
+depends = "libc6 (>= 2.30), libgcc-s1, libgtk-3-0, libxcb1, libdbus-1-3, libfontconfig1"
+recommends = "libayatana-appindicator3-1, libwayland-client0, libwayland-egl1, libegl1, libxkbcommon0, libpipewire-0.3-0, xdg-desktop-portal, xdg-utils, tesseract-ocr"
+suggests = "gnome-shell-extension-appindicator"
+assets = [
+    ["target/package/snipdeck", "usr/bin/", "755"],
+    ["target/package/snipdeck.desktop", "usr/share/applications/snipdeck.desktop", "644"],
+    ["target/package/icons/snipdeck-48.png", "usr/share/icons/hicolor/48x48/apps/snipdeck.png", "644"],
+    ["target/package/icons/snipdeck-128.png", "usr/share/icons/hicolor/128x128/apps/snipdeck.png", "644"],
+    ["target/package/icons/snipdeck-256.png", "usr/share/icons/hicolor/256x256/apps/snipdeck.png", "644"],
+    ["target/package/snipdeck@revisetouch.com/extension.js", "usr/share/gnome-shell/extensions/snipdeck@revisetouch.com/extension.js", "644"],
+    ["target/package/snipdeck@revisetouch.com/metadata.json", "usr/share/gnome-shell/extensions/snipdeck@revisetouch.com/metadata.json", "644"],
+    ["README.md", "usr/share/doc/snipdeck/README.md", "644"],
+]
+
+[package.metadata.generate-rpm]
+summary = "Screen snipping with floating snips, on-device OCR and a searchable gallery"
+# No rpm on the build machine to read the ELF headers; the list is the
+# binary's NEEDED entries, as for the .deb.
+auto-req = "disabled"
+assets = [
+    { source = "target/package/snipdeck", dest = "/usr/bin/snipdeck", mode = "755" },
+    { source = "target/package/snipdeck.desktop", dest = "/usr/share/applications/snipdeck.desktop", mode = "644" },
+    { source = "target/package/icons/snipdeck-48.png", dest = "/usr/share/icons/hicolor/48x48/apps/snipdeck.png", mode = "644" },
+    { source = "target/package/icons/snipdeck-128.png", dest = "/usr/share/icons/hicolor/128x128/apps/snipdeck.png", mode = "644" },
+    { source = "target/package/icons/snipdeck-256.png", dest = "/usr/share/icons/hicolor/256x256/apps/snipdeck.png", mode = "644" },
+    { source = "target/package/snipdeck@revisetouch.com/extension.js", dest = "/usr/share/gnome-shell/extensions/snipdeck@revisetouch.com/extension.js", mode = "644" },
+    { source = "target/package/snipdeck@revisetouch.com/metadata.json", dest = "/usr/share/gnome-shell/extensions/snipdeck@revisetouch.com/metadata.json", mode = "644" },
+    { source = "README.md", dest = "/usr/share/doc/snipdeck/README.md", mode = "644", doc = true },
+    { source = "LICENSE", dest = "/usr/share/licenses/snipdeck/LICENSE", mode = "644" },
+]
+
+# By soname, not package name: Fedora, RHEL and openSUSE name the same library
+# differently (dbus-libs, libdbus-1-3), and every rpm distribution resolves
+# these to its own package.
+[package.metadata.generate-rpm.requires]
+"libc.so.6(GLIBC_2.30)(64bit)" = "*"
+"libgtk-3.so.0()(64bit)" = "*"
+"libgdk-3.so.0()(64bit)" = "*"
+"libxcb.so.1()(64bit)" = "*"
+"libdbus-1.so.3()(64bit)" = "*"
+"libfontconfig.so.1()(64bit)" = "*"
+
+[package.metadata.generate-rpm.recommends]
+libayatana-appindicator-gtk3 = "*"
+xdg-desktop-portal = "*"
+xdg-utils = "*"
+tesseract = "*"
