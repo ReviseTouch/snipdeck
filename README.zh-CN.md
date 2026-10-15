@@ -10,16 +10,16 @@
 
 # Snipdeck
 
-**一款快速、以键盘为核心的 Windows 屏幕截图 _工作台_。**
+**一款快速、以键盘为核心的 Windows 和 Linux 屏幕截图 _工作台_。**
 
 <sub>由 <a href="https://revisetouch.com"><b>ReviseTouch</b></a> 出品的免费开源应用。</sub>
 
 框选一块区域，让截图悬浮于一切窗口之上，对其进行标注、
 建立 OCR 索引，并在一个高密度图库中检索数百张截图——
-这一切都来自一个原生 Rust 应用，搭配软件渲染的 [Slint](https://slint.dev) 界面。
+这一切都来自一个原生 Rust 应用，搭配 [Slint](https://slint.dev) 界面。
 
-![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white)
-![linux](https://img.shields.io/badge/Linux-GNOME%20full%20%2F%20others%20partial-yellow) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
+![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white) ![release](https://img.shields.io/github/v/release/ReviseTouch/snipdeck?label=release)
+![linux](https://img.shields.io/badge/Linux-GNOME%20%C2%B7%20KDE%20%C2%B7%20X11%20%28beta%29-FCC624?logo=linux&logoColor=black) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
 ![built with](https://img.shields.io/badge/built%20with-Rust%20%2B%20Slint-orange?logo=rust&logoColor=white)
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)

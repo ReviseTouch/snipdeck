@@ -10,17 +10,17 @@
 
 # Snipdeck
 
-**Windows için hızlı, klavye odaklı bir ekran kırpma _destesi_.**
+**Windows ve Linux için hızlı, klavye odaklı bir ekran kırpma _destesi_.**
 
 <sub><a href="https://revisetouch.com"><b>ReviseTouch</b></a> tarafından geliştirilen ücretsiz ve açık kaynaklı bir uygulama.</sub>
 
 Bir bölgeyi yakala, snip'leri her şeyin üstünde yüzer halde tut, üzerlerine
 çizim yap, OCR ile dizinle ve yüzlerce ekran görüntüsünü tek bir yoğun galeriden
-ara — hepsi, yazılımla render edilen [Slint](https://slint.dev) arayüzüne sahip
+ara — hepsi, [Slint](https://slint.dev) arayüzüne sahip
 yerel bir Rust uygulamasından.
 
-![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white)
-![linux](https://img.shields.io/badge/Linux-GNOME%20full%20%2F%20others%20partial-yellow) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
+![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white) ![release](https://img.shields.io/github/v/release/ReviseTouch/snipdeck?label=release)
+![linux](https://img.shields.io/badge/Linux-GNOME%20%C2%B7%20KDE%20%C2%B7%20X11%20%28beta%29-FCC624?logo=linux&logoColor=black) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
 ![built with](https://img.shields.io/badge/built%20with-Rust%20%2B%20Slint-orange?logo=rust&logoColor=white)
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)

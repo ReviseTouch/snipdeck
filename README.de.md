@@ -10,16 +10,16 @@
 
 # Snipdeck
 
-**Ein schnelles, tastaturgesteuertes _Deck_ für Bildschirmausschnitte unter Windows.**
+**Ein schnelles, tastaturgesteuertes _Deck_ für Bildschirmausschnitte unter Windows und Linux.**
 
 <sub>Eine kostenlose Open-Source-App von <a href="https://revisetouch.com"><b>ReviseTouch</b></a>.</sub>
 
 Erfasse einen Bereich, halte Ausschnitte über allem schwebend, versieh sie mit Anmerkungen,
 indexiere sie per OCR und durchsuche hunderte Screenshots aus einer einzigen, dichten Galerie –
-alles aus einer nativen Rust-App mit einer softwaregerenderten [Slint](https://slint.dev)-Oberfläche.
+alles aus einer nativen Rust-App mit einer [Slint](https://slint.dev)-Oberfläche.
 
-![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white)
-![linux](https://img.shields.io/badge/Linux-GNOME%20full%20%2F%20others%20partial-yellow) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
+![platform](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?logo=windows&logoColor=white) ![release](https://img.shields.io/github/v/release/ReviseTouch/snipdeck?label=release)
+![linux](https://img.shields.io/badge/Linux-GNOME%20%C2%B7%20KDE%20%C2%B7%20X11%20%28beta%29-FCC624?logo=linux&logoColor=black) ![soon](https://img.shields.io/badge/macOS-on%20the%20way-lightgrey)
 ![built with](https://img.shields.io/badge/built%20with-Rust%20%2B%20Slint-orange?logo=rust&logoColor=white)
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)
