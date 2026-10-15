@@ -273,6 +273,7 @@ okunur ve derleme sırasında ikiliye gömülür (çalışma zamanında gettext 
    alanını doldur — yer tutucuları (`{}`, `{e}`, `{url}`, `{path}`) ve `\r\n` kaçışlarını koru.
 4. Yeni bir dil eklemek için `.po` dosyasını oluştur ve kodu `src/i18n.rs` içindeki `LANGUAGES`
    ve `po_source()`'a ekle.
+5. `tools/i18n-check.py` betiğini çalıştır: her metnin yer tutucularıyla birlikte çevrildiğini denetler; CI da çalıştırır.
 
 </details>
 

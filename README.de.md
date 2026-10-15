@@ -263,6 +263,7 @@ Binärdatei eingebettet wird (keine Laufzeitabhängigkeit von gettext).
    halte Platzhalter (`{}`, `{e}`, `{url}`, `{path}`) und `\r\n`-Escapes intakt.
 4. Um eine neue Sprache hinzuzufügen, erstelle ihre `.po` und füge den Code zu `LANGUAGES` und `po_source()`
    in `src/i18n.rs` hinzu.
+5. Führe `tools/i18n-check.py` aus: Es prüft, ob jeder Text samt Platzhaltern übersetzt ist; die CI führt es ebenfalls aus.
 
 </details>
 

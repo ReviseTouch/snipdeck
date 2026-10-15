@@ -262,6 +262,7 @@ binário no momento da compilação (sem dependência de gettext em tempo de exe
    mantenha os marcadores de posição (`{}`, `{e}`, `{url}`, `{path}`) e os escapes `\r\n` intactos.
 4. Para adicionar um novo idioma, crie seu `.po` e adicione o código em `LANGUAGES` e `po_source()`
    em `src/i18n.rs`.
+5. Execute `tools/i18n-check.py`: ele verifica se cada texto está traduzido, com os marcadores intactos; a CI também o executa.
 
 </details>
 

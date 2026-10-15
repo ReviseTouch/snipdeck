@@ -262,6 +262,7 @@ binary at build time (no runtime gettext dependency).
    keep placeholders (`{}`, `{e}`, `{url}`, `{path}`) and `\r\n` escapes intact.
 4. To add a new language, create its `.po` and add the code to `LANGUAGES` and `po_source()`
    in `src/i18n.rs`.
+5. Run `tools/i18n-check.py`: it checks that every string is translated, placeholders intact; CI runs it too.
 
 </details>
 

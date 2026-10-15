@@ -401,8 +401,6 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-msgid "A fast, free, open-source screen-snipping deck for Windows."
-msgstr ""
 
 msgid "Made by ReviseTouch — we build developer tools & AI products."
 msgstr ""
@@ -539,4 +537,155 @@ msgid "Imgur refused the Client-ID (HTTP 403)."
 msgstr ""
 
 msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
+msgstr ""
+
+#. ── Added since 0.2.0: menus, confirmations, editor, colour picker ──
+msgid "A fast, free, open-source screen-snipping deck for Windows and Linux."
+msgstr ""
+
+msgid "Asked once; your answer is remembered."
+msgstr ""
+
+msgid "Capture a region from the screen with Super + Alt + drag."
+msgstr ""
+
+msgid "Capture a region from the screen with the New button or a hotkey."
+msgstr ""
+
+msgid "Colour picker unavailable: {e}"
+msgstr ""
+
+msgid "Copy the snip image to the clipboard"
+msgstr ""
+
+msgid "Crop by dragging the edges inward"
+msgstr ""
+
+msgid "Delete all {} snips?"
+msgstr ""
+
+msgid "Delete the snip permanently"
+msgstr ""
+
+msgid "Delete {} unpinned snips?"
+msgstr ""
+
+msgid "Discard"
+msgstr ""
+
+msgid "Discard your annotations?"
+msgstr ""
+
+msgid "Draw and mark up the snip"
+msgstr ""
+
+msgid "Every snip goes, pinned ones included. The images are deleted from disk and cannot be restored."
+msgstr ""
+
+msgid "Everything drawn since the editor opened will be lost."
+msgstr ""
+
+msgid "Failed to open annotation editor: {e}"
+msgstr ""
+
+msgid "Failed to open window: {e}"
+msgstr ""
+
+msgid "Failed to read image: {e}"
+msgstr ""
+
+msgid "Failed to save snip: {e}"
+msgstr ""
+
+msgid "Finish or cancel the open annotation before starting another."
+msgstr ""
+
+msgid "Flip horizontally"
+msgstr ""
+
+msgid "Flip vertically"
+msgstr ""
+
+msgid "Hide from screen (stays in the gallery)"
+msgstr ""
+
+msgid "Hover an item to see what it does"
+msgstr ""
+
+msgid "Keep editing"
+msgstr ""
+
+msgid "New email with the snip attached"
+msgstr ""
+
+msgid "OCR + Translate reads the text in this snip on your computer, then sends that text — not the image — to Google Translate (translate.googleapis.com). Nothing else in Snipdeck sends anything without asking."
+msgstr ""
+
+msgid "Open in the system image editor"
+msgstr ""
+
+msgid "Open the main Snipdeck window"
+msgstr ""
+
+msgid "Pick a color from anywhere on screen — a magnifier follows the cursor, click to grab"
+msgstr ""
+
+msgid "Pick a color from this snip with the magnifier"
+msgstr ""
+
+msgid "Pick color"
+msgstr ""
+
+msgid "Picked color"
+msgstr ""
+
+msgid "Pinned snips stay. The images are deleted from disk and cannot be restored."
+msgstr ""
+
+msgid "Read the text in the image and copy it"
+msgstr ""
+
+msgid "Read the text, then translate it"
+msgstr ""
+
+msgid "Resize with the corner handles"
+msgstr ""
+
+msgid "Rotate 180°"
+msgstr ""
+
+msgid "Rotate 90° left"
+msgstr ""
+
+msgid "Rotate 90° right"
+msgstr ""
+
+msgid "Run as administrator"
+msgstr ""
+
+msgid "Send"
+msgstr ""
+
+msgid "Send the text to Google?"
+msgstr ""
+
+msgid "Settings could not be read and were reset. The old file is kept as {path}"
+msgstr ""
+
+msgid "Share via the Windows share sheet"
+msgstr ""
+
+msgid "Snipping needs pointer access this session does not grant."
+msgstr ""
+
+msgid "Take a new snip"
+msgstr ""
+
+msgid "Take a new snip — or drag a region with Super + Alt"
+msgstr ""
+
+msgid "Upload to an image host, copy the link"
+msgstr ""
+
+msgid "eyedropper"
 msgstr ""

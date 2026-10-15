@@ -264,6 +264,7 @@ binaire au moment de la compilation (aucune dépendance gettext à l'exécution)
    gardez les espaces réservés (`{}`, `{e}`, `{url}`, `{path}`) et les séquences d'échappement `\r\n` intacts.
 4. Pour ajouter une nouvelle langue, créez son `.po` et ajoutez le code à `LANGUAGES` et `po_source()`
    dans `src/i18n.rs`.
+5. Lancez `tools/i18n-check.py` : il vérifie que chaque texte est traduit, espaces réservés intacts ; la CI le lance aussi.
 
 </details>
 

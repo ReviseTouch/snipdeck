@@ -130,6 +130,11 @@ jobs:
             libfontconfig-dev libdbus-1-dev \
             libgl1-mesa-dev libegl1-mesa-dev
 
+      # Every string the UI asks for, translated in every language, with
+      # its placeholders intact.
+      - name: Translations
+        run: python3 tools/i18n-check.py
+
       - name: Build (release)
         run: cargo build --release
         env:
