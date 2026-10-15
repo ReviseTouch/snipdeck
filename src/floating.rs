@@ -367,6 +367,7 @@ impl FloatingManager {
         win.window()
             .set_size(slint::LogicalSize::new(outer_w, outer_h));
         win.show()?;
+        crate::window_env::keep_above(&win);
         // NOTE: this never resolves an HWND on the winit backend (the native
         // window handle isn't exposed through raw-window-handle here — logs
         // show "not available yet" even after show). The style work actually

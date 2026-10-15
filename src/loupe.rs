@@ -119,6 +119,7 @@ impl ColorPicker {
         self.update(); // paint a first frame before the window appears
         if let Some(w) = &self.loupe {
             let _ = w.show();
+            crate::window_env::keep_above(w);
         }
         crate::mouse_trigger::arm_color_pick();
         log::info!("color picker: armed");
@@ -223,6 +224,7 @@ impl ColorPicker {
             w.window()
                 .set_position(slint::PhysicalPosition::new(cx + 18, cy + 18));
             let _ = w.show();
+            crate::window_env::keep_above(w);
         }
     }
 }

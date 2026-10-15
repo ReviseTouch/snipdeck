@@ -285,6 +285,7 @@ impl TranslatePopup {
         let (x, y) = place_popup(anchor, pw, ph);
         w.window().set_position(PhysicalPosition::new(x, y));
         w.show()?;
+        crate::window_env::keep_above(&w);
         self.window = Some(w);
 
         // Nothing leaves the machine until the user has agreed to it once:

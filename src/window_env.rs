@@ -243,3 +243,36 @@ pub fn set_frame_theme<C: slint::ComponentHandle + 'static>(c: &C, dark: bool) {
         });
     }
 }
+
+/// Put a just-shown always-on-top window above the others on X11. Call after
+/// every `show()` of a window whose `.slint` says `always-on-top`.
+///
+/// winit asks for `_NET_WM_STATE_ABOVE` once, when it creates the window — and
+/// Slint creates windows hidden, so the request reaches the window manager
+/// before the window is mapped, and EWMH has the window manager ignore a state
+/// message for a window it does not manage yet. Mutter does: the snips came up
+/// as ordinary windows and went behind whatever was clicked next. Slint only
+/// repeats the request when `always-on-top` changes, which it never does. A
+/// window hidden and shown again is withdrawn and loses the state as well.
+///
+/// Sent after the map request, so the window manager reads them in that order.
+/// Again on the next turn, for a window whose native window is created there.
+/// Nothing to do on Wayland, where the level travels with the surface, or on
+/// Windows, where it is a window style.
+pub fn keep_above<C: slint::ComponentHandle + 'static>(c: &C) {
+    if !matches!(caps().backend, Backend::X11 | Backend::Unknown) {
+        return;
+    }
+    use i_slint_backend_winit::winit::window::WindowLevel;
+    use i_slint_backend_winit::WinitWindowAccessor;
+    let apply = |w: &slint::Window| {
+        w.with_winit_window(|native| native.set_window_level(WindowLevel::AlwaysOnTop));
+    };
+    apply(c.window());
+    let weak = c.as_weak();
+    slint::Timer::single_shot(std::time::Duration::from_millis(50), move || {
+        if let Some(c) = weak.upgrade() {
+            apply(c.window());
+        }
+    });
+}

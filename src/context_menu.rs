@@ -359,6 +359,7 @@ impl ContextMenuManager {
         }
 
         w.show()?;
+        crate::window_env::keep_above(&w);
         w.invoke_take_focus();
         self.window = Some(w);
         Ok(())

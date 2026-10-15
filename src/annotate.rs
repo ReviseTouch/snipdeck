@@ -166,6 +166,7 @@ impl Annotator {
     pub fn raise(&self) {
         if let Some(w) = &self.window {
             let _ = w.show();
+            crate::window_env::keep_above(w);
             crate::window_env::set_frame_theme(w, true);
         }
     }
@@ -268,6 +269,7 @@ impl Annotator {
         });
 
         w.show()?;
+        crate::window_env::keep_above(&w);
         // The editor is dark whatever the desktop is; so is its frame.
         crate::window_env::set_frame_theme(&w, true);
         self.window = Some(w);

@@ -243,6 +243,7 @@ impl SlintOverlayManager {
             win.window().set_fullscreen(true);
         }
         win.show()?;
+        crate::window_env::keep_above(&win);
         // Route Escape to the overlay's FocusScope so the overlay-driven
         // path can cancel without the global keyboard hook.
         if cfg!(not(target_os = "windows")) {

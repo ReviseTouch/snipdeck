@@ -60,6 +60,7 @@ impl UploadUi {
         let w = self.window(dark)?;
         if self.busy {
             w.show()?;
+            crate::window_env::keep_above(&w);
             return Ok(());
         }
         if host.needs_client_id() {
@@ -82,6 +83,7 @@ impl UploadUi {
             w.window().set_position(slint::PhysicalPosition::new(px, py));
         }
         w.show()?;
+        crate::window_env::keep_above(&w);
         w.window().request_redraw();
         Ok(())
     }
@@ -132,6 +134,7 @@ impl UploadUi {
                 }
             }
             let _ = w.show();
+            crate::window_env::keep_above(w);
         }
         worked
     }
