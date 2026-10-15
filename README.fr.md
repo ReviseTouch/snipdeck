@@ -77,6 +77,7 @@ le tout depuis une application Rust native dotée d'une interface [Slint](https:
   ou un hébergeur d'images — catbox.moe, Imgur ou **votre propre serveur** à partir d'un fichier ShareX `.sxcu`
   ([détails](#-votre-propre-hébergeur-dimages)). Chaque envoi **demande d'abord**.
 - 🌍 **23 langues**, détectées automatiquement depuis votre système d'exploitation et commutables depuis le menu `⋯` de la barre d'outils.
+- 🪶 **Léger pour votre machine.** Du code natif en Rust avec une interface [Slint](https://slint.dev) — ni moteur de navigateur, ni environnement d'exécution à installer. Environ 68 MB de mémoire, et quasiment pas de CPU pendant qu'il attend dans la zone de notification ([mesures](#-consommation-de-ressources)).
 - 🌗 **Thèmes clair / sombre**, un accueil dans la zone de notification, et un lancement au démarrage **sans registre**.
 
 ---
@@ -424,6 +425,31 @@ lien peut l'ouvrir, et elle n'est pas chiffrée.
 </details>
 
 ---
+
+## 🪶 Consommation de ressources
+
+Snipdeck est du code natif : Rust, avec une interface [Slint](https://slint.dev).
+Il n'embarque aucun moteur de navigateur (comme les applications Electron) ni
+environnement d'exécution .NET ou Java ; il tient donc en un seul fichier et reste
+léger pendant qu'il tourne.
+
+| | Galerie ouverte, au repos | En attente dans la zone de notification |
+| --- | --- | --- |
+| Mémoire (PSS) | 68 MB | 67 MB |
+| dont mémoire propre (USS) | 57 MB | 57 MB |
+| CPU | 0.6 % | 0.05 % |
+
+| Téléchargement | Taille |
+| --- | --- |
+| Windows, `snipdeck-windows-x64.exe` | 32 MB, l'application complète |
+| Linux, `.deb` | 10 MB |
+
+*Méthode de mesure :* la version 0.3.0 compilée en release sur Linux x64 (GNOME
+51, Wayland), avec 10 captures dans la galerie, après 25 secondes de repos ;
+mémoire lue depuis `/proc/<pid>/smaps_rollup`, CPU moyenné sur 40 secondes. Le PSS
+répartit les bibliothèques partagées (GTK, Mesa) au prorata de leurs utilisateurs
+; l'USS est la mémoire que seul Snipdeck occupe. Mesuré le 15/10/2026 ; Windows
+n'a pas encore été mesuré.
 
 ## 🧩 Architecture
 

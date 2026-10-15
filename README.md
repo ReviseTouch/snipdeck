@@ -77,6 +77,7 @@ all from a native Rust app with a [Slint](https://slint.dev) UI.
   or an image host — catbox.moe, Imgur, or **your own server** from a ShareX `.sxcu` file
   ([details](#-your-own-image-host)). Every upload **asks first**.
 - 🌍 **23 languages**, auto-detected from your OS and switchable from the toolbar's `⋯` menu.
+- 🪶 **Light on your machine.** Native code in Rust with a [Slint](https://slint.dev) UI — no browser engine, no runtime to install. About 68 MB of memory, and next to no CPU while it waits in the tray ([measured](#-resource-use)).
 - 🌗 **Light / dark themes**, a system-tray home, and **registry-free** launch-at-login.
 
 ---
@@ -422,6 +423,29 @@ link can open it, and it is not encrypted.
 </details>
 
 ---
+
+## 🪶 Resource use
+
+Snipdeck is native code: Rust, with a [Slint](https://slint.dev) UI. There is no
+embedded browser engine (as in Electron apps) and no .NET or Java runtime, so
+it ships as one file and stays small while it runs.
+
+| | Gallery open, idle | Waiting in the tray |
+| --- | --- | --- |
+| Memory (PSS) | 68 MB | 67 MB |
+| of which its own (USS) | 57 MB | 57 MB |
+| CPU | 0.6 % | 0.05 % |
+
+| Download | Size |
+| --- | --- |
+| Windows, `snipdeck-windows-x64.exe` | 32 MB, the whole app |
+| Linux, `.deb` | 10 MB |
+
+*How it was measured:* the 0.3.0 release build on Linux x64 (GNOME 51,
+Wayland), with 10 snips in the gallery, after 25 seconds of rest; memory read
+from `/proc/<pid>/smaps_rollup`, CPU averaged over 40 seconds. PSS counts the
+shared libraries (GTK, Mesa) in proportion to their users; USS is the memory
+only Snipdeck holds. Measured on 2026-10-15; Windows has not been measured.
 
 ## 🧩 Architecture
 

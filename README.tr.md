@@ -83,6 +83,9 @@ yerel bir Rust uygulamasından.
   `.sxcu` dosyasından **kendi sunucun** ([ayrıntılar](#-kendi-görüntü-barındırıcın)). Her yükleme **önce sorar.**
 - 🌍 **23 dil**, işletim sisteminden otomatik algılanır ve araç çubuğundaki `⋯` menüsünden
   değiştirilebilir.
+- 🪶 **Makinene yük olmaz.** Rust ile yazılmış yerel kod, [Slint](https://slint.dev) arayüzü —
+  tarayıcı motoru yok, kurulacak çalışma zamanı yok. Yaklaşık 68 MB bellek; tepside beklerken
+  neredeyse hiç CPU harcamaz ([ölçüm](#-kaynak-kullanımı)).
 - 🌗 **Açık / koyu temalar**, sistem tepsisi yuvası ve **kayıt defteri kullanmayan**
   oturum açılışında başlatma.
 
@@ -428,6 +431,30 @@ listelenmez ama bağlantıya sahip herkes açabilir ve şifrelenmez.
 </details>
 
 ---
+
+## 🪶 Kaynak kullanımı
+
+Snipdeck yerel koddur: Rust ve [Slint](https://slint.dev) arayüzü. İçine gömülü
+bir tarayıcı motoru (Electron uygulamalarındaki gibi) ya da .NET veya Java çalışma
+zamanı yok; bu yüzden tek dosya olarak gelir ve çalışırken de küçük kalır.
+
+| | Galeri açık, boşta | Tepside beklerken |
+| --- | --- | --- |
+| Bellek (PSS) | 68 MB | 67 MB |
+| bunun kendine ait olanı (USS) | 57 MB | 57 MB |
+| CPU | 0.6 % | 0.05 % |
+
+| İndirme | Boyut |
+| --- | --- |
+| Windows, `snipdeck-windows-x64.exe` | 32 MB, uygulamanın tamamı |
+| Linux, `.deb` | 10 MB |
+
+*Nasıl ölçüldü:* Linux x64 üzerinde (GNOME 51, Wayland) 0.3.0 sürüm derlemesi,
+galeride 10 snip varken, 25 saniyelik dinlenmeden sonra; bellek
+`/proc/<pid>/smaps_rollup` dosyasından okundu, CPU 40 saniye boyunca ortalandı.
+PSS paylaşılan kütüphaneleri (GTK, Mesa) onları kullanan süreçlere orantılı olarak
+sayar; USS yalnızca Snipdeck'in tuttuğu bellektir. Ölçüm tarihi 2026-10-15;
+Windows henüz ölçülmedi.
 
 ## 🧩 Mimari
 
