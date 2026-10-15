@@ -202,10 +202,9 @@ impl AppState {
                 .monitor_label
                 .cmp(&b.monitor_label)
                 .then(b.created_at.cmp(&a.created_at)),
-            _ => b
-                .pinned
-                .cmp(&a.pinned)
-                .then(b.created_at.cmp(&a.created_at)),
+            // Newest: by date alone. It used to put pinned snips first as
+            // well, which made it the "Pinned" order under another name.
+            _ => b.created_at.cmp(&a.created_at),
         });
     }
 
