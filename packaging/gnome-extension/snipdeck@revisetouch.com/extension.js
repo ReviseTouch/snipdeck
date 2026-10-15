@@ -691,6 +691,13 @@ export default class SnipdeckExtension extends Extension {
                 this._quietApps.set(id, now);
             }
         };
+        // What the dock last heard is what the answer was when the shell said
+        // the state changed — record it then. Recorded only by the recheck, an
+        // app the shell announced while quiet and first rechecked once it no
+        // longer was would have been left out of the dock with nothing to
+        // correct it.
+        this._handles.push([appSystem, appSystem.connect('app-state-changed',
+            (_s, app) => this._quietApps.set(app.get_id(), quiet(app)))]);
         // A window joins the app unmapped and untitled, so the answer can
         // change later than that: when it is mapped, and when it goes.
         const tracker = Shell.WindowTracker.get_default();
