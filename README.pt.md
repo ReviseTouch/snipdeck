@@ -24,6 +24,12 @@ tudo a partir de um aplicativo Rust nativo com interface [Slint](https://slint.d
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
+<br/>
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/hero-en-light.png">
+  <img src="docs/screenshots/hero-en-dark.png" alt="The Snipdeck gallery, with two snips floating on the desktop" width="100%">
+</picture>
+
 </div>
 
 ---

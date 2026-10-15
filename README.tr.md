@@ -25,6 +25,12 @@ yerel bir Rust uygulamasından.
 ![languages](https://img.shields.io/badge/languages-23-success)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
+<br/>
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/hero-tr-light.png">
+  <img src="docs/screenshots/hero-tr-dark.png" alt="Snipdeck galerisi ve masaüstünde yüzen iki snip" width="100%">
+</picture>
+
 </div>
 
 ---

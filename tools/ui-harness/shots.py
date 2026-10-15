@@ -281,6 +281,37 @@ def scene_ontop(lang, theme, out):
     encode(shot("ontop.mp4"), os.path.join(out, f"ontop-{lang}-{theme}"), trim=1.4, fade=DESKTOP[theme])
 
 
+def scene_hero(lang, theme, out):
+    """The README's and the site's first picture: the gallery where every
+    snip collects, with two of its snips floating over the desktop beside it.
+
+    The two are gallery snips marked floating, as a snip left on screen is
+    at the next start: their cards keep their titles, and the gallery does
+    not gain two untitled copies."""
+    db = sqlite3.connect(os.path.join(WORK, "appdata", "Snipdeck", "snips.db"))
+    rows = [r[0] for r in db.execute("SELECT id FROM snips ORDER BY created_at")]
+    for n, (x, y) in HERO_FLOATS.items():
+        px, py = x * SCALE, y * SCALE
+        db.execute("UPDATE snips SET floating = 1, x = ?, y = ?, last_x = ?, last_y = ? WHERE id = ?",
+                   (px, py, px, py, rows[n - 1]))
+    db.commit()
+    db.close()
+    # The toolbar's eye: show every snip marked floating.
+    log = run(DISMISS + [{"click": {"win": "Snipdeck", "right": 60, "y": 57}}, {"wait": 2000},
+                         {"move": {"x": 1700, "y": 1150}}, {"wait": 1500},
+                         {"windows": True}, {"shot": "hero.png"}],
+              BG=DESKTOP[theme])
+    if log.count("SnipdeckFloating") < 2:
+        raise SystemExit("hero: the floating snips did not appear")
+    save(shot("hero.png"), HERO_BOX, os.path.join(out, f"hero-{lang}-{theme}"))
+
+
+# Seed number -> logical top-left: the chart beside the gallery's left edge,
+# below its toolbar; the notes over its bottom-right corner.
+HERO_FLOATS = {8: (110, 440), 4: (1390, 700)}
+HERO_BOX = (60, 226, 1800, 772)  # logical x, y, w, h
+
+
 def encode(src, base, width=1600, trim=0.0, fade=None):
     """The web video: AV1 in WebM, an H.264 MP4 for Safari, and a poster
     (the last frame: the snip above the editor). `trim` drops the idle start;
@@ -302,7 +333,7 @@ def encode(src, base, width=1600, trim=0.0, fade=None):
 
 
 SCENES = {"gallery": scene_gallery, "floating": scene_floating, "annotate": scene_annotate,
-          "collage": scene_collage, "upload": scene_upload, "ontop": scene_ontop}
+          "collage": scene_collage, "upload": scene_upload, "ontop": scene_ontop, "hero": scene_hero}
 
 
 def main():
