@@ -202,8 +202,18 @@ function setCrosshair(actor, on) {
  * Alt is the trigger here, not a choice, so it is not passed on.
  */
 class SnipGesture {
+    /**
+     * @param {(pid: number | null) => void} onAppPid  told the process id
+     *   behind the app's bus name once it is known, and `null` when the app
+     *   goes.
+     */
+    constructor(onAppPid) {
+        this._onAppPid = onAppPid;
+    }
+
     enable() {
         this._appRunning = false;
+        this._owner = null;
         /** While Super+Alt are held: `{actor, grab, shot, fresh}`. */
         this._armed = null;
         /** While the button is down. */
@@ -213,12 +223,16 @@ class SnipGesture {
 
         this._watchId = Gio.bus_watch_name(
             Gio.BusType.SESSION, BUS_NAME, Gio.BusNameWatcherFlags.NONE,
-            () => {
+            (connection, _name, owner) => {
                 this._appRunning = true;
+                this._owner = owner;
+                this._askPid(connection, owner);
                 this._sync();
             },
             () => {
                 this._appRunning = false;
+                this._owner = null;
+                this._onAppPid?.(null);
                 this._sync();
             });
 
@@ -227,7 +241,29 @@ class SnipGesture {
         this._keymapId = this._keymap.connect('state-changed', () => this._sync());
     }
 
+    /**
+     * Which process owns the app's bus name. The bus daemon answers from the
+     * socket's credentials, so this is not something a client gets to claim.
+     */
+    _askPid(connection, owner) {
+        connection.call(
+            'org.freedesktop.DBus', '/org/freedesktop/DBus', 'org.freedesktop.DBus',
+            'GetConnectionUnixProcessID',
+            new GLib.Variant('(s)', [owner]), new GLib.VariantType('(u)'),
+            Gio.DBusCallFlags.NONE, -1, null,
+        ).then(reply => {
+            // Only if that owner still holds the name: the app may have been
+            // restarted while the question was in flight.
+            if (this._owner === owner)
+                this._onAppPid?.(reply.deepUnpack()[0]);
+        }).catch(e => {
+            log(`snipdeck: could not learn the app's process id: ${e.message}`);
+        });
+    }
+
     disable() {
+        this._owner = null;
+        this._onAppPid = null;
         if (this._watchId) {
             Gio.bus_unwatch_name(this._watchId);
             this._watchId = 0;
@@ -631,13 +667,18 @@ export default class SnipdeckExtension extends Extension {
         // module, and on Wayland it cannot re-import one without a new
         // session — without this marker there is no way to tell a fix that
         // did not work from a fix that was never loaded.
-        log('snipdeck: enable() match=title placement=first-frame lists=switcher+overview+running listed-flag=on gesture=super-alt-drag');
+        log('snipdeck: enable() match=title+pid placement=first-frame lists=switcher+overview+running listed-flag=on gesture=super-alt-drag');
 
         this._handles = [];
         this._pending = new Set();
         this._placing = new Set();
 
-        this._gesture = new SnipGesture();
+        /** The running app's process id, from the session bus; null until known. */
+        this._appPid = null;
+        /** Windows already given their treatment; a second pass leaves them be. */
+        this._adopted = new WeakSet();
+
+        this._gesture = new SnipGesture(pid => this._setAppPid(pid));
         this._gesture.enable();
 
         this._handles.push([
@@ -813,7 +854,7 @@ export default class SnipdeckExtension extends Extension {
     _isSnipWindow(window) {
         try {
             const title = window.get_title() ?? '';
-            if (!title.startsWith(SNIP_TITLE))
+            if (!title.startsWith(SNIP_TITLE) || !this._fromApp(window))
                 return false;
             return !this._wantsListing(title);
         } catch (_) {
@@ -862,6 +903,44 @@ export default class SnipdeckExtension extends Extension {
         this._pending = null;
         this._placing?.clear();
         this._placing = null;
+        this._appPid = null;
+        this._adopted = null;
+    }
+
+    /**
+     * The app's process id arrived, or the app went.
+     *
+     * Windows are judged by it (see `_fromApp`), and the answer comes a
+     * moment after the app's name appears on the bus — by which time it may
+     * already have windows up. So every window on screen is looked at again;
+     * the ones adopted before are skipped.
+     */
+    _setAppPid(pid) {
+        this._appPid = pid;
+        if (pid === null)
+            return;
+        for (const actor of global.get_window_actors())
+            this._adopt(actor.meta_window);
+    }
+
+    /**
+     * Does this window belong to the running Snipdeck?
+     *
+     * A title is only a string, and any client can set one: without this
+     * check, a window of any application that called itself
+     * `SnipdeckFloating 0,0` was put above everything, on every workspace,
+     * where it asked to be, and left out of the switcher — the overlay
+     * GNOME on Wayland deliberately does not let a client make. So the
+     * window's process must be the one that owns the app's bus name. Both
+     * ids come from socket credentials (the compositor's and the bus
+     * daemon's), not from anything the client says about itself.
+     */
+    _fromApp(window) {
+        try {
+            return this._appPid !== null && window.get_pid() === this._appPid;
+        } catch (_) {
+            return false;
+        }
     }
 
     _onWindowCreated(window) {
@@ -936,10 +1015,16 @@ export default class SnipdeckExtension extends Extension {
     _adopt(window) {
         if (!window)
             return false;
+        if (this._adopted?.has(window))
+            return true;
+        // Whatever it is called: only the app's own windows.
+        if (!this._fromApp(window))
+            return false;
 
         // Before `_isOurs`, which a Wayland window without a snip's title
         // never passes.
         if (ABOVE_TITLES.has(window.get_title() ?? '')) {
+            this._adopted.add(window);
             this._raise(window);
             this._applyWhenPlaced(window);
             return true;
@@ -952,6 +1037,7 @@ export default class SnipdeckExtension extends Extension {
         if (!title || !title.startsWith(SNIP_TITLE))
             return false;
 
+        this._adopted.add(window);
         log(`snipdeck: adopting ${JSON.stringify(title)}`);
 
         // Once now, because a window adopted from `enable()` is already placed
