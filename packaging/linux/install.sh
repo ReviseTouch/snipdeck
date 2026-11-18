@@ -149,7 +149,7 @@ elif [ -d "$SRC/$EXT_UUID" ]; then
     echo "    and it is only needed there."
 fi
 
-if [ -z "${XDG_DATA_HOME:-}" ] && ! echo "$PATH" | grep -q "$BIN_DIR"; then
+if [ -z "${XDG_BIN_HOME:-}" ] && ! echo "$PATH" | grep -q "$BIN_DIR"; then
     echo "  * $BIN_DIR is not on your PATH; the menu entry works regardless."
 fi
 
