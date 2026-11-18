@@ -59,6 +59,9 @@ ureq = { version = "2", features = ["json"] }
 # The `{regex:…}` output syntax of imported ShareX uploaders (`src/sxcu.rs`).
 # Already in the tree through other crates; no new download.
 regex = "1"
+# Reads the host an imported uploader really sends to, with the parser ureq
+# itself uses (`sxcu::Uploader::target`). Already in the tree through ureq.
+url = "2"
 # Pure-Rust 2D rasteriser (the resvg engine) used to FLATTEN annotations onto
 # the snip at full resolution: proper anti-aliased thick strokes, round caps/
 # joins and fills that match the live Slint `Path` preview pixel-for-pixel. No

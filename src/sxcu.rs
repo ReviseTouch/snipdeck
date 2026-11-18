@@ -97,10 +97,10 @@ impl Uploader {
         let mut up: Uploader = serde_json::from_str(text)
             .map_err(|_| anyhow!(crate::i18n::t("This file is not a ShareX custom uploader.")))?;
         up.name = up.name.trim().to_string();
+        up.validate()?;
         if up.name.is_empty() {
             up.name = up.domain();
         }
-        up.validate()?;
         Ok(up)
     }
 
@@ -109,22 +109,37 @@ impl Uploader {
         if self.name.is_empty() { self.domain() } else { self.name.clone() }
     }
 
+    /// The request URL as the HTTP client will read it: templates expanded
+    /// first, then the same parser ureq sends with. Reading the host off the
+    /// raw text instead named a different machine than the one that got the
+    /// image — `https://evil.example\\@imgur.com/up` expands to
+    /// `https://evil.example\@imgur.com/up`, where a URL parser takes `\` for
+    /// `/` and the host is `evil.example`, while a split on `/` and `@` said
+    /// `imgur.com`.
+    fn target(&self) -> Option<url::Url> {
+        let expanded = expand(self.request_url.trim(), &|name, _| {
+            (name == "filename").then(|| "snip.png".to_string())
+        })
+        .ok()?;
+        let url = url::Url::parse(&expanded).ok()?;
+        (matches!(url.scheme(), "http" | "https") && url.host_str().is_some()).then_some(url)
+    }
+
     /// `host[:port]` of the request URL — what the consent prompt names.
+    /// Credentials in the URL are not part of the name.
     pub fn domain(&self) -> String {
-        let rest = self
-            .request_url
-            .split_once("://")
-            .map_or(self.request_url.as_str(), |(_, r)| r);
-        let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
-        let host = &rest[..end];
-        // Credentials in the URL are not part of the name.
-        host.rsplit_once('@').map_or(host, |(_, h)| h).to_string()
+        let Some(url) = self.target() else { return String::new() };
+        let host = url.host_str().unwrap_or_default();
+        match url.port() {
+            Some(port) => format!("{host}:{port}"),
+            None => host.to_string(),
+        }
     }
 
     /// True for `https://`. The prompt says so when the image would travel
     /// in the clear — a self-hosted server on the LAN is a fair reason to.
     pub fn is_encrypted(&self) -> bool {
-        self.request_url.trim().to_ascii_lowercase().starts_with("https://")
+        self.target().is_some_and(|url| url.scheme() == "https")
     }
 
     fn method(&self) -> String {
@@ -197,6 +212,13 @@ impl Uploader {
                     }
                 }
             }
+        }
+        // And the address has to be one the HTTP client reads a host from:
+        // the consent window names that host, so it must be the real one.
+        if self.target().is_none() {
+            return Err(anyhow!(crate::i18n::t(
+                "It must upload to an http:// or https:// address."
+            )));
         }
         for t in [self.url.as_deref(), self.error_message.as_deref()].into_iter().flatten() {
             for token in tokens(t)? {
@@ -725,6 +747,23 @@ mod tests {
     fn dollars_and_braces_that_are_not_syntax_stay_text() {
         let up = Uploader::parse(r#"{"RequestURL":"https://h.example/a$b/{x}","Body":"Binary"}"#).unwrap();
         assert_eq!(up.request(b"", "s.png").unwrap().url, "https://h.example/a$b/{x}");
+    }
+
+    /// The consent window must name the machine the image goes to. A URL
+    /// parser reads `\\` as `/` in an http(s) URL, so this one's host is
+    /// `evil.example`, whatever follows the `@`.
+    #[test]
+    fn domain_is_the_host_the_request_goes_to() {
+        let up = Uploader::parse(
+            r#"{"Name":"Imgur","RequestURL":"https://evil.example\\\\@imgur.com/up","Body":"Binary"}"#,
+        )
+        .unwrap();
+        let sent = url::Url::parse(&up.request(b"", "s.png").unwrap().url).unwrap();
+        assert_eq!(sent.host_str(), Some("evil.example"));
+        assert_eq!(up.domain(), "evil.example");
+
+        // Nothing to read a host from: refused at import.
+        assert!(Uploader::parse(r#"{"RequestURL":"https://","Body":"Binary"}"#).is_err());
     }
 
     #[test]
