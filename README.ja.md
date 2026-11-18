@@ -191,6 +191,11 @@ XML の応答、画像ホストではない送信先）は、最初のアップ�
 **Windows** —— [**Releases**](https://github.com/ReviseTouch/snipdeck/releases) ページから
 `snipdeck-windows-x64.exe` を入手してください。インストーラー不要の、単一のポータブル実行ファイルです。
 
+実行ファイルはコード署名されていないため、初回起動時に Windows SmartScreen が
+*Windows によって PC が保護されました* と表示することがあります。**詳細情報 → 実行** を選んでください。
+事前にダウンロードを確認するには、`Get-FileHash snipdeck-windows-x64.exe` の結果を同じページの
+`SHA256SUMS` と比べます。
+
 **Linux (x64)** —— 同じページから、お使いのディストリビューション向けのパッケージを入手します。
 
 ```bash
@@ -384,11 +389,11 @@ GNOME Wayland でまだ欠けている点: ドラッグしたスニップは Mut
 設定は JSON として保存され、初回実行時に作成されます。設定ウィンドウはまだないため、
 ファイルを直接編集してから、Snipdeck を再起動してください。
 
-| パス | 内容 |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | ユーザー設定（下記） |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`、`state.json`、および画像 + サムネイルの `cache\` |
-| `Pictures\Snipdeck\` | *保存* のデフォルトフォルダー |
+| Windows | Linux | 内容 |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | ユーザー設定（下記） |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db`、および画像 + サムネイルの `cache` |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | *保存* のデフォルトフォルダー |
 
 <details>
 <summary><b>主な <code>settings.json</code> のキー</b></summary>
@@ -470,6 +475,9 @@ Snipdeck は **[ReviseTouch](https://revisetouch.com)** による無料のオー
 ## ライセンス
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+Snipdeck のバイナリには他のオープンソースソフトウェアも含まれています。それらのライセンスは
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) にあります。
 
 <div align="center">
 <sub>🦀 Rust と <a href="https://slint.dev">Slint</a> で構築されています。</sub>

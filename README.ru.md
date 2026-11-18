@@ -192,6 +192,11 @@ Snipdeck отправляет изображение как данные фор�
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Единый
 переносимый исполняемый файл, без установщика.
 
+Файл не подписан, поэтому при первом запуске Windows SmartScreen может показать
+*Система Windows защитила ваш компьютер*: выберите **Подробнее → Выполнить в любом случае**.
+Чтобы сначала проверить загрузку, сравните `Get-FileHash snipdeck-windows-x64.exe` с
+`SHA256SUMS` на той же странице.
+
 **Linux (x64)** — с той же страницы возьмите пакет для своего дистрибутива:
 
 ```bash
@@ -394,11 +399,11 @@ Snipdeck он есть (`com.revisetouch.Snipdeck` — имя его запис�
 Настройки хранятся в формате JSON и создаются при первом запуске. Окна настроек пока нет — отредактируйте
 файл напрямую, затем перезапустите Snipdeck.
 
-| Путь | Содержимое |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | Пользовательские настройки (ниже) |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`, `state.json` и `cache\` с изображениями и миниатюрами |
-| `Pictures\Snipdeck\` | Папка по умолчанию для *Сохранить* |
+| Windows | Linux | Содержимое |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | Пользовательские настройки (ниже) |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db` и `cache` с изображениями и миниатюрами |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | Папка по умолчанию для *Сохранить* |
 
 <details>
 <summary><b>Избранные ключи <code>settings.json</code></b></summary>
@@ -487,6 +492,9 @@ Snipdeck — бесплатное приложение с открытым ис�
 ## Лицензия
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+Исполняемый файл Snipdeck содержит и другое открытое ПО; его лицензии — в
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 <div align="center">
 <sub>Создано с 🦀 Rust и <a href="https://slint.dev">Slint</a>.</sub>

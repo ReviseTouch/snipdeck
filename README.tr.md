@@ -205,6 +205,11 @@ ne anlama geldiğini açıklar; iş bitince bağlantıyı gösterir ve onu çokt
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases) sayfasından al. Tek bir
 taşınabilir çalıştırılabilir dosya; kurulum gerektirmez.
 
+Dosya kod imzalı değil; bu yüzden ilk çalıştırmada Windows SmartScreen
+*Windows kişisel bilgisayarınızı korudu* uyarısını gösterebilir: **Ek bilgi → Yine de çalıştır**'ı seç.
+İndirdiğin dosyayı önce doğrulamak için `Get-FileHash snipdeck-windows-x64.exe` çıktısını aynı
+sayfadaki `SHA256SUMS` ile karşılaştır.
+
 **Linux (x64)** — aynı sayfadan, dağıtımına uygun paketi al:
 
 ```bash
@@ -403,11 +408,11 @@ bırakıldığı hiç bildirilmez; bu yüzden konumu yeniden başlatmalar arası
 Ayarlar JSON olarak saklanır ve ilk çalıştırmada oluşturulur. Henüz bir ayarlar penceresi yok —
 dosyayı doğrudan düzenle, sonra Snipdeck'i yeniden başlat.
 
-| Yol | İçerik |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | Kullanıcı ayarları (aşağıda) |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`, `state.json` ve görüntü + küçük resimlerin `cache\` dizini |
-| `Pictures\Snipdeck\` | *Kaydet* için varsayılan klasör |
+| Windows | Linux | İçerik |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | Kullanıcı ayarları (aşağıda) |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db` ve görüntü + küçük resimlerin `cache` dizini |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | *Kaydet* için varsayılan klasör |
 
 <details>
 <summary><b>Seçili <code>settings.json</code> anahtarları</b></summary>
@@ -497,6 +502,9 @@ neler geliştirdiğimizi görmek için **[revisetouch.com](https://revisetouch.c
 ## Lisans
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+Snipdeck'in ikili dosyası başka açık kaynak yazılımlar da içerir; lisansları
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) dosyasındadır.
 
 <div align="center">
 <sub>🦀 Rust ve <a href="https://slint.dev">Slint</a> ile yapıldı.</sub>

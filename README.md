@@ -192,6 +192,10 @@ the upload means; when it is done, it shows the link and has already copied it.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases) page. A single
 portable executable, no installer.
 
+The executable is not code-signed, so the first time it runs Windows SmartScreen may show
+*Windows protected your PC*: choose **More info → Run anyway**. To check the download first,
+compare `Get-FileHash snipdeck-windows-x64.exe` with `SHA256SUMS` on the same page.
+
 **Linux (x64)** — from the same page, the package for your distribution:
 
 ```bash
@@ -395,11 +399,11 @@ restarts.
 Settings are stored as JSON and created on first run. There is no settings window yet — edit the
 file directly, then restart Snipdeck.
 
-| Path | Contents |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | User settings (below) |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`, `state.json`, and the `cache\` of images + thumbnails |
-| `Pictures\Snipdeck\` | Default folder for *Save* |
+| Windows | Linux | Contents |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | User settings (below) |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db` and the `cache` of images + thumbnails |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | Default folder for *Save* |
 
 <details>
 <summary><b>Selected <code>settings.json</code> keys</b></summary>
@@ -487,6 +491,9 @@ we build developer tools and AI products. See what else we're building at
 ## License
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+Snipdeck's binary also contains other open-source software; their licences are in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 <div align="center">
 <sub>Built with 🦀 Rust and <a href="https://slint.dev">Slint</a>.</sub>

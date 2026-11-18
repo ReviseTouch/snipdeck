@@ -188,6 +188,10 @@ Snipdeck 以 multipart 表单数据或二进制请求体发送图像，附带文
 **Windows**——从 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases)
 页面获取 `snipdeck-windows-x64.exe`。单个便携可执行文件，无需安装程序。
 
+该可执行文件没有代码签名，首次运行时 Windows SmartScreen 可能显示
+*Windows 已保护你的电脑*：选择**更多信息 → 仍要运行**。如需先校验下载的文件，把
+`Get-FileHash snipdeck-windows-x64.exe` 的结果与同一页面上的 `SHA256SUMS` 对比。
+
 **Linux (x64)**——从同一页面获取适合你发行版的软件包：
 
 ```bash
@@ -374,11 +378,11 @@ GNOME Wayland 上仍欠缺的一点：你拖动的截图由 Mutter 移动，而�
 设置以 JSON 形式存储，并在首次运行时创建。目前尚无设置窗口——请直接编辑该
 文件，然后重启 Snipdeck。
 
-| 路径 | 内容 |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | 用户设置（见下） |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`、`state.json`，以及图像 + 缩略图的 `cache\` |
-| `Pictures\Snipdeck\` | *保存*的默认文件夹 |
+| Windows | Linux | 内容 |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | 用户设置（见下） |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db`，以及图像 + 缩略图的 `cache` |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | *保存*的默认文件夹 |
 
 <details>
 <summary><b>部分 <code>settings.json</code> 键</b></summary>
@@ -460,6 +464,9 @@ Snipdeck 是 **[ReviseTouch](https://revisetouch.com)** 出品的一款免费开
 ## License
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+Snipdeck 的二进制文件还包含其他开源软件；它们的许可证见
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
 <div align="center">
 <sub>由 🦀 Rust 和 <a href="https://slint.dev">Slint</a> 构建。</sub>

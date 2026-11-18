@@ -192,6 +192,10 @@ significa; ao terminar, mostra o link, que já foi copiado.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Um único
 executável portátil, sem instalador.
 
+O executável não é assinado, então na primeira execução o Windows SmartScreen pode mostrar
+*O Windows protegeu o seu PC*: escolha **Mais informações → Executar assim mesmo**. Para conferir
+o download antes, compare `Get-FileHash snipdeck-windows-x64.exe` com `SHA256SUMS` na mesma página.
+
 **Linux (x64)** — na mesma página, o pacote da sua distribuição:
 
 ```bash
@@ -395,11 +399,11 @@ reinicializações.
 As configurações são armazenadas como JSON e criadas na primeira execução. Ainda não há uma janela de configurações — edite o
 arquivo diretamente e, em seguida, reinicie o Snipdeck.
 
-| Caminho | Conteúdo |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | Configurações do usuário (abaixo) |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`, `state.json` e o `cache\` de imagens + miniaturas |
-| `Pictures\Snipdeck\` | Pasta padrão para *Salvar* |
+| Windows | Linux | Conteúdo |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | Configurações do usuário (abaixo) |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db` e o `cache` de imagens + miniaturas |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | Pasta padrão para *Salvar* |
 
 <details>
 <summary><b>Chaves selecionadas de <code>settings.json</code></b></summary>
@@ -488,6 +492,9 @@ criamos ferramentas para desenvolvedores e produtos de IA. Veja o que mais estam
 ## Licença
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+O binário do Snipdeck contém também outros softwares de código aberto; as licenças estão em
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 <div align="center">
 <sub>Construído com 🦀 Rust e <a href="https://slint.dev">Slint</a>.</sub>

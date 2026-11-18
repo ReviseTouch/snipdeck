@@ -192,6 +192,11 @@ la subida; al terminar, muestra el enlace y ya lo ha copiado.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Es un único
 ejecutable portátil, sin instalador.
 
+El ejecutable no está firmado, así que la primera vez que lo abras Windows SmartScreen puede
+mostrar *Windows protegió su PC*: elige **Más información → Ejecutar de todas formas**. Para
+comprobar antes la descarga, compara `Get-FileHash snipdeck-windows-x64.exe` con `SHA256SUMS`
+en la misma página.
+
 **Linux (x64)**: desde la misma página, el paquete para tu distribución:
 
 ```bash
@@ -395,11 +400,11 @@ reinicios.
 Los ajustes se almacenan como JSON y se crean en la primera ejecución. Todavía no hay una ventana de ajustes: edita el
 archivo directamente y luego reinicia Snipdeck.
 
-| Ruta | Contenido |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | Ajustes del usuario (abajo) |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`, `state.json` y la `cache\` de imágenes + miniaturas |
-| `Pictures\Snipdeck\` | Carpeta predeterminada para *Guardar* |
+| Windows | Linux | Contenido |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | Ajustes del usuario (abajo) |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db` y la `cache` de imágenes + miniaturas |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | Carpeta predeterminada para *Guardar* |
 
 <details>
 <summary><b>Claves seleccionadas de <code>settings.json</code></b></summary>
@@ -489,6 +494,9 @@ creamos herramientas para desarrolladores y productos de IA. Descubre qué más 
 ## Licencia
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+El binario de Snipdeck contiene además otro software de código abierto; sus licencias están en
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 <div align="center">
 <sub>Construido con 🦀 Rust y <a href="https://slint.dev">Slint</a>.</sub>

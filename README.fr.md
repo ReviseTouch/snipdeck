@@ -193,6 +193,11 @@ l'envoi ; une fois terminé, elle affiche le lien, déjà copié.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Un unique
 exécutable portable, sans installateur.
 
+L'exécutable n'est pas signé : au premier lancement, Windows SmartScreen peut afficher
+*Windows a protégé votre ordinateur* ; choisissez **Informations complémentaires → Exécuter quand même**.
+Pour vérifier d'abord le téléchargement, comparez `Get-FileHash snipdeck-windows-x64.exe` avec
+`SHA256SUMS` sur la même page.
+
 **Linux (x64)** — depuis la même page, le paquet de votre distribution :
 
 ```bash
@@ -397,11 +402,11 @@ n'est donc pas mémorisée d'un redémarrage à l'autre.
 Les paramètres sont stockés au format JSON et créés au premier lancement. Il n'y a pas encore de fenêtre de paramètres — modifiez le
 fichier directement, puis redémarrez Snipdeck.
 
-| Chemin | Contenu |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | Paramètres utilisateur (ci-dessous) |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`, `state.json`, et le `cache\` d'images + vignettes |
-| `Pictures\Snipdeck\` | Dossier par défaut pour *Enregistrer* |
+| Windows | Linux | Contenu |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | Paramètres utilisateur (ci-dessous) |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db` et le `cache` d'images + vignettes |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | Dossier par défaut pour *Enregistrer* |
 
 <details>
 <summary><b>Quelques clés de <code>settings.json</code></b></summary>
@@ -491,6 +496,9 @@ d'autre sur **[revisetouch.com](https://revisetouch.com)**.
 ## Licence
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+Le binaire de Snipdeck contient aussi d'autres logiciels open source ; leurs licences se trouvent dans
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 <div align="center">
 <sub>Conçu avec 🦀 Rust et <a href="https://slint.dev">Slint</a>.</sub>

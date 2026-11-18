@@ -193,6 +193,11 @@ Upload bedeutet; danach zeigt es den Link, der bereits kopiert ist.
 [**Releases**](https://github.com/ReviseTouch/snipdeck/releases). Eine einzelne
 portable ausführbare Datei, kein Installer.
 
+Die Datei ist nicht codesigniert; beim ersten Start kann Windows SmartScreen daher
+*Der Computer wurde durch Windows geschützt* anzeigen: wähle **Weitere Informationen → Trotzdem ausführen**.
+Um den Download vorher zu prüfen, vergleiche `Get-FileHash snipdeck-windows-x64.exe` mit
+`SHA256SUMS` auf derselben Seite.
+
 **Linux (x64)** – von derselben Seite das Paket für deine Distribution:
 
 ```bash
@@ -395,11 +400,11 @@ gespeichert.
 Einstellungen werden als JSON gespeichert und beim ersten Start erstellt. Es gibt noch kein Einstellungsfenster – bearbeite die
 Datei direkt und starte Snipdeck dann neu.
 
-| Pfad | Inhalt |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | Benutzereinstellungen (unten) |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db`, `state.json` und der `cache\` mit Bildern + Miniaturbildern |
-| `Pictures\Snipdeck\` | Standardordner für *Speichern* |
+| Windows | Linux | Inhalt |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | Benutzereinstellungen (unten) |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db` und der `cache` mit Bildern + Miniaturbildern |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | Standardordner für *Speichern* |
 
 <details>
 <summary><b>Ausgewählte <code>settings.json</code>-Schlüssel</b></summary>
@@ -489,6 +494,9 @@ wir bauen Entwicklertools und KI-Produkte. Was wir sonst noch bauen, siehst du a
 ## Lizenz
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+Die Binärdatei von Snipdeck enthält weitere Open-Source-Software; deren Lizenzen stehen in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 <div align="center">
 <sub>Erstellt mit 🦀 Rust und <a href="https://slint.dev">Slint</a>.</sub>

@@ -190,6 +190,10 @@
 [**الإصدارات**](https://github.com/ReviseTouch/snipdeck/releases). ملف تنفيذي
 محمول واحد، دون مُثبِّت.
 
+الملف التنفيذي غير موقَّع رقميًا، لذلك قد يعرض Windows SmartScreen عند أول تشغيل رسالة
+*حماية Windows لجهاز الكمبيوتر*: اختر **مزيد من المعلومات ← التشغيل على أي حال**. وللتحقق من
+التنزيل أولًا، قارن ناتج `Get-FileHash snipdeck-windows-x64.exe` بملف `SHA256SUMS` في الصفحة نفسها.
+
 **Linux (x64)** — من الصفحة نفسها، الحزمة الخاصة بتوزيعتك:
 
 ```bash
@@ -388,11 +392,11 @@ Wayland آخر — وبخلاف نوافذ Snipdeck نفسه لا تمسّ إل�
 تُخزَّن الإعدادات بصيغة JSON وتُنشأ عند أول تشغيل. لا توجد نافذة إعدادات بعد — حرّر
 الملف مباشرةً، ثم أعِد تشغيل Snipdeck.
 
-| المسار | المحتويات |
-| --- | --- |
-| `%APPDATA%\Snipdeck\settings.json` | إعدادات المستخدم (أدناه) |
-| `%LOCALAPPDATA%\Snipdeck\` | `snips.db` و`state.json` ومجلّد `cache\` للصور والمصغّرات |
-| `Pictures\Snipdeck\` | المجلّد الافتراضي لأمر *حفظ* |
+| Windows | Linux | المحتويات |
+| --- | --- | --- |
+| `%APPDATA%\Snipdeck\settings.json` | `~/.config/Snipdeck/settings.json` | إعدادات المستخدم (أدناه) |
+| `%LOCALAPPDATA%\Snipdeck\` | `~/.local/share/Snipdeck/` | `snips.db` ومجلّد `cache` للصور والمصغّرات |
+| `Pictures\Snipdeck\` | `~/Pictures/Snipdeck/` | المجلّد الافتراضي لأمر *حفظ* |
 
 <details>
 <summary><b>مفاتيح مختارة من <code>settings.json</code></b></summary>
@@ -480,6 +484,9 @@ Snipdeck تطبيق مجاني ومفتوح المصدر من **[ReviseTouch](ht
 ## الترخيص
 
 [MIT](LICENSE) © 2026 Hasan Salihoğlu
+
+يحتوي ملف Snipdeck التنفيذي أيضًا على برمجيات مفتوحة المصدر أخرى؛ تراخيصها في
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 <div align="center">
 <sub>مبنيّ بلغة 🦀 Rust و<a href="https://slint.dev">Slint</a>.</sub>
