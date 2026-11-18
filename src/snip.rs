@@ -89,10 +89,17 @@ impl Snip {
     /// (`image_files::file_name`) — lossless WebP, or PNG for one too large for
     /// it. The snip's file names only change once both new files are on disk,
     /// so a failed write leaves it pointing at its old, intact image rather
-    /// than at a file that was never written; the old files, if the names
-    /// changed, are removed after. Callers persist the gallery afterwards,
-    /// which records the new names.
-    pub fn save_image(&mut self, image: &image::RgbaImage) -> anyhow::Result<()> {
+    /// than at a file that was never written.
+    ///
+    /// Returns the old files, if the names changed (a PNG becoming a WebP),
+    /// for the caller to remove once the gallery has been saved with the new
+    /// names — `App::save_gallery_then_remove`. Removing them here, before
+    /// that save, left the database pointing at a PNG that was gone whenever
+    /// the save then failed and the app closed before a retry: the snip could
+    /// not be opened again, its pixels sitting beside it under a name nothing
+    /// knew. The same order `apply_conversion` keeps.
+    #[must_use = "the old files are removed only after the gallery is saved"]
+    pub fn save_image(&mut self, image: &image::RgbaImage) -> anyhow::Result<Vec<PathBuf>> {
         let image_file = crate::image_files::file_name(&self.id.to_string(), image);
         let thumb_file = default_thumb_file(self.id);
         let image_path = paths::images_dir().join(&image_file);
@@ -106,12 +113,10 @@ impl Snip {
         let old_thumb = self.thumb_path();
         self.image_file = image_file;
         self.thumb_file = Some(thumb_file);
-        for (old, new) in [(old_image, &image_path), (Some(old_thumb), &thumb_path)] {
-            if let Some(old) = old.filter(|old| old != new) {
-                crate::image_files::remove(&old);
-            }
-        }
-        Ok(())
+        Ok([(old_image, &image_path), (Some(old_thumb), &thumb_path)]
+            .into_iter()
+            .filter_map(|(old, new)| old.filter(|old| old != new))
+            .collect())
     }
 
     pub fn load_image(&self) -> anyhow::Result<image::RgbaImage> {
@@ -269,6 +274,10 @@ pub struct GalleryState {
     /// Each snip as the database last stored it, so `save` can tell what
     /// changed — however the caller changed it.
     persisted: HashMap<Uuid, Snip>,
+    /// The database could not be read at start-up, so `snips` holds only
+    /// what was captured since — not what is stored. The app says so, and
+    /// "delete all" keeps to what is in front of the user (`clear_all`).
+    pub unread: bool,
 }
 
 impl GalleryState {
@@ -281,7 +290,7 @@ impl GalleryState {
             Ok(state) => state,
             Err(err) => {
                 log::error!("the gallery could not be read: {err:#}");
-                Self::default()
+                Self { unread: true, ..Self::default() }
             }
         }
     }
@@ -295,11 +304,24 @@ impl GalleryState {
                  FROM snips
                  ORDER BY pinned DESC, created_at DESC",
             )?;
-            let snips = stmt
-                .query_map([], snip_from_row)?
-                .collect::<rusqlite::Result<Vec<_>>>()?;
+            // A row that cannot be read is left out, not allowed to take the
+            // whole gallery with it: one bad id or date used to fail the load,
+            // and the user opened to an empty window. The row and its files
+            // stay where they are.
+            let snips: Vec<Snip> = stmt
+                .query_map([], |row| Ok(snip_from_row(row)))?
+                .filter_map(|row| match row {
+                    Ok(Ok(snip)) => Some(Ok(snip)),
+                    Ok(Err(err)) => {
+                        log::error!("a snip's row could not be read, leaving it out: {err}");
+                        None
+                    }
+                    // The statement itself failing is the database, not a row.
+                    Err(err) => Some(Err(err)),
+                })
+                .collect::<rusqlite::Result<_>>()?;
             let persisted = snips.iter().map(|s| (s.id, s.clone())).collect();
-            Ok(Self { snips, persisted })
+            Ok(Self { snips, persisted, unread: false })
         })
     }
 
@@ -361,7 +383,19 @@ impl GalleryState {
     }
 
     /// Same ordering argument as [`GalleryState::remove`].
+    ///
+    /// When the stored gallery could not be read, only the snips on screen
+    /// go, one by one. Emptying the table then deleted every stored row while
+    /// the files — known only from the rows that were never read — stayed
+    /// behind with nothing left pointing at them.
     pub fn clear_all(&mut self) {
+        if self.unread {
+            let ids: Vec<Uuid> = self.snips.iter().map(|s| s.id).collect();
+            for id in ids {
+                self.remove(id);
+            }
+            return;
+        }
         match clear_db_snips() {
             Ok(()) => {
                 self.persisted.clear();

@@ -681,3 +681,6 @@ msgstr "Imgur Client-ID গ্রহণ করেনি (HTTP 403)।"
 
 msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
 msgstr "Imgur-এর আপলোড সীমা পূর্ণ হয়েছে (HTTP 429)। পরে আবার চেষ্টা করুন।"
+
+msgid "The gallery could not be read. Your snips are still on disk — restart Snipdeck."
+msgstr "গ্যালারি পড়া যায়নি। আপনার স্নিপগুলো এখনও ডিস্কে আছে — Snipdeck আবার চালু করুন।"

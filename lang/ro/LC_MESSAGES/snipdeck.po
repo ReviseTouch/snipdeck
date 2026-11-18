@@ -681,3 +681,6 @@ msgstr "Imgur a respins Client-ID-ul (HTTP 403)."
 
 msgid "Imgur's upload limit is reached (HTTP 429). Try again later."
 msgstr "Limita de încărcări Imgur a fost atinsă (HTTP 429). Încercați din nou mai târziu."
+
+msgid "The gallery could not be read. Your snips are still on disk — restart Snipdeck."
+msgstr "Galeria nu a putut fi citită. Capturile tale sunt încă pe disc — repornește Snipdeck."

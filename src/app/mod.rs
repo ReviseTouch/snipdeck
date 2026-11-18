@@ -199,6 +199,7 @@ impl AppState {
     pub fn new() -> Self {
         let settings = Settings::load();
         let gallery = GalleryState::load();
+        let gallery_unread = gallery.unread;
         let conversions = crate::snip::convert_legacy_pngs(&gallery.snips);
         crate::window_tamer::set_floating_in_taskbar(settings.floating_in_taskbar);
 
@@ -258,13 +259,20 @@ impl AppState {
             pending_freeze_arm: None,
             color_pick_hid_main: false,
             color_pick_started_at: None,
-            last_error: crate::settings::load_problem().map(|backup| {
-                t1(
-                    "Settings could not be read and were reset. The old file is kept as {path}",
-                    "{path}",
-                    backup,
-                )
-            }),
+            last_error: crate::settings::load_problem()
+                .map(|backup| {
+                    t1(
+                        "Settings could not be read and were reset. The old file is kept as {path}",
+                        "{path}",
+                        backup,
+                    )
+                })
+                // An empty gallery with no word looked like every snip was gone.
+                .or_else(|| {
+                    gallery_unread.then(|| {
+                        t("The gallery could not be read. Your snips are still on disk — restart Snipdeck.")
+                    })
+                }),
             hotkey_error,
             background_errors: crossbeam_channel::unbounded(),
             upload_ui: crate::upload_window::UploadUi::new(),
@@ -502,19 +510,23 @@ impl AppState {
 
         // 3a. Snips converted from PNG to WebP in the background. The new
         // names are saved first; the old files go only once that worked.
-        let converted: Vec<_> = self
-            .conversions
-            .as_ref()
-            .map(|rx| rx.try_iter().collect())
-            .unwrap_or_default();
-        // When the converter is done, refresh once so the storage figure in the
-        // status bar shows the smaller files — not once per converted snip.
-        let conversion_finished = self.conversions.as_ref().is_some_and(|rx| {
-            matches!(rx.try_recv(), Err(crossbeam_channel::TryRecvError::Disconnected))
-        });
-        if conversion_finished {
-            self.conversions = None;
-            self.refresh_gallery(window);
+        //
+        // One loop reads both the results and the end of the channel. Asking
+        // "is it finished?" with a second `try_recv` after draining took, and
+        // threw away, any result that arrived between the two.
+        let mut converted = Vec::new();
+        let mut conversion_finished = false;
+        if let Some(rx) = &self.conversions {
+            loop {
+                match rx.try_recv() {
+                    Ok(c) => converted.push(c),
+                    Err(crossbeam_channel::TryRecvError::Empty) => break,
+                    Err(crossbeam_channel::TryRecvError::Disconnected) => {
+                        conversion_finished = true;
+                        break;
+                    }
+                }
+            }
         }
         if !converted.is_empty() {
             let stale: Vec<_> = converted
@@ -528,6 +540,12 @@ impl AppState {
                 Ok(()) => stale.iter().for_each(|p| crate::image_files::remove(p)),
                 Err(e) => log::warn!("recording converted snips failed, keeping the PNGs: {e}"),
             }
+        }
+        // When the converter is done, refresh once so the storage figure in the
+        // status bar shows the smaller files — not once per converted snip.
+        if conversion_finished {
+            self.conversions = None;
+            self.refresh_gallery(window);
         }
 
         // 3b. The session bus: Super+Alt+drag snips from the GNOME extension,
@@ -901,6 +919,17 @@ impl AppState {
     /// returned for a caller that wants to show it. Any later save, retried or
     /// not, writes everything still pending: `GalleryState::save` writes what
     /// differs from the database, not what the caller just changed.
+    /// Save the gallery, then remove the files an edit replaced
+    /// (`Snip::save_image`). If the save fails they stay: the database still
+    /// names them, and a snip must not point at a file that is gone.
+    pub(crate) fn save_gallery_then_remove(&mut self, stale: Vec<std::path::PathBuf>) {
+        match self.save_gallery() {
+            Ok(()) => stale.iter().for_each(|p| crate::image_files::remove(p)),
+            Err(e) if stale.is_empty() => log::debug!("gallery save failed: {e}"),
+            Err(e) => log::warn!("gallery save failed, keeping the replaced files: {e}"),
+        }
+    }
+
     pub(crate) fn save_gallery(&mut self) -> anyhow::Result<()> {
         match self.gallery.save() {
             Ok(()) => {

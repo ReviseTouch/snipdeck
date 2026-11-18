@@ -195,17 +195,18 @@ impl AppState {
         // Annotation never changes the pixel dimensions, so `area.w/h` (which
         // may legitimately differ from the native size for a resize-stretched
         // snip) is left untouched — only the pixels are rewritten.
-        match self.gallery.get_mut(id) {
-            Some(s) => {
-                if let Err(e) = s.save_image(&image) {
+        let stale = match self.gallery.get_mut(id) {
+            Some(s) => match s.save_image(&image) {
+                Ok(stale) => stale,
+                Err(e) => {
                     self.last_error =
                         Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
                     return;
                 }
-            }
+            },
             None => return,
-        }
-        let _ = self.save_gallery();
+        };
+        self.save_gallery_then_remove(stale);
         self.forget_thumb(id);
         if self.floating.is_shown(id) {
             self.floating.close(id);
@@ -261,6 +262,7 @@ impl AppState {
         }
         let mut snip = make_snip(ScreenRect::new(0, 0, w, h));
         snip.monitor_label = Some(t("Collage"));
+        // A new snip: there are no old files to replace.
         if let Err(e) = snip.save_image(&image) {
             self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
             return;
@@ -531,15 +533,19 @@ impl AppState {
         };
         let out = op(&img);
         let (ow, oh) = (out.width(), out.height());
+        let mut stale = Vec::new();
         if let Some(s) = self.gallery.get_mut(id) {
-            if let Err(e) = s.save_image(&out) {
-                self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
-                return;
+            match s.save_image(&out) {
+                Ok(old) => stale = old,
+                Err(e) => {
+                    self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
+                    return;
+                }
             }
             s.area.w = ow;
             s.area.h = oh;
         }
-        let _ = self.save_gallery();
+        self.save_gallery_then_remove(stale);
         // Force the gallery card + any floating window to pick up the new
         // pixels (the cached decoded thumbnail is now stale).
         self.forget_thumb(id);
@@ -586,16 +592,20 @@ impl AppState {
         let cw = cw.min(iw - cx).max(1);
         let ch = ch.min(ih - cy).max(1);
         let cropped = image::imageops::crop_imm(&img, cx, cy, cw, ch).to_image();
+        let mut stale = Vec::new();
         if let Some(s) = self.gallery.get_mut(id) {
-            if let Err(e) = s.save_image(&cropped) {
-                self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
-                return;
+            match s.save_image(&cropped) {
+                Ok(old) => stale = old,
+                Err(e) => {
+                    self.last_error = Some(t1("Failed to save image: {e}", "{e}", &e.to_string()));
+                    return;
+                }
             }
             s.area.w = cw;
             s.area.h = ch;
             s.remember_position(new_pos);
         }
-        let _ = self.save_gallery();
+        self.save_gallery_then_remove(stale);
         self.forget_thumb(id);
         self.floating.close(id);
         if let Some(s) = self.gallery.get(id).cloned() {

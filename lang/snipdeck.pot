@@ -689,3 +689,6 @@ msgstr ""
 
 msgid "eyedropper"
 msgstr ""
+
+msgid "The gallery could not be read. Your snips are still on disk — restart Snipdeck."
+msgstr ""
