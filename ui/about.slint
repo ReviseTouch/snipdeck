@@ -8,6 +8,7 @@
 // lives ONLY in the shipped binary, never in the public source.
 
 import { Glyph } from "icons.slint";
+import { AboutSlint, Palette } from "std-widgets.slint";
 
 // A small pill link/button.
 component LinkButton inherits Rectangle {
@@ -120,6 +121,19 @@ export component AboutWindow inherits Window {
                 if root.has-donate : LinkButton {
                     label: @tr("Support");
                     clicked => { root.open-donate(); }
+                }
+            }
+
+            // Slint's mark: its royalty-free licence asks for it in the About
+            // window. The widget picks its artwork and text colour from the
+            // system colour scheme, not from this window, which is dark either
+            // way — so under a light scheme it gets a light plate to sit on.
+            HorizontalLayout {
+                alignment: start;
+                Rectangle {
+                    border-radius: 8px;
+                    background: Palette.color-scheme == ColorScheme.dark ? transparent : #f2f0ea;
+                    AboutSlint { }
                 }
             }
 

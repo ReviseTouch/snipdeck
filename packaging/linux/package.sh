@@ -63,6 +63,8 @@ install -m755 "$bin" "$tar_dir/snipdeck"
 install -m755 packaging/linux/install.sh "$tar_dir/"
 install -m644 packaging/linux/com.revisetouch.Snipdeck.desktop "$tar_dir/"
 install -m644 assets/preview_256.png "$tar_dir/snipdeck.png"
+# The licences of what is linked into the binary travel with it.
+install -m644 LICENSE THIRD-PARTY-NOTICES.md "$tar_dir/"
 cp -r packaging/gnome-extension/$ext "$tar_dir/"
 cp -r packaging/kwin-script "$tar_dir/kwin-script"
 tar -C target/package-tar -czf "$out/snipdeck-linux-x64.tar.gz" snipdeck-linux-x64
