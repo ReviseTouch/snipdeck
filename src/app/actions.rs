@@ -207,6 +207,7 @@ impl AppState {
             None => return,
         };
         self.save_gallery_then_remove(stale);
+        reread_ocr(id, &image);
         self.forget_thumb(id);
         if self.floating.is_shown(id) {
             self.floating.close(id);
@@ -606,6 +607,7 @@ impl AppState {
             s.remember_position(new_pos);
         }
         self.save_gallery_then_remove(stale);
+        reread_ocr(id, &cropped);
         self.forget_thumb(id);
         self.floating.close(id);
         if let Some(s) = self.gallery.get(id).cloned() {

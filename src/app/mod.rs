@@ -1017,12 +1017,32 @@ fn make_checker(w: u32, h: u32, cell: u32, c0: [u8; 4], c1: [u8; 4]) -> Image {
     Image::from_rgba8(buf)
 }
 
+/// Read `image` — the snip's current picture — for search. The epoch is taken
+/// here, before the thread starts: a crop or an annotation that lands while
+/// the OCR runs moves the snip past it, and this text is then dropped.
+/// The snip's pixels were just rewritten by a crop or an annotation. What OCR
+/// read from the old ones may be exactly what the user cut away or painted
+/// over — a password, an account number — and it would stay findable in the
+/// gallery search and come back from "Copy text". Drop it and read the new
+/// picture instead.
+///
+/// Not for rotations and flips: the same text is still there, and OCR reads
+/// a turned picture worse than the stored text describes it.
+fn reread_ocr(id: Uuid, image: &image::RgbaImage) {
+    if let Err(err) = crate::snip::forget_ocr_text(id) {
+        log::warn!("Failed to drop the old OCR text of {id}: {err}");
+    }
+    spawn_ocr_index(id, image.clone());
+}
+
 fn spawn_ocr_index(id: Uuid, image: image::RgbaImage) {
+    let epoch = crate::snip::ocr_epoch(id);
     std::thread::spawn(move || match crate::ocr::extract_text(&image) {
         Ok(text) => {
-            if let Err(err) = crate::snip::save_ocr_text(id, crate::ocr::engine_name(), None, &text)
-            {
-                log::warn!("Failed to write OCR text to DB: {err}");
+            match crate::snip::save_ocr_text(id, epoch, crate::ocr::engine_name(), None, &text) {
+                Ok(true) => {}
+                Ok(false) => log::debug!("OCR text for {id} dropped: its picture changed"),
+                Err(err) => log::warn!("Failed to write OCR text to DB: {err}"),
             }
         }
         Err(err) => {
@@ -1032,11 +1052,14 @@ fn spawn_ocr_index(id: Uuid, image: image::RgbaImage) {
 }
 
 fn spawn_ocr_copy(id: Uuid, snip: crate::snip::Snip) {
+    let epoch = crate::snip::ocr_epoch(id);
     std::thread::spawn(move || match snip.load_image() {
         Ok(img) => match crate::ocr::extract_text(&img) {
             Ok(text) => {
+                // Copied either way: it is what the user asked for. Stored
+                // only while it still describes the snip's picture.
                 if let Err(err) =
-                    crate::snip::save_ocr_text(id, crate::ocr::engine_name(), None, &text)
+                    crate::snip::save_ocr_text(id, epoch, crate::ocr::engine_name(), None, &text)
                 {
                     log::warn!("Failed to write OCR text to DB: {err}");
                 }

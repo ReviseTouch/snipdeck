@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
-use std::sync::OnceLock;
+use std::sync::{Mutex, MutexGuard, OnceLock};
 use uuid::Uuid;
 
 use crate::paths;
@@ -1175,12 +1175,66 @@ fn insert_ocr(
     )
 }
 
+/// Which picture of each snip OCR text may still be stored for. A crop or an
+/// annotation rewrites the pixels and moves the snip on to a new epoch
+/// ([`forget_ocr_text`]); OCR started on the old picture — on a detached
+/// thread, finishing whenever it finishes — then carries a stale epoch and
+/// [`save_ocr_text`] drops its text instead of writing back what the user
+/// just cut or painted out. Snips never edited have no entry: epoch 0.
+///
+/// The check and the write happen under this lock, and so do the bump and the
+/// delete, so a stale result cannot slip in between them.
+static OCR_EPOCHS: Mutex<Option<HashMap<Uuid, u64>>> = Mutex::new(None);
+
+fn ocr_epochs() -> MutexGuard<'static, Option<HashMap<Uuid, u64>>> {
+    OCR_EPOCHS.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+fn epoch_in(epochs: &Option<HashMap<Uuid, u64>>, id: Uuid) -> u64 {
+    epochs.as_ref().and_then(|m| m.get(&id).copied()).unwrap_or(0)
+}
+
+/// The epoch to hand [`save_ocr_text`] for OCR about to read this snip's
+/// current picture. Taken before the OCR starts, on the thread that knows
+/// which picture that is.
+pub fn ocr_epoch(id: Uuid) -> u64 {
+    epoch_in(&ocr_epochs(), id)
+}
+
+/// The snip's pixels were rewritten: drop what OCR read from the old ones —
+/// from the stored text, from the search index, and from any OCR still
+/// running on them. The caller reads the new picture afterwards.
+///
+/// The epoch moves on even when the database cannot be reached, so the
+/// re-read that follows still replaces the old text once it can be written.
+pub fn forget_ocr_text(id: Uuid) -> anyhow::Result<()> {
+    let mut epochs = ocr_epochs();
+    *epochs.get_or_insert_with(HashMap::new).entry(id).or_insert(0) += 1;
+    with_db(|conn| forget_ocr_with_conn(conn, id))
+}
+
+fn forget_ocr_with_conn(conn: &Connection, id: Uuid) -> anyhow::Result<()> {
+    conn.execute("DELETE FROM snip_ocr WHERE snip_id = ?1", [id.to_string()])?;
+    if let Some(snip) = load_snip_by_id(conn, id)? {
+        upsert_fts_for_snip(conn, &snip, Some(""))?;
+    }
+    Ok(())
+}
+
+/// Store OCR text read at `epoch` ([`ocr_epoch`]). Returns false, writing
+/// nothing, when the snip's picture has changed since — the text describes
+/// pixels that are no longer there.
 pub fn save_ocr_text(
     id: Uuid,
+    epoch: u64,
     engine: &str,
     language: Option<&str>,
     text: &str,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<bool> {
+    let epochs = ocr_epochs();
+    if epoch_in(&epochs, id) != epoch {
+        return Ok(false);
+    }
     with_db(|conn| {
         insert_ocr(conn, id, engine, language, text)?;
         match load_snip_by_id(conn, id) {
@@ -1195,7 +1249,9 @@ pub fn save_ocr_text(
             }
         }
         Ok(())
-    })
+    })?;
+    drop(epochs);
+    Ok(true)
 }
 
 #[cfg(test)]
@@ -1324,6 +1380,37 @@ mod tests {
         assert_eq!(insert_ocr(&conn, snip.id, "test", None, "hello").unwrap(), 1);
         conn.execute("DELETE FROM snips WHERE id = ?1", [snip.id.to_string()]).unwrap();
         assert_eq!(ocr_rows(&conn, snip.id), 0);
+    }
+
+    /// Cropping or painting over a snip takes its old OCR text out of storage
+    /// and out of search, and OCR that was already reading the old pixels
+    /// finishes without writing that text back.
+    #[test]
+    fn rewritten_pixels_drop_the_old_ocr_text() {
+        use_memory_db();
+        let mut gallery = GalleryState::default();
+        let snip = make_snip(ScreenRect::new(0, 0, 10, 10));
+        let id = snip.id;
+        gallery.push_new(snip);
+        gallery.save().unwrap();
+
+        let old_picture = ocr_epoch(id);
+        assert!(save_ocr_text(id, old_picture, "test", None, "password hunter2").unwrap());
+        assert_eq!(gallery.search("hunter2").unwrap().len(), 1);
+
+        forget_ocr_text(id).unwrap();
+        assert_eq!(cached_ocr_text(id).unwrap(), None);
+        assert!(gallery.search("hunter2").unwrap().is_empty());
+
+        // OCR started on the old picture, finishing late: dropped.
+        assert!(!save_ocr_text(id, old_picture, "test", None, "password hunter2").unwrap());
+        assert_eq!(cached_ocr_text(id).unwrap(), None);
+        assert!(gallery.search("hunter2").unwrap().is_empty());
+
+        // The re-read of the new picture is stored and found.
+        assert!(save_ocr_text(id, ocr_epoch(id), "test", None, "password").unwrap());
+        assert_eq!(cached_ocr_text(id).unwrap().as_deref(), Some("password"));
+        assert_eq!(gallery.search("password").unwrap().len(), 1);
     }
 
     #[test]
