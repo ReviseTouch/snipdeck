@@ -125,6 +125,21 @@ const DIM = 'rgba(0, 0, 0, 0.376)';
  */
 const MIN_SNIP = 4;
 
+/**
+ * Windows already given their treatment; a second pass leaves them be.
+ *
+ * At module level, not on the extension object, so it outlives `disable()`.
+ * `session-modes: ["user"]` means GNOME disables the extension when the
+ * screen locks and enables it again on unlock — and with a fresh set each
+ * time, `enable()` adopted every snip anew and moved it back to the spot
+ * named in its title, which is where it was captured, not where the user
+ * had since dragged it. Every lock undid the arrangement. Windows keep what
+ * they were given across a disable (see there), so they are still adopted.
+ * The shell caches this module for the session; a weak set holds no window
+ * alive.
+ */
+const ADOPTED = new WeakSet();
+
 /** How long a selection border may wait for the snip window that replaces it. */
 const HANDOFF_MS = 2000;
 
@@ -667,7 +682,7 @@ export default class SnipdeckExtension extends Extension {
         // module, and on Wayland it cannot re-import one without a new
         // session — without this marker there is no way to tell a fix that
         // did not work from a fix that was never loaded.
-        log('snipdeck: enable() match=title+pid placement=first-frame lists=switcher+overview+running listed-flag=on gesture=super-alt-drag');
+        log('snipdeck: enable() match=title+pid placement=first-frame lists=switcher+overview+running listed-flag=on gesture=super-alt-drag adopted=session');
 
         this._handles = [];
         this._pending = new Set();
@@ -675,8 +690,6 @@ export default class SnipdeckExtension extends Extension {
 
         /** The running app's process id, from the session bus; null until known. */
         this._appPid = null;
-        /** Windows already given their treatment; a second pass leaves them be. */
-        this._adopted = new WeakSet();
 
         this._gesture = new SnipGesture(pid => this._setAppPid(pid));
         this._gesture.enable();
@@ -904,7 +917,6 @@ export default class SnipdeckExtension extends Extension {
         this._placing?.clear();
         this._placing = null;
         this._appPid = null;
-        this._adopted = null;
     }
 
     /**
@@ -1015,7 +1027,7 @@ export default class SnipdeckExtension extends Extension {
     _adopt(window) {
         if (!window)
             return false;
-        if (this._adopted?.has(window))
+        if (ADOPTED.has(window))
             return true;
         // Whatever it is called: only the app's own windows.
         if (!this._fromApp(window))
@@ -1024,7 +1036,7 @@ export default class SnipdeckExtension extends Extension {
         // Before `_isOurs`, which a Wayland window without a snip's title
         // never passes.
         if (ABOVE_TITLES.has(window.get_title() ?? '')) {
-            this._adopted.add(window);
+            ADOPTED.add(window);
             this._raise(window);
             this._applyWhenPlaced(window);
             return true;
@@ -1037,7 +1049,7 @@ export default class SnipdeckExtension extends Extension {
         if (!title || !title.startsWith(SNIP_TITLE))
             return false;
 
-        this._adopted.add(window);
+        ADOPTED.add(window);
         log(`snipdeck: adopting ${JSON.stringify(title)}`);
 
         // Once now, because a window adopted from `enable()` is already placed
