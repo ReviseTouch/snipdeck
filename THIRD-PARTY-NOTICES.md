@@ -149,7 +149,7 @@ binary: they are separate programs and shared libraries on your system.
 | [font-types](https://github.com/googlefonts/fontations) | 0.11.3 | MIT OR Apache-2.0 |
 | [fontdb](https://github.com/RazrFalcon/fontdb) | 0.23.0 | MIT |
 | [fontique](https://github.com/linebender/parley) | 0.8.0 | Apache-2.0 OR MIT |
-| [form_urlencoded](https://github.com/servo/rust-url) | 1.2.2 | MIT OR Apache-2.0 |
+| [form_urlencoded](https://github.com/servo/rust-url) | 1.2.3 | MIT OR Apache-2.0 |
 | [futures](https://github.com/rust-lang/futures-rs) | 0.3.32 | MIT OR Apache-2.0 |
 | [futures-channel](https://github.com/rust-lang/futures-rs) | 0.3.32 | MIT OR Apache-2.0 |
 | [futures-core](https://github.com/rust-lang/futures-rs) | 0.3.32 | MIT OR Apache-2.0 |
@@ -438,7 +438,7 @@ binary: they are separate programs and shared libraries on your system.
 | [unicode-xid](https://github.com/unicode-rs/unicode-xid) | 0.2.6 | MIT OR Apache-2.0 |
 | [untrusted](https://github.com/briansmith/untrusted) | 0.9.0 | ISC |
 | [ureq](https://github.com/algesten/ureq) | 2.12.1 | MIT OR Apache-2.0 |
-| [url](https://github.com/servo/rust-url) | 2.5.8 | MIT OR Apache-2.0 |
+| [url](https://github.com/servo/rust-url) | 2.5.9 | MIT OR Apache-2.0 |
 | [urlencoding](https://github.com/kornelski/rust_urlencoding) | 2.1.3 | MIT |
 | [usvg](https://github.com/linebender/resvg) | 0.47.0 | Apache-2.0 OR MIT |
 | [utf8_iter](https://github.com/hsivonen/utf8_iter) | 1.0.4 | Apache-2.0 OR MIT |
@@ -544,7 +544,7 @@ binary: they are separate programs and shared libraries on your system.
 
 ## Licence texts
 
-Used by: ahash 0.8.12, aligned 0.4.3, arrayvec 0.7.6, as-slice 0.2.1, async-channel 2.5.0, async-executor 1.14.0, async-fs 2.2.0, async-io 2.6.0, async-lock 3.4.2, async-net 2.0.0, async-process 2.5.0, async-recursion 1.1.1, async-signal 0.2.14, async-task 4.7.1, atomic-waker 1.1.2, base64 0.22.1, bitflags 1.3.2, bitflags 2.11.1, bitstream-io 4.10.0, blocking 1.6.2, by_address 1.2.1, cfg-if 1.0.4, concurrent-queue 2.5.0, countme 3.0.1, critical-section 1.2.0, crossbeam-channel 0.5.15, crossbeam-deque 0.8.6, crossbeam-epoch 0.9.21, crossbeam-utils 0.8.21, data-url 0.3.2, displaydoc 0.2.5, either 1.16.0, equivalent 1.0.2, errno 0.3.14, euclid 0.22.14, event-listener 5.4.1, event-listener-strategy 0.5.4, fastrand 2.4.1, flate2 1.1.9, fnv 1.0.7, fontique 0.8.0, form_urlencoded 1.2.2, futures-lite 2.6.1, gethostname 1.1.0, getopts 0.2.24, gif 0.14.2, global-hotkey 0.5.5, glow 0.17.0, hashbrown 0.14.5, hashbrown 0.16.1, hashbrown 0.17.1, heck 0.4.1, heck 0.5.0, htmlparser 0.2.1, idna 1.1.0, idna_adapter 1.2.2, indexmap 2.14.0, itertools 0.14.0, keyboard-types 0.7.0, lazy_static 1.5.0, libappindicator 0.9.0, linux-raw-sys 0.12.1, linux-raw-sys 0.4.15, lock_api 0.4.14, log 0.4.29, muda 0.18.0, muda 0.19.3, num-bigint 0.4.6, num-derive 0.4.2, num-integer 0.1.46, num-rational 0.4.2, num-traits 0.2.19, once_cell 1.21.4, ordered-stream 0.2.0, parking 2.2.1, parking_lot 0.12.5, parking_lot_core 0.9.12, parlance 0.1.0, parley 0.8.0, parley_data 0.8.0, percent-encoding 2.3.2, piper 0.2.5, png 0.17.16, png 0.18.1, polling 3.11.0, pollster 0.3.0, rayon 1.12.0, rayon-core 1.13.0, regex 1.12.3, regex-automata 0.4.14, regex-syntax 0.8.10, rowan 0.16.1, roxmltree 0.21.1, rustc-hash 1.1.0, rustix 0.38.44, rustix 1.1.4, rustls 0.23.46, scoped-tls 1.0.1, scoped-tls-hkt 0.1.5, scopeguard 1.2.0, signal-hook-registry 1.4.8, simplecss 0.2.2, smallvec 1.15.1, smol_str 0.2.2, smol_str 0.3.6, spin_on 0.1.1, stable_deref_trait 1.2.1, svgtypes 0.16.1, swash 0.2.7, syn 1.0.109, text-size 1.1.1, toml_datetime 0.6.3, tray-icon 0.24.2, ttf-parser 0.25.1, unicase 2.9.0, unicode-bidi 0.3.18, unicode-bidi-mirroring 0.4.0, unicode-ccc 0.4.0, unicode-properties 0.1.4, unicode-segmentation 1.13.2, unicode-vo 0.1.0, unicode-width 0.2.2, unicode-xid 0.2.6, url 2.5.8, uuid 1.23.1, weezl 0.1.12, yazi 0.2.1, zeno 0.3.3
+Used by: ahash 0.8.12, aligned 0.4.3, arrayvec 0.7.6, as-slice 0.2.1, async-channel 2.5.0, async-executor 1.14.0, async-fs 2.2.0, async-io 2.6.0, async-lock 3.4.2, async-net 2.0.0, async-process 2.5.0, async-recursion 1.1.1, async-signal 0.2.14, async-task 4.7.1, atomic-waker 1.1.2, base64 0.22.1, bitflags 1.3.2, bitflags 2.11.1, bitstream-io 4.10.0, blocking 1.6.2, by_address 1.2.1, cfg-if 1.0.4, concurrent-queue 2.5.0, countme 3.0.1, critical-section 1.2.0, crossbeam-channel 0.5.15, crossbeam-deque 0.8.6, crossbeam-epoch 0.9.21, crossbeam-utils 0.8.21, data-url 0.3.2, displaydoc 0.2.5, either 1.16.0, equivalent 1.0.2, errno 0.3.14, euclid 0.22.14, event-listener 5.4.1, event-listener-strategy 0.5.4, fastrand 2.4.1, flate2 1.1.9, fnv 1.0.7, fontique 0.8.0, form_urlencoded 1.2.3, futures-lite 2.6.1, gethostname 1.1.0, getopts 0.2.24, gif 0.14.2, global-hotkey 0.5.5, glow 0.17.0, hashbrown 0.14.5, hashbrown 0.16.1, hashbrown 0.17.1, heck 0.4.1, heck 0.5.0, htmlparser 0.2.1, idna 1.1.0, idna_adapter 1.2.2, indexmap 2.14.0, itertools 0.14.0, keyboard-types 0.7.0, lazy_static 1.5.0, libappindicator 0.9.0, linux-raw-sys 0.12.1, linux-raw-sys 0.4.15, lock_api 0.4.14, log 0.4.29, muda 0.18.0, muda 0.19.3, num-bigint 0.4.6, num-derive 0.4.2, num-integer 0.1.46, num-rational 0.4.2, num-traits 0.2.19, once_cell 1.21.4, ordered-stream 0.2.0, parking 2.2.1, parking_lot 0.12.5, parking_lot_core 0.9.12, parlance 0.1.0, parley 0.8.0, parley_data 0.8.0, percent-encoding 2.3.2, piper 0.2.5, png 0.17.16, png 0.18.1, polling 3.11.0, pollster 0.3.0, rayon 1.12.0, rayon-core 1.13.0, regex 1.12.3, regex-automata 0.4.14, regex-syntax 0.8.10, rowan 0.16.1, roxmltree 0.21.1, rustc-hash 1.1.0, rustix 0.38.44, rustix 1.1.4, rustls 0.23.46, scoped-tls 1.0.1, scoped-tls-hkt 0.1.5, scopeguard 1.2.0, signal-hook-registry 1.4.8, simplecss 0.2.2, smallvec 1.15.1, smol_str 0.2.2, smol_str 0.3.6, spin_on 0.1.1, stable_deref_trait 1.2.1, svgtypes 0.16.1, swash 0.2.7, syn 1.0.109, text-size 1.1.1, toml_datetime 0.6.3, tray-icon 0.24.2, ttf-parser 0.25.1, unicase 2.9.0, unicode-bidi 0.3.18, unicode-bidi-mirroring 0.4.0, unicode-ccc 0.4.0, unicode-properties 0.1.4, unicode-segmentation 1.13.2, unicode-vo 0.1.0, unicode-width 0.2.2, unicode-xid 0.2.6, url 2.5.9, uuid 1.23.1, weezl 0.1.12, yazi 0.2.1, zeno 0.3.3
 
 ```
 Apache License
@@ -2775,7 +2775,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-Used by: data-url 0.3.2, idna 1.1.0, percent-encoding 2.3.2, url 2.5.8
+Used by: data-url 0.3.2, idna 1.1.0, percent-encoding 2.3.2, url 2.5.9
 
 ```
 Copyright (c) 2013-2025 The rust-url developers
@@ -9249,7 +9249,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-Used by: form_urlencoded 1.2.2
+Used by: form_urlencoded 1.2.3
 
 ```
 Copyright (c) 2013-2016 The rust-url developers
