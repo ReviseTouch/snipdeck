@@ -157,6 +157,13 @@ impl AppState {
                     ));
                     return;
                 }
+                // A crop still being dragged on this snip would be committed
+                // under the open editor, and the editor's save would then
+                // write the uncropped pixels back over it. Nothing is cropped
+                // until the gesture ends, so leaving crop mode loses nothing.
+                if self.is_cropping(id) {
+                    self.leave_crop(id);
+                }
                 if let Some(snip) = self.gallery.get(id).cloned() {
                     match snip.load_image() {
                         Ok(img) => {
@@ -562,6 +569,22 @@ impl AppState {
         self.refresh_gallery(window);
     }
 
+    fn is_cropping(&self, id: Uuid) -> bool {
+        self.floating
+            .handle(id)
+            .is_some_and(|h| h.window.get_cropping())
+    }
+
+    /// Leave crop mode without cropping: the floating window is reopened at
+    /// the snip's stored size, as after a committed crop.
+    fn leave_crop(&mut self, id: Uuid) {
+        self.floating.close(id);
+        if let Some(s) = self.gallery.get(id).cloned() {
+            let sf = self.scale_factor;
+            let _ = self.floating.open(&s, &self.settings, sf);
+        }
+    }
+
     /// Commit a crop chosen with the inward-only handles: crop the image to
     /// the clip rect (in image pixels), rewrite image + thumbnail, update the
     /// stored size + position, and reopen the floating window at the cropped
@@ -630,6 +653,20 @@ impl AppState {
         // In crop mode the same end-gesture commits a real pixel crop rather
         // than persisting a stretched resize.
         if handle.window.get_cropping() {
+            // Open in the editor as well (crop mode entered first, then
+            // "Annotate" from the gallery): a crop committed now would be
+            // overwritten by the editor's save with the pixels it opened
+            // with, while the window kept the cropped size — the picture
+            // stretched and the crop gone. The editor comes first, as for
+            // every other pixel rewrite (`handle_context_action`).
+            if self.annotate.editing() == Some(id) {
+                self.leave_crop(id);
+                self.annotate.raise();
+                self.last_error = Some(t(
+                    "Finish or cancel the open annotation before starting another.",
+                ));
+                return;
+            }
             let cx = handle.window.get_clip_x().max(0) as u32;
             let cy = handle.window.get_clip_y().max(0) as u32;
             let cw = handle.window.get_clip_w().max(1) as u32;
