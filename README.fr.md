@@ -224,7 +224,7 @@ suivante.
 
 ### Compilation depuis les sources
 
-Prérequis : [Rust](https://rustup.rs/) (stable).
+Prérequis : [Rust](https://rustup.rs/) via rustup, qui récupère lui-même la version du compilateur fixée dans `rust-toolchain.toml`.
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

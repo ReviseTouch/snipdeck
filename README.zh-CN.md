@@ -216,7 +216,7 @@ openSUSE Leap 15.6 和 Tumbleweed 上完成安装和启动（`packaging/linux/te
 
 ### 从源码构建
 
-要求：[Rust](https://rustup.rs/)（稳定版）。
+要求：通过 rustup 安装的 [Rust](https://rustup.rs/)；rustup 会自动获取 `rust-toolchain.toml` 中固定的编译器版本。
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

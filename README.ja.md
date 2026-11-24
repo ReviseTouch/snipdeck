@@ -221,7 +221,7 @@ Rocky 9、openSUSE Leap 15.6 と Tumbleweed で、インストールと起動を
 
 ### ソースからビルド
 
-要件: [Rust](https://rustup.rs/)（stable）。
+要件: rustup で入れた [Rust](https://rustup.rs/)。`rust-toolchain.toml` で固定されたコンパイラのバージョンは rustup が自動で取得します。
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

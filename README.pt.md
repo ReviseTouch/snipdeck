@@ -221,7 +221,7 @@ o GNOME carrega uma extensão recém-instalada no próximo login.
 
 ### Compilar a partir do código-fonte
 
-Requisitos: [Rust](https://rustup.rs/) (estável).
+Requisitos: [Rust](https://rustup.rs/) via rustup, que baixa sozinho a versão do compilador fixada em `rust-toolchain.toml`.
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

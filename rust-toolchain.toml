@@ -1,0 +1,17 @@
+# The one compiler every build uses: CI's Windows and Linux jobs (they read
+# this file), the Debian 11 release image (packaging/linux/build-release.sh
+# reads it too) and a local `cargo build` through rustup.
+#
+# Pinned, not "stable": Rust 1.100 changed never-type fallback and xcap 0.0.14
+# stopped compiling (E0277 in its src/linux/wayland_capture.rs), so a floating
+# stable turned the release build red with nothing changed here.
+#
+# 1.98.0 because the release image can go no higher: Debian 11 left support in
+# August 2026 and the rust:*-bullseye images stopped at 1.98.0. Pinning CI to
+# the same version means the compiler that is tested is the one that builds
+# the shipped Linux binary.
+#
+# No components or targets here: inside the release image cargo runs as an
+# unprivileged user, and rustup there can only use what the image holds.
+[toolchain]
+channel = "1.98.0"

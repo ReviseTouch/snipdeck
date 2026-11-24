@@ -13,9 +13,16 @@
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$here"
-image=snipdeck-release
+# The compiler is the one rust-toolchain.toml pins, and the image is named for
+# it: change the pin and the next build makes a new image instead of reusing
+# one with the old compiler (cargo inside would then fail to find the pinned
+# toolchain, as rustup there cannot install one).
+rust="$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)"
+[[ -n "$rust" ]] || { echo "rust-toolchain.toml names no channel" >&2; exit 1; }
+image="snipdeck-release:$rust"
 podman image exists "$image" ||
-    podman build -f packaging/linux/Containerfile.release -t "$image" packaging/linux
+    podman build --build-arg BASE="docker.io/library/rust:$rust-bullseye" \
+        -f packaging/linux/Containerfile.release -t "$image" packaging/linux
 mkdir -p target/container "${CARGO_HOME:-$HOME/.cargo}/registry" "${CARGO_HOME:-$HOME/.cargo}/git"
 ${CARGO_RUN:-} podman run --rm --userns=keep-id \
     -v "$here":/src:ro \

@@ -222,7 +222,7 @@ GNOME carga una extensión recién instalada en el siguiente inicio de sesión.
 
 ### Compilar desde el código fuente
 
-Requisitos: [Rust](https://rustup.rs/) (estable).
+Requisitos: [Rust](https://rustup.rs/) mediante rustup, que descarga por sí solo la versión del compilador fijada en `rust-toolchain.toml`.
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

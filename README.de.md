@@ -223,7 +223,7 @@ lädt eine neu installierte Erweiterung bei der nächsten Anmeldung.
 
 ### Aus dem Quellcode erstellen
 
-Voraussetzungen: [Rust](https://rustup.rs/) (stable).
+Voraussetzungen: [Rust](https://rustup.rs/) über rustup, das die in `rust-toolchain.toml` festgelegte Compiler-Version selbst holt.
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

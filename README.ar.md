@@ -218,7 +218,7 @@ Plasma تثبّت أيضًا المساعد المكتبي لـ Snipdeck (انظ
 
 ### البناء من المصدر
 
-المتطلبات: [Rust](https://rustup.rs/) (المستقرّ).
+المتطلبات: [Rust](https://rustup.rs/) عبر rustup، الذي يجلب بنفسه إصدار المترجم المثبّت في `rust-toolchain.toml`.
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

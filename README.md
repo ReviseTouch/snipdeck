@@ -221,7 +221,7 @@ its first start; GNOME loads a newly installed extension at the next login.
 
 ### Build from source
 
-Requirements: [Rust](https://rustup.rs/) (stable).
+Requirements: [Rust](https://rustup.rs/) through rustup, which fetches the compiler version pinned in `rust-toolchain.toml` on its own.
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

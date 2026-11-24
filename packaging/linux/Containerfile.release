@@ -9,7 +9,10 @@
 # Used by packaging/linux/build-release.sh:
 #
 #   podman build -f packaging/linux/Containerfile.release -t snipdeck-release .
-ARG BASE=docker.io/library/rust:1-bullseye
+# build-release.sh passes the version from rust-toolchain.toml; the default
+# here is only for a bare `podman build`. 1.98.0 is the last Rust these images
+# were published with: Debian 11 left support in August 2026.
+ARG BASE=docker.io/library/rust:1.98.0-bullseye
 FROM ${BASE}
 
 # The CI's list (.github/workflows/release.yml, Linux job), on Debian 11,

@@ -222,7 +222,7 @@ RHEL 9 и всё, что новее, — и были установлены и �
 
 ### Сборка из исходного кода
 
-Требования: [Rust](https://rustup.rs/) (stable).
+Требования: [Rust](https://rustup.rs/) через rustup — он сам скачает версию компилятора, закреплённую в `rust-toolchain.toml`.
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git

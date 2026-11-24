@@ -235,7 +235,7 @@ kurulan bir uzantıyı bir sonraki oturum açılışında yükler.
 
 ### Kaynaktan derle
 
-Gereksinimler: [Rust](https://rustup.rs/) (stable).
+Gereksinimler: rustup ile kurulmuş [Rust](https://rustup.rs/); `rust-toolchain.toml` dosyasında sabitlenen derleyici sürümünü rustup kendisi indirir.
 
 ```bash
 git clone https://github.com/ReviseTouch/snipdeck.git
