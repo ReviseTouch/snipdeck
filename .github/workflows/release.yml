@@ -257,9 +257,17 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # The licence and the third-party notices as files of their own. The
+      # .deb, .rpm and tarball carry both inside; the Windows download is a
+      # bare .exe with nowhere to put them, and the licences of what is linked
+      # into it (libwebp's BSD-3 among them) ask for their notices to travel
+      # with binary copies. On the release page they sit beside it.
+      - name: Licences
+        run: cp LICENSE THIRD-PARTY-NOTICES.md dist/
+
       - name: Checksums
         working-directory: dist
-        run: sha256sum snipdeck-windows-x64.exe snipdeck-linux-x64.tar.gz *.deb *.rpm | tee SHA256SUMS
+        run: sha256sum snipdeck-windows-x64.exe snipdeck-linux-x64.tar.gz *.deb *.rpm LICENSE THIRD-PARTY-NOTICES.md | tee SHA256SUMS
 
       - name: Attach to GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
@@ -269,5 +277,7 @@ jobs:
             dist/snipdeck-linux-x64.tar.gz
             dist/*.deb
             dist/*.rpm
+            dist/LICENSE
+            dist/THIRD-PARTY-NOTICES.md
             dist/SHA256SUMS
           fail_on_unmatched_files: true
