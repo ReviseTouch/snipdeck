@@ -196,7 +196,12 @@ fn acquire_inner(wait_for_handoff: bool) -> bool {
 
         if already_running {
             // Another instance holds the lock. Surface its window so the
-            // user sees the app they just tried to launch, then quit.
+            // user sees the app they just tried to launch, then quit. Asked
+            // of the instance itself first: its window may be hidden in the
+            // tray, which raising it from here cannot undo.
+            if crate::tray::show_running_instance() {
+                return false;
+            }
             if let Some(hwnd) = crate::window_tamer::find_instance_window("Snipdeck") {
                 if IsIconic(hwnd).as_bool() {
                     let _ = ShowWindow(hwnd, SW_RESTORE);

@@ -203,6 +203,57 @@ pub fn shutdown() {
 #[cfg(not(target_os = "windows"))]
 pub fn shutdown() {}
 
+/// The message a second launch posts to the running instance's tray window:
+/// "show yourself". Registered by name, so both processes get the same id.
+#[cfg(target_os = "windows")]
+const SHOW_RUNNING_MESSAGE: windows::core::PCWSTR =
+    windows::core::w!("com.revisetouch.Snipdeck.ShowRunningInstance");
+
+/// Ask the Snipdeck that is already running to show its window — the
+/// Windows side of `bus_service::show_running_instance`. Called by a second
+/// launch before it quits.
+///
+/// Through the tray window, not the main one: a main window closed to the
+/// tray, or never shown after `--autostart`, is hidden, and restoring and
+/// foregrounding a hidden window from outside shows nothing. A double-clicked
+/// exe did nothing at all. The tray window is always there, and the message
+/// lands where a tray "Show" does, so the app shows itself through its own
+/// path and its state stays right. Found by class, not by the exe's file
+/// name, which a second download ("snipdeck-windows-x64 (1).exe") changes.
+///
+/// False when there is no tray window to tell — the caller falls back to
+/// raising the main window.
+#[cfg(target_os = "windows")]
+pub fn show_running_instance() -> bool {
+    use windows::core::{w, PCWSTR};
+    use windows::Win32::Foundation::{LPARAM, WPARAM};
+    use windows::Win32::UI::WindowsAndMessaging::{
+        AllowSetForegroundWindow, FindWindowW, GetWindowThreadProcessId, PostMessageW,
+        RegisterWindowMessageW,
+    };
+    unsafe {
+        let msg = RegisterWindowMessageW(SHOW_RUNNING_MESSAGE);
+        if msg == 0 {
+            return false;
+        }
+        let Ok(hwnd) = FindWindowW(w!("SnipdeckTrayWindow"), PCWSTR::null()) else {
+            return false;
+        };
+        if hwnd.0.is_null() {
+            return false;
+        }
+        // This process was just launched by the user and may take the
+        // foreground; hand that right on, or the shown window would only
+        // flash in the taskbar.
+        let mut pid = 0u32;
+        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+        if pid != 0 {
+            let _ = AllowSetForegroundWindow(pid);
+        }
+        PostMessageW(hwnd, msg, WPARAM(0), LPARAM(0)).is_ok()
+    }
+}
+
 /// Apply the embedded app icon to the main window's title bar / Alt-Tab.
 /// Returns true once the window exists and the icon has been applied, so the
 /// caller can stop retrying on subsequent ticks.
@@ -452,6 +503,15 @@ mod win {
             TASKBAR_CREATED.store(taskbar_created, Ordering::Relaxed);
             let _ = ChangeWindowMessageFilterEx(hwnd, taskbar_created, MSGFLT_ALLOW, None);
         }
+        // A second launch asking this one to show itself
+        // (`show_running_instance`). Let it through UIPI as well: an elevated
+        // Snipdeck is still found by a double click on the exe, which starts
+        // at the ordinary level.
+        let show_running = RegisterWindowMessageW(super::SHOW_RUNNING_MESSAGE);
+        if show_running != 0 {
+            SHOW_RUNNING.store(show_running, Ordering::Relaxed);
+            let _ = ChangeWindowMessageFilterEx(hwnd, show_running, MSGFLT_ALLOW, None);
+        }
 
         add_icon(hwnd);
         log::info!("tray icon active");
@@ -465,6 +525,8 @@ mod win {
 
     /// The registered "TaskbarCreated" message, 0 until registered.
     static TASKBAR_CREATED: AtomicU32 = AtomicU32::new(0);
+    /// The registered "show the running instance" message, 0 until registered.
+    static SHOW_RUNNING: AtomicU32 = AtomicU32::new(0);
 
     unsafe fn add_icon(hwnd: HWND) {
         let hinstance = GetModuleHandleW(None).unwrap_or_default();
@@ -515,6 +577,11 @@ mod win {
         if taskbar_created != 0 && msg == taskbar_created {
             log::info!("taskbar recreated; adding the tray icon again");
             add_icon(hwnd);
+            return LRESULT(0);
+        }
+        let show_running = SHOW_RUNNING.load(Ordering::Relaxed);
+        if show_running != 0 && msg == show_running {
+            send(TrayCommand::Show);
             return LRESULT(0);
         }
         if msg == WM_TRAYICON {
