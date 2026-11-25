@@ -254,6 +254,57 @@ impl SlintOverlayManager {
         Ok(())
     }
 
+    /// Put the overlay up empty, to learn which monitor the compositor puts
+    /// it on before anything is frozen ([`crate::capture::OutputHint`]).
+    ///
+    /// Without a frozen backdrop and without a selection the overlay draws
+    /// nothing at all, so this shows nothing and photographs as nothing: the
+    /// capture that follows sees the screen as it was, and the frozen image
+    /// then goes into this same window, already on the right monitor — no
+    /// hide, no second show, no flicker. It takes no input until then.
+    /// `near` sizes the first guess only; fullscreen sets the real size.
+    #[cfg(target_os = "linux")]
+    pub fn show_probe(&mut self, scale_factor: f32, near: ScreenRect) -> Result<(), slint::PlatformError> {
+        self.show_for_monitor(near, scale_factor, None)?;
+        if let Some(win) = &self.window {
+            win.set_input_capture(false);
+        }
+        Ok(())
+    }
+
+    /// The monitor the overlay is on, once the compositor has said so (it
+    /// does when the surface is mapped, a frame or two after `show`), and
+    /// the overlay has its real size.
+    #[cfg(target_os = "linux")]
+    pub fn current_output(&self) -> Option<crate::capture::OutputHint> {
+        use i_slint_backend_winit::WinitWindowAccessor;
+        let win = self.window.as_ref()?;
+        if !self.synced.get() {
+            return None;
+        }
+        win.window()
+            .with_winit_window(|w| {
+                let current = w.current_monitor()?;
+                // Logical origins: winit reports each monitor's position
+                // scaled by that monitor's own factor, which would reorder
+                // monitors of different scales.
+                let origin = |m: &i_slint_backend_winit::winit::monitor::MonitorHandle| {
+                    let p = m.position();
+                    let sf = m.scale_factor().max(0.001);
+                    ((p.x as f64 / sf).round() as i32, (p.y as f64 / sf).round() as i32)
+                };
+                let mut all: Vec<_> = w.available_monitors().collect();
+                all.sort_by_key(|m| origin(m));
+                let rank = all.iter().position(|m| *m == current)?;
+                Some(crate::capture::OutputHint {
+                    name: current.name(),
+                    rank,
+                    count: all.len(),
+                })
+            })
+            .flatten()
+    }
+
     /// Re-read the window's real geometry into the layout properties.
     ///
     /// Fullscreen is granted asynchronously: the size reported straight after

@@ -40,6 +40,82 @@ pub fn capture_at(x: i32, y: i32) -> anyhow::Result<CapturedScreen> {
     capture_monitor(monitor, idx, count)
 }
 
+/// The monitor a Wayland window landed on, as the compositor names it: what
+/// [`capture_output`] needs to find the same monitor among xcap's.
+///
+/// Wayland tells a client neither where the pointer is nor where its windows
+/// are, so a hotkey snip had no way to know which monitor the user was on.
+/// It took the main window's centre, which Wayland always reports as 0,0 —
+/// and froze the monitor at the origin, whichever one the user was working
+/// on, shown on whichever output the compositor then put the overlay. The
+/// overlay itself can be asked: once mapped, the compositor has put it on a
+/// monitor and says which (`wl_surface.enter`).
+#[cfg(target_os = "linux")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OutputHint {
+    /// The connector name (`DP-1`), where the compositor gives one.
+    pub name: Option<String>,
+    /// Its place among all monitors ordered by logical origin, x then y.
+    pub rank: usize,
+    /// How many monitors the compositor reports.
+    pub count: usize,
+}
+
+/// Is this a Wayland session with more than one monitor — the case where
+/// the monitor to freeze must be asked of the overlay ([`OutputHint`])?
+/// With one there is nothing to choose, and on X11 the window position the
+/// old path reads is real.
+#[cfg(target_os = "linux")]
+pub fn needs_output_probe() -> bool {
+    crate::window_env::caps().backend == crate::window_env::Backend::Wayland
+        && xcap::Monitor::all().is_ok_and(|m| m.len() > 1)
+}
+
+/// Capture the monitor `hint` names; [`capture_at`] `fallback` when no
+/// monitor of xcap's can be matched to it.
+#[cfg(target_os = "linux")]
+pub fn capture_output(hint: &OutputHint, fallback: (i32, i32)) -> anyhow::Result<CapturedScreen> {
+    let monitors = xcap::Monitor::all().context("enumerating monitors")?;
+    let layout: Vec<(String, i32, i32)> = monitors
+        .iter()
+        .map(|m| (m.name().to_string(), m.x(), m.y()))
+        .collect();
+    match pick_output(&layout, hint) {
+        Some(idx) => {
+            log::info!("freezing the overlay's monitor: {:?} (xcap #{idx})", hint.name);
+            let count = monitors.len();
+            let monitor = monitors.into_iter().nth(idx).expect("index from the same list");
+            capture_monitor(monitor, idx, count)
+        }
+        None => {
+            log::info!("overlay's monitor {hint:?} not among xcap's {layout:?}; capturing at {fallback:?}");
+            capture_at(fallback.0, fallback.1)
+        }
+    }
+}
+
+/// Which of xcap's monitors (name, x, y) the compositor's `hint` is.
+///
+/// By name first. xcap reads XWayland's RandR outputs, which carry the
+/// connector names on current Xwayland but generic ones on older builds, so
+/// failing that by place: XWayland lays its outputs out as the compositor
+/// lays out its monitors, so the same monitor has the same rank by origin
+/// in both lists — provided both lists have the same monitors.
+#[cfg(target_os = "linux")]
+fn pick_output(layout: &[(String, i32, i32)], hint: &OutputHint) -> Option<usize> {
+    if let Some(name) = hint.name.as_deref().filter(|n| !n.is_empty()) {
+        if let Some(idx) = layout.iter().position(|(n, _, _)| n == name) {
+            return Some(idx);
+        }
+    }
+    if layout.len() != hint.count {
+        return None;
+    }
+    let mut order: Vec<usize> = (0..layout.len()).collect();
+    order.sort_by_key(|&i| (layout[i].1, layout[i].2));
+    order.get(hint.rank).copied()
+}
+
 /// Rescale a monitor rect reported in logical pixels onto the pixel grid of
 /// the image that was actually captured.
 ///
@@ -418,5 +494,46 @@ mod tests {
         assert!(crop(&screen(), ScreenRect::new(900, 0, 50, 50)).is_err());
         assert!(crop(&screen(), ScreenRect::new(1100, 0, 50, 50)).is_err());
         assert!(crop(&screen(), ScreenRect::new(1000, 80, 50, 50)).is_err());
+    }
+
+    #[cfg(target_os = "linux")]
+    fn layout() -> Vec<(String, i32, i32)> {
+        // Listed in no particular order, as xcap may list them.
+        vec![
+            ("XWAYLAND2".into(), 3840, 0),
+            ("XWAYLAND0".into(), 0, 0),
+            ("XWAYLAND1".into(), 1920, 0),
+        ]
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn the_overlays_monitor_is_found_by_name() {
+        let mut named = layout();
+        named[0].0 = "DP-2".into();
+        let hint = OutputHint { name: Some("DP-2".into()), rank: 0, count: 3 };
+        // The name wins over a rank that would say otherwise.
+        assert_eq!(pick_output(&named, &hint), Some(0));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn without_a_matching_name_the_overlays_monitor_is_found_by_place() {
+        // Second from the left, whatever order xcap lists them in.
+        let hint = OutputHint { name: Some("DP-1".into()), rank: 1, count: 3 };
+        assert_eq!(pick_output(&layout(), &hint), Some(2));
+        let hint = OutputHint { name: None, rank: 0, count: 3 };
+        assert_eq!(pick_output(&layout(), &hint), Some(1));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn lists_that_disagree_match_nothing() {
+        // A monitor the compositor has and XWayland does not (or the other
+        // way round): a rank in one list says nothing about the other.
+        let hint = OutputHint { name: None, rank: 1, count: 2 };
+        assert_eq!(pick_output(&layout(), &hint), None);
+        let hint = OutputHint { name: None, rank: 5, count: 3 };
+        assert_eq!(pick_output(&layout(), &hint), None);
     }
 }

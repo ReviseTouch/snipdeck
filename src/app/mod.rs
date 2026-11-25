@@ -189,6 +189,11 @@ pub struct AppState {
     /// A freeze-first capture running on its own thread, its result to come.
     #[cfg(target_os = "linux")]
     freeze_capture: Option<crossbeam_channel::Receiver<anyhow::Result<crate::capture::CapturedScreen>>>,
+    /// The empty overlay is up and the monitor it lands on is awaited, before
+    /// that monitor is frozen (Wayland, several monitors; see
+    /// `capture::OutputHint`). The freeze point to fall back on, and until when.
+    #[cfg(target_os = "linux")]
+    output_probe: Option<(i32, i32, std::time::Instant)>,
 }
 
 mod input;
@@ -292,6 +297,8 @@ impl AppState {
             selection_foreground: 0,
             #[cfg(target_os = "linux")]
             freeze_capture: None,
+            #[cfg(target_os = "linux")]
+            output_probe: None,
         }
     }
 
@@ -583,6 +590,26 @@ impl AppState {
             if std::time::Instant::now() >= due {
                 self.pending_freeze_arm = None;
                 self.handle_mouse_event(MouseTriggerEvent::FreezeArm { x, y });
+            }
+        }
+        // The empty overlay is up: once the compositor has said which monitor
+        // it is on, freeze that one. A compositor that does not say in time
+        // gets the old guess rather than a snip that never starts.
+        #[cfg(target_os = "linux")]
+        if let Some((x, y, due)) = self.output_probe {
+            self.overlay.sync_to_window();
+            let output = self.overlay.current_output();
+            if output.is_some() || std::time::Instant::now() >= due {
+                self.output_probe = None;
+                match output {
+                    Some(output) => {
+                        self.spawn_freeze_capture(move || capture::capture_output(&output, (x, y)))
+                    }
+                    None => {
+                        log::info!("the overlay's monitor was not reported in time; freezing at {x},{y}");
+                        self.spawn_freeze_capture(move || capture::capture_at(x, y))
+                    }
+                }
             }
         }
         // Its result, once the capture thread has one (it wakes the pump).
@@ -992,6 +1019,7 @@ impl AppState {
                 // now, nothing wakes it when the deadline passes and the snip
                 // never starts.
                 || self.pending_freeze_arm.is_some()
+                || self.output_probe_pending()
         }
     }
 }

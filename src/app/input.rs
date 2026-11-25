@@ -14,6 +14,11 @@ use crate::i18n::t1;
 /// clears that with margin and still reads as immediate.
 #[cfg(not(target_os = "windows"))]
 const FREEZE_AFTER_HIDE: std::time::Duration = std::time::Duration::from_millis(250);
+/// How long the empty overlay may take to be told its monitor before the
+/// freeze goes ahead on the old guess. A mapped surface hears it within a
+/// frame or two.
+#[cfg(target_os = "linux")]
+const OUTPUT_PROBE_WAIT: std::time::Duration = std::time::Duration::from_millis(500);
 
 impl AppState {
     pub(crate) fn handle_action(&mut self, action: Action, window: &MainWindow) {
@@ -346,6 +351,10 @@ impl AppState {
     /// the failure inside it, and the arm waited to turn the next ordinary
     /// click into another attempt.
     fn abandon_snip(&mut self) {
+        #[cfg(target_os = "linux")]
+        {
+            self.output_probe = None;
+        }
         self.armed_snip_at = None;
         self.armed_routing = None;
         crate::mouse_trigger::consume_armed();
@@ -405,15 +414,51 @@ impl AppState {
             || self.freeze_capture_in_flight()
     }
 
-    /// A freeze capture still running on its thread (Linux; see `FreezeArm`).
+    /// A freeze capture still running on its thread, or the overlay still
+    /// waiting to learn its monitor before one starts (Linux; see `FreezeArm`).
     pub(crate) fn freeze_capture_in_flight(&self) -> bool {
         #[cfg(target_os = "linux")]
         {
-            self.freeze_capture.is_some()
+            self.freeze_capture.is_some() || self.output_probe.is_some()
         }
         #[cfg(not(target_os = "linux"))]
         {
             false
+        }
+    }
+
+    /// The empty overlay is waiting to learn its monitor: the pump has to
+    /// keep ticking, since nothing else wakes it when the answer arrives.
+    pub(crate) fn output_probe_pending(&self) -> bool {
+        #[cfg(target_os = "linux")]
+        {
+            self.output_probe.is_some()
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            false
+        }
+    }
+
+    /// Run a freeze capture off the UI thread. A Wayland capture goes through
+    /// the ScreenCast portal, and the first one waits on its consent dialog —
+    /// for as long as the user takes to answer. Taken on the UI thread, that
+    /// froze it for up to the portal timeout.
+    #[cfg(target_os = "linux")]
+    pub(crate) fn spawn_freeze_capture(
+        &mut self,
+        capture: impl FnOnce() -> anyhow::Result<crate::capture::CapturedScreen> + Send + 'static,
+    ) {
+        let (tx, rx) = crossbeam_channel::bounded(1);
+        let spawned = std::thread::Builder::new()
+            .name("freeze-capture".into())
+            .spawn(move || {
+                let _ = tx.send(capture());
+                crate::pump::wake();
+            });
+        match spawned {
+            Ok(_) => self.freeze_capture = Some(rx),
+            Err(e) => self.freeze_captured(Err(e.into())),
         }
     }
 
@@ -613,20 +658,24 @@ impl AppState {
                 // that froze the UI thread for up to the portal timeout.
                 #[cfg(target_os = "linux")]
                 {
-                    if self.freeze_capture.is_some() {
+                    if self.freeze_capture_in_flight() {
                         return;
                     }
-                    let (tx, rx) = crossbeam_channel::bounded(1);
-                    let spawned = std::thread::Builder::new()
-                        .name("freeze-capture".into())
-                        .spawn(move || {
-                            let _ = tx.send(capture::capture_at(x, y));
-                            crate::pump::wake();
-                        });
-                    match spawned {
-                        Ok(_) => self.freeze_capture = Some(rx),
-                        Err(e) => self.freeze_captured(Err(e.into())),
+                    // Wayland with several monitors: (x, y) is no guide to
+                    // which one the user is on (see `capture::OutputHint`).
+                    // Ask the overlay first; the tick freezes its monitor.
+                    if capture::needs_output_probe() {
+                        let near = ScreenRect::new(x, y, 1920, 1080);
+                        match self.overlay.show_probe(self.scale_factor, near) {
+                            Ok(()) => {
+                                self.output_probe =
+                                    Some((x, y, std::time::Instant::now() + OUTPUT_PROBE_WAIT));
+                                return;
+                            }
+                            Err(e) => log::debug!("overlay probe failed ({e}); freezing at {x},{y}"),
+                        }
                     }
+                    self.spawn_freeze_capture(move || capture::capture_at(x, y));
                 }
                 #[cfg(not(target_os = "linux"))]
                 self.freeze_captured(capture::capture_at(x, y));
@@ -813,6 +862,10 @@ impl AppState {
                 // drop the pending capture, or the overlay springs up moments
                 // after the user cancelled.
                 self.pending_freeze_arm = None;
+                #[cfg(target_os = "linux")]
+                {
+                    self.output_probe = None;
+                }
                 // Drop any capture routing armed by a toolbar/tray/hotkey
                 // trigger, plus its watchdog timestamp; otherwise a cancelled
                 // arm's stale routing (e.g. clipboard-only) would mis-route a
